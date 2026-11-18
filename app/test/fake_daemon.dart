@@ -70,6 +70,12 @@ class FakeDaemon implements Transport {
   /// tracked, unchanged one does. [answer] goes first.
   final fileDiffs = <String, Object>{};
 
+  /// The folders GetDiff's names (the Files tree's dots, API 123) answers
+  /// for: each [fileDiffs] change under one, unskipped and not deleted,
+  /// by its path in the folder, whatever the base. Any other folder
+  /// isn't a git repository. [answer] goes first.
+  final repositories = <String>{};
+
   /// The chats' images GetChatImage answers, by hash (ADR 0099); another
   /// hash is NotFound.
   final chatImages = <String, ImageData>{};
@@ -185,6 +191,25 @@ class FakeDaemon implements Transport {
                   : null,
             ),
           GetSettingsRequest() => GetSettingsResponse(settings: settings),
+          GetDiffRequest(:final folder, names: true) =>
+            repositories.contains(folder)
+                ? GetDiffResponse(
+                    files: [
+                      for (final MapEntry(:key, :value) in fileDiffs.entries)
+                        if (value is FileChange &&
+                            value.skipped.isEmpty &&
+                            value.status != 'deleted' &&
+                            key.startsWith('$folder/'))
+                          FileChange(
+                            path: key.substring(folder.length + 1),
+                            status: value.status,
+                          ),
+                    ],
+                  )
+                : throw ConnectException(
+                    Code.failedPrecondition,
+                    '$folder is not in a git repository',
+                  ),
           GetDiffRequest(:final folder, :final path) when path.isNotEmpty =>
             switch (fileDiffs['$folder/$path']) {
               final FileChange f => GetDiffResponse(files: [f]),

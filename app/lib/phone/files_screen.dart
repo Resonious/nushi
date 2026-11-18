@@ -8,6 +8,7 @@ import 'package:nushi/phone/preview_screen.dart';
 import 'package:nushi/phone/ui.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/theme/theme.dart';
+import 'package:nushi/tree_dots.dart';
 import 'package:nushi/tree_rows.dart';
 
 /// The Mac's Files pane on the phone: the same tree of the chat's folder
@@ -26,6 +27,7 @@ class FilesScreen extends StatefulWidget {
 
 class _FilesScreenState extends State<FilesScreen> {
   late final FolderTree _tree = folderTreeOf(widget.chat);
+  late final TreeDots _dots = treeDotsOf(widget.chat);
   final _query = TextEditingController();
   final _git = GitFiles();
   final _filter = FilterMemo();
@@ -34,6 +36,7 @@ class _FilesScreenState extends State<FilesScreen> {
   void initState() {
     super.initState();
     _tree.attach(widget.daemon);
+    _dots.attach(widget.daemon);
     _query.addListener(() {
       if (_query.text.trim().isNotEmpty) {
         _git.ask(widget.daemon, widget.chat.folder);
@@ -45,6 +48,7 @@ class _FilesScreenState extends State<FilesScreen> {
   @override
   void dispose() {
     _tree.detach();
+    _dots.detach();
     _query.dispose();
     _git.dispose();
     super.dispose();
@@ -90,7 +94,7 @@ class _FilesScreenState extends State<FilesScreen> {
             ),
             Expanded(
               child: ListenableBuilder(
-                listenable: Listenable.merge([_tree, _git, widget.chat]),
+                listenable: Listenable.merge([_tree, _dots, _git, widget.chat]),
                 builder: (context, _) => _list(context),
               ),
             ),
@@ -104,7 +108,7 @@ class _FilesScreenState extends State<FilesScreen> {
     final q = _query.text.trim();
     final filtering = q.isNotEmpty;
     final rows = filtering ? _filter.of(_tree, _git, q).rows : _tree.rows();
-    final marks = writtenMarks(widget.chat);
+    final marks = _dots.marks;
     if (rows.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(16),
@@ -126,9 +130,7 @@ class _FilesScreenState extends State<FilesScreen> {
             large: true,
             selected: false,
             showing: false,
-            wrote: r.kind == TreeRowKind.folder
-                ? marks.folders.contains(r.path)
-                : marks.files.contains(r.path),
+            dot: dotWords(r, marks, git: _dots.fromGit),
             onTap: r.entry ? () => _tap(r, filtering: filtering) : null,
           ),
         );

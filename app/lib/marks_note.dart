@@ -7,12 +7,14 @@ import 'package:nushi/file_view.dart';
 import 'package:nushi/line_base.dart';
 import 'package:nushi/preview.dart' show PreviewKind;
 import 'package:nushi/theme/theme.dart';
+import 'package:nushi/tree_dots.dart';
 import 'package:nushi/widgets.dart' show showError;
 
 // The Files pane's path row's one word on the shown file's change marks
 // (ADR 0131): what they count from and how many lines, that the file is
 // new, that it's unchanged, or why there are none; so a file with the
-// tree's dot never opens to an unexplained blank gutter.
+// tree's dot never opens to an unexplained blank gutter, and one the chat
+// wrote says when it's the same as before.
 
 /// What the path row says of a file's marks: `label` in a [NotePill] of
 /// `tone`, `tip` its tooltip; `toSource` makes it the way to the source
@@ -109,6 +111,7 @@ class MarksNote extends StatelessWidget {
       shown.source,
       shown.watch,
       shown.chat.editsChanged,
+      treeDotsOf(shown.chat),
     ]),
     builder: (context, _) {
       // A picture or a PDF shows no text, so has no gutter to explain.
@@ -116,8 +119,12 @@ class MarksNote extends StatelessWidget {
         return const SizedBox.shrink();
       }
       final chat = shown.chat;
-      final wrote = chatWrote(chat)
-          .contains(relativeIn(chat.folder, shown.path));
+      // The chat wrote it, or the tree dots it: either way the path row
+      // says what its marks are, or why there are none.
+      final rel = relativeIn(chat.folder, shown.path);
+      final wrote =
+          chatWrote(chat).contains(rel) ||
+          treeDotsOf(chat).marks.files.contains(rel);
       final lines = shown.lines;
       if (lines.slow && wrote) {
         final theme = NushiTheme.of(context);

@@ -61,6 +61,10 @@ const apiVersion = 123;
 /// a file preview's change marks are drawn from.
 const oneFileDiffApi = 121;
 
+/// The API from which GetDiff lists a base's changes by name alone
+/// (GetDiffRequest.names), what the Files tree's dots come from.
+const namesDiffApi = 123;
+
 /// The API from which the daemon says what an agent has (Agent.mcp_user_only,
 /// ListSkillsResponse.has_built_in and has_plugins), which
 /// the app went by the agent's name for. While an older daemon waits to

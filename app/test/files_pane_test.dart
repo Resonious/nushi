@@ -400,7 +400,9 @@ void main() {
   }, variant: _mac);
 
   testWidgets('a folder opens as it is clicked, listed then; a file opens in '
-      'the preview; what the chat wrote is marked', (tester) async {
+      'the preview; outside git, what the chat wrote is marked', (
+    tester,
+  ) async {
     final (d, folder) = await _app(tester);
     await tester.tap(_row('docs'));
     await tester.pumpAndSettle();
@@ -412,10 +414,13 @@ void main() {
       'report.md',
       'build.zip',
     ]);
-    expect(_view(tester, 'docs').wrote, isTrue);
-    expect(_view(tester, 'app').wrote, isTrue); // app/lib/main.dart
-    expect(_view(tester, 'report.md').wrote, isTrue);
-    expect(_view(tester, 'img').wrote, isFalse);
+    expect(_view(tester, 'docs').dot, 'holds files the chat wrote');
+    expect(
+      _view(tester, 'app').dot,
+      'holds files the chat wrote',
+    ); // app/lib/main.dart
+    expect(_view(tester, 'report.md').dot, 'the chat wrote it');
+    expect(_view(tester, 'img').dot, isNull);
     await tester.tap(_row('report.md'));
     await tester.pumpAndSettle();
     expect(d.chats['c']!.shownFile, 'docs/report.md');
@@ -696,7 +701,7 @@ void main() {
           const TreeRow('docs/$name', name, 1, TreeRowKind.file),
           selected: false,
           showing: false,
-          wrote: false,
+          dot: null,
           onTap: () {},
         ),
       ),

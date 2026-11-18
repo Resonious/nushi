@@ -41,6 +41,10 @@ class FolderTree extends ChangeNotifier {
   /// listings holds while this stays (the filter's FilterMemo).
   int revision = 0;
 
+  /// Counts the listings the daemon sent: a file in sight was added,
+  /// removed or saved, so the tree's dots ask again (tree_dots.dart).
+  final heard = ValueNotifier<int>(0);
+
   @override
   void notifyListeners() {
     revision++;
@@ -215,6 +219,7 @@ class FolderTree extends ChangeNotifier {
             // filter asks for none.
             _sync();
             notifyListeners();
+            heard.value++;
           },
           onError: (Object e) {
             _subs.remove(folder);
@@ -358,8 +363,8 @@ Set<String> foldersOf(Iterable<String> wrote) => {
     if (!f.startsWith('/')) ..._ancestors(f),
 };
 
-/// The files [chat] wrote, and the folders holding them, for the tree's
-/// marks.
+/// The files [chat] wrote, and the folders holding them: the tree's
+/// dots outside git (tree_dots.dart).
 ({Set<String> files, Set<String> folders}) writtenMarks(ChatState chat) {
   final files = chatWrote(chat);
   return (files: files, folders: foldersOf(files));

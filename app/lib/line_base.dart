@@ -3,34 +3,21 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
-import 'package:nushi/changes_span.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/errors.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/line_changes.dart';
+import 'package:nushi/marks_base.dart';
 import 'package:nushi/motion.dart';
 import 'package:nushi/preview.dart' show FileWatch;
+import 'package:nushi/tree_dots.dart';
+
+export 'package:nushi/marks_base.dart' show MarksFrom;
 
 // What a shown file's change marks count from, asked of the daemon, and
 // why there are none when there are none (ADR 0131): its path row says
 // one or the other, so a file never opens to an unexplained blank gutter.
-
-/// What a file's change marks count from (ADR 0131).
-enum MarksFrom {
-  /// Where the chat's branch left its base ([LineBase.against]), the
-  /// Branch view's comparison.
-  branch,
-
-  /// Before the chat's own commits, on the branch it counts from itself
-  /// (the default branch): the parent of the oldest of the branch's
-  /// latest commits made since the chat began.
-  chat,
-
-  /// The last commit: no branch base, and no commit since the chat began
-  /// (or a file outside the chat's folder).
-  lastCommit,
-}
 
 /// Why a file shows no change marks, in the words its path row says.
 enum NoMarks {
@@ -48,12 +35,6 @@ enum NoMarks {
   final String label;
 }
 
-/// A base found: what GetDiff's `base` is ('' for the last commit), and
-/// what that is.
-typedef _Base = ({String base, MarksFrom from});
-
-const _Base _lastCommit = (base: '', from: MarksFrom.lastCommit);
-
 /// A shown file's text before its chat's work, what its change marks are
 /// drawn against ([value]; null draws none), and what its path row says
 /// of them (ADR 0131). The base is, by [from]: where the chat's branch
@@ -67,10 +48,12 @@ const _Base _lastCommit = (base: '', from: MarksFrom.lastCommit);
 /// Asked of the daemon (GetDiff with the file's path and the base, API
 /// [oneFileDiffApi]) as the file changes on disk, the chat's turn ends, it
 /// commits or its folder or worktree changes; the base itself is found
-/// again when the turn ends, it commits or the folder changes. The file's
-/// own folder is asked, so a file in a nested repository is compared
-/// against its own repository. Where there are no marks, [none] says why;
-/// [changed] counts the lines that differ in the file as saved.
+/// again when the turn ends, it commits or the folder changes, once for
+/// the chat ([marksBaseOf]), the Files tree's dots counting from the same
+/// ([TreeDots]). The file's own folder is asked, so a file in a nested
+/// repository is compared against its own repository. Where there are no
+/// marks, [none] says why; [changed] counts the lines that differ in the
+/// file as saved.
 class LineBase extends ChangeNotifier implements ValueListenable<String?> {
   new(this.daemon, this.chat, this.watch) {
     _folder = chat.folder;
@@ -141,7 +124,6 @@ class LineBase extends ChangeNotifier implements ValueListenable<String?> {
   late String _worktree;
   late int _commits;
   late bool _wasBusy;
-  Future<_Base>? _branchBase; // the base found, until it may have changed
   int _asked = 0; // only the latest question's answer lands
   bool _disposed = false;
 
@@ -165,45 +147,13 @@ class LineBase extends ChangeNotifier implements ValueListenable<String?> {
     final moved = _folder != chat.folder || _worktree != worktree;
     final committed = _commits != chat.commits;
     if (ended || moved || committed) {
-      // A commit can be the chat's first, which moves its start.
-      _branchBase = null;
+      // A commit can be the chat's first, which moves its start
+      // (marksBaseOf finds it again).
       _folder = chat.folder;
       _worktree = worktree;
       _commits = chat.commits;
       unawaited(ask());
     }
-  }
-
-  /// What the file's marks count from in the chat's folder: the branch
-  /// the Branch view counts from, or on that branch itself from before
-  /// the chat's commits ([_chatStart]). A failure is found again next
-  /// time.
-  Future<_Base> _findBase() async {
-    try {
-      final b = await ChangeSpan.branchBase(daemon, chat);
-      if (!b.status.git) return _lastCommit;
-      final span = ChangeSpan(chat.folder, Scope.branch, b.base, b.status);
-      if (!span.onBase) return (base: b.base, from: MarksFrom.branch);
-      return await _chatStart();
-    } on Object {
-      _branchBase = null;
-      return _lastCommit;
-    }
-  }
-
-  /// On the branch it counts from (the default branch): from the parent
-  /// of the oldest of the branch's latest commits (ListCommits' last 50)
-  /// made since the chat began, so the chat's own commits stay marked;
-  /// with none, the last commit. A commit of the user's made meanwhile on
-  /// that branch counts too: the daemon doesn't know whose a commit is.
-  Future<_Base> _chatStart() async {
-    final r = await daemon.client.listCommits(
-      ListCommitsRequest(folder: chat.folder),
-    );
-    final began = chat.created.millisecondsSinceEpoch ~/ 1000;
-    final own = r.commits.takeWhile((c) => c.unixSeconds.toInt() >= began);
-    if (own.isEmpty) return _lastCommit;
-    return (base: '${own.last.hash}^', from: MarksFrom.chat);
   }
 
   /// Asks again what the file was before the chat's work.
@@ -229,7 +179,9 @@ class LineBase extends ChangeNotifier implements ValueListenable<String?> {
     final slash = abs.lastIndexOf('/');
     if (slash < 0) return await _land(asked, none: NoMarks.failed);
     final inChat = abs.startsWith('${chat.folder}/');
-    final found = inChat ? await (_branchBase ??= _findBase()) : _lastCommit;
+    final found = inChat
+        ? await marksBaseOf(chat).find(daemon)
+        : lastCommitBase;
     if (_disposed || asked != _asked) return;
     Future<GetDiffResponse> diff(String base) => daemon.client.getDiff(
       GetDiffRequest(
@@ -248,7 +200,7 @@ class LineBase extends ChangeNotifier implements ValueListenable<String?> {
         // one), or the chat's first commit was the repository's first:
         // from its last commit instead.
         if (against.base.isEmpty) rethrow;
-        against = _lastCommit;
+        against = lastCommitBase;
         r = await diff('');
       }
     } on Object catch (e) {
@@ -309,7 +261,7 @@ class LineBase extends ChangeNotifier implements ValueListenable<String?> {
     bool isNew = false,
     NoMarks? none,
     String error = '',
-    _Base at = _lastCommit,
+    MarksBase at = lastCommitBase,
   }) async {
     var changed = 0;
     var text = base;
@@ -345,6 +297,8 @@ class LineBase extends ChangeNotifier implements ValueListenable<String?> {
     _error = error;
     _changed = changed;
     notifyListeners();
+    // The tree's dot follows what the file's marks found (ADR 0131).
+    treeDotsOf(chat).poke();
   }
 
   @override

@@ -10,6 +10,7 @@ import 'package:nushi/folder_tree.dart';
 import 'package:nushi/menu.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/theme/theme.dart';
+import 'package:nushi/tree_dots.dart';
 import 'package:nushi/tree_rows.dart';
 import 'package:nushi/widgets.dart';
 
@@ -17,11 +18,12 @@ import 'package:nushi/widgets.dart';
 /// worktree's, for a worktree chat), at the window's edge right of the
 /// pane's viewer. Folders open as they're clicked (or with →, ← closing
 /// them), listed by the daemon then and kept current ([FolderTree]); a file
-/// that previews opens in the viewer, with a click or ⏎. The files the
-/// chat wrote are marked, and the folders holding them. What git ignores
-/// is left out unless the eye shows it. The filter over the tree finds any
-/// file in the folder by name, as a tree of what matched. Read-only (ADR
-/// 0019).
+/// that previews opens in the viewer, with a click or ⏎. A dot marks each
+/// file that differs from what its change marks count from, and the
+/// folders holding one ([TreeDots]; outside git, the files the chat
+/// wrote). What git ignores is left out unless the eye shows it. The
+/// filter over the tree finds any file in the folder by name, as a tree of
+/// what matched. Read-only (ADR 0019).
 class FilesTree extends StatefulWidget {
   const new({required this.chat, required this.daemon, super.key});
 
@@ -37,6 +39,7 @@ class FilesTree extends StatefulWidget {
 
 class _FilesTreeState extends State<FilesTree> {
   late final FolderTree _tree = folderTreeOf(widget.chat);
+  late final TreeDots _dots = treeDotsOf(widget.chat);
   final _query = TextEditingController();
   final _field = FocusNode(debugLabel: 'files filter');
   final _list = FocusNode(debugLabel: 'files');
@@ -58,12 +61,14 @@ class _FilesTreeState extends State<FilesTree> {
   void initState() {
     super.initState();
     _tree.attach(widget.daemon);
+    _dots.attach(widget.daemon);
     _query.addListener(_queried);
   }
 
   @override
   void dispose() {
     _tree.detach();
+    _dots.detach();
     _clicks.dispose();
     _query.dispose();
     _git.dispose();
@@ -208,6 +213,7 @@ class _FilesTreeState extends State<FilesTree> {
             child: ListenableBuilder(
               listenable: Listenable.merge([
                 _tree,
+                _dots,
                 _git,
                 widget.chat,
                 widget.chat.files.shown,
@@ -220,15 +226,14 @@ class _FilesTreeState extends State<FilesTree> {
     );
   }
 
-  /// A row the chat [wrote] (a file with the dot) has a right-click menu:
-  /// Show changes opens it in the chat's Changes tab (ADR 0131). Others
-  /// have none.
-  Widget _written(
+  /// A file with the dot ([dotted]) has a right-click menu: Show changes
+  /// opens it in the chat's Changes tab (ADR 0131). Others have none.
+  Widget _dotted(
     TreeRow r, {
-    required bool wrote,
+    required bool dotted,
     required Widget Function(GestureTapUpCallback? menu) builder,
   }) {
-    if (!wrote) return builder(null);
+    if (!dotted) return builder(null);
     return Menu(
       filter: false,
       entries: [
@@ -244,7 +249,8 @@ class _FilesTreeState extends State<FilesTree> {
 
   Widget _body(NushiTheme theme) {
     final t = theme.t;
-    final marks = writtenMarks(widget.chat);
+    final marks = _dots.marks;
+    final git = _dots.fromGit;
     var capped = false;
     if (_q.isNotEmpty) {
       final found = _filter.of(_tree, _git, _q);
@@ -280,9 +286,7 @@ class _FilesTreeState extends State<FilesTree> {
               itemCount: _rows.length,
               itemBuilder: (context, i) {
                 final r = _rows[i];
-                final wrote = r.kind == TreeRowKind.folder
-                    ? marks.folders.contains(r.path)
-                    : marks.files.contains(r.path);
+                final dot = dotWords(r, marks, git: git);
                 // A second click on a file keeps its tab: its first opened
                 // it, and the second's tap shows it again.
                 return Listener(
@@ -291,14 +295,14 @@ class _FilesTreeState extends State<FilesTree> {
                       widget.chat.openInFiles(r.path);
                     }
                   },
-                  child: _written(
+                  child: _dotted(
                     r,
-                    wrote: wrote && r.kind != TreeRowKind.folder,
+                    dotted: dot != null && r.kind != TreeRowKind.folder,
                     builder: (menu) => TreeRowView(
                       r,
                       selected: r.entry && r.path == _at,
                       showing: r.kind == TreeRowKind.file && r.path == open,
-                      wrote: wrote,
+                      dot: dot,
                       onSecondaryTapUp: menu,
                       onTap: r.entry
                           ? () {

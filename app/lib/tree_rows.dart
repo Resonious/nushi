@@ -67,13 +67,14 @@ class TreeRow {
 
 /// One row of the tree: indented by its depth, a folder's chevron or a
 /// file's kind, its name (muted when git ignores it, or nothing opens it),
-/// and a dot when the chat wrote it (or a file in the folder).
+/// and a dot ([dot]) when it differs from what its change marks count
+/// from (or a file in the folder does; ADR 0131).
 class TreeRowView extends StatelessWidget {
   const new(
     this.row, {
     required this.selected,
     required this.showing,
-    required this.wrote,
+    required this.dot,
     required this.onTap,
     super.key,
     this.large = false,
@@ -86,10 +87,13 @@ class TreeRowView extends StatelessWidget {
   final bool large;
   final bool selected;
   final bool showing; // the file the preview shows
-  final bool wrote;
+
+  /// What its dot says, in its tooltip ("changed", "the chat wrote it");
+  /// null for no dot.
+  final String? dot;
   final VoidCallback? onTap;
 
-  /// A right-click on it (a written file's menu).
+  /// A right-click on it (a dotted file's menu).
   final GestureTapUpCallback? onSecondaryTapUp;
 
   @override
@@ -130,7 +134,7 @@ class TreeRowView extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, box) {
           final row = _row(context, r, icon: icon, text: text, dim: dim);
-          final least = 14 + icon + 8 + (wrote ? 10 : 0);
+          final least = 14 + icon + 8 + (dot != null ? 10 : 0);
           if (box.maxWidth >= least) return row;
           return UnconstrainedBox(
             constrainedAxis: Axis.vertical,
@@ -185,7 +189,7 @@ class TreeRowView extends StatelessWidget {
             ),
           ),
         ),
-        if (wrote)
+        if (dot != null)
           Container(
             width: 6,
             height: 6,
@@ -201,8 +205,7 @@ class TreeRowView extends StatelessWidget {
       plainPath(r.path),
       if (r.kind == TreeRowKind.file) diskSize(r.size),
       if (r.modified case final m?) ago(clock().difference(m), m),
-      if (wrote && r.kind == TreeRowKind.folder) 'holds files the chat wrote',
-      if (wrote && r.kind != TreeRowKind.folder) 'the chat wrote it',
+      ?dot,
       if (r.ignored) 'ignored by git',
       if (r.linked) 'a link',
       if (r.kind == TreeRowKind.link)

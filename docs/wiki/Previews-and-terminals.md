@@ -14,7 +14,7 @@ You can also open files in these ways:
 
 - **Artifacts**: in the details panel (the panel button in the chat's header), the **Artifacts** list shows the documents, pages and images the chat made. Click one to open it.
 - **Open file** (⌘P): type part of a name to open any file in the chat's folder, code included.
-- **Files** (⇧⌘E, or the folder button in the header): the open files on the left and a tree of the chat's folder on the right, as in Claude's desktop app. With nothing open it says **Open files appear here**. Files the chat wrote have a dot. Opening a file never moves the tree. Type in **Search files…** above the tree to find a file anywhere in the folder. The three buttons at the right of the pane's second row collapse every folder, hide or show the tree (⇧⌘Y; the open file takes its room) and open **⋯**, which has **Go to file or search** (⌘P), **File tree position** (put the tree on the left or the right; Automatic keeps it at the window's edge), **Preview tabs** and how a file's source shows: **Word wrap**, **Indent guides**, **Show whitespace**, **Scroll past end** and **Tab size** (2, 4 or 8 columns).
+- **Files** (⇧⌘E, or the folder button in the header): the open files on the left and a tree of the chat's folder on the right, as in Claude's desktop app. With nothing open it says **Open files appear here**. Files with changes have a dot (below). Opening a file never moves the tree. Type in **Search files…** above the tree to find a file anywhere in the folder. The three buttons at the right of the pane's second row collapse every folder, hide or show the tree (⇧⌘Y; the open file takes its room) and open **⋯**, which has **Go to file or search** (⌘P), **File tree position** (put the tree on the left or the right; Automatic keeps it at the window's edge), **Preview tabs** and how a file's source shows: **Word wrap**, **Indent guides**, **Show whitespace**, **Scroll past end** and **Tab size** (2, 4 or 8 columns).
 
 Some agents can also open a file in the Files pane, or a page on your own machine in the browser, themselves.
 
@@ -41,7 +41,9 @@ Next to the file's path, a pill says what the marks count from and how many line
 
 Rendered views (Markdown, CSV, HTML) can't show marks: click the pill (**3 changed lines since main ›**) to switch to the source, where they are.
 
-A file with a dot and no marks always says why next to its path: **No changes since main** (the chat wrote it back as it was), **Not in a git repository**, **Ignored by git**, a link, not text, too large or over 10,000 lines, **Change marks need a newer daemon** (restart Nushi), or **Couldn’t compare with git** (click it for git's words). A file outside the chat's folder is marked against its own last commit.
+In the tree, a green dot marks every file with changes (the ones that open with marks or **New file**), whoever made them: the agent, a command, or you. The folders holding one have it too, even closed. A file the chat wrote back as it was has none (opened, it says **No changes since main**). In a folder that isn't a git repository there's nothing to compare with, so the dot marks the files the chat wrote instead.
+
+A file with a dot and no marks always says why next to its path: **Not in a git repository**, **Ignored by git**, a link, not text, too large or over 10,000 lines, **Change marks need a newer daemon** (restart Nushi), or **Couldn’t compare with git** (click it for git's words). A file outside the chat's folder is marked against its own last commit.
 
 ## Work with several files
 
