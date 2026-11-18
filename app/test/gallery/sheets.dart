@@ -504,6 +504,19 @@ Widget _pills() => page('Pills, chips, cards', [
     ('NeedsYou', const NeedsYou()),
     (ChatPhase.done.name, const PhasePill(ChatPhase.done, small: true)),
   ]),
+  plainRow('NotePill', [
+    for (final tone in NoteTone.values)
+      (tone.name, NotePill('5 changed lines', tone: tone)),
+  ]),
+  stateRow(
+    'NotePill, a button',
+    ({required on}) => NotePill(
+      '3 changed lines',
+      tone: NoteTone.accent,
+      trailing: Icons.chevron_right,
+      onTap: on ? _tap : null,
+    ),
+  ),
   plainRow('StatePill', [
     for (final (name, state, draft) in [
       ('open', 'open', false),
@@ -823,7 +836,7 @@ final List<Sheet> sheets = [
   (name: 'buttons', size: const Size(1200, 1080), build: _buttons, open: null),
   (name: 'small', size: const Size(1200, 820), build: _small, open: null),
   (name: 'fields', size: const Size(1200, 940), build: _fields, open: null),
-  (name: 'pills', size: const Size(1200, 860), build: _pills, open: null),
+  (name: 'pills', size: const Size(1200, 960), build: _pills, open: null),
   (name: 'settings', size: const Size(760, 540), build: _settings, open: null),
   (name: 'phone', size: const Size(1200, 420), build: _phone, open: null),
   (name: 'dialogs', size: const Size(1340, 340), build: _dialogs, open: null),
