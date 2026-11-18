@@ -23,13 +23,22 @@ final _marker = RegExp(r'^<!-- reply \d+ -->\n', multiLine: true);
 
 /// A group's lead line, before its first reply's marker.
 final _from = RegExp(r'^<!-- from -->\n(.*)\n\n', multiLine: true);
-const _end = '<!-- end of replies -->';
-final _endLine = RegExp('^$_end\$', multiLine: true);
+
+/// Where the replies end, said in words an agent reads too: each card is
+/// about what it quotes, the rest is the message as typed. (The owner,
+/// 2026-11-18, after an agent took typed text for more of a review
+/// comment.)
+const _end = '<!-- end of replies: the rest is my own message, as typed -->';
+
+/// The end's line, as written now or before it said more (0.42.0 and
+/// older: `<!-- end of replies -->`).
+const _endPattern = r'<!-- end of replies(?:: [^\n]*)? -->';
+final _endLine = RegExp('^$_endPattern\$', multiLine: true);
 
 /// A line [splitReplies] reads as one of its marks: a reply's, a lead's or
 /// the end's.
 final _markLine = RegExp(
-  '^(<!-- reply \\d+ -->|<!-- from -->|$_end)\$',
+  '^(<!-- reply \\d+ -->|<!-- from -->|$_endPattern)\$',
   multiLine: true,
 );
 
@@ -40,7 +49,7 @@ bool hasReplyMarks(String text) => _markLine.hasMatch(text);
 
 /// A message's text: each reply as `<!-- reply n -->`, its quote as `> `
 /// lines and its text (its lines as written) after a blank line, then
-/// [text]. `<!-- end of replies -->` says where the replies end whenever
+/// [text]. The end's line ([_end]) says where the replies end whenever
 /// [text] follows them (an agent read the user's own message as more of
 /// the last comment, about that comment's file), and when the last
 /// reply's text has a blank line of its own. Replies from the

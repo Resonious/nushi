@@ -2,6 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/replies.dart';
 
 void main() {
+  // The end's line, as withReplies writes it.
+  const end = '<!-- end of replies: the rest is my own message, as typed -->';
+
   test('a message with replies, and back', () {
     const replies = [
       (quote: 'line one\nline two', text: 'why?', from: ''),
@@ -12,7 +15,7 @@ void main() {
       message,
       '<!-- reply 1 -->\n> line one\n> line two\n\nwhy?\n\n'
       '<!-- reply 2 -->\n> just this\n\n'
-      '<!-- end of replies -->\n\nand the rest',
+      '$end\n\nand the rest',
     );
     // The mark says where the replies end, so what follows a reply
     // without text is the message's own, to an agent as to Nushi.
@@ -24,6 +27,21 @@ void main() {
     (got, rest) = splitReplies('<!-- reply 1 -->\n> just this\n\nthe rest');
     expect(got, [(quote: 'just this', text: 'the rest', from: '')]);
     expect(rest, '');
+    // And one with the end's line as it was first written.
+    (got, rest) = splitReplies(
+      '<!-- reply 1 -->\n> just this\n\n<!-- end of '
+      'replies -->\n\nthe rest',
+    );
+    expect(got, [(quote: 'just this', text: '', from: '')]);
+    expect(rest, 'the rest');
+    expect(
+      hasReplyMarks(
+        'a\n<!-- end of '
+        'replies -->\nb',
+      ),
+      isTrue,
+    );
+    expect(hasReplyMarks('a\n$end\nb'), isTrue);
     (got, rest) = splitReplies(withReplies(replies, ''));
     expect(got, replies);
     expect(rest, '');
@@ -42,7 +60,7 @@ void main() {
       from: '',
     );
     var message = withReplies([lines], 'the rest');
-    expect(message, contains('\n\n<!-- end of replies -->\n\nthe rest'));
+    expect(message, contains('\n\n$end\n\nthe rest'));
     // None when nothing follows the replies and none has a blank line.
     expect(withReplies([lines], ''), isNot(contains('end of replies')));
     var (got, rest) = splitReplies(message);
@@ -60,7 +78,7 @@ void main() {
         message,
         '<!-- reply 1 -->\n> kept as a DateTime\n\nWhy?\nAnd why not a string?'
         '\n\n<!-- reply 2 -->\n> kept as a DateTime\n\nWhy?\n\nAnd why not?'
-        '\n\n<!-- end of replies -->${text.isEmpty ? '' : '\n\n$text'}',
+        '\n\n$end${text.isEmpty ? '' : '\n\n$text'}',
       );
       (got, rest) = splitReplies(message);
       expect(got, [lines, paragraphs]);
@@ -90,7 +108,7 @@ void main() {
       '<!-- from -->\n$theirs\n\n'
       '<!-- reply 3 -->\n> Overflow?\n\nAddress it.\n\n'
       '<!-- reply 4 -->\n> selected text\n\nwhy?\n\n'
-      '<!-- end of replies -->\n\nThanks.',
+      '$end\n\nThanks.',
     );
     final (got, rest) = splitReplies(message);
     expect(rest, 'Thanks.');
