@@ -11,16 +11,21 @@ import (
 
 // Changed lists the folder's changes as Changes does with base (Span.Base),
 // by path and status alone: no texts, no line counts, nothing staged, so
-// it costs two git runs whatever the files hold. A submodule and a
-// repository inside the folder are left out (not looked into). What git
-// ignores isn't listed: a folder holding a tracked file isn't ignored, as
-// git (and so the Files pane) sees it.
+// it costs a few git runs whatever the files hold. It runs with no click
+// behind it, so with the repository's own filter drivers off (noFilters),
+// as Status does. A submodule and a repository inside the folder are left
+// out (not looked into). What git ignores isn't listed: a folder holding
+// a tracked file isn't ignored, as git (and so the Files pane) sees it.
 func Changed(ctx context.Context, folder, base string) ([]model.FileChange, error) {
 	from, err := start(ctx, folder, base)
 	if err != nil {
 		return nil, err
 	}
-	changes, err := listed(ctx, folder, from, "")
+	off, err := noFilters(ctx, folder)
+	if err != nil {
+		return nil, err
+	}
+	changes, err := listed(ctx, folder, off, from, "")
 	if err != nil {
 		return nil, err
 	}
@@ -32,8 +37,11 @@ func Changed(ctx context.Context, folder, base string) ([]model.FileChange, erro
 // listed lists the files changed from commit from to commit to (to "" for
 // the work tree, with its untracked files; from "" before the first
 // commit, every file added), by path and status alone: a submodule and a
-// repository inside the folder (git lists its folder) skipped.
-func listed(ctx context.Context, folder, from, to string) ([]model.FileChange, error) {
+// repository inside the folder (git lists its folder) skipped. The diff
+// runs with the config settings named in blank set empty (noFilters'
+// list, for a run no click asked for); the untracked listing reads no
+// file's content, so runs no filter.
+func listed(ctx context.Context, folder string, blank []string, from, to string) ([]model.FileChange, error) {
 	hasHead := from != ""
 	revs := []string{from}
 	if to != "" {
@@ -41,7 +49,7 @@ func listed(ctx context.Context, folder, from, to string) ([]model.FileChange, e
 	}
 	var changes []model.FileChange
 	if hasHead {
-		out, err := run(ctx, folder, append(append([]string{"diff"}, revs...), "--raw", "-z", "-M", "--relative", "--ignore-submodules=dirty", "--no-ext-diff", "--no-textconv")...)
+		out, err := runTo(ctx, folder, blank, nil, append(append([]string{"diff"}, revs...), "--raw", "-z", "-M", "--relative", "--ignore-submodules=dirty", "--no-ext-diff", "--no-textconv")...)
 		if err != nil {
 			return nil, err
 		}

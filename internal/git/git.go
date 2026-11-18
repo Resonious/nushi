@@ -45,7 +45,7 @@ func Changes(ctx context.Context, folder string, span Span) ([]model.FileChange,
 	if err != nil {
 		return nil, err
 	}
-	changes, err := listed(ctx, folder, from, to)
+	changes, err := listed(ctx, folder, nil, from, to)
 	if err != nil {
 		return nil, err
 	}

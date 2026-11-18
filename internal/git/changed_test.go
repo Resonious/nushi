@@ -102,3 +102,33 @@ func TestChanged(t *testing.T) {
 		t.Errorf("deleted: %+v", got)
 	}
 }
+
+// TestChangedRunsNoFilter: the tree's listing runs with no click behind it,
+// so a repository's own clean and process filters never run, as for the
+// panel's status (TestWorkSinceRunsNoFilter).
+func TestChangedRunsNoFilter(t *testing.T) {
+	ctx := t.Context()
+	repo := t.TempDir()
+	testcheck.Git(t, repo, "init", "-q", "-b", "main")
+	write(t, filepath.Join(repo, "a.txt"), "one\n")
+	write(t, filepath.Join(repo, "b.md"), "one\n")
+	testcheck.Git(t, repo, "add", ".")
+	testcheck.Git(t, repo, "commit", "-q", "-m", "init")
+	marks := t.TempDir()
+	clean, process := filepath.Join(marks, "clean-ran"), filepath.Join(marks, "process-ran")
+	write(t, filepath.Join(repo, ".gitattributes"), "*.txt filter=evil\n*.md filter=talker\n")
+	testcheck.Git(t, repo, "config", "filter.evil.clean", "touch "+clean+"; cat")
+	testcheck.Git(t, repo, "config", "filter.talker.process", "touch "+process+"; cat")
+	write(t, filepath.Join(repo, "a.txt"), "one\ntwo\n")
+	write(t, filepath.Join(repo, "b.md"), "one\ntwo\n")
+
+	got, err := Changed(ctx, repo, "")
+	if err != nil || len(got) != 3 { // .gitattributes is untracked
+		t.Errorf("%+v, %v", got, err)
+	}
+	for _, f := range []string{clean, process} {
+		if _, err := os.Stat(f); err == nil {
+			t.Errorf("a filter ran: %s", filepath.Base(f))
+		}
+	}
+}
