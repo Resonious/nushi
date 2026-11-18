@@ -47,6 +47,21 @@ func (s *server) GetDiff(ctx context.Context, req *connect.Request[nushiv1.GetDi
 	}
 	span := git.Span{Base: req.Msg.Base, Commit: req.Msg.Commit, Since: req.Msg.Since, After: req.Msg.After, Path: req.Msg.Path}
 	resp := &nushiv1.GetDiffResponse{}
+	if req.Msg.Names {
+		if span != (git.Span{Base: span.Base}) {
+			return nil, invalid(errors.New("names lists a base's changes alone"))
+		}
+		changes, err := git.Changed(ctx, req.Msg.Folder, span.Base)
+		if err != nil {
+			return nil, refused(err)
+		}
+		for _, c := range changes {
+			if sendable(c.Path, c.OldPath) {
+				resp.Files = append(resp.Files, fileChangeProto(c))
+			}
+		}
+		return connect.NewResponse(resp), nil
+	}
 	if span == (git.Span{}) {
 		// Read before the files: a file staged between the two then moves
 		// the index, and the commit is refused rather than taking it unseen.

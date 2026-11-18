@@ -83,3 +83,40 @@ func TestGetDiffOfOnePath(t *testing.T) {
 		}
 	}
 }
+
+// TestGetDiffNames: the Files tree's GetDiff (names) lists the changes from
+// a base by path and status alone, without texts, counts or the index,
+// and refuses any other span.
+func TestGetDiffNames(t *testing.T) {
+	repo := t.TempDir()
+	c := client(t, New(Services{}))
+	ctx := t.Context()
+	if _, err := c.GetDiff(ctx, connect.NewRequest(&nushiv1.GetDiffRequest{Folder: repo, Names: true})); connect.CodeOf(err) != connect.CodeFailedPrecondition {
+		t.Errorf("not a repository: %v", err)
+	}
+	testcheck.Git(t, repo, "init", "-q", "-b", "main")
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "one\n")
+	testcheck.Git(t, repo, "add", ".")
+	testcheck.Git(t, repo, "commit", "-q", "-m", "init")
+	testcheck.Git(t, repo, "switch", "-q", "-c", "work")
+	testcheck.Write(t, filepath.Join(repo, "dir", "b.txt"), "b\n")
+	testcheck.Git(t, repo, "add", ".")
+	testcheck.Git(t, repo, "commit", "-q", "-m", "b")
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "one\ntwo\n")
+
+	diff, err := c.GetDiff(ctx, connect.NewRequest(&nushiv1.GetDiffRequest{Folder: repo, Base: "main", Names: true}))
+	if err != nil || diff.Msg.Index != "" || len(diff.Msg.Files) != 2 {
+		t.Fatalf("names: %v %v", diff, err)
+	}
+	for _, f := range diff.Msg.Files {
+		if f.OldText != "" || f.NewText != "" || f.Added != 0 {
+			t.Errorf("a text or count came: %v", f)
+		}
+	}
+	if f := diff.Msg.Files[1]; f.Path != "dir/b.txt" || f.Status != "added" {
+		t.Errorf("the branch's file: %v", f)
+	}
+	if _, err := c.GetDiff(ctx, connect.NewRequest(&nushiv1.GetDiffRequest{Folder: repo, Path: "a.txt", Names: true})); connect.CodeOf(err) != connect.CodeInvalidArgument {
+		t.Errorf("names with a path: %v", err)
+	}
+}

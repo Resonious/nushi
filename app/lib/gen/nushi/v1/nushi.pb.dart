@@ -13415,6 +13415,7 @@ class GetDiffRequest extends $pb.GeneratedMessage {
     $core.String? since,
     $core.String? after,
     $core.String? path,
+    $core.bool? names,
   }) {
     final result = GetDiffRequest._();
     if (folder != null) result.folder = folder;
@@ -13423,6 +13424,7 @@ class GetDiffRequest extends $pb.GeneratedMessage {
     if (since != null) result.since = since;
     if (after != null) result.after = after;
     if (path != null) result.path = path;
+    if (names != null) result.names = names;
     return result;
   }
 
@@ -13445,6 +13447,7 @@ class GetDiffRequest extends $pb.GeneratedMessage {
     ..aOS(4, _omitFieldNames ? '' : 'since')
     ..aOS(5, _omitFieldNames ? '' : 'after')
     ..aOS(6, _omitFieldNames ? '' : 'path')
+    ..aOB(7, _omitFieldNames ? '' : 'names')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -13536,6 +13539,19 @@ class GetDiffRequest extends $pb.GeneratedMessage {
   $core.bool hasPath() => $_has(5);
   @$pb.TagNumber(6)
   void clearPath() => $_clearField(6);
+
+  /// With base (or none) alone: only the files' paths and statuses (and a
+  /// rename's old path), no texts, counts or index state; a submodule, a
+  /// repository inside the folder and a file in a folder git ignores are
+  /// left out (the Files tree's marks, API 123).
+  @$pb.TagNumber(7)
+  $core.bool get names => $_getBF(6);
+  @$pb.TagNumber(7)
+  set names($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasNames() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearNames() => $_clearField(7);
 }
 
 class StageFilesRequest extends $pb.GeneratedMessage {

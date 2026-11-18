@@ -1929,6 +1929,11 @@ message GetDiffRequest {
   // tree's, a file that is ignored or a symlink comes back skipped, so no
   // file at all means it is tracked and unchanged (API 121).
   string path = 6;
+  // With base (or none) alone: only the files' paths and statuses (and a
+  // rename's old path), no texts, counts or index state; a submodule, a
+  // repository inside the folder and a file in a folder git ignores are
+  // left out (the Files tree's marks, API 123).
+  bool names = 7;
 }
 
 message StageFilesRequest {

@@ -10553,7 +10553,12 @@ type GetDiffRequest struct {
 	// path); its index state and what's staged are left out. Of the work
 	// tree's, a file that is ignored or a symlink comes back skipped, so no
 	// file at all means it is tracked and unchanged (API 121).
-	Path          string `protobuf:"bytes,6,opt,name=path,proto3" json:"path,omitempty"`
+	Path string `protobuf:"bytes,6,opt,name=path,proto3" json:"path,omitempty"`
+	// With base (or none) alone: only the files' paths and statuses (and a
+	// rename's old path), no texts, counts or index state; a submodule, a
+	// repository inside the folder and a file in a folder git ignores are
+	// left out (the Files tree's marks, API 123).
+	Names         bool `protobuf:"varint,7,opt,name=names,proto3" json:"names,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -10628,6 +10633,13 @@ func (x *GetDiffRequest) GetPath() string {
 		return x.Path
 	}
 	return ""
+}
+
+func (x *GetDiffRequest) GetNames() bool {
+	if x != nil {
+		return x.Names
+	}
+	return false
 }
 
 type StageFilesRequest struct {
@@ -26764,14 +26776,15 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\x06branch\x18\x02 \x01(\tR\x06branch\x12\x12\n" +
 	"\x04main\x18\x03 \x01(\bR\x04main\x12\x16\n" +
 	"\x06locked\x18\x04 \x01(\bR\x06locked\x12\x18\n" +
-	"\acurrent\x18\x05 \x01(\bR\acurrent\"\x94\x01\n" +
+	"\acurrent\x18\x05 \x01(\bR\acurrent\"\xaa\x01\n" +
 	"\x0eGetDiffRequest\x12\x16\n" +
 	"\x06folder\x18\x01 \x01(\tR\x06folder\x12\x12\n" +
 	"\x04base\x18\x02 \x01(\tR\x04base\x12\x16\n" +
 	"\x06commit\x18\x03 \x01(\tR\x06commit\x12\x14\n" +
 	"\x05since\x18\x04 \x01(\tR\x05since\x12\x14\n" +
 	"\x05after\x18\x05 \x01(\tR\x05after\x12\x12\n" +
-	"\x04path\x18\x06 \x01(\tR\x04path\"Y\n" +
+	"\x04path\x18\x06 \x01(\tR\x04path\x12\x14\n" +
+	"\x05names\x18\a \x01(\bR\x05names\"Y\n" +
 	"\x11StageFilesRequest\x12\x16\n" +
 	"\x06folder\x18\x01 \x01(\tR\x06folder\x12\x14\n" +
 	"\x05paths\x18\x02 \x03(\tR\x05paths\x12\x16\n" +

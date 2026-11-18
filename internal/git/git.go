@@ -37,7 +37,7 @@ type Span struct{ Base, Commit, Since, After, Path string }
 // when they are uncommitted ones, with paths relative to the folder and
 // each file's lines added and removed, and uncommitted ones say how much is
 // staged. The folder may be anywhere inside a repository.
-func Changes(ctx context.Context, folder string, span Span) ([]model.FileChange, error) { //nolint:gocognit,gocyclo // each span's git commands, then one pass over their output
+func Changes(ctx context.Context, folder string, span Span) ([]model.FileChange, error) { //nolint:gocognit // the span, its counts, then one pass reading the texts
 	if span.Path != "" && !filepath.IsLocal(span.Path) {
 		return nil, fmt.Errorf("%q is not a path inside the folder", span.Path)
 	}
@@ -45,65 +45,23 @@ func Changes(ctx context.Context, folder string, span Span) ([]model.FileChange,
 	if err != nil {
 		return nil, err
 	}
-	hasHead := from != ""
-	revs := []string{from}
-	if to != "" {
-		revs = append(revs, to)
+	changes, err := listed(ctx, folder, from, to)
+	if err != nil {
+		return nil, err
 	}
-	var changes []model.FileChange
-	if hasHead {
-		out, err := run(ctx, folder, append(append([]string{"diff"}, revs...), "--raw", "-z", "-M", "--relative", "--ignore-submodules=dirty", "--no-ext-diff", "--no-textconv")...)
-		if err != nil {
-			return nil, err
-		}
-		fields := split(out)
-		for i := 0; i+1 < len(fields); i += 2 { // ":<mode> <mode> <sha> <sha> <status>", the path
-			head := strings.Fields(fields[i])
-			if len(head) < 5 {
-				return nil, fmt.Errorf("git diff: can't read %q", fields[i])
-			}
-			c := model.FileChange{Path: fields[i+1], Status: "modified"}
-			switch head[4][0] {
-			case 'A':
-				c.Status = "added"
-			case 'D':
-				c.Status = "deleted"
-			case 'R': // R<score>, the old path, the new one
-				if i+2 < len(fields) {
-					c.Status, c.OldPath, c.Path = "renamed", fields[i+1], fields[i+2]
-					i++
-				}
-			}
-			if head[0] == ":"+gitlink || head[1] == gitlink {
-				c.Skipped = "a submodule"
-			}
-			changes = append(changes, c)
+	if from != "" {
+		revs := []string{from}
+		if to != "" {
+			revs = append(revs, to)
 		}
 		counts, err := numstat(ctx, folder, nil, revs...)
 		if err != nil {
 			return nil, err
 		}
-		for i := range changes {
+		for i := range changes { // an untracked file counts none here
 			n := counts[changes[i].Path]
 			changes[i].Added, changes[i].Removed = n[0], n[1]
 		}
-	}
-	var added []string
-	if to == "" {
-		if added, err = untracked(ctx, folder, hasHead); err != nil {
-			return nil, err
-		}
-	}
-	status := "untracked"
-	if !hasHead {
-		status = "added" // before the first commit, every file is new
-	}
-	for _, p := range added {
-		c := model.FileChange{Path: p, Status: status}
-		if before, ok := strings.CutSuffix(p, "/"); ok { // git lists a repository inside the folder as a folder
-			c.Path, c.Skipped = before, "a repository of its own"
-		}
-		changes = append(changes, c)
 	}
 	if span.Path != "" {
 		changes = slices.DeleteFunc(changes, func(c model.FileChange) bool { return c.Path != span.Path })
