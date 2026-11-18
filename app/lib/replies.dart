@@ -40,8 +40,10 @@ bool hasReplyMarks(String text) => _markLine.hasMatch(text);
 
 /// A message's text: each reply as `<!-- reply n -->`, its quote as `> `
 /// lines and its text (its lines as written) after a blank line, then
-/// [text]. When the last reply's text has a blank line of its own,
-/// `<!-- end of replies -->` says where the replies end. Replies from the
+/// [text]. `<!-- end of replies -->` says where the replies end whenever
+/// [text] follows them (an agent read the user's own message as more of
+/// the last comment, about that comment's file), and when the last
+/// reply's text has a blank line of its own. Replies from the
 /// same place in a row are a group, its lead ((its `from`)) once before
 /// it, after `<!-- from -->`.
 String withReplies(List<Reply> replies, String text) => [
@@ -58,7 +60,9 @@ String withReplies(List<Reply> replies, String text) => [
       if (r.text.trim().isNotEmpty) '\n\n${r.text.trim()}',
     ].join(),
   ],
-  if (replies.lastOrNull?.text.trim().contains('\n\n') ?? false) _end,
+  if (replies.isNotEmpty &&
+      (text.isNotEmpty || replies.last.text.trim().contains('\n\n')))
+    _end,
   if (text.isNotEmpty) text,
 ].join('\n\n');
 

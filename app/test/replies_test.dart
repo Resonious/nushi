@@ -11,11 +11,20 @@ void main() {
     expect(
       message,
       '<!-- reply 1 -->\n> line one\n> line two\n\nwhy?\n\n'
-      '<!-- reply 2 -->\n> just this\n\nand the rest',
+      '<!-- reply 2 -->\n> just this\n\n'
+      '<!-- end of replies -->\n\nand the rest',
     );
-    // A reply without text followed by text reads as that reply's text;
-    // they show the same.
-    var (got, rest) = splitReplies(withReplies(replies, ''));
+    // The mark says where the replies end, so what follows a reply
+    // without text is the message's own, to an agent as to Nushi.
+    var (got, rest) = splitReplies(message);
+    expect(got, replies);
+    expect(rest, 'and the rest');
+    // One sent before the mark was always there (0.42.0 and older): a
+    // reply without text followed by text reads as that reply's text.
+    (got, rest) = splitReplies('<!-- reply 1 -->\n> just this\n\nthe rest');
+    expect(got, [(quote: 'just this', text: 'the rest', from: '')]);
+    expect(rest, '');
+    (got, rest) = splitReplies(withReplies(replies, ''));
     expect(got, replies);
     expect(rest, '');
     (got, rest) = splitReplies(withReplies(replies.sublist(0, 1), 'a\n\nb'));
@@ -33,7 +42,9 @@ void main() {
       from: '',
     );
     var message = withReplies([lines], 'the rest');
-    expect(message, isNot(contains('end of replies')));
+    expect(message, contains('\n\n<!-- end of replies -->\n\nthe rest'));
+    // None when nothing follows the replies and none has a blank line.
+    expect(withReplies([lines], ''), isNot(contains('end of replies')));
     var (got, rest) = splitReplies(message);
     expect(got, [lines]);
     expect(rest, 'the rest');
@@ -78,7 +89,8 @@ void main() {
       '<!-- reply 2 -->\n> a.go, line 2\n\nDrop it.\n\n'
       '<!-- from -->\n$theirs\n\n'
       '<!-- reply 3 -->\n> Overflow?\n\nAddress it.\n\n'
-      '<!-- reply 4 -->\n> selected text\n\nwhy?\n\nThanks.',
+      '<!-- reply 4 -->\n> selected text\n\nwhy?\n\n'
+      '<!-- end of replies -->\n\nThanks.',
     );
     final (got, rest) = splitReplies(message);
     expect(rest, 'Thanks.');
