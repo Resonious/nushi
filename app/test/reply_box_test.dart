@@ -358,4 +358,44 @@ void main() {
     expect(find.byType(AlertDialog), findsNothing);
     expect(replies.value.single.text, _lines.join('\n'));
   }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
+  testWidgets('a short rule parts a message’s cards from its typed text, '
+      'and the end’s line never shows', (tester) async {
+    const card = (
+      quote: '`cmd/server/main.go`, line 48:\n```go\ntracer := New(\n```',
+      text: 'Should this be tracerClient?',
+      from: 'My review comments on your changes:',
+    );
+    Future<void> show(String message) => tester.pumpWidget(
+      themed(
+        Align(
+          alignment: Alignment.topRight,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: UserMessageText(message),
+            ),
+          ),
+        ),
+      ),
+    );
+    final rule = find.byKey(const ValueKey('replies-end'));
+    await show(withReplies([card], 'Is there anything you would change?'));
+    expect(rule, findsOneWidget);
+    expect(find.textContaining('end of replies'), findsNothing);
+    final comment = tester.getRect(find.text('Should this be tracerClient?'));
+    final typed = tester.getRect(
+      find.text('Is there anything you would change?'),
+    );
+    final at = tester.getRect(rule);
+    expect(at.top, greaterThan(comment.bottom));
+    expect(at.bottom, lessThan(typed.top));
+    await render(tester, find.byType(UserMessageText), 'replies_end_rule');
+    // Cards alone, or text alone: nothing to part.
+    await show(withReplies([card], ''));
+    expect(rule, findsNothing);
+    await show('Just text.');
+    expect(rule, findsNothing);
+  });
 }

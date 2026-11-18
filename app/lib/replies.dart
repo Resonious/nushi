@@ -185,6 +185,18 @@ class UserMessageText extends StatelessWidget {
                 ),
             ],
           ),
+        // Where the cards end and the typed message begins, for the reader
+        // as the end's line is for the agent: a comment's own words and
+        // the message's looked like one run of paragraphs. A short rule: the
+        // bubble is as wide as its widest part, which a full one would be.
+        if (replies.isNotEmpty && rest.isNotEmpty)
+          Container(
+            key: const ValueKey('replies-end'),
+            width: 48,
+            height: 1,
+            color: NushiTheme.of(context).t.userBandMuted
+                .withValues(alpha: 0.6),
+          ),
         if (rest.isNotEmpty)
           AgentMarkdown(rest, typed: true, transcript: true, chips: true),
       ],
