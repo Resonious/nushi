@@ -55,7 +55,7 @@ final String dataDir = Platform.environment.containsKey('FLUTTER_TEST')
     : Platform.environment['NUSHI_DATA'] ?? native.install.dataFolder;
 
 /// The API version this app was built with (`internal/api.Version`).
-const apiVersion = 121;
+const apiVersion = 122;
 
 /// The API from which GetDiff answers one file (GetDiffRequest.path), what
 /// a file preview's change marks are drawn from.
@@ -181,6 +181,7 @@ class Daemon extends ChangeNotifier {
   int _links = 0; // times the daemon was reached anew ([whenBack])
   String daemonVersion = ''; // its release, "" when it isn't one (API 74)
   String daemonOs = ''; // its system, Go's name for it; "" before API 112
+  int daemonPid = 0; // its process's id, as it last said; 0 before API 122
 
   /// The running daemon's build: its program's `<size>-<mtime in ms>`.
   String get daemonBuild => _build;

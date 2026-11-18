@@ -121,6 +121,7 @@ const PingResponse$json = {
       '10': 'update'
     },
     {'1': 'os', '3': 5, '4': 1, '5': 9, '10': 'os'},
+    {'1': 'pid', '3': 6, '4': 1, '5': 5, '10': 'pid'},
   ],
 };
 
@@ -128,7 +129,8 @@ const PingResponse$json = {
 final $typed_data.Uint8List pingResponseDescriptor = $convert.base64Decode(
     'CgxQaW5nUmVzcG9uc2USHwoLYXBpX3ZlcnNpb24YASABKAVSCmFwaVZlcnNpb24SFAoFYnVpbG'
     'QYAiABKAlSBWJ1aWxkEhgKB3ZlcnNpb24YAyABKAlSB3ZlcnNpb24SLQoGdXBkYXRlGAQgASgL'
-    'MhUubnVzaGkudjEuVXBkYXRlQ2hlY2tSBnVwZGF0ZRIOCgJvcxgFIAEoCVICb3M=');
+    'MhUubnVzaGkudjEuVXBkYXRlQ2hlY2tSBnVwZGF0ZRIOCgJvcxgFIAEoCVICb3MSEAoDcGlkGA'
+    'YgASgFUgNwaWQ=');
 
 @$core.Deprecated('Use updateCheckDescriptor instead')
 const UpdateCheck$json = {

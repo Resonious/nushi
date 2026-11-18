@@ -211,15 +211,17 @@ func run() error {
 	srv := &http.Server{Handler: socket, Protocols: new(http.Protocols), ErrorLog: errorLog} //nolint:gosec // a Unix socket in a 0700 folder; clients need the token
 	srv.Protocols.SetUnencryptedHTTP2(true)
 
-	// On SIGINT or SIGTERM, once its app is deleted, or for a restart
-	// into a newer build, stop the agents too: their sessions reopen
-	// through session/load when the daemon is back. The terminals and the
+	// On SIGINT or SIGTERM (the app's stop event on Windows), once its app
+	// is deleted, or for a restart into a newer build, stop the agents
+	// too: their sessions reopen through session/load when the daemon is
+	// back. The terminals and the
 	// dev servers end first: the restart found none running a moment ago,
 	// and ending them before the agents (which take up to stopGrace)
 	// leaves none the time to start.
 	closeChats := sync.OnceFunc(func() { termSvc.CloseAll(); srvSvc.CloseAll(); chatSvc.Close() })
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	watchStopEvent(stop)
 	why, err := serve(srv, ln, stop, restarts.Due(), closeChats)
 	if why != "" {
 		slog.Info("nushid stopping", "why", why)

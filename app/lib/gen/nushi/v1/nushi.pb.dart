@@ -70,6 +70,7 @@ class PingResponse extends $pb.GeneratedMessage {
     $core.String? version,
     UpdateCheck? update,
     $core.String? os,
+    $core.int? pid,
   }) {
     final result = PingResponse._();
     if (apiVersion != null) result.apiVersion = apiVersion;
@@ -77,6 +78,7 @@ class PingResponse extends $pb.GeneratedMessage {
     if (version != null) result.version = version;
     if (update != null) result.update = update;
     if (os != null) result.os = os;
+    if (pid != null) result.pid = pid;
     return result;
   }
 
@@ -99,6 +101,7 @@ class PingResponse extends $pb.GeneratedMessage {
     ..aOM<UpdateCheck>(4, _omitFieldNames ? '' : 'update',
         subBuilder: UpdateCheck.$_createMessage)
     ..aOS(5, _omitFieldNames ? '' : 'os')
+    ..aI(6, _omitFieldNames ? '' : 'pid')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -178,6 +181,18 @@ class PingResponse extends $pb.GeneratedMessage {
   $core.bool hasOs() => $_has(4);
   @$pb.TagNumber(5)
   void clearOs() => $_clearField(5);
+
+  /// Its process's id: the app on Windows stops it by it (its stop event),
+  /// as a Windows Unix socket doesn't name the process at its other end
+  /// (API 122).
+  @$pb.TagNumber(6)
+  $core.int get pid => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set pid($core.int value) => $_setSignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasPid() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearPid() => $_clearField(6);
 }
 
 /// What the daemon's check for a newer release of Nushi found: GitHub's

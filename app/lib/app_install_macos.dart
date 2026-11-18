@@ -84,7 +84,7 @@ class MacAppInstall implements AppInstall {
   }
 
   @override
-  Future<void> stop(String dataDir) async => stopByLsof(dataDir);
+  Future<void> stop(String dataDir, {int pid = 0}) async => stopByLsof(dataDir);
 }
 
 /// Stops the daemon listening in [dir], if one is, through [lsof]. A

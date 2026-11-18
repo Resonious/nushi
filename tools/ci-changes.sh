@@ -13,8 +13,9 @@
 #
 # Docs (docs/, the root's Markdown, LICENSE) are read by no build or test;
 # a Markdown file anywhere else counts by its folder. Go's folders mark go,
-# the app's and the Dart packages' app; app/macos marks both, because the
-# window's Swift tests run in Go's macOS lint job. Anything else (CI, the
+# the app's and the Dart packages' app (app/windows too, which only the
+# Windows app's build reads); app/macos marks both, because the window's
+# Swift tests run in Go's macOS lint job. Anything else (CI, the
 # Makefile, tools, protos, packaging, a path not named here) marks both.
 set -u
 
@@ -75,6 +76,8 @@ docs/remote.md"
 	check "false true" "app/lib/chat_view.dart"
 	check "false true" "app/test/timings.tsv"
 	check "false true" "packages/noise/lib/noise.dart"
+	check "false true" "app/windows/runner/web_views.cpp"
+	check "false true" "app/windows/runner/CMakeLists.txt"
 	check "true true" "app/macos/Runner/Placement.swift"
 	check "true true" ".github/workflows/ci.yml"
 	check "true true" "Makefile"

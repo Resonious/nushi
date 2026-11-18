@@ -6,7 +6,7 @@
 <title>Diagram</title>
 <style>
   html, body { margin: 0; }
-  body { font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; }
+  body { font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", sans-serif; }
   #out { padding: 12px; }
   #out svg { display: block; max-width: 100%; height: auto; }
   .center #out svg { margin: 0 auto; }
@@ -18,8 +18,8 @@
 <body>
 <div id="out"></div>
 <script>
-  // Nushi's page for a Mermaid diagram (lib/mermaid.dart): the Mac's
-  // preview pane and its hidden renderer load it from the app's assets,
+  // Nushi's page for a Mermaid diagram (lib/mermaid.dart): the Mac's and
+  // Windows's preview pane and hidden renderer load it from the app's assets,
   // the phone writes it into its sandboxed frame. show() draws a diagram
   // and says how big it came out, or why it couldn't. Mermaid's strict
   // security level: labels are text, no clicks or links run.
@@ -42,6 +42,9 @@
       themeVariables: opts.background
         ? { edgeLabelBackground: opts.background, labelBackground: opts.background }
         : {},
+      // SVG's own text for labels, not HTML in a foreignObject, which
+      // would taint png()'s canvas.
+      ...(opts.plainLabels ? { htmlLabels: false, flowchart: { htmlLabels: false } } : {}),
     });
     const id = "nushi-diagram-" + ++count;
     try {
@@ -62,6 +65,47 @@
     }
     const r = out.querySelector("svg").getBoundingClientRect();
     return { width: Math.ceil(r.right + 12), height: Math.ceil(r.bottom + 12) };
+  }
+
+  // Windows's hidden renderer (lib/mermaid_windows.dart), whose web view
+  // takes no snapshot of itself: the diagram drawn as show() draws it,
+  // then, on the page's ground and at its padding, onto a canvas at
+  // opts.scale, as base64 PNG with its size in CSS pixels. A diagram too
+  // big for a canvas at that scale is drawn at a smaller one: past
+  // Chromium's limits (32767 pixels a side, 2^28 in all) a canvas is
+  // blank. One that can't be drawn even so says why.
+  const maxSide = 16384, maxArea = 1 << 26;
+  async function png(source, opts) {
+    const drawn = await show(source, { ...opts, plainLabels: true });
+    if (drawn.error) return drawn;
+    const svg = document.querySelector("#out svg");
+    const r = svg.getBoundingClientRect();
+    const copy = svg.cloneNode(true);
+    copy.setAttribute("width", r.width);
+    copy.setAttribute("height", r.height);
+    copy.style.maxWidth = "none";
+    const image = new Image();
+    image.src = "data:image/svg+xml;charset=utf-8," +
+      encodeURIComponent(new XMLSerializer().serializeToString(copy));
+    await image.decode();
+    const scale = Math.min(
+      opts.scale || window.devicePixelRatio || 1,
+      maxSide / drawn.width,
+      maxSide / drawn.height,
+      Math.sqrt(maxArea / (drawn.width * drawn.height)),
+    );
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(drawn.width * scale);
+    canvas.height = Math.ceil(drawn.height * scale);
+    const g = canvas.getContext("2d");
+    g.scale(scale, scale);
+    g.fillStyle = getComputedStyle(document.body).backgroundColor;
+    g.fillRect(0, 0, drawn.width, drawn.height);
+    g.drawImage(image, r.left, r.top, r.width, r.height);
+    const data = canvas.toDataURL("image/png");
+    const base64 = data.slice(data.indexOf(",") + 1);
+    if (!base64) return { error: "The diagram is too big to draw" };
+    return { png: base64, width: drawn.width, height: drawn.height };
   }
 </script>
 </body>

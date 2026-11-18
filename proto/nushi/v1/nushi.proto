@@ -543,6 +543,10 @@ message PingResponse {
   // The system it runs on, as Go names it ("darwin", "linux"): the phone
   // names the computer it's paired with by it (API 112).
   string os = 5;
+  // Its process's id: the app on Windows stops it by it (its stop event),
+  // as a Windows Unix socket doesn't name the process at its other end
+  // (API 122).
+  int32 pid = 6;
 }
 
 // What the daemon's check for a newer release of Nushi found: GitHub's

@@ -104,12 +104,12 @@ class LinuxAppInstall implements AppInstall {
   /// still says nushid after an upgrade replaced its file, where `exe`
   /// would say "(deleted)"), and gets SIGTERM.
   @override
-  Future<void> stop(String dataDir) async {
-    final pid = await socketPeer('$dataDir/nushid.sock');
-    if (pid == null) return;
+  Future<void> stop(String dataDir, {int pid = 0}) async {
+    final peer = await socketPeer('$dataDir/nushid.sock');
+    if (peer == null) return;
     final String comm;
     try {
-      comm = File('$proc/$pid/comm').readAsStringSync().trim();
+      comm = File('$proc/$peer/comm').readAsStringSync().trim();
     } on FileSystemException {
       return; // gone meanwhile
     }
@@ -117,11 +117,11 @@ class LinuxAppInstall implements AppInstall {
       appLog.warn(
         "the daemon's socket is another program's, so none "
         'stopped',
-        {'pid': '$pid', 'program': comm},
+        {'pid': '$peer', 'program': comm},
       );
       return;
     }
-    kill(pid);
+    kill(peer);
   }
 }
 

@@ -172,11 +172,11 @@ Messages waiting in the queue stay held after a failed turn, or one you stopped:
 
 ## Spell check
 
-On the Mac the composer checks spelling as you type, with macOS's own checker, languages and dictionary (Settings › General's Check spelling while typing, on at first). A misspelled word gets a dotted underline once you've moved on from it, by a space, punctuation or the caret; a word isn't judged while the caret's in it. Typos never stop a message going.
+On the Mac the composer checks spelling as you type, with macOS's own checker, languages and dictionary; on Windows with Windows's, in your language (Settings › General's Check spelling while typing, on at first). A misspelled word gets a dotted underline once you've moved on from it, by a space, punctuation or the caret; a word isn't judged while the caret's in it. Typos never stop a message going.
 
 - **Click a flagged word**, or press ⌘; (Chat › Next Typo) to go to the next one after the caret: a menu opens above it with up to four suggestions, Ignore and Add to dictionary. ⏎ takes the first suggestion and 1–4 take that one; esc closes, and any other key closes it and carries on. ⌘Z undoes a suggestion, which keeps the word's capital.
 - **Right-click a flagged word** for the same, over Cut, Copy and Paste.
-- **Ignore** lasts until Nushi quits, in every chat. **Add to dictionary** goes in the macOS user dictionary, which every app shares.
+- **Ignore** lasts until Nushi quits, in every chat. **Add to dictionary** goes in the macOS user dictionary, or Windows's for your language, which every app shares.
 - **Left alone**: anything in backticks or fences, paths, URLs, words starting with `/ @ # ~ $ -`, anything with digits, dots, underscores or colons in it, camelCase and ALLCAPS, words under three letters, capitalized words mid-sentence (probably names; one starting a sentence is checked), and any word of the agent's messages in this chat, which covers the project's own. A hyphenated word is checked part by part. A prompt past 20,000 characters is checked up to there.
 
 A subagent's box, a reply box and a review comment aren't checked.

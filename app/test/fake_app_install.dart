@@ -29,11 +29,17 @@ class FakeAppInstall implements AppInstall {
   /// The data folders it was asked to stop the daemon of, in order.
   final stopped = <String>[];
 
+  /// The pids it was given with each stop, in order.
+  final stoppedPids = <int>[];
+
   @override
   Future<void> launch(String dataDir) async => launched.add(dataDir);
 
   @override
-  Future<void> stop(String dataDir) async => stopped.add(dataDir);
+  Future<void> stop(String dataDir, {int pid = 0}) async {
+    stopped.add(dataDir);
+    stoppedPids.add(pid);
+  }
 }
 
 /// The test's [FakeAppInstall] (`flutter_test_config.dart` puts one in

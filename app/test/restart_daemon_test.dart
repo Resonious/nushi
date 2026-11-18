@@ -46,22 +46,30 @@ void main() {
     expect((d.connected, phase), (true, 'new'));
   });
 
-  test('a restart stops the daemon of the data folder and starts the '
-      'packaged one once it has gone', () async {
+  test('a restart stops the daemon of the data folder, by the pid it '
+      'says just then, and starts the packaged one once it has gone', () async {
     fakeInstall.daemon = '/opt/nushi/lib/nushid';
     var phase = 'old';
+    var pid = 4242;
     final fake = FakeDaemon([])
       ..answer = (input) => switch (input) {
         PingRequest() when phase == 'gone' => throw ConnectException(
           Code.unavailable,
           'no daemon',
         ),
-        PingRequest() => PingResponse(apiVersion: apiVersion, build: phase),
+        PingRequest() => PingResponse(
+          apiVersion: apiVersion,
+          build: phase,
+          pid: pid,
+        ),
         _ => null,
       };
     final d = Daemon(transport: fake);
     addTearDown(d.dispose);
     await _connected(d);
+    // It restarted itself since the last ping: the pid that ping gave
+    // names no daemon now.
+    pid = 5151;
     Future<void>.delayed(
       const Duration(milliseconds: 100),
       () => phase = 'gone',
@@ -72,6 +80,7 @@ void main() {
     );
     await d.restartDaemon();
     expect(fakeInstall.stopped, [dataDir]);
+    expect(fakeInstall.stoppedPids, [5151]);
     expect(fakeInstall.launched, [dataDir]);
   });
 
@@ -99,6 +108,48 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
     expect(error, isA<StateError>());
     d.dispose();
+  });
+
+  // As above, but the daemon restarted itself into a newer build since the
+  // last ping: the build it's compared with is the one just before the
+  // stop, so a stop that did nothing is still said.
+  testWidgets('a daemon that restarted itself and then never stops is said', (
+    tester,
+  ) async {
+    var build = 'old';
+    final fake = FakeDaemon([])
+      ..answer = (input) => input is PingRequest
+          ? PingResponse(apiVersion: apiVersion, build: build, pid: 7)
+          : null;
+    final d = Daemon(transport: fake);
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(d.connected, isTrue);
+    build = 'newer';
+    Object? error;
+    unawaited(d.restartDaemon().then((_) {}, onError: (Object e) => error = e));
+    await tester.pump(const Duration(seconds: 11));
+    expect(error, isA<StateError>());
+    d.dispose();
+  });
+
+  test("a failed ping forgets the daemon's pid", () async {
+    var up = true;
+    final fake = FakeDaemon([])
+      ..answer = (input) => switch (input) {
+        PingRequest() when !up => throw ConnectException(
+          Code.unavailable,
+          'no daemon',
+        ),
+        PingRequest() => PingResponse(apiVersion: apiVersion, pid: 4242),
+        _ => null,
+      };
+    final d = Daemon(transport: fake);
+    addTearDown(d.dispose);
+    await _connected(d);
+    expect(d.daemonPid, 4242);
+    up = false;
+    expect(await d.ping(), isFalse);
+    expect(d.daemonPid, 0);
   });
 
   test(

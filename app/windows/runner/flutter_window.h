@@ -6,6 +6,7 @@
 
 #include <memory>
 
+#include "web_views.h"
 #include "win32_window.h"
 
 // A window that does nothing but host a Flutter view.
@@ -28,6 +29,9 @@ class FlutterWindow : public Win32Window {
 
   // The Flutter instance hosted by this window.
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
+
+  // The app's web views (ADR 0134), over the Flutter view.
+  std::unique_ptr<WebViews> web_views_;
 };
 
 #endif  // RUNNER_FLUTTER_WINDOW_H_

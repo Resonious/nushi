@@ -31,7 +31,7 @@ import (
 )
 
 // Version is the API version reported by Ping. Bump it when methods are added.
-const Version = 121
+const Version = 122
 
 // Release is the version a release build stamps in (make package's
 // VERSION, through -ldflags -X), "" in a build that isn't packaged
@@ -209,8 +209,14 @@ func WithToken(token string, h http.Handler) http.Handler {
 	})
 }
 
-func (s *server) Ping(context.Context, *connect.Request[nushiv1.PingRequest]) (*connect.Response[nushiv1.PingResponse], error) {
-	return connect.NewResponse(&nushiv1.PingResponse{ApiVersion: Version, Build: Build(), Version: Release, Update: s.update(), Os: runtime.GOOS}), nil
+// Ping says which daemon answers; its pid only on the socket, for the app
+// on Windows to stop it by (a paired device has nothing to stop).
+func (s *server) Ping(ctx context.Context, _ *connect.Request[nushiv1.PingRequest]) (*connect.Response[nushiv1.PingResponse], error) {
+	var pid int32
+	if d, _ := ctx.Value(deviceKey{}).(string); d == "" {
+		pid = int32(os.Getpid()) // a pid is below 2^31 on macOS, Linux (pid_max) and Windows
+	}
+	return connect.NewResponse(&nushiv1.PingResponse{ApiVersion: Version, Build: Build(), Version: Release, Update: s.update(), Os: runtime.GOOS, Pid: pid}), nil
 }
 
 func (s *server) RestartWhenIdle(context.Context, *connect.Request[nushiv1.RestartWhenIdleRequest]) (*connect.Response[nushiv1.RestartWhenIdleResponse], error) {

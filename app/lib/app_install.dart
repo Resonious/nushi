@@ -25,8 +25,8 @@ abstract interface class AppInstall {
   /// sentence's clause.
   String get stopByHand;
 
-  /// Whether [stop] stops the daemon: where it can't (Windows, so far),
-  /// nothing offers to restart it ([restartsDaemon]).
+  /// Whether [stop] stops the daemon: where it can't, nothing offers to
+  /// restart it ([restartsDaemon]).
   bool get canStop;
 
   /// Starts the packaged [daemon] on [dataDir] in the background, where it
@@ -35,8 +35,9 @@ abstract interface class AppInstall {
   Future<void> launch(String dataDir);
 
   /// Stops the daemon listening in [dataDir], if one is; it doesn't wait
-  /// for it to go.
-  Future<void> stop(String dataDir);
+  /// for it to go. [pid] is the daemon's own, as its Ping said (API 122; 0
+  /// before), which Windows stops it by: its socket doesn't name it.
+  Future<void> stop(String dataDir, {int pid = 0});
 }
 
 /// Restart daemon, where the app offers it.

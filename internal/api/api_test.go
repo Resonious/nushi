@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"runtime"
 	"strings"
 	"testing"
@@ -58,8 +59,8 @@ func TestPingNeedsToken(t *testing.T) {
 	}
 }
 
-// Ping says the release a packaged daemon was stamped with, and the system
-// it runs on.
+// Ping says the release a packaged daemon was stamped with, the system it
+// runs on, and on the socket its pid.
 func TestPingSaysTheRelease(t *testing.T) {
 	defer func(r string) { Release = r }(Release)
 	Release = "1.2.0-beta.1"
@@ -68,7 +69,7 @@ func TestPingSaysTheRelease(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if r.Msg.GetVersion() != "1.2.0-beta.1" || r.Msg.GetApiVersion() != Version || r.Msg.GetOs() != runtime.GOOS {
+	if r.Msg.GetVersion() != "1.2.0-beta.1" || r.Msg.GetApiVersion() != Version || r.Msg.GetOs() != runtime.GOOS || int(r.Msg.GetPid()) != os.Getpid() {
 		t.Errorf("ping: %v", r.Msg)
 	}
 }

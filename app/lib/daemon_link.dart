@@ -62,11 +62,13 @@ extension DaemonLink on Daemon {
     var build = '';
     var version = '';
     var os = '';
+    var pid = 0;
     var found = UpdateCheck();
     try {
       // A daemon that hangs counts as gone, rather than stalling the pings.
       final r = await client.ping(PingRequest()).timeout(wait);
       (api, build, version, os) = (r.apiVersion, r.build, r.version, r.os);
+      pid = r.pid;
       found = r.update;
       pingError = null;
     } on Object catch (e) {
@@ -77,6 +79,8 @@ extension DaemonLink on Daemon {
     }
     final ok = api > 0;
     if (ok) _launcher.launches = 0;
+    // 0 when it failed: the pid a gone daemon said may be another's now.
+    daemonPid = pid;
     if (ok && !remote) _sawUpdate(found);
     if (ok && _events == null) _subscribe();
     if (ok && (!connected || build != _build)) macView.forget();
@@ -178,8 +182,12 @@ extension DaemonLink on Daemon {
       'restarting the daemon',
       attrs: {'build': _build, 'bundled': ?bundled},
     );
+    // The daemon may have restarted itself since the last ping (into the
+    // bundled one, when idle): its pid and build now, not that ping's, so
+    // a stop that does nothing isn't taken for the new one answering.
+    await ping();
     final before = _build;
-    await native.install.stop(dataDir);
+    await native.install.stop(dataDir, pid: daemonPid);
     // The first ping that fails starts the bundled daemon.
     _launcher.launched = DateTime(0);
     for (var i = 0; i < 50 && connected; i++) {

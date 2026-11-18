@@ -8,19 +8,21 @@
 # Windows; and the Linux app (ADR 0104): every other app test file, in three shards, and its package built on each
 # architecture as the release builds it (tools/release.sh's linux part, on the oldest Ubuntu it supports, for the glibc
 # it needs), installed and started on a virtual display (tools/linux-smoke.sh), with the runner's channels tested for
-# real on amd64 (tools/linux-channels.sh). tools/test-shards says which app test files are whose and splits each set by
+# real on amd64 (tools/linux-channels.sh); Windows for the daemon's Windows-only tests and the Windows app's build
+# (its C++ runner compiled, ADR 0125). tools/test-shards says which app test files are whose and splits each set by
 # app/test/timings.tsv, slowest first (ADR 0129); a shard's count is its matrix's, nowhere else. The ACP library,
 # github.com/afrase/acp-go, has its own CI. Actions are pinned by commit.
 #
 # A push or a pull request runs only the jobs its change can affect (the changes job, tools/ci-changes.sh): a docs-only
-# change none, a Go-only one all but the golden shards, an app-only one all but Go's four jobs. Anything else, and any
-# path it can't place, runs everything; the release counts only a run that skipped nothing (release.yml).
+# change none, a Go-only one all but the golden shards and the Windows app's build, an app-only one all but Go's four
+# jobs. Anything else, and any path it can't place, runs everything; the release counts only a run that skipped nothing
+# (release.yml).
 #
 # Each job's timeout is two to three times its longest recent run with warm caches (2026-11-16: Go's tests on macOS 4.1
 # minutes, the web 2.4 on Linux, Linux's Go 3), room for a cold cache's downloads and builds: a hung test ends there, not
 # at GitHub's six hours on a scarce macOS runner. The app's shards: 15, over twice their longest by time (5.7 minutes,
-# 2026-11-16; 25 when a macOS shard ran every other file and took up to 13). Windows' and the Linux package's (a cold
-# Flutter build) are as they were.
+# 2026-11-16; 25 when a macOS shard ran every other file and took up to 13). Windows', the Linux package's and the Windows
+# app's (a cold Flutter build) are as they were, or as the nearest job's.
 name: CI
 
 on:
@@ -358,9 +360,9 @@ jobs:
 
   windows:
     # The Windows-only tests run on Windows itself (ADR 0124): the processes' job objects and handles, the data
-    # folder's DACL, batch-file shims, locks, logs, the shell's environment and Claude's history there; every
-    # package's tests build there too, but the rest assume Unix. The daemon is built as the app runs it. Unmeasured
-    # yet: 20 until it has run.
+    # folder's DACL, the app's stop event (ADR 0134), batch-file shims, locks, logs, the shell's environment and
+    # Claude's history there; every package's tests build there too, but the rest assume Unix. The daemon is built as
+    # the app runs it. Unmeasured yet: 20 until it has run.
     name: Go on Windows
     needs: changes
     if: needs.changes.outputs.go == 'true'
@@ -385,7 +387,29 @@ jobs:
         run: |
           go test ./internal/procgroup ./internal/filelock ./internal/logs ./internal/shellenv ./internal/batchfile ./internal/terminal ./internal/proctree ./internal/listeners ./internal/footprint
           go test -run 'TestAlive|TestOpenWindows' ./internal/claudehistory
-          go test -run 'TestOwnDataFolder|TestWTDefaultLine|TestMachineFragment' ./cmd/nushid
+          go test -run 'TestOwnDataFolder|TestWTDefaultLine|TestMachineFragment|TestStopEvent' ./cmd/nushid
+
+  # The Windows app built (ADR 0125), build only: CI's one compile of its C++ runner (WebView2's host, ADR 0134),
+  # whose first build fetches WebView2's pinned SDK. Nothing of it runs here. Unmeasured yet: 30, as the Linux
+  # package's cold build.
+  windows-app:
+    name: App build (Windows)
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.NUSHI_FLUTTER_VERSION }}
+          cache: true
+      - working-directory: app
+        run: flutter build windows
 
   linux-app:
     name: App tests (Linux, ${{ matrix.shard }}/${{ strategy.job-total }})

@@ -1,32 +1,36 @@
 import 'package:nushi/browser_page.dart';
 import 'package:nushi/diagram_page.dart';
+import 'package:nushi/diagram_page_windows.dart';
 import 'package:nushi/outside_page.dart';
 import 'package:nushi/preview_entry.dart';
 import 'package:nushi/shell_windows.dart';
 import 'package:nushi/web_page.dart';
+import 'package:nushi/web_page_windows.dart';
 import 'package:nushi/web_views.dart';
 
-/// Windows's web views, none yet (ADR 0125; WebView2 later): as on Linux,
-/// a file's preview and a browser tab are placeholders
-/// (`outside_page.dart`) whose button opens the page in the default
-/// browser. That browser is the program Windows associates with https,
+/// Windows's web views (ADR 0125, 0134): a file's preview and a Mermaid
+/// file's diagram show in WebView2s of the runner's
+/// (`web_page_windows.dart`, `diagram_page_windows.dart`); a browser tab
+/// is still a placeholder (`outside_page.dart`) whose button opens the
+/// page in the default browser, and so is a preview without the WebView2
+/// runtime. That browser is the program Windows associates with https,
 /// given the address itself, so a `file:` page is shown by the browser,
-/// never run by the program its type has (as on the Mac and Linux). A
-/// Mermaid file shows its source.
+/// never run by the program its type has (as on the Mac and Linux).
 class WindowsWebViews implements WebViews {
   const new();
 
+  /// Not yet: browser tabs open outside, so a link does too (ADR 0134).
   @override
   bool get embedded => false;
 
   @override
-  PageHost page() => OutsidePage();
+  PageHost page() => WindowsPage();
 
   @override
   BrowserHost tab(BrowserTab tab) => OutsideTab(tab);
 
   @override
-  DiagramHost? diagram() => null;
+  DiagramHost diagram() => WindowsDiagram();
 
   /// Only http, https and file, as the Mac's and Linux's.
   @override
