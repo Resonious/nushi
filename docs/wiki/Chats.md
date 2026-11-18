@@ -153,6 +153,16 @@ When the agent asks permission to run something, or asks a question, the chat **
 
 Nushi never answers for you.
 
+### See every option of an answered question
+
+Once you answer, the question card shrinks to your answers. To see everything it offered:
+
+1. Click the answered card's title line, or the chevron at its end.
+2. Each question shows in full with all its options; the ones you chose are marked, the rest are greyed.
+3. Click the line again to close it.
+
+Skipped questions open the same way. Nothing in the open card can be clicked to change an answer.
+
 ## Get notified
 
 Nushi notifies you when a chat needs you, a turn ends, or a turn fails. Click one to open its chat. Pick which you get, and the sound, in **Settings › General › Notifications**.

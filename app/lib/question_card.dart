@@ -7,13 +7,10 @@ import 'package:nushi/cards.dart';
 import 'package:nushi/draft.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/keys.dart';
+import 'package:nushi/question_answered.dart';
 import 'package:nushi/question_parts.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
-
-/// One question of a form: a field with options, or a text field, and the
-/// free-text "Other" field the daemon pairs with it, if any.
-typedef _Question = ({Field field, Field? other});
 
 /// The agent's question form, one question at a time as in Claude Code.
 /// Several questions get a tab each (a check once answered) and a last
@@ -50,22 +47,10 @@ class _QuestionCardState extends State<QuestionCard> {
   Map<String, List<String>> get _picked => _draft.picked; // by field id
   Map<String, TextEditingController> get _text => _draft.text;
   final _focus = FocusNode();
-  late final List<_Question> _qs = _questions(widget.item.fields);
+  late final List<AskedQuestion> _qs = askedQuestions(widget.item.fields);
   int get _tab => _draft.tab; // the question shown; _qs.length is Submit
   set _tab(int v) => _draft.tab = v;
   int _at = 0; // the option ↑/↓ are on
-
-  static List<_Question> _questions(List<Field> fields) {
-    final out = <_Question>[];
-    for (final f in fields) {
-      if (f.otherFor.isNotEmpty && out.lastOrNull?.field.id == f.otherFor) {
-        out.last = (field: out.last.field, other: f);
-      } else {
-        out.add((field: f, other: null));
-      }
-    }
-    return out;
-  }
 
   @override
   void initState() {
@@ -122,7 +107,7 @@ class _QuestionCardState extends State<QuestionCard> {
   ];
 
   /// The answer to [q] in words, or ''.
-  String _said(_Question q) => [
+  String _said(AskedQuestion q) => [
     for (final id in _picked[q.field.id] ?? const <String>[])
       q.field.options.firstWhere((o) => o.id == id).name,
     for (final f in [q.field, ?q.other])
@@ -213,8 +198,17 @@ class _QuestionCardState extends State<QuestionCard> {
     final theme = NushiTheme.of(context);
     final t = theme.t;
     final item = widget.item;
-    // Answered, it settles into its answered lines (SettleCard).
+    // Answered, it settles into its answered lines (SettleCard), which
+    // open to every option it offered when it kept them.
     if (item.status != 'pending') {
+      if (AnsweredQuestion.opens(item)) {
+        return SettleCard(
+          state: false,
+          decoration: cardBox(t),
+          padding: AnsweredQuestion.padding,
+          child: AnsweredQuestion(item),
+        );
+      }
       return SettleCard(
         state: false,
         decoration: cardBox(t),
@@ -297,7 +291,7 @@ class _QuestionCardState extends State<QuestionCard> {
     );
   }
 
-  List<Widget> _question(NushiTheme theme, _Question q) {
+  List<Widget> _question(NushiTheme theme, AskedQuestion q) {
     final t = theme.t;
     final f = q.field;
     final picked = _picked[f.id] ?? const [];

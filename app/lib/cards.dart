@@ -90,11 +90,20 @@ class SettleCard extends StatefulWidget {
     required this.state,
     required this.child,
     super.key,
+    this.padding = SettleCard.inset,
   });
 
   final BoxDecoration decoration;
   final Object state;
   final Widget child;
+
+  /// Between the card's edge and [child]: [inset], or less where a row of
+  /// the child carries the rest as its own (a header's hover tint that
+  /// reaches past its words, as the answered question's).
+  final EdgeInsets padding;
+
+  /// A card's padding.
+  static const inset = EdgeInsets.symmetric(horizontal: 16, vertical: 14);
 
   @override
   State<SettleCard> createState() => _SettleCardState();
@@ -133,7 +142,7 @@ class _SettleCardState extends State<SettleCard> with ClockRun {
       child: widget.child,
     );
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: widget.padding,
       decoration: _box(widget.decoration),
       child: Marks(
         child: EaseSize(
