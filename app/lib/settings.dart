@@ -36,7 +36,8 @@ import 'package:nushi/tile_picture.dart';
 /// each project's own sort, and sections, the models picked last, each
 /// repository's merge method, each chat's pinned artifacts, and the Mac's
 /// notifications and Dock badge, the appearance and the color theme,
-/// whether the composer checks spelling, whether a chat's links open in a
+/// whether the composer checks spelling, whether the plan pinned over it
+/// shows collapsed, whether a chat's links open in a
 /// browser tab and which sites there may reach the local network, whether a
 /// preview's source wraps its lines and shows its whitespace,
 /// what reply cards ask the agent, the pull request each chat's tab shows,
@@ -476,6 +477,11 @@ final Pref<bool> dockBadge = _plain('dockBadge', true);
 /// Whether the Mac's composer checks spelling (ADR 0083): off, it asks
 /// nothing and flags nothing.
 final Pref<bool> checkSpelling = _plain('checkSpelling', true);
+
+/// Whether the plan pinned over the composer shows collapsed, its summary
+/// line alone (ADR 0135); every chat's, the Mac's only (the phone's opens
+/// collapsed).
+final Pref<bool> planCollapsed = _plain('planCollapsed', false);
 
 /// Whether a web link the user clicks in a chat (its messages, its tool
 /// calls' output) to this Mac or the local network opens in a browser tab

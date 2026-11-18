@@ -110,6 +110,16 @@ No need to wait for the agent to finish. Type your message, then:
 
 Press **Esc**, or click the round red **Stop** button at the end of the box's row. Queued messages wait until you send again.
 
+## Follow the agent's plan
+
+When the agent keeps a to-do list, its plan stays over the box until every step is done, so you always see where it is, even after the turn ends: "Plan · 2 of 5 done", a bar, and the steps with a dot on the one being worked on.
+
+- **To make it one line**, click the plan's bottom line (or press Enter on it). Collapsed, it shows the count and the step being worked on. Click it again to see every step.
+- Your choice holds for every chat, and after you quit.
+- On the phone the plan shows as one line. Tap it to see the steps.
+
+In the conversation, the plan's place says "shown over the box" while it's there. Once it's done or a new plan replaces it, its card shows there again.
+
 ## Follow a workflow
 
 Claude can run a workflow: a script that has many helpers work in phases, in the background. Its card shows where Claude started it, and the chat counts as working until it ends.

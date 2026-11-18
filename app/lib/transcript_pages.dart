@@ -176,3 +176,23 @@ double? topOfChild(RenderFlex column, int i) {
   }
   return (child?.parentData as FlexParentData?)?.offset.dy;
 }
+
+/// What keeps the first of [column]'s children in sight where it is, as
+/// one above it changes height: by how far its top moved in the layout
+/// that changes it, the list's offset into the column being [top]. Null
+/// when none is in sight. For `BottomFollower.shift`.
+double Function()? holdFirstInView(RenderFlex column, double top) {
+  var child = column.firstChild;
+  for (var i = 0; child != null; i++) {
+    final at = (child.parentData! as FlexParentData).offset.dy;
+    if (at + child.size.height > top) {
+      final row = i;
+      return () => switch (topOfChild(column, row)) {
+        final now? => now - at,
+        null => 0.0,
+      };
+    }
+    child = column.childAfter(child);
+  }
+  return null;
+}

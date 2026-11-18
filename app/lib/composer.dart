@@ -20,7 +20,7 @@ import 'package:nushi/keys.dart';
 import 'package:nushi/motion.dart';
 import 'package:nushi/pasted_files.dart';
 import 'package:nushi/pickers.dart';
-import 'package:nushi/plan_view.dart';
+import 'package:nushi/pinned_plan.dart';
 import 'package:nushi/queue.dart';
 import 'package:nushi/replies.dart';
 import 'package:nushi/rewind_picker.dart';
@@ -552,12 +552,8 @@ class _ComposerState extends State<Composer> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // The lines over the box grow in and fold away (grow.dart).
-                GrowLine(
-                  child: switch (turnPlan(chat.items)) {
-                    final plan? when chat.busy => PlanStatus(plan),
-                    _ => null,
-                  },
-                ),
+                // Over the queue and the box, as Claude Code's to-dos.
+                PinnedPlan(chat),
                 GrowLine(
                   child: chat.queue.isEmpty
                       ? null

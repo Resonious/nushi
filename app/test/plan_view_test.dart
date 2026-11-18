@@ -124,23 +124,6 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('the line over the box crossfades to the next step', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_app(PlanStatus(running)));
-    expect(find.text('1/3'), findsOneWidget);
-
-    await tester.pumpWidget(_app(PlanStatus(merged)));
-    await tester.pump(const Duration(milliseconds: 60));
-    expect(find.text('2/3'), findsOneWidget); // the count at once
-    expect(find.text('Merging the duplicates'), findsOneWidget);
-    expect(find.text('Writing an index'), findsOneWidget);
-
-    await tester.pumpAndSettle();
-    expect(find.text('Merging the duplicates'), findsNothing);
-    expect(find.text('Writing an index'), findsOneWidget);
-  });
-
   for (final (name, tokens) in [
     ('light', Tokens.light),
     ('dark', Tokens.dark),
@@ -163,8 +146,7 @@ void main() {
           tokens: tokens,
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 12,
-            children: [PlanView(plan, _chat(plan)), PlanStatus(plan)],
+            children: [PlanView(plan, _chat(plan))],
           ),
         ),
       );

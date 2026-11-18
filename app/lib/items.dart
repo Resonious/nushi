@@ -120,7 +120,7 @@ class ItemView extends StatelessWidget {
       case ItemKind.ITEM_KIND_THOUGHT:
         return ThoughtView(item, live: live);
       case ItemKind.ITEM_KIND_PLAN:
-        return PlanView(item, chat);
+        return PlanView(item, chat, pinnable: true);
       case ItemKind.ITEM_KIND_NOTICE
           when item.status == 'compacted' || item.status == 'history_differs':
         return HistoryMark(item, agent: chat.agentName);

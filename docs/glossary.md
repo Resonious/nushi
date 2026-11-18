@@ -23,7 +23,7 @@ Nushi's words, defined once. The UI, the code and the docs use them; a new user-
 | **Tool call** | The agent's use of a tool (read, edit, run…), shown as a **tool row**: one line on a card's fill, its icon in the tools' color (red once it failed), a spinner at its end while it runs; open, its output on code's surface. | `ToolCall` item, `ToolCallView` | |
 | **Run** | Tool rows in a row, folded into one line: "Read 4 files, running make test", with what its edits added and removed; open, a card of its calls' rows. | `RunView`, `RunLine` | |
 | **Thought** | The agent's thinking: "Thinking…", then "Thought for 12s". | `Thought`, `ThoughtLine` | |
-| **Plan** | The agent's checklist on a card, updated in place: "Plan · 2 of 5 done", and that count as a thin bar. | `Plan`, `PlanEntry`, `plan_view.dart` | |
+| **Plan** | The agent's checklist on a card, updated in place: "Plan · 2 of 5 done", and that count as a thin bar. The chat's latest plan with steps not done is pinned over the composer, collapsible to one line; its card in the transcript is a line meanwhile. | `Plan`, `PlanEntry`, `plan_view.dart`, `PinnedPlan`, pref `planCollapsed` | 0135 |
 | **Notice** | A quiet line in the transcript: how a turn ended when it didn't end well, or a note of the agent's own ("Stopped by safeguards", "Compacted here"). | `Notice`, `AgentNotice` | |
 | **Permission prompt** | The agent asking to run a tool call, with its options (Allow, Deny…). You answer; Nushi never does. | `Permission` item, `PermissionCard`, `AnswerPermission` | 0007 |
 | **Question** | A form the agent asks you to fill in (Claude's AskUserQuestion), as a question card. | `Question` item, `Field`, `QuestionCard`, `AnswerQuestion` | 0009 |

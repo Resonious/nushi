@@ -17,21 +17,33 @@ import 'package:nushi/theme/theme.dart';
 /// step to come is a quiet ring. A plan the chat opened with shows still,
 /// and so does one whose turn has ended. With Reduce Motion only colors
 /// change: the check is whole at once, and nothing shines or rings.
+///
+/// In its chat's own transcript ([pinnable]), the plan pinned over the
+/// composer ([pinnedPlan], ADR 0135) is a line saying so in the card's
+/// place, and becomes the card once it's pinned no longer.
 class PlanView extends StatefulWidget {
-  const new(this.item, this.chat, {super.key});
+  const new(this.item, this.chat, {super.key, this.pinnable = false});
 
   final Item item;
   final ChatState chat;
+
+  /// Whether it's a line in its card's place while it's the pinned plan.
+  final bool pinnable;
 
   @override
   State<PlanView> createState() => _PlanViewState();
 }
 
 class _PlanViewState extends State<PlanView> {
-  late bool _working = _isWorking();
+  late bool _working = planWorking(widget.chat, widget.item);
+  late bool _pinned = _isPinned();
+  int _revision = -1; // the chat's items when [_pinned] was worked out
 
-  bool _isWorking() =>
-      widget.chat.busy && turnPlan(widget.chat.items)?.id == widget.item.id;
+  bool _isPinned() {
+    _revision = widget.chat.revision;
+    return widget.pinnable &&
+        pinnedPlan(widget.chat.items)?.id == widget.item.id;
+  }
 
   @override
   void initState() {
@@ -46,7 +58,8 @@ class _PlanViewState extends State<PlanView> {
       old.chat.removeListener(_changed);
       widget.chat.addListener(_changed);
     }
-    _working = _isWorking();
+    _working = planWorking(widget.chat, widget.item);
+    _pinned = _isPinned();
   }
 
   @override
@@ -55,10 +68,18 @@ class _PlanViewState extends State<PlanView> {
     super.dispose();
   }
 
-  // Every streamed chunk notifies: only a change of working rebuilds.
+  // Every streamed chunk notifies: only a change of working or of the
+  // pinned plan rebuilds, and the pinned one is looked for again only once
+  // the items changed.
   void _changed() {
-    final working = _isWorking();
-    if (working != _working) setState(() => _working = working);
+    final working = planWorking(widget.chat, widget.item);
+    final pinned = widget.chat.revision == _revision ? _pinned : _isPinned();
+    if (working != _working || pinned != _pinned) {
+      setState(() {
+        _working = working;
+        _pinned = pinned;
+      });
+    }
   }
 
   @override
@@ -66,7 +87,19 @@ class _PlanViewState extends State<PlanView> {
     final theme = NushiTheme.of(context);
     final t = theme.t;
     final plan = widget.item.plan;
-    final done = plan.where((e) => e.status == 'completed').length;
+    if (_pinned) {
+      // Where the plan was made, while it shows over the composer.
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          spacing: 10,
+          children: [
+            Icon(Icons.checklist, size: 15, color: t.textMuted),
+            Expanded(child: PlanTitle(plan, more: ' · shown over the box')),
+          ],
+        ),
+      );
+    }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
@@ -83,44 +116,73 @@ class _PlanViewState extends State<PlanView> {
               spacing: 10,
               children: [
                 Icon(Icons.checklist, size: 15, color: t.textSecondary),
-                Expanded(
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'Plan',
-                          style: theme.ui(t.text, weight: FontWeight.w600),
-                        ),
-                        TextSpan(text: ' · $done of ${plan.length} done'),
-                      ],
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.ui(t.textMuted),
-                  ),
-                ),
-                if (plan.isNotEmpty) _Progress(done / plan.length),
+                Expanded(child: PlanTitle(plan)),
+                if (plan.isNotEmpty) PlanProgress(plan),
               ],
             ),
           ),
-          for (final e in plan) _Step(e.content, e.status, working: _working),
+          for (final e in plan)
+            PlanStep(e.content, e.status, working: _working),
         ],
       ),
     );
   }
 }
 
-/// How much of a plan is done, [part] of 1, as a thin bar with round ends.
-class _Progress extends StatelessWidget {
-  const new(this.part);
+/// How many of [plan]'s steps are done.
+int planDone(List<PlanEntry> plan) =>
+    plan.where((e) => e.status == 'completed').length;
 
-  final double part;
+/// "Plan · 2 of 4 done", the plan's name and count on one line, cut short
+/// at its end; [short], "Plan · 2/4", for a narrow line; [more] after it,
+/// muted as the count.
+class PlanTitle extends StatelessWidget {
+  const new(this.plan, {super.key, this.short = false, this.more = ''});
+
+  final List<PlanEntry> plan;
+  final bool short;
+  final String more;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = NushiTheme.of(context);
+    final t = theme.t;
+    final done = planDone(plan);
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: 'Plan',
+            style: theme.ui(t.text, weight: FontWeight.w600),
+          ),
+          TextSpan(
+            text: short
+                ? ' · $done/${plan.length}$more'
+                : ' · $done of ${plan.length} done$more',
+          ),
+        ],
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: theme.ui(t.textMuted),
+    );
+  }
+}
+
+/// How much of [plan] is done, as a thin bar with round ends, [width]
+/// long.
+class PlanProgress extends StatelessWidget {
+  const new(this.plan, {super.key, this.width = 120});
+
+  final List<PlanEntry> plan;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
     final t = NushiTheme.of(context).t;
+    final part = plan.isEmpty ? 0.0 : planDone(plan) / plan.length;
     return Container(
-      width: 120,
+      width: width,
       height: 6,
       clipBehavior: Clip.antiAlias,
       alignment: Alignment.centerLeft,
@@ -142,23 +204,32 @@ class _Progress extends StatelessWidget {
   }
 }
 
-/// One step of a plan: its mark and its words, by its status.
-class _Step extends StatefulWidget {
-  const new(this.content, this.status, {required this.working});
+/// One step of a plan: its mark and its words, by its status; [oneLine],
+/// its words on one line cut short at their end (the pinned plan's
+/// collapsed line), otherwise wrapped.
+class PlanStep extends StatefulWidget {
+  const new(
+    this.content,
+    this.status, {
+    required this.working,
+    super.key,
+    this.oneLine = false,
+  });
 
   final String content;
   final String status;
   final bool working;
+  final bool oneLine;
 
   @override
-  State<_Step> createState() => _StepState();
+  State<PlanStep> createState() => _PlanStepState();
 }
 
-class _StepState extends State<_Step> with ClockRun {
+class _PlanStepState extends State<PlanStep> with ClockRun {
   static const _size = 16.0;
 
   @override
-  void didUpdateWidget(_Step old) {
+  void didUpdateWidget(PlanStep old) {
     super.didUpdateWidget(old);
     if (old.status != 'completed' &&
         widget.status == 'completed' &&
@@ -194,12 +265,15 @@ class _StepState extends State<_Step> with ClockRun {
       ),
       _ => _Ring(t.textMuted),
     };
+    final one = widget.oneLine;
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: 10,
+      crossAxisAlignment: one
+          ? CrossAxisAlignment.center
+          : CrossAxisAlignment.start,
+      spacing: one ? 8 : 10,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 1),
+          padding: EdgeInsets.only(top: one ? 0 : 1),
           child: CustomPaint(size: const Size.square(_size), painter: mark),
         ),
         Expanded(
@@ -213,6 +287,8 @@ class _StepState extends State<_Step> with ClockRun {
               'in_progress' => theme.ui(t.text, weight: FontWeight.w500),
               _ => theme.ui(t.textSecondary),
             },
+            maxLines: one ? 1 : null,
+            overflow: one ? TextOverflow.ellipsis : TextOverflow.clip,
             child: Shine(
               on: widget.status == 'in_progress' && widget.working,
               child: Text(widget.content),
@@ -244,58 +320,30 @@ class _Ring extends CustomPainter {
   bool shouldRepaint(_Ring old) => old.color != color;
 }
 
-/// The current step of the turn's plan, one line above the composer while
-/// the agent works, as the plan itself may have scrolled away. The step
-/// crossfades to the next over [Motion.quick]; the count changes at once.
-class PlanStatus extends StatelessWidget {
-  const new(this.plan, {super.key});
-
-  final Item plan;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = NushiTheme.of(context);
-    final t = theme.t;
-    final entries = plan.plan;
-    final done = entries.where((e) => e.status == 'completed').length;
-    final now = entries.where((e) => e.status == 'in_progress').firstOrNull;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
-        spacing: 8,
-        children: [
-          Icon(Icons.checklist, size: 14, color: t.textSecondary),
-          Text(
-            '$done/${entries.length}',
-            style: theme.ui(t.textSecondary, size: 12),
-          ),
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: Motion.quick,
-              layoutBuilder: (current, previous) => Stack(
-                alignment: Alignment.centerLeft,
-                children: [...previous, ?current],
-              ),
-              child: Text(
-                now?.content ?? '',
-                key: ValueKey(now?.content),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.ui(t.text, size: 12),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+/// Whether the agent works on [plan] now: its chat's turn runs and the
+/// plan is the turn's.
+bool planWorking(ChatState chat, Item plan) =>
+    chat.busy && turnPlan(chat.items)?.id == plan.id;
 
 /// The plan of the current turn (since the last prompt), if any.
 Item? turnPlan(List<Item> items) {
   for (final it in items.reversed) {
     if (it.kind == ItemKind.ITEM_KIND_USER_MESSAGE) return null;
     if (it.kind == ItemKind.ITEM_KIND_PLAN) return it;
+  }
+  return null;
+}
+
+/// The plan pinned over the composer (ADR 0135): the chat's latest plan
+/// while a step of it isn't done, whichever turn made it. The daemon keeps
+/// one plan a turn, updated in place, and a later turn's plan is a new
+/// item only once it changed (`planLocked`), so the latest is the one the
+/// agent works to; a plan whose every step is done is pinned no longer.
+/// Only what the chat has loaded is looked in.
+Item? pinnedPlan(List<Item> items) {
+  for (final it in items.reversed) {
+    if (it.kind != ItemKind.ITEM_KIND_PLAN) continue;
+    return planDone(it.plan) < it.plan.length ? it : null;
   }
   return null;
 }

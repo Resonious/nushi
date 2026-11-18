@@ -16,6 +16,7 @@ import 'package:nushi/items.dart';
 import 'package:nushi/jump_chip.dart';
 import 'package:nushi/message_pins.dart';
 import 'package:nushi/motion.dart';
+import 'package:nushi/plan_view.dart';
 import 'package:nushi/pull_link.dart';
 import 'package:nushi/pull_live_card.dart';
 import 'package:nushi/rail.dart';
@@ -106,6 +107,12 @@ class _TranscriptState extends State<Transcript> {
   // down by their height in the same layout, so what shows stays put.
   List<String> _laidKeys = const [];
   bool _hadHeader = false;
+
+  // The plan pinned over the composer (pinnedPlan), as of the items'
+  // revision: its card shows here once it's pinned no longer, a line in
+  // its place till then.
+  String? _pinnedPlan;
+  int _planRevision = -1;
 
   // The first item of the first entry at the last build: a page that comes
   // in above it fills in a few frames, as the chat does when it opens. An
@@ -233,6 +240,32 @@ class _TranscriptState extends State<Transcript> {
       };
       return;
     }
+  }
+
+  /// As the pinned plan changes, its card in the list becomes a line or the
+  /// line a card (PlanView): what the reader looks at stays where it is,
+  /// unless the list follows its bottom, which it then keeps.
+  void _planMoves() {
+    final chat = widget.chat;
+    if (widget.items != null || chat.revision == _planRevision) return;
+    final first = _planRevision < 0;
+    _planRevision = chat.revision;
+    final pinned = pinnedPlan(chat.items)?.id;
+    if (pinned == _pinnedPlan) return;
+    _pinnedPlan = pinned;
+    if (first ||
+        _follower.following ||
+        _follower.gliding ||
+        _follower.shift != null ||
+        !_follower.scroll.hasClients) {
+      return;
+    }
+    final column = _column.currentContext?.findRenderObject();
+    if (column is! RenderFlex) return;
+    _follower.shift = holdFirstInView(
+      column,
+      _follower.scroll.position.pixels - _padTop,
+    );
   }
 
   /// A page that came in above what's built builds over the next frames,
@@ -551,6 +584,7 @@ class _TranscriptState extends State<Transcript> {
       _restore = null;
       _laidKeys = const [];
       _firstItem = null;
+      _planRevision = -1; // another chat's plan: nothing to hold
       if (widget.items == null) _follower.follow();
       _openAtKept();
       if (_follower.following || _restore != null) {
@@ -828,6 +862,7 @@ class _TranscriptState extends State<Transcript> {
     }
     _laidOut = entries.sublist(from);
     _keepPlace(_laidOut, header: header != null);
+    _planMoves();
     if (_goTo != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _go());
     }
