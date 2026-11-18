@@ -256,7 +256,59 @@ void main() {
       expect(chat.draft.text.text, 'please check this ');
       expect(_open(tester, chat), isFalse);
       expect(sentPrompts(), isEmpty);
-      expect(_selected(chat), const TextSelection.collapsed(offset: 12));
+      // The caret is back at the text's end, where ⌘; found it.
+      expect(_selected(chat), const TextSelection.collapsed(offset: 18));
+    });
+
+    spellTest('a fix from ⌘; puts the caret back where it was: before the '
+        'word as it was, after it moved by what the fix added', (tester) async {
+      final (_, chat) = await spellBox(tester, _speller());
+      await typed(tester, 'chekc and thrid then more ');
+      // Before the second word: nothing before the caret changes.
+      chat.draft.text.selection = const TextSelection.collapsed(offset: 7);
+      await tester.pump();
+      await _next(tester, chat);
+      await _key(tester, LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.enter);
+      expect(chat.draft.text.text, 'chekc and third then more ');
+      expect(_selected(chat), const TextSelection.collapsed(offset: 7));
+      // After the word (⌘; wraps to it): the caret keeps its place in the
+      // text, which is as long as before here, then two words on.
+      chat.draft.text.selection = const TextSelection.collapsed(offset: 20);
+      await tester.pump();
+      await _next(tester, chat);
+      expect(
+        _selected(chat),
+        const TextSelection(baseOffset: 0, extentOffset: 5),
+      );
+      await _key(tester, LogicalKeyboardKey.digit1);
+      await tester.pumpAndSettle();
+      expect(chat.draft.text.text, 'check and third then more ');
+      expect(_selected(chat), const TextSelection.collapsed(offset: 20));
+    });
+
+    spellTest('Ignore and Esc from ⌘; put the caret back too; a click on a '
+        'word keeps it at the word', (tester) async {
+      final (_, chat) = await spellBox(tester, _speller());
+      await typed(tester, 'chekc and thrid ');
+      chat.draft.text.selection = const TextSelection.collapsed(offset: 16);
+      await tester.pump();
+      await _next(tester, chat);
+      await _key(tester, LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(_open(tester, chat), isFalse);
+      expect(_selected(chat), const TextSelection.collapsed(offset: 16));
+      await _next(tester, chat);
+      await tester.tap(find.text('Ignore'));
+      await tester.pumpAndSettle();
+      expect(_selected(chat), const TextSelection.collapsed(offset: 16));
+      // By a click the caret is the writer's own: after the fixed word.
+      await _clickWord(tester, chat, 'thrid');
+      await _key(tester, LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(chat.draft.text.text, 'chekc and third ');
+      expect(_selected(chat), const TextSelection.collapsed(offset: 15));
     });
 
     spellTest("⏎ held after it's used doesn't send", (tester) async {

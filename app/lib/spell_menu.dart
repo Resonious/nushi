@@ -138,6 +138,26 @@ class SpellMenu extends ChangeNotifier {
     controller.close();
   }
 
+  /// Where the caret was when ⌘; went looking for a word, while its menu is
+  /// up: the fix, Ignore, Add or Esc puts it back there, so a word fixed
+  /// from the keyboard doesn't take the writer's place with it. A click on
+  /// a word leaves none: the caret is then where the writer put it.
+  TextSelection? _back;
+
+  /// The caret back where ⌘; found it ([_back]), [delta] further on when
+  /// the text before it grew by that much from [from]; else at [otherwise].
+  void _return(int otherwise, {int from = 0, int delta = 0}) {
+    final back = _back;
+    _back = null;
+    var at = otherwise;
+    if (back != null && back.isValid) {
+      at = back.end > from ? back.end + delta : back.end;
+    }
+    _text.selection = TextSelection.collapsed(
+      offset: at.clamp(0, _text.text.length),
+    );
+  }
+
   /// Replaces [w] with [fix], unless the text moved on; ⌘Z undoes it.
   void take(SpellWord w, String fix) {
     close();
@@ -148,18 +168,28 @@ class SpellMenu extends ChangeNotifier {
         text: text.replaceRange(w.start, w.end, fix),
         selection: TextSelection.collapsed(offset: w.start + fix.length),
       );
+      // A caret inside or after the word moves with the text after it.
+      _return(
+        w.start + fix.length,
+        from: w.start,
+        delta: fix.length - w.word.length,
+      );
       spell.settle();
+    } else {
+      _back = null;
     }
     spell.focus.requestFocus();
   }
 
   /// Ignores [w], or with [add] adds it to the dictionary, with the caret
-  /// after it.
+  /// after it, or back where ⌘; found it.
   void allow(SpellWord w, {required bool add}) {
     close();
     spell.allow(w.word, add: add);
     if (w.end <= _text.text.length) {
-      _text.selection = TextSelection.collapsed(offset: w.end);
+      _return(w.end);
+    } else {
+      _back = null;
     }
     spell.focus.requestFocus();
   }
@@ -178,6 +208,7 @@ class SpellMenu extends ChangeNotifier {
     if (_modifiers.contains(key)) return false;
     if (key == LogicalKeyboardKey.escape) {
       close();
+      if (_back != null) _return(_text.selection.end);
       return true;
     }
     if (isSendKey(e)) {
@@ -191,6 +222,7 @@ class SpellMenu extends ChangeNotifier {
       take(w, fixes[n]);
       return true;
     }
+    _back = null; // typed over, or ⌘; again, which keeps its own
     close();
     return false;
   }
@@ -203,12 +235,15 @@ class SpellMenu extends ChangeNotifier {
   /// the word being typed judged too.
   Future<void> next() async {
     if (!spell.fixable) return;
+    // From word to word the caret to go back to stays the first's.
+    final back = word != null && controller.isOpen ? _back : null;
     close();
+    final sel = _text.selection;
     await spell.judgeAll();
     final all = _text.marks;
     if (_disposed || all.isEmpty) return;
-    final sel = _text.selection;
     final from = sel.isValid ? sel.end : 0;
+    _back = back ?? (sel.isValid ? sel : null);
     await open(all.firstWhere((w) => w.start >= from, orElse: () => all.first));
   }
 
@@ -216,6 +251,7 @@ class SpellMenu extends ChangeNotifier {
   /// its menu has them when it shows.
   void pressed(PointerDownEvent e) {
     _pressedAt = e.position;
+    _back = null; // the caret goes where the pointer puts it
     if (e.buttons != kSecondaryButton) return;
     if (_flaggedAt(e.position) case final w?) unawaited(_fixesOf(w.word));
   }
