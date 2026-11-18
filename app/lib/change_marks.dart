@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import 'package:nushi/hover_card.dart';
+import 'package:nushi/line_base.dart';
 import 'package:nushi/line_changes.dart';
 import 'package:nushi/run_state.dart';
 import 'package:nushi/theme/theme.dart';
@@ -96,12 +97,17 @@ class _ChangeMarkState extends State<ChangeMark> {
 
   @override
   Widget build(BuildContext context) {
-    final branch = MarksAgainst.branchOf(context);
+    final against = MarksAgainst.maybeOf(context);
     return HoverCard(
       showOnTap: true,
       above: 300,
       around: _around,
-      card: (_) => ChangeCard(marks: widget.cell.marks, branch: branch),
+      card: (_) => ChangeCard(
+        marks: widget.cell.marks,
+        from: against?.from ?? MarksFrom.lastCommit,
+        against: against?.against ?? '',
+        isNew: against?.isNew ?? false,
+      ),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: CustomPaint(
@@ -164,32 +170,68 @@ class _MarkPainter extends CustomPainter {
       old.cell != cell || old.x != x || old.t != t;
 }
 
-/// What a file's change marks below it count from (ADR 0131): the text
-/// before the chat's branch ([branch]), or the last commit's.
+/// What a file's change marks below it count from (ADR 0131): [from]
+/// ([against] the branch, for [MarksFrom.branch]), and whether the file is
+/// new against it ([isNew]), so its cards say so.
 class MarksAgainst extends InheritedWidget {
-  const new({required this.branch, required super.child, super.key});
+  const new({
+    required super.child,
+    super.key,
+    this.from = MarksFrom.lastCommit,
+    this.against = '',
+    this.isNew = false,
+  });
 
-  final bool branch;
+  /// [lines]'s answer, for the view under it.
+  new of(LineBase lines, {required Widget child, Key? key})
+    : this(
+        key: key,
+        from: lines.from,
+        against: lines.against,
+        isNew: lines.isNew,
+        child: child,
+      );
 
-  /// Whether the marks at [context] count from before the branch; false
-  /// with none above.
-  static bool branchOf(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<MarksAgainst>()?.branch ??
-      false;
+  final MarksFrom from;
+  final String against;
+  final bool isNew;
+
+  /// The one above [context]; the last commit, with none above.
+  static MarksAgainst? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<MarksAgainst>();
 
   @override
-  bool updateShouldNotify(MarksAgainst old) => old.branch != branch;
+  bool updateShouldNotify(MarksAgainst old) =>
+      old.from != from || old.against != against || old.isNew != isNew;
 }
 
 /// A change mark's card: what the base had at its lines, read-only (not a
-/// diff): "Before this branch" ([branch]) or "Before" (the last commit)
-/// over a changed run's old lines, "N lines removed" over a removed run's,
-/// "New lines" for an added run.
+/// diff): "Before this branch", "Before this chat" or "Before" (the last
+/// commit), by [from], over a changed run's old lines, "N lines removed"
+/// over a removed run's, "New lines" for an added run, and "New file"
+/// when the whole file is new ([isNew]).
 class ChangeCard extends StatelessWidget {
-  const new({required this.marks, super.key, this.branch = false});
+  const new({
+    required this.marks,
+    super.key,
+    this.from = MarksFrom.lastCommit,
+    this.against = '',
+    this.isNew = false,
+  });
 
   final List<LineMark> marks;
-  final bool branch;
+  final MarksFrom from;
+  final String against;
+  final bool isNew;
+
+  /// What an added run's line under its title says: where it isn't.
+  String _added() => switch ((from, isNew)) {
+    (MarksFrom.branch, false) => 'Added on this branch',
+    (MarksFrom.branch, true) => 'Not in ${baseName(against)}',
+    (MarksFrom.chat, false) => 'Added since this chat began',
+    (MarksFrom.chat, true) => 'Made since this chat began',
+    (MarksFrom.lastCommit, _) => 'Not in the last commit',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -197,8 +239,13 @@ class ChangeCard extends StatelessWidget {
     final t = theme.t;
     final code = theme.code(t.text, size: 12);
     String title(LineMark m) => switch (m.kind) {
+      MarkKind.added when isNew => 'New file',
       MarkKind.added => m.count == 1 ? 'New line' : 'New lines',
-      MarkKind.changed => branch ? 'Before this branch' : 'Before',
+      MarkKind.changed => switch (from) {
+        MarksFrom.branch => 'Before this branch',
+        MarksFrom.chat => 'Before this chat',
+        MarksFrom.lastCommit => 'Before',
+      },
       MarkKind.removed =>
         m.old.length == 1 ? '1 line removed' : '${m.old.length} lines removed',
     };
@@ -245,12 +292,7 @@ class ChangeCard extends StatelessWidget {
                     ),
                   ),
                   if (m.kind == MarkKind.added)
-                    Text(
-                      branch
-                          ? 'Added on this branch'
-                          : 'Not in the last commit',
-                      style: theme.ui(t.textMuted, size: 12),
-                    )
+                    Text(_added(), style: theme.ui(t.textMuted, size: 12))
                   else
                     _OldLines(m.old, style: code),
                 ],

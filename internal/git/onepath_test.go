@@ -224,3 +224,48 @@ func TestChangesOfOnePathOnABranch(t *testing.T) {
 		t.Error("a base that isn't a branch answered")
 	}
 }
+
+// TestOnePathFromBeforeAChatsCommits is a file's change marks for a chat
+// on main itself, with two commits of its own (ADR 0131's amendment): the
+// app names the parent of the oldest commit made since the chat began
+// ("<hash>^", from Commits) as the base, so both commits and what's
+// uncommitted count, and the user's commit before the chat doesn't.
+func TestOnePathFromBeforeAChatsCommits(t *testing.T) {
+	ctx := t.Context()
+	repo := t.TempDir()
+	testcheck.Git(t, repo, "init", "-q", "-b", "main")
+	commit := func(text, message string) {
+		t.Helper()
+		write(t, filepath.Join(repo, "a.txt"), text)
+		testcheck.Git(t, repo, "add", "-A")
+		testcheck.Git(t, repo, "commit", "-q", "-m", message)
+	}
+	commit("one\n", "the user's")
+	commit("one\ntwo\n", "the chat's first")
+	commit("one\ntwo\nthree\n", "the chat's second")
+	write(t, filepath.Join(repo, "a.txt"), "one\ntwo\nthree\nfour\n")
+
+	commits, err := Commits(ctx, repo, "", "", 50)
+	testcheck.NoErr(t, err)
+	if len(commits) != 3 || commits[1].Subject != "the chat's first" {
+		t.Fatalf("commits: %+v", commits)
+	}
+	got, err := Changes(ctx, repo, Span{Base: commits[1].Hash + "^", Path: "a.txt"})
+	testcheck.NoErr(t, err)
+	want := []model.FileChange{{Path: "a.txt", Status: "modified", Old: "one\n", New: "one\ntwo\nthree\nfour\n", Added: 3}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("from the first one's parent =\n%+v\nwant\n%+v", got, want)
+	}
+	// From the last commit, as before, only what's uncommitted.
+	got, err = Changes(ctx, repo, Span{Path: "a.txt"})
+	testcheck.NoErr(t, err)
+	if len(got) != 1 || got[0].Old != "one\ntwo\nthree\n" {
+		t.Errorf("from the last commit: %+v", got)
+	}
+
+	// The chat's first commit the repository's first: it has no parent, so
+	// it's refused, and the app asks again of the last commit.
+	if _, err := Changes(ctx, repo, Span{Base: commits[2].Hash + "^", Path: "a.txt"}); err == nil {
+		t.Error("the first commit's parent answered")
+	}
+}

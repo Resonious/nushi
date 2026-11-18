@@ -1,0 +1,151 @@
+import 'package:flutter/material.dart';
+
+import 'package:nushi/chat.dart' show relativeIn;
+import 'package:nushi/chat_files.dart' show chatWrote;
+import 'package:nushi/controls.dart';
+import 'package:nushi/file_view.dart';
+import 'package:nushi/line_base.dart';
+import 'package:nushi/preview.dart' show PreviewKind;
+import 'package:nushi/theme/theme.dart';
+import 'package:nushi/widgets.dart' show showError;
+
+// The Files pane's path row's one word on the shown file's change marks
+// (ADR 0131): what they count from and how many lines, that the file is
+// new, that it's unchanged, or why there are none; so a file with the
+// tree's dot never opens to an unexplained blank gutter.
+
+/// What the path row says of a file's marks: `label` in a [NotePill] of
+/// `tone`, `tip` its tooltip; `toSource` makes it the way to the source
+/// view, where the marks are, from a rendered view.
+typedef MarksWord = ({String label, NoteTone tone, String tip, bool toSource});
+
+/// [lines]'s word for the path row, null for none: nothing until the
+/// first answer, and for a file the chat didn't write ([wrote] false) only
+/// a count of changed lines or New file, as "No changes" and why there
+/// are no marks would be noise on every file opened. [rendered] is a
+/// rendered view that has a source to switch to (Markdown, CSV, HTML),
+/// where marks can't show: a count or New file leads to the source.
+/// [reformatted] is a source shown other than as saved (JSON
+/// pretty-printed), whose lines aren't marked.
+MarksWord? marksWord(
+  LineBase lines, {
+  required bool wrote,
+  bool rendered = false,
+  bool reformatted = false,
+}) {
+  if (!lines.loaded) return null;
+  if (lines.none case final none?) {
+    if (!wrote) return null;
+    return (
+      label: none.label,
+      tone: switch (none) {
+        NoMarks.failed => NoteTone.crashed,
+        NoMarks.oldDaemon => NoteTone.needs,
+        _ => NoteTone.quiet,
+      },
+      tip: switch (none) {
+        NoMarks.notRepository =>
+          'Change marks come from git, and this folder has no repository',
+        NoMarks.ignored =>
+          'Git ignores it (.gitignore), so has nothing to compare it with',
+        NoMarks.link => 'A symbolic link: git keeps the link, not the file',
+        NoMarks.binary => 'Only text has change marks',
+        NoMarks.tooLarge => 'Change marks stop at 1 MiB',
+        NoMarks.tooManyLines => 'Change marks stop at 10,000 lines',
+        NoMarks.otherRepository => 'A repository inside this one',
+        NoMarks.oldDaemon =>
+          'The daemon running is older than this app: restart Nushi',
+        NoMarks.failed =>
+          lines.error.isEmpty ? 'Click for the error' : lines.error,
+      },
+      toSource: false,
+    );
+  }
+  final since = lines.since;
+  if (lines.isNew) {
+    return (
+      label: 'New file',
+      tone: NoteTone.done,
+      tip: rendered
+          ? 'Every line is new $since: view source to see them marked'
+          : 'Every line is new $since',
+      toSource: rendered,
+    );
+  }
+  final n = lines.changed;
+  if (n == 0) {
+    if (!wrote) return null;
+    return (
+      label: 'No changes $since',
+      tone: NoteTone.quiet,
+      tip: 'The chat wrote it, but it’s the same as it was',
+      toSource: false,
+    );
+  }
+  return (
+    label: '$n changed ${n == 1 ? 'line' : 'lines'} $since',
+    tone: NoteTone.accent,
+    tip: rendered
+        ? 'View source to see the changed lines marked'
+        : reformatted
+        ? 'Shown reformatted, so its lines aren’t marked'
+        : 'Marked beside the lines; click a mark for what was there',
+    toSource: rendered,
+  );
+}
+
+/// The shown file's [marksWord] as a [NotePill], kept current; a quiet
+/// "Comparing…" while the first answer takes more than a moment; a
+/// failure's pill shows the daemon's words.
+class MarksNote extends StatelessWidget {
+  const new({required this.shown, super.key});
+
+  final ShownFile shown;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: Listenable.merge([
+      shown.lines,
+      shown.source,
+      shown.watch,
+      shown.chat.editsChanged,
+    ]),
+    builder: (context, _) {
+      // A picture or a PDF shows no text, so has no gutter to explain.
+      if (shown.kind == PreviewKind.image || shown.kind == PreviewKind.pdf) {
+        return const SizedBox.shrink();
+      }
+      final chat = shown.chat;
+      final wrote = chatWrote(chat)
+          .contains(relativeIn(chat.folder, shown.path));
+      final lines = shown.lines;
+      if (lines.slow && wrote) {
+        final theme = NushiTheme.of(context);
+        return Text(
+          'Comparing…',
+          maxLines: 1,
+          style: theme.ui(theme.t.textMuted, size: 12),
+        );
+      }
+      final word = marksWord(
+        lines,
+        wrote: wrote,
+        rendered: !shown.showsSource && shown.switches,
+        reformatted: shown.reformatted,
+      );
+      if (word == null) return const SizedBox.shrink();
+      final failed = lines.none == NoMarks.failed && lines.error.isNotEmpty;
+      return NotePill(
+        word.label,
+        tone: word.tone,
+        tip: word.tip,
+        trailing: word.toSource ? Icons.chevron_right : null,
+        onTap: word.toSource
+            ? () => shown.showSource(on: true)
+            : failed
+            ? () => showError(context, lines.error)
+            : null,
+      );
+    },
+  );
+}

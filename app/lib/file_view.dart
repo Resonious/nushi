@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -8,10 +10,11 @@ import 'package:nushi/diagram_page.dart';
 import 'package:nushi/edit_bars.dart';
 import 'package:nushi/file_edit.dart';
 import 'package:nushi/file_text.dart';
-import 'package:nushi/line_changes.dart';
+import 'package:nushi/line_base.dart';
 import 'package:nushi/native.dart';
 import 'package:nushi/preview.dart';
 import 'package:nushi/preview_marks.dart';
+import 'package:nushi/preview_text.dart' show prettyJson;
 import 'package:nushi/settings.dart' show indentGuides, scrollPastEnd, tabSize;
 import 'package:nushi/skills_list.dart';
 import 'package:nushi/source_editor.dart';
@@ -42,9 +45,11 @@ final class ShownFile {
   final FileWatch watch;
   final PreviewKind kind;
 
-  /// Its last commit's text, its source's change marks drawn against
-  /// (ADR 0131).
+  /// Its text before the chat's work, its source's change marks drawn
+  /// against, and what its path row says of them (ADR 0131).
   late final LineBase lines;
+
+  (String, bool)? _pretty; // whether a version, by its sha, is reformatted
 
   /// The web view of a page, or the diagram's, by its kind.
   late final PageHost? page;
@@ -108,6 +113,26 @@ final class ShownFile {
   bool get showsSource =>
       kind == PreviewKind.code && !watch.notText ||
       kind.rendered && (source.value || !switches);
+
+  /// Whether its source shows other than as saved, so has no change
+  /// marks: JSON shown read-only is pretty-printed (`SourceView`).
+  bool get reformatted {
+    final f = watch.file;
+    if (edit != null ||
+        f == null ||
+        f.missing ||
+        !showsSource ||
+        !path.toLowerCase().endsWith('.json')) {
+      return false;
+    }
+    if (_pretty case (final sha, final pretty) when sha == f.sha256) {
+      return pretty;
+    }
+    final text = utf8.decode(f.data, allowMalformed: true);
+    final pretty = prettyJson(text).trimRight() != text.trimRight();
+    _pretty = (f.sha256, pretty);
+    return pretty;
+  }
 
   /// Shows its Source, or its rendering again.
   void showSource({required bool on}) {
@@ -240,8 +265,8 @@ class _FileViewState extends State<FileView> {
                     scrollPastEnd,
                     shown.lines,
                   ]),
-                  builder: (context, _) => MarksAgainst(
-                    branch: shown.lines.branch,
+                  builder: (context, _) => MarksAgainst.of(
+                    shown.lines,
                     child: PreviewBody(
                       watch: shown.watch,
                       source: shown.source.value,

@@ -1,6 +1,6 @@
 # 0131. Change marks in a file's source
 
-Status: accepted, 2026-11-17; amended 2026-11-18 (the marks count from the chat's branch base).
+Status: accepted, 2026-11-17; amended 2026-11-18 (the marks count from the chat's branch base; a dotted file never opens blank).
 
 ## Context
 The owner: "I see the green dot and want to know what changed. I don't think we need a diff but just to know which lines changed." The tree's dot says only that the chat wrote a file; to see what changed meant opening Changes and finding the file.
@@ -20,6 +20,14 @@ The owner, a day in: "I tried the change thing, it showed for a bit then now it 
 - **The last commit, as before**, where there's no branch base: HEAD on the base branch itself, no base found, outside a repository, a file outside the chat's folder, or a base the file's own repository lacks (a nested one; the daemon refuses it, and the app asks again without it).
 - **The card says which**: "Before this branch" over a changed run's old lines and "Added on this branch" under "New lines" when counted from the branch; "Before" and "Not in the last commit" otherwise. A file the branch added (committed or untracked) is new against the base: **New file**, no marks.
 - **Refresh**: the file's text against the base as before (a file change, a turn's end, a commit, the folder or the worktree's base changing: one GetDiff); the base itself is found again (one GetFolderStatus) only at a turn's end or when the folder or worktree changes, as the branch checked out may have changed then, as Branch reloads.
+
+## Amendment, 2026-11-18 (later): a dotted file never opens blank
+The owner, twice: "It shows the green dot but no line changes." and "You see I'm on a file with the green dot but there are no changes in the file when I click it." Every way a file with the dot showed no marks did so silently.
+
+- **A chat on the default branch** counts from before its own commits: the parent (`<hash>^`, GetDiff's `base`, whose merge base with HEAD is that commit) of the oldest of the branch's latest commits (ListCommits, its last 50) made since the chat began (`Chat.created_unix_ms`). With none, the last commit, as before. The daemon doesn't know whose a commit is, so a commit of the user's on that branch while the chat lives counts too; no API change. The base is found again on a commit made in the app too, as it can be the chat's first. A first commit with no parent is refused, and the app asks of the last commit.
+- **A new file** (untracked, or added against the base) has the empty text as its base: every line has the added bar, its card says **New file** and where it isn't ("Not in main"), and its path row's pill says **New file** (`done` on `doneSoft`).
+- **The path row says one thing**, a `NotePill` between the path and its buttons, cut after the path is and never moving them: "5 changed lines since main", "… since this chat began", "… since the last commit" (lines added, changed and removed, in the file as saved), **New file**, and for a file the chat wrote "No changes since main" or why there are none: Not in a git repository, Ignored by git, a link, not text, too large, over 10,000 lines, a repository of its own, an older daemon (amber), or Couldn't compare with git (red; a click shows git's words). A file the chat didn't write gets only the count or New file. A rendered Markdown, CSV or HTML view's pill leads to the source, where the marks are. While the first answer takes more than `Waits.slow`, a quiet "Comparing…"; nothing before. A picture or a PDF says nothing: it has no gutter.
+- Still one GetDiff a refresh; the base search adds one ListCommits beside GetFolderStatus, only when the chat is on its base branch.
 
 ## Consequences
 - A detached HEAD counts from where it left the base, as Branch does.

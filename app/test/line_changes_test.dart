@@ -1,11 +1,14 @@
 import 'dart:convert';
 
 import 'package:connectrpc/connect.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/line_base.dart';
 import 'package:nushi/line_changes.dart';
+import 'package:nushi/motion.dart';
 import 'package:nushi/preview.dart';
 
 import 'fake_daemon.dart';
@@ -164,36 +167,153 @@ void main() {
       await end(tester);
     });
 
-    for (final (what, change, isNew) in [
-      ('untracked', FileChange(status: 'untracked'), true),
-      ('added', FileChange(status: 'added'), true),
-      (
-        'ignored',
-        FileChange(status: 'untracked', skipped: 'not tracked'),
-        false,
-      ),
-      ('a link', FileChange(status: 'modified', skipped: 'a link'), false),
-      ('binary', FileChange(status: 'modified', skipped: 'binary'), false),
-      ('deleted', FileChange(status: 'deleted'), false),
-    ]) {
-      testWidgets('$what: no base, new $isNew', (tester) async {
-        await start(tester, path: 'a.go', change: change..path = 'a.go');
-        expect(lines.value, isNull);
-        expect(lines.isNew, isNew);
+    for (final what in ['untracked', 'added']) {
+      testWidgets('$what: new, its base empty, every line added', (
+        tester,
+      ) async {
+        await start(
+          tester,
+          path: 'a.go',
+          change: FileChange(path: 'a.go', status: what),
+        );
+        expect(lines.value, '');
+        expect(lines.isNew, isTrue);
+        expect(lines.none, isNull);
+        expect(lines.changed, 5);
+        expect(lineMarks(lines.value!, _base), [
+          const LineMark(MarkKind.added, 0, 5),
+        ]);
         await end(tester);
       });
     }
 
-    testWidgets('not in a repository: no base', (tester) async {
+    for (final (what, change, why) in [
+      (
+        'ignored',
+        FileChange(status: 'untracked', skipped: 'not tracked'),
+        NoMarks.ignored,
+      ),
+      (
+        'a link',
+        FileChange(status: 'modified', skipped: 'a link'),
+        NoMarks.link,
+      ),
+      (
+        'binary',
+        FileChange(status: 'modified', skipped: 'binary'),
+        NoMarks.binary,
+      ),
+      (
+        'too large',
+        FileChange(status: 'modified', skipped: 'too large'),
+        NoMarks.tooLarge,
+      ),
+      (
+        'a submodule',
+        FileChange(status: 'modified', skipped: 'a submodule'),
+        NoMarks.otherRepository,
+      ),
+      (
+        'unreadable',
+        FileChange(status: 'modified', skipped: 'unreadable'),
+        NoMarks.failed,
+      ),
+      ('deleted', FileChange(status: 'deleted'), NoMarks.failed),
+    ]) {
+      testWidgets('$what: no base, and why', (tester) async {
+        await start(tester, path: 'a.go', change: change..path = 'a.go');
+        expect(lines.value, isNull);
+        expect(lines.isNew, isFalse);
+        expect(lines.none, why);
+        expect(lines.loaded, isTrue);
+        await end(tester);
+      });
+    }
+
+    testWidgets('not in a repository: no base, and says so', (tester) async {
       await start(
         tester,
         change: ConnectException(
           Code.failedPrecondition,
-          'not a git repository',
+          '/Users/me/nushi/src is not in a git repository',
         ),
       );
       expect(lines.value, isNull);
       expect(lines.isNew, isFalse);
+      expect(lines.none, NoMarks.notRepository);
+      await end(tester);
+    });
+
+    testWidgets("a failure: no base, the daemon's words kept", (tester) async {
+      await start(
+        tester,
+        change: ConnectException(Code.unavailable, 'the daemon went'),
+      );
+      expect(lines.value, isNull);
+      expect(lines.none, NoMarks.failed);
+      expect(lines.error, contains('the daemon went'));
+      await end(tester);
+    });
+
+    testWidgets('the same as its base: no changes, counted none', (
+      tester,
+    ) async {
+      await start(tester);
+      expect(lines.value, _base);
+      expect(lines.none, isNull);
+      expect(lines.changed, 0);
+      await end(tester);
+    });
+
+    testWidgets('a modified file counts its lines added, changed and '
+        'removed', (tester) async {
+      await start(
+        tester,
+        path: 'a.go',
+        text: 'one\nTWO\nthree\nnew a\nnew b\nfour\n',
+        change: FileChange(path: 'a.go', status: 'modified', oldText: _base),
+      );
+      // One changed, two added, one removed.
+      expect(lines.changed, 4);
+      await end(tester);
+    });
+
+    testWidgets('past 10,000 lines: no marks, and why', (tester) async {
+      final long = '${List.filled(10001, 'x').join('\n')}\n';
+      await start(
+        tester,
+        path: 'a.go',
+        text: long,
+        change: FileChange(path: 'a.go', status: 'modified', oldText: 'x\n'),
+      );
+      expect(lines.value, isNull);
+      expect(lines.none, NoMarks.tooManyLines);
+      await end(tester);
+    });
+
+    testWidgets('a slow first answer says so after a moment; nothing '
+        'before', (tester) async {
+      await start(
+        tester,
+        path: 'a.go',
+        answer: (input) => input is GetDiffRequest
+            ? Future<Object?>.delayed(
+                const Duration(seconds: 1),
+                GetDiffResponse.new,
+              )
+            : null,
+      );
+      // start's settling waited the answer out: ask again from afresh.
+      lines.dispose();
+      lines = LineBase(d, c, watch);
+      await tester.pump(Waits.slow ~/ 2);
+      expect(lines.slow, isFalse);
+      await tester.pump(Waits.slow);
+      expect(lines.slow, isTrue);
+      expect(lines.loaded, isFalse);
+      await tester.pump(const Duration(seconds: 1));
+      expect(lines.slow, isFalse);
+      expect(lines.loaded, isTrue);
       await end(tester);
     });
 
@@ -292,7 +412,7 @@ void main() {
         );
         expect(_asked(fake).single.base, 'dev');
         expect(lines.value, 'old\n');
-        expect(lines.branch, isTrue);
+        expect(lines.from, MarksFrom.branch);
         await end(tester);
       });
 
@@ -311,7 +431,7 @@ void main() {
           ),
         );
         expect(_asked(fake).single.base, 'abc123');
-        expect(lines.branch, isTrue);
+        expect(lines.from, MarksFrom.branch);
         await end(tester);
       });
 
@@ -322,7 +442,7 @@ void main() {
           answer: git(onBranch, diff: (_) => change),
         );
         expect(_asked(fake).single.base, 'main');
-        expect(lines.branch, isTrue);
+        expect(lines.from, MarksFrom.branch);
         await end(tester);
       });
 
@@ -359,7 +479,7 @@ void main() {
           );
           expect(_asked(fake).single.base, isEmpty);
           expect(lines.value, 'old\n');
-          expect(lines.branch, isFalse);
+          expect(lines.from, MarksFrom.lastCommit);
           await end(tester);
         });
       }
@@ -376,7 +496,7 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(_asked(fake).last.base, isEmpty);
-        expect(lines.branch, isFalse);
+        expect(lines.from, MarksFrom.lastCommit);
         await end(tester);
       });
 
@@ -399,11 +519,11 @@ void main() {
         );
         expect(bases, ['main', '']);
         expect(lines.value, 'x\n');
-        expect(lines.branch, isFalse);
+        expect(lines.from, MarksFrom.lastCommit);
         await end(tester);
       });
 
-      testWidgets('added on the branch: new, no marks', (tester) async {
+      testWidgets('added on the branch: new, every line added', (tester) async {
         await start(
           tester,
           path: 'a.go',
@@ -414,9 +534,117 @@ void main() {
             ),
           ),
         );
-        expect(lines.value, isNull);
+        expect(lines.value, '');
         expect(lines.isNew, isTrue);
+        expect(lines.since, 'since main');
         await end(tester);
+      });
+
+      group('on the default branch itself, from before the chat', () {
+        final began = DateTime(2026, 10, 25, 12).millisecondsSinceEpoch ~/ 1000;
+        Commit at(String hash, int secs) =>
+            Commit(hash: hash, unixSeconds: Int64(began + secs));
+        Object? Function(Object) onMain(List<Commit> commits) =>
+            (input) => switch (input) {
+              GetFolderStatusRequest() => GetFolderStatusResponse(
+                git: true,
+                branch: 'main',
+                defaultBase: 'origin/main',
+              ),
+              ListCommitsRequest() => ListCommitsResponse(commits: commits),
+              final GetDiffRequest r when r.base.isNotEmpty => GetDiffResponse(
+                files: [
+                  FileChange(path: 'a.go', status: 'modified', oldText: 'x\n'),
+                ],
+              ),
+              _ => null,
+            };
+
+        testWidgets("two commits of the chat's own: the first one's parent", (
+          tester,
+        ) async {
+          await start(
+            tester,
+            path: 'a.go',
+            answer: onMain([
+              at('c3', 120),
+              at('c2', 60),
+              at('c1', -60), // the user's, before the chat
+            ]),
+          );
+          final listed = fake.calls.whereType<ListCommitsRequest>().single;
+          expect(listed.folder, '/Users/me/nushi');
+          expect(listed.base, isEmpty);
+          expect(_asked(fake).single.base, 'c2^');
+          expect(lines.from, MarksFrom.chat);
+          expect(lines.since, 'since this chat began');
+          expect(lines.value, 'x\n');
+          await end(tester);
+        });
+
+        testWidgets('none since the chat began: the last commit', (
+          tester,
+        ) async {
+          await start(
+            tester,
+            path: 'a.go',
+            answer: onMain([at('c1', -60)]),
+            change: FileChange(
+              path: 'a.go',
+              status: 'modified',
+              oldText: 'y\n',
+            ),
+          );
+          expect(_asked(fake).single.base, isEmpty);
+          expect(lines.from, MarksFrom.lastCommit);
+          expect(lines.since, 'since the last commit');
+          await end(tester);
+        });
+
+        testWidgets("the chat's first commit was the repository's first: "
+            'the last commit', (tester) async {
+          final bases = <String>[];
+          final main = onMain([at('c1', 60)]);
+          await start(
+            tester,
+            path: 'a.go',
+            answer: (input) {
+              if (input is GetDiffRequest) {
+                bases.add(input.base);
+                if (input.base.isNotEmpty) {
+                  throw ConnectException(Code.failedPrecondition, 'no c1^');
+                }
+              }
+              return main(input);
+            },
+            change: FileChange(
+              path: 'a.go',
+              status: 'modified',
+              oldText: 'z\n',
+            ),
+          );
+          expect(bases, ['c1^', '']);
+          expect(lines.from, MarksFrom.lastCommit);
+          await end(tester);
+        });
+
+        testWidgets("a commit made in the app finds the chat's start again", (
+          tester,
+        ) async {
+          var commits = [at('c1', -60)];
+          await start(
+            tester,
+            path: 'a.go',
+            answer: (input) => onMain(commits)(input),
+          );
+          expect(_asked(fake).last.base, isEmpty);
+          commits = [at('c2', 30), ...commits];
+          c.committed();
+          await tester.pumpAndSettle();
+          expect(_asked(fake).last.base, 'c2^');
+          expect(lines.from, MarksFrom.chat);
+          await end(tester);
+        });
       });
 
       testWidgets('the marks stay after a commit; the base is found again '
@@ -434,15 +662,17 @@ void main() {
         expect(lines.value, 'old\n');
 
         // Committed: HEAD has the text, the branch's base still not.
+        // The base is found again (a commit can be a chat's first).
         c.committed();
         await tester.pumpAndSettle();
         expect(_asked(fake), hasLength(2));
         expect(_asked(fake).last.base, 'main');
         expect(lines.value, 'old\n');
+        expect(statuses(), 2);
         fake.putFile('a.go', utf8.encode('newer\n'));
         await tester.pumpAndSettle();
         expect(_asked(fake), hasLength(3));
-        expect(statuses(), 1);
+        expect(statuses(), 2);
 
         // The turn ends on main itself (the agent checked it out).
         fake.answer = git(
@@ -460,9 +690,9 @@ void main() {
           ..busy = false
           ..notifyListeners();
         await tester.pumpAndSettle();
-        expect(statuses(), 2);
+        expect(statuses(), 3);
         expect(_asked(fake).last.base, isEmpty);
-        expect(lines.branch, isFalse);
+        expect(lines.from, MarksFrom.lastCommit);
 
         // Moved into a worktree off dev.
         fake.answer = git(onBranch, diff: (_) => change);
@@ -470,9 +700,9 @@ void main() {
           ..worktree = Worktree(base: 'dev')
           ..notifyListeners();
         await tester.pumpAndSettle();
-        expect(statuses(), 3);
+        expect(statuses(), 4);
         expect(_asked(fake).last.base, 'dev');
-        expect(lines.branch, isTrue);
+        expect(lines.from, MarksFrom.branch);
         await end(tester);
       });
     });
@@ -481,6 +711,7 @@ void main() {
       await start(tester, api: oneFileDiffApi - 1);
       expect(_asked(fake), isEmpty);
       expect(lines.value, isNull);
+      expect(lines.none, NoMarks.oldDaemon);
       await end(tester);
     });
   });

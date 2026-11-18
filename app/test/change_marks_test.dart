@@ -8,6 +8,7 @@ import 'package:nushi/change_marks.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/hover_card.dart';
+import 'package:nushi/line_base.dart';
 import 'package:nushi/line_changes.dart';
 import 'package:nushi/motion.dart';
 import 'package:nushi/source_editor.dart';
@@ -68,11 +69,15 @@ Widget _source({
   String path = 'main.go',
   bool wrap = true,
   bool branch = false,
+  MarksFrom? from,
+  bool isNew = false,
   Tokens tokens = Tokens.dark,
 }) => themed(
   tokens: tokens,
   MarksAgainst(
-    branch: branch,
+    from: from ?? (branch ? MarksFrom.branch : MarksFrom.lastCommit),
+    against: branch ? 'origin/main' : '',
+    isNew: isNew,
     child: SizedBox(
       width: 560,
       height: 380,
@@ -229,6 +234,35 @@ void main() {
     await tester.pump();
     expect(find.text('New lines'), findsOneWidget);
     expect(find.text('Added on this branch'), findsOneWidget);
+  });
+
+  testWidgets('a new file (its base empty): every line barred, the card '
+      'says New file and where it is not', (tester) async {
+    await tester.pumpWidget(
+      _source(base: '', branch: true, isNew: true, text: 'a\nb\nc\n'),
+    );
+    final cells = _cells(tester);
+    expect(cells, hasLength(3));
+    expect(cells.every((c) => c.bar?.kind == MarkKind.added), isTrue);
+    await tester.tap(find.byType(ChangeMark).first);
+    await tester.pump();
+    expect(find.text('New file'), findsOneWidget);
+    expect(find.text('Not in main'), findsOneWidget);
+    expect(find.text('New lines'), findsNothing);
+  });
+
+  testWidgets("from before the chat's own commits, the cards say so", (
+    tester,
+  ) async {
+    await tester.pumpWidget(_source(from: MarksFrom.chat));
+    await tester.tap(find.byType(ChangeMark).first);
+    await tester.pump();
+    expect(find.text('Before this chat'), findsOneWidget);
+    await tester.tapAt(const Offset(400, 300));
+    await tester.pump();
+    await tester.tap(find.byType(ChangeMark).last);
+    await tester.pump();
+    expect(find.text('Added since this chat began'), findsOneWidget);
   });
 
   testWidgets("near the window's foot, the card opens over its line", (
@@ -416,7 +450,7 @@ void main() {
                 RepaintBoundary(
                   key: Key('card'),
                   child: ChangeCard(
-                    branch: true,
+                    from: MarksFrom.branch,
                     marks: [
                       LineMark(MarkKind.removed, 0, 0, ['func old() {}', '']),
                       LineMark(MarkKind.changed, 0, 2, [

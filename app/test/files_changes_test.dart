@@ -1,14 +1,20 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:connectrpc/connect.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/change_marks.dart';
 import 'package:nushi/changes_view.dart';
+import 'package:nushi/controls.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/files_tree.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/line_changes.dart';
 import 'package:nushi/main.dart';
+import 'package:nushi/motion.dart';
 import 'package:nushi/preview_path.dart';
 import 'package:nushi/source_editor.dart';
 
@@ -30,18 +36,30 @@ Item _write(String id, String path) => Item(
   paths: [path],
 );
 
-/// The chat wrote main.go and notes.md; README.md it didn't.
+/// The chat wrote main.go, notes.md (new), new.go (new), same.go (written
+/// back as it was) and plan.md (changed); README.md it didn't.
 final List<Item> _items = [
   ...editItems,
   _write('w1', 'main.go'),
   _write('w2', 'notes.md'),
+  _write('w3', 'new.go'),
+  _write('w4', 'same.go'),
+  _write('w5', 'plan.md'),
 ];
 
 final _folder = [
   FolderEntry(name: 'main.go', kind: 'file'),
+  FolderEntry(name: 'new.go', kind: 'file'),
   FolderEntry(name: 'notes.md', kind: 'file'),
+  FolderEntry(name: 'plan.md', kind: 'file'),
   FolderEntry(name: 'README.md', kind: 'file'),
+  FolderEntry(name: 'same.go', kind: 'file'),
 ];
+
+const _planBase = '# Plan\n\n- Parse the header.\n- Read the body.\n';
+const _planNow =
+    '# Plan\n\n- Parse the header first.\n- Read the body.\n'
+    '- Check the footer.\n- Say what failed.\n';
 
 /// The chat's folder on a branch of its own, off main: the marks count
 /// from where it left main (`FakeDaemon.fileDiffs` answers either way).
@@ -78,6 +96,11 @@ Future<(Daemon, FakeDaemon)> _open(
     'main.go': utf8.encode(changeShown),
     'notes.md': utf8.encode('# Notes\n\nWhat the parser still misses.\n'),
     'README.md': utf8.encode('# Parser\n'),
+    'new.go': utf8.encode(
+      'package main\n\nfunc parse() {}\n\nfunc check() {}\n',
+    ),
+    'same.go': utf8.encode('package main\n'),
+    'plan.md': utf8.encode(_planNow),
   },
   open: open,
   width: width,
@@ -86,6 +109,12 @@ Future<(Daemon, FakeDaemon)> _open(
   folder: _folder,
   answer: answer,
   fileDiffs: {
+    '/Users/me/nushi/new.go': FileChange(path: 'new.go', status: 'untracked'),
+    '/Users/me/nushi/plan.md': FileChange(
+      path: 'plan.md',
+      status: 'modified',
+      oldText: _planBase,
+    ),
     '/Users/me/nushi/main.go': FileChange(
       path: 'main.go',
       status: 'modified',
@@ -100,6 +129,29 @@ Future<(Daemon, FakeDaemon)> _open(
 
 Finder _row(String name) =>
     find.descendant(of: find.byType(FilesTree), matching: find.text(name));
+
+/// The path row's word on the shown file's marks.
+Finder _status(String words) =>
+    find.descendant(of: find.byType(PathLine), matching: find.text(words));
+
+/// The path row's pill, if it has one.
+Finder get _pill =>
+    find.descendant(of: find.byType(PathLine), matching: find.byType(NotePill));
+
+/// The marks in the editor or the source, whichever shows.
+Finder get _marks => find.byType(ChangeMark);
+
+/// The lines [lineMarks] marks, as the path row counts them.
+int sumOfMarks(String base, String now) => lineMarks(
+  base,
+  now,
+).fold(0, (n, m) => n + (m.kind == MarkKind.removed ? m.old.length : m.count));
+
+/// The chat shows [path] in Files.
+Future<void> _show(WidgetTester tester, Daemon d, String path) async {
+  chatC(d).openInFiles(path);
+  await tester.pumpAndSettle();
+}
 
 void main() {
   setUpAll(loadFonts);
@@ -121,28 +173,26 @@ void main() {
     await endEditor(tester, d);
   }, variant: onMac);
 
-  testWidgets('a new file says so on its path line, and has no marks', (
-    tester,
-  ) async {
-    final (d, _) = await _open(tester, open: ['notes.md']);
+  testWidgets('a new file: every line barred, New file on its path row, '
+      'its card says so', (tester) async {
+    final (d, _) = await _open(tester, open: ['new.go']);
+    expect(_status('New file'), findsOneWidget);
+    final pill = tester.widget<NotePill>(_pill);
+    expect(pill.tone, NoteTone.done);
+    expect(pill.onTap, isNull);
+    // Its five lines, each barred as added.
+    final marks = tester.widgetList<ChangeMark>(_marks).toList();
+    expect(marks, hasLength(5));
+    expect(marks.every((m) => m.cell.bar?.kind == MarkKind.added), isTrue);
+    await tester.tap(_marks.first);
     await tester.pumpAndSettle();
-    expect(
-      find.descendant(
-        of: find.byType(PathLine),
-        matching: find.text('New file'),
-      ),
-      findsOneWidget,
-    );
-    expect(find.byType(ChangeMark), findsNothing);
+    expect(find.text('Not in main'), findsOneWidget);
     await endEditor(tester, d);
   }, variant: onMac);
 
-  testWidgets('a changed file has marks in its editor and no note', (
-    tester,
-  ) async {
+  testWidgets('a changed file: marks in its editor, and how many lines '
+      'since what on its path row', (tester) async {
     final (d, _) = await _open(tester);
-    await tester.pumpAndSettle();
-    expect(find.text('New file'), findsNothing);
     expect(
       find.descendant(
         of: find.byType(SourceEditor),
@@ -150,6 +200,191 @@ void main() {
       ),
       findsNWidgets(7),
     );
+    final n = sumOfMarks(changeBase, changeShown);
+    expect(_status('$n changed lines since main'), findsOneWidget);
+    expect(tester.widget<NotePill>(_pill).tone, NoteTone.accent);
+    expect(find.text('New file'), findsNothing);
+    await endEditor(tester, d);
+  }, variant: onMac);
+
+  testWidgets('a written file the same as its base: No changes since main; '
+      'a file the chat never wrote says nothing', (tester) async {
+    final (d, _) = await _open(tester, open: ['same.go']);
+    expect(_status('No changes since main'), findsOneWidget);
+    expect(_marks, findsNothing);
+    await _show(tester, d, 'README.md');
+    expect(_pill, findsNothing);
+    await endEditor(tester, d);
+  }, variant: onMac);
+
+  testWidgets("a rendered Markdown file's changes: a pill that leads to "
+      'its source, where they are marked', (tester) async {
+    final (d, _) = await _open(tester, open: ['plan.md']);
+    // Markdown opens rendered: no gutter there.
+    expect(find.byType(SourceEditor), findsNothing);
+    expect(_marks, findsNothing);
+    final words = '${sumOfMarks(_planBase, _planNow)} changed lines since main';
+    expect(_status(words), findsOneWidget);
+    expect(tester.widget<NotePill>(_pill).onTap, isNotNull);
+    await tester.tap(_pill);
+    await tester.pumpAndSettle();
+    expect(_marks, findsWidgets);
+    // In the source the pill only says.
+    expect(_status(words), findsOneWidget);
+    expect(tester.widget<NotePill>(_pill).onTap, isNull);
+    await endEditor(tester, d);
+  }, variant: onMac);
+
+  testWidgets('a new rendered Markdown file: New file leads to its source', (
+    tester,
+  ) async {
+    final (d, _) = await _open(tester, open: ['notes.md']);
+    expect(_status('New file'), findsOneWidget);
+    await tester.tap(_pill);
+    await tester.pumpAndSettle();
+    expect(_marks, findsNWidgets(3));
+    await endEditor(tester, d);
+  }, variant: onMac);
+
+  group('a chat on main itself', () {
+    final began = DateTime(2026, 10, 25, 12).millisecondsSinceEpoch ~/ 1000;
+    Object? Function(Object) onMain(List<Commit> commits) =>
+        (input) => switch (input) {
+          ListCommitsRequest() => ListCommitsResponse(commits: commits),
+          _ => _onMain(input),
+        };
+
+    testWidgets('with commits of its own: from before them, and says so', (
+      tester,
+    ) async {
+      final (d, fake) = await _open(
+        tester,
+        answer: onMain([
+          Commit(hash: 'c2', unixSeconds: Int64(began + 90)),
+          Commit(hash: 'c1', unixSeconds: Int64(began + 30)),
+          Commit(hash: 'c0', unixSeconds: Int64(began - 3600)),
+        ]),
+      );
+      final asked = fake.calls.whereType<GetDiffRequest>().where(
+        (r) => r.path == 'main.go',
+      );
+      expect(asked.last.base, 'c1^');
+      expect(_marks, findsNWidgets(7));
+      final n = sumOfMarks(changeBase, changeShown);
+      expect(_status('$n changed lines since this chat began'), findsOneWidget);
+      await tester.tap(_marks.first);
+      await tester.pumpAndSettle();
+      expect(find.text('Before this chat'), findsOneWidget);
+      await endEditor(tester, d);
+    }, variant: onMac);
+
+    testWidgets('no commit since it began: since the last commit', (
+      tester,
+    ) async {
+      final (d, _) = await _open(
+        tester,
+        answer: onMain([Commit(hash: 'c0', unixSeconds: Int64(began - 60))]),
+      );
+      final n = sumOfMarks(changeBase, changeShown);
+      expect(_status('$n changed lines since the last commit'), findsOneWidget);
+      await endEditor(tester, d);
+    }, variant: onMac);
+  });
+
+  for (final (what, change, words, tone) in [
+    (
+      'not in a repository',
+      ConnectException(
+        Code.failedPrecondition,
+        '/Users/me/nushi is not in a git repository',
+      ),
+      'Not in a git repository',
+      NoteTone.quiet,
+    ),
+    (
+      'ignored',
+      FileChange(path: 'same.go', status: 'untracked', skipped: 'not tracked'),
+      'Ignored by git',
+      NoteTone.quiet,
+    ),
+    (
+      'a link',
+      FileChange(path: 'same.go', status: 'modified', skipped: 'a link'),
+      'A link: no change marks',
+      NoteTone.quiet,
+    ),
+    (
+      'binary',
+      FileChange(path: 'same.go', status: 'modified', skipped: 'binary'),
+      'Not text: no change marks',
+      NoteTone.quiet,
+    ),
+    (
+      'too large',
+      FileChange(path: 'same.go', status: 'modified', skipped: 'too large'),
+      'Too large for change marks',
+      NoteTone.quiet,
+    ),
+  ]) {
+    testWidgets('$what: its path row says so', (tester) async {
+      final (d, fake) = await _open(tester, open: []);
+      fake.fileDiffs['/Users/me/nushi/same.go'] = change;
+      await _show(tester, d, 'same.go');
+      expect(_status(words), findsOneWidget);
+      expect(tester.widget<NotePill>(_pill).tone, tone);
+      expect(_marks, findsNothing);
+      await endEditor(tester, d);
+    }, variant: onMac);
+  }
+
+  testWidgets('a failure says so, its words a click away', (tester) async {
+    final (d, fake) = await _open(tester, open: []);
+    fake.fileDiffs['/Users/me/nushi/same.go'] = ConnectException(
+      Code.internal,
+      'git diff: exit status 128',
+    );
+    await _show(tester, d, 'same.go');
+    expect(_status('Couldn’t compare with git'), findsOneWidget);
+    final pill = tester.widget<NotePill>(_pill);
+    expect(pill.tone, NoteTone.crashed);
+    expect(pill.tip, contains('exit status 128'));
+    await tester.tap(_pill);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('exit status 128'), findsWidgets);
+    await endEditor(tester, d);
+  }, variant: onMac);
+
+  testWidgets('an older daemon: says marks need a newer one', (tester) async {
+    final (d, _) = await _open(tester, open: []);
+    d.daemonApi = oneFileDiffApi - 1;
+    await _show(tester, d, 'same.go');
+    expect(_status('Change marks need a newer daemon'), findsOneWidget);
+    expect(tester.widget<NotePill>(_pill).tone, NoteTone.needs);
+    await endEditor(tester, d);
+  }, variant: onMac);
+
+  testWidgets('a slow answer: nothing at first, then a quiet Comparing…, '
+      'then the word', (tester) async {
+    final answer = Completer<Object?>();
+    final (d, _) = await _open(
+      tester,
+      open: [],
+      answer: (input) => switch (input) {
+        GetDiffRequest(path: 'main.go') => answer.future,
+        _ => _onBranch(input),
+      },
+    );
+    chatC(d).openInFiles('main.go');
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Comparing…'), findsNothing);
+    expect(_pill, findsNothing);
+    await tester.pump(Waits.slow);
+    expect(find.text('Comparing…'), findsOneWidget);
+    answer.complete(null);
+    await tester.pumpAndSettle();
+    expect(find.text('Comparing…'), findsNothing);
+    expect(_pill, findsOneWidget);
     await endEditor(tester, d);
   }, variant: onMac);
 
@@ -256,6 +491,51 @@ void main() {
           chatC(d).openInFiles('notes.md');
           await tester.pumpAndSettle();
           await render(tester, app, 'cl_${w}_new_file_$theme');
+          await endEditor(tester, d);
+        },
+        variant: onMac,
+        skip: rendersDir == null,
+      );
+      testWidgets(
+        "renders: the path row's word on each kind of file, $w, $theme",
+        (tester) async {
+          final app = find.byType(NushiApp);
+          var (d, fake) = await _open(
+            tester,
+            open: ['new.go'],
+            width: width,
+            brightness: brightness,
+          );
+          await render(tester, app, 'marks_${w}_new_file_$theme');
+          await _show(tester, d, 'main.go');
+          await render(tester, app, 'marks_${w}_edited_$theme');
+          await _show(tester, d, 'same.go');
+          await render(tester, app, 'marks_${w}_unchanged_$theme');
+          await _show(tester, d, 'plan.md');
+          await render(tester, app, 'marks_${w}_markdown_$theme');
+          await tester.tap(_pill);
+          await tester.pumpAndSettle();
+          await render(tester, app, 'marks_${w}_markdown_source_$theme');
+          await endEditor(tester, d);
+
+          (d, fake) = await _open(
+            tester,
+            open: [],
+            width: width,
+            brightness: brightness,
+            answer: (input) => switch (input) {
+              GetFolderStatusRequest() => GetFolderStatusResponse(),
+              _ => null,
+            },
+          );
+          fake.fileDiffs['/Users/me/nushi/main.go'] = ConnectException(
+            Code.failedPrecondition,
+            '/Users/me/nushi is not in a git repository',
+          );
+          await _show(tester, d, 'main.go');
+          expect(_status('Not in a git repository'), findsOneWidget);
+          await render(tester, app, 'marks_${w}_no_repository_$theme');
+          expectTextInside(tester, width);
           await endEditor(tester, d);
         },
         variant: onMac,

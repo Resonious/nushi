@@ -11,6 +11,7 @@ import 'package:nushi/file_view.dart';
 import 'package:nushi/files_menu.dart';
 import 'package:nushi/folder_tree.dart';
 import 'package:nushi/keys.dart';
+import 'package:nushi/marks_note.dart';
 import 'package:nushi/menu.dart';
 import 'package:nushi/panes.dart';
 import 'package:nushi/preview_path.dart';
@@ -161,15 +162,12 @@ class FilesBar extends StatelessWidget {
         Expanded(
           child: Align(
             alignment: Alignment.centerLeft,
-            child: ListenableBuilder(
-              listenable: shown.lines,
-              builder: (context, _) => PathLine(
-                folder: shown.chat.folder,
-                path: shown.path,
-                note: shown.lines.isNew ? 'New file' : null,
-                top: 0,
-                end: 8,
-              ),
+            child: PathLine(
+              folder: shown.chat.folder,
+              path: shown.path,
+              status: MarksNote(shown: shown),
+              top: 0,
+              end: 8,
             ),
           ),
         ),

@@ -25,16 +25,17 @@ String shownPath(String folder, String path) {
 
 /// The path line: [path] in a quiet line, tinted under the pointer; a click
 /// copies it and says so. [trailing] sits at its right end (the source
-/// button). [note] is a muted word after the path ("New file": git
-/// doesn't know it yet, so it has no change marks, ADR 0131). [inset],
-/// [end] and [top] are its sides' room.
+/// button). [status] sits between the two, at the path's right end (the
+/// Files pane's word on the file's change marks, ADR 0131): the path is
+/// cut before it is, so it stays whole beside the buttons. [inset], [end]
+/// and [top] are its sides' room.
 class PathLine extends StatelessWidget {
   const new({
     required this.folder,
     required this.path,
     super.key,
     this.trailing,
-    this.note,
+    this.status,
     this.inset = PathLine.textInset - textPad,
     this.end = 4,
     this.top = 6,
@@ -43,7 +44,7 @@ class PathLine extends StatelessWidget {
   final String folder;
   final String path;
   final Widget? trailing;
-  final String? note;
+  final Widget? status;
   final double inset;
   final double end;
   final double top;
@@ -54,6 +55,12 @@ class PathLine extends StatelessWidget {
 
   /// The room left of the text inside its tint.
   static const textPad = 6.0;
+
+  /// The least of the path that shows beside its [status].
+  static const pathLeast = 56.0;
+
+  /// The least room its [status] shows in.
+  static const statusLeast = 48.0;
 
   Future<void> _copy(BuildContext context) => tryOrShow(context, () async {
     await Clipboard.setData(ClipboardData(text: copiedPath(folder, path)));
@@ -66,52 +73,52 @@ class PathLine extends StatelessWidget {
     final t = theme.t;
     return Padding(
       padding: EdgeInsets.fromLTRB(inset, top, end, 0),
-      child: Row(
-        spacing: 8,
-        children: [
-          Expanded(
-            child: Pressable(
-              onTap: () => _copy(context),
-              tooltip: 'Copy path',
-              // Across the line, as Claude's is, its text where it was.
-              builder: (context, look) => Container(
-                // The line's width: a touch target centres what it holds.
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: textPad,
-                  vertical: 4,
-                ),
-                decoration: look.hover
-                    ? BoxDecoration(
-                        color: look.pressed ? t.pressed : t.hover,
-                        borderRadius: BorderRadius.circular(NushiTheme.control),
-                      )
-                    : null,
-                foregroundDecoration: focusRing(t, look),
-                child: Row(
-                  spacing: 8,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        shownPath(folder, path),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.ui(t.textSecondary),
-                      ),
-                    ),
-                    if (note case final note?)
-                      Text(
-                        note,
-                        maxLines: 1,
-                        style: theme.ui(t.textMuted, size: 12),
-                      ),
-                  ],
+      child: LayoutBuilder(
+        builder: (context, box) => Row(
+          spacing: 8,
+          children: [
+            Expanded(
+              child: Pressable(
+                onTap: () => _copy(context),
+                tooltip: 'Copy path',
+                // Across the line, as Claude's is, its text where it was.
+                builder: (context, look) => Container(
+                  // The line's width: a touch target centres what it holds.
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: textPad,
+                    vertical: 4,
+                  ),
+                  decoration: look.hover
+                      ? BoxDecoration(
+                          color: look.pressed ? t.pressed : t.hover,
+                          borderRadius: BorderRadius.circular(
+                            NushiTheme.control,
+                          ),
+                        )
+                      : null,
+                  foregroundDecoration: focusRing(t, look),
+                  child: Text(
+                    shownPath(folder, path),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.ui(t.textSecondary),
+                  ),
                 ),
               ),
             ),
-          ),
-          ?trailing,
-        ],
+            // Squeezed past a pill's least, the path alone.
+            if (status case final status?
+                when box.maxWidth - pathLeast - 8 >= statusLeast)
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: box.maxWidth - pathLeast - 8,
+                ),
+                child: status,
+              ),
+            ?trailing,
+          ],
+        ),
       ),
     );
   }
