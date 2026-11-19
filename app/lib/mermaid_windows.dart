@@ -6,18 +6,9 @@ import 'package:nushi/daemon.dart' show dataDir;
 import 'package:nushi/mermaid.dart';
 import 'package:nushi/web_view_windows.dart';
 
-/// How long a diagram waits on the hidden web view, its queue included.
-Duration diagramWait = const Duration(minutes: 1);
-
 /// How long one diagram may take in the hidden web view, as the Mac's
 /// (`Diagrams.swift`'s `jobTimeout`).
 const diagramJobWait = Duration(seconds: 10);
-
-/// What a diagram that took longer than [diagramJobWait] is.
-const _tooLong = DrawnDiagram(
-  error: 'The diagram took too long to draw',
-  retry: true,
-);
 
 /// Windows's diagrams: mermaid.js in one hidden WebView2 of the runner's,
 /// made when the first is asked for, drawing one at a time. Its web view
@@ -51,13 +42,7 @@ class WindowsDiagrams implements Diagrams {
         width: width.clamp(120, 2400).toDouble(),
       ),
     );
-    return drawn.timeout(
-      diagramWait,
-      onTimeout: () => const DrawnDiagram(
-        error: 'The diagram took too long to draw',
-        retry: true,
-      ),
-    );
+    return drawn.timeout(diagramWait, onTimeout: () => diagramTooLong);
   }
 }
 
@@ -139,7 +124,7 @@ class _Renderer {
       // The page is still busy with it, or its script never answers: a new
       // web view for the next, and this one's calls end with it.
       if (_web == web) _drop();
-      return _tooLong;
+      return diagramTooLong;
     } on Object catch (e) {
       return DrawnDiagram(error: '$e', retry: true);
     }
@@ -175,7 +160,7 @@ class _Renderer {
       );
       if (r is Map) return drawnFrom(r.cast<String, Object?>());
     }
-    return _tooLong;
+    return diagramTooLong;
   }
 }
 
