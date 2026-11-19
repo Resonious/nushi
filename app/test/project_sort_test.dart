@@ -227,7 +227,7 @@ void main() {
             'project_sort_${width.toInt()}_${b.name}',
           );
           d.dispose();
-        }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+        }, variant: onMac);
       }
     }
   });

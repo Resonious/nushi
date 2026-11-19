@@ -226,7 +226,7 @@ void main() {
     await tester.pump();
     expect(_reopens(fake), ['c', 'c', 'c']);
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   // A chat kept though its agent deleted its session (its worktree has
   // work): quiet, not an error; Delete… instead of Try again.

@@ -10,8 +10,6 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 import 'pull_fixture.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Finder get _pull => find.ancestor(
   of: find.text('Pull request').last,
   matching: find.byType(PanelWidget),
@@ -107,7 +105,7 @@ void main() {
     expect(box.value, hasLength(5));
     expect(box.value.last.from, startsWith('Review comments from @mona'));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a failing check that isn't required: the summary says Ready, "
       'as the Merge control does', (tester) async {
@@ -123,7 +121,7 @@ void main() {
       ),
     );
     expect(find.text('Ready'), findsNothing);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("each state's one cue under the row's title", (tester) async {
     for (final (state, cue) in [
@@ -145,7 +143,7 @@ void main() {
       );
       d.dispose();
     }
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, brightness) in [
     ('dark', Brightness.dark),
@@ -166,7 +164,7 @@ void main() {
           matchesGoldenFile('goldens/pull_widget_${state}_$name.png'),
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('golden: the collapsed summaries, $name', (tester) async {
@@ -215,6 +213,6 @@ void main() {
         find.byType(Scaffold),
         matchesGoldenFile('goldens/pull_widget_collapsed_$name.png'),
       );
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

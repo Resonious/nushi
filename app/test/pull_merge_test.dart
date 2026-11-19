@@ -14,9 +14,8 @@ import 'package:nushi/settings.dart';
 import 'package:nushi/toast.dart';
 
 import 'fake_daemon.dart';
+import 'harness.dart';
 import 'pull_fixture.dart';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 /// What the control's box says, whole.
 String _says(WidgetTester tester) => tester
@@ -207,7 +206,7 @@ void main() {
         expect(find.text('Merged'), findsWidgets);
         d.dispose();
       },
-      variant: _mac,
+      variant: onMac,
     );
 
     testWidgets('Cancel sends nothing', (tester) async {
@@ -221,7 +220,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(fake.calls.whereType<MergeGitHubPullRequest>(), isEmpty);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('no title, no merge', (tester) async {
       final (d, fake) = await openPullTab(
@@ -241,7 +240,7 @@ void main() {
       await tester.pump();
       expect(fake.calls.whereType<MergeGitHubPullRequest>(), isEmpty);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a rebase has no commit text', (tester) async {
       mergeMethods.value = {'github.com $fixtureRepo': 'rebase'};
@@ -261,7 +260,7 @@ void main() {
       expect(sent.method, 'rebase');
       expect(sent.headOid, 'b' * 40);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a head that moved says so, and reads it again', (
       tester,
@@ -296,7 +295,7 @@ void main() {
         greaterThan(before),
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets("GitHub's refusal toasts, in its words, and the dialog stays", (
       tester,
@@ -327,7 +326,7 @@ void main() {
       expect(find.text(words), findsNWidgets(2));
       expect(find.byType(ToastLine), findsOneWidget);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the commit text not read means no merge', (tester) async {
       final (d, fake) = await openPullTab(
@@ -348,7 +347,7 @@ void main() {
       await tester.pump();
       expect(fake.calls.whereType<MergeGitHubPullRequest>(), isEmpty);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('picking a method is remembered for the repository', (
       tester,
@@ -361,7 +360,7 @@ void main() {
       expect(mergeMethods.value['github.com $fixtureRepo'], 'rebase');
       expect(find.text('Rebase and merge'), findsWidgets);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('what was kept from before offers nothing', (tester) async {
       final kept = mergePull('ready');
@@ -375,7 +374,7 @@ void main() {
       expect(_says(tester), 'Ready to merge.');
       expect(find.byType(SplitButton), findsNothing);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('auto-merge', () {
@@ -425,7 +424,7 @@ void main() {
       );
       expect(find.text('Enable auto-merge'), findsWidgets);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the merge queue', () {
@@ -468,7 +467,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(fake.calls.whereType<DequeueGitHubPullRequest>(), hasLength(1));
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('Merge when ready asks, and joins through auto-merge', (
       tester,
@@ -489,7 +488,7 @@ void main() {
         'b' * 40,
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   testWidgets('the split button is as wide as its label', (tester) async {
@@ -502,7 +501,7 @@ void main() {
     final wide = tester.getTopRight(caret).dx - tester.getTopLeft(split).dx;
     expect(wide, lessThan(170));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   // ADR 0117: the Merge control left the widget; a row's ⋯ has Merge….
   testWidgets("the details widget's row has Merge… instead", (tester) async {
@@ -522,7 +521,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Merge…', findRichText: true), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the page says ready once, beside the button that acts on it', (
     tester,
@@ -536,7 +535,7 @@ void main() {
     expect(find.textContaining('nothing blocks'), findsNothing);
     expect(find.textContaining('Nothing else waits'), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a move the control doesn’t say stays in the head', (
     tester,
@@ -551,5 +550,5 @@ void main() {
       findsOneWidget,
     );
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

@@ -9,8 +9,6 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 import 'pull_fixture.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -36,7 +34,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getRect(find.text('To do')).top, lessThan(100));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Checks: what they came to, Re-run failed, the passed in two '
       'columns', (tester) async {
@@ -75,7 +73,7 @@ void main() {
       '4m 12s',
     );
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Files: those with review threads not resolved first', (
     tester,
@@ -90,7 +88,7 @@ void main() {
     expect(records.top, lessThan(helper.top));
     expect(spec.top, lessThan(helper.top));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("Checks: an open failed check's log stays with its check when "
       'the checks change, and a failed fetch is tried again', (tester) async {

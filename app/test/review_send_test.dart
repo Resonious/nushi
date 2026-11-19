@@ -13,8 +13,6 @@ import 'package:nushi/theme/theme.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 ReviewComment _comment(String id, int line, String quote, String text) =>
     ReviewComment(
       id: id,
@@ -114,7 +112,7 @@ void main() {
     expect(unsentComments('c'), isEmpty);
     expect(find.textContaining('review comment in Changes'), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Send to agent in Changes goes back to the chat, its cards '
       'in the box', (tester) async {
@@ -127,7 +125,7 @@ void main() {
     expect(chat.tab.value, ChatTab.chat);
     expect(chat.draft.replies.value, hasLength(2));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a sent message takes its cards: they stay sent', (tester) async {
     final d = await _app(tester, 1700);
@@ -152,7 +150,7 @@ void main() {
       ('2', true),
     ]);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Changes: Send to agent (n), and the cards waiting with the '
       'way back to the chat, 720 wide', (tester) async {
@@ -180,5 +178,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(d.chats['c']!.tab.value.name, 'chat');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

@@ -58,8 +58,6 @@ const _many = [
   'docs/eight.md',
 ];
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Item _wrote(String id, String path) => Item(
   id: id,
   kind: ItemKind.ITEM_KIND_TOOL_CALL,
@@ -359,7 +357,7 @@ void main() {
     expect(_tab(shown), findsOneWidget);
     expect(find.byTooltip('docs/invoice\ufffdfdp.sh'), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   group('the pane', () {
     testWidgets('one file: its name, plain, its path in a tooltip; no tabs, '
@@ -383,7 +381,7 @@ void main() {
       );
       expect(find.byTooltip('/Users/me/nushi/docs/report.md'), findsOneWidget);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     for (final (name, brightness) in [
       ('light', Brightness.light),
@@ -426,7 +424,7 @@ void main() {
         expect((box().decoration! as BoxDecoration).color, t.hover);
         await render(tester, row, 'preview_name_hover_$name');
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     for (final width in [1700.0, 720.0]) {
@@ -451,7 +449,7 @@ void main() {
         expect(first.left, name.left);
         expect(first.center.dy, name.center.dy);
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('each tab leads with its own file’s kind, not the shown '
@@ -488,7 +486,7 @@ void main() {
       expect(before('b.go'), PreviewKind.code.icon);
       expect(before('c.md'), PreviewKind.markdown.icon);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     // The pane lies beside the chat header, its top row level with it (ADR
     // 0123): the two rows share a height and a line, and each row's lines
@@ -517,7 +515,7 @@ void main() {
           expect(bottom, row.bottom - 1);
         }
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('no file in the chat header', (tester) async {
@@ -532,7 +530,7 @@ void main() {
         );
       }
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a tab shows its file, and its ✕ closes it', (tester) async {
       final d = await _app(tester, files: _three);
@@ -550,7 +548,7 @@ void main() {
       expect(find.byType(PaneTabs), findsNothing, reason: 'one left');
       expect(_inPane(find.text('report.md')), findsOneWidget);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the ✕ shows on the tab showing and under the pointer', (
       tester,
@@ -571,7 +569,7 @@ void main() {
       expect(close('plan.md'), 1);
       expect(close('notes.md'), 0);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the pane’s × hides it and keeps its tabs', (tester) async {
       final d = await _app(tester, files: _three);
@@ -584,7 +582,7 @@ void main() {
       expect(find.byType(PaneTabs), findsOneWidget);
       expect(c.shownFile, 'docs/report.md');
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('its width is one, across tabs', (tester) async {
       final d = await _app(tester, files: _three);
@@ -597,7 +595,7 @@ void main() {
       await _tap(tester, _closeOf('notes.md'));
       expect(width(), 1000);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('Source is remembered per file', (tester) async {
       final d = await _app(tester, files: _three);
@@ -615,7 +613,7 @@ void main() {
         isTrue,
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a file’s view is made again as it shows, one at a time', (
       tester,
@@ -635,7 +633,7 @@ void main() {
       expect(live.value, 1);
       expect(made.value, before + 2);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('every way in', () {
@@ -657,7 +655,7 @@ void main() {
       expect(c.fileNames, hasLength(2));
       expect(c.shownFile, 'docs/report.md');
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the Files list opens a tab', (tester) async {
       final d = await _app(tester, details: true, width: 2400);
@@ -680,7 +678,7 @@ void main() {
       expect(c.fileNames, ['docs/plan.md', 'docs/report.md']);
       expect(c.shownFile, 'docs/report.md');
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('⌘W', () {
@@ -698,7 +696,7 @@ void main() {
       expect(c.files.shown.value, isNull);
       expect(find.byType(FilesPane), findsOneWidget);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('with a file and a browser tab open, closes the one shown '
         "last, then the other; in a pane, that pane's", (tester) async {
@@ -729,7 +727,7 @@ void main() {
       expect(c.files.shown.value, isNull);
       expect(c.browser.shown.value, isNotNull);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('leaves the files of a hidden Files pane', (tester) async {
       final d = await _app(tester, files: _three.take(2).toList());
@@ -740,7 +738,7 @@ void main() {
       await _key(tester, LogicalKeyboardKey.keyW, meta: true);
       expect(c.fileNames, hasLength(2));
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('leaves a preview out of sight', (tester) async {
       final d = await _app(tester, files: _three.take(2).toList());
@@ -749,7 +747,7 @@ void main() {
       await _key(tester, LogicalKeyboardKey.keyW, meta: true);
       expect(c.fileNames, hasLength(2));
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a focused terminal keeps it', (tester) async {
       terminalChats.value = {'c'};
@@ -758,7 +756,7 @@ void main() {
       await _key(tester, LogicalKeyboardKey.keyW, meta: true);
       expect(d.chats['c']!.fileNames, hasLength(2));
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('leaves the tab under a dialog; the menu bar’s too', (
       tester,
@@ -779,7 +777,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(c.fileNames, ['docs/plan.md']);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('too many tabs', () {
@@ -806,7 +804,7 @@ void main() {
         lessThanOrEqualTo(tester.getTopLeft(_inPane(find.byType(LiveMark))).dx),
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the pane at its narrowest: nothing overflows or overlaps', (
       tester,
@@ -825,7 +823,7 @@ void main() {
         ),
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('names that fit aren’t cut; those that don’t are', (
       tester,
@@ -842,7 +840,7 @@ void main() {
       expect(cut('plan.md'), isFalse);
       expect(cut('notes.md'), isFalse);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('three short names fit the pane as it starts', (tester) async {
       final d = await _app(tester, files: _three);
@@ -856,7 +854,7 @@ void main() {
         );
       }
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('picking a tab keeps the row where it is', (tester) async {
       final d = await _app(tester, files: _many, last: true);
@@ -868,7 +866,7 @@ void main() {
       expect(tester.state(find.byType(PaneTabs)), same(before));
       expect(_row(tester).pixels, at);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a file opened brings its tab into view', (tester) async {
       final d = await _app(tester, files: _many, last: true);
@@ -883,7 +881,7 @@ void main() {
         lessThanOrEqualTo(rect.right + 0.5),
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a wheel scrolls it sideways', (tester) async {
       final d = await _app(tester, files: _many, last: true);
@@ -898,7 +896,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(row.pixels, at - 120);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the window', () {
@@ -931,7 +929,7 @@ void main() {
               'preview_pane_${count}_${name}_${width.toInt()}',
             );
             d.dispose();
-          }, variant: _mac);
+          }, variant: onMac);
         }
       }
     }

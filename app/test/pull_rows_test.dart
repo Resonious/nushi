@@ -106,8 +106,6 @@ final Map<int, GitHubItem> _stack = {
   ),
 };
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The app on a chat with [numbers] linked (the first the primary), the
 /// details panel shown.
 Future<(Daemon, FakeDaemon)> _app(
@@ -225,7 +223,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 200));
         await tester.pumpAndSettle();
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('one pull request: one row, "Pull request", no +N ($name)', (
@@ -253,7 +251,7 @@ void main() {
       expectTextInside(tester, 720);
       await render(tester, find.byType(NushiApp), 'pull_rows_one_720_$name');
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets("the badge's popover and the row's ⋯ ($name)", (tester) async {
       final (d, _) = await _app(
@@ -299,7 +297,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets("the tab's picker lists the rows; a pick is remembered "
         '($name)', (tester) async {
@@ -325,7 +323,7 @@ void main() {
       expect(pickedPulls.value['c'], 'github.com/lumen-dev/lumen#224');
       expect(fake.calls.whereType<GetGitHubPullRequest>().last.ref.number, 224);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('Unlink from a row unlinks that one', (tester) async {
@@ -341,7 +339,7 @@ void main() {
     expect(sent.unlink.number, 224);
     expect(sent.hasPull(), isFalse);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('folded, several read their count by state and the worst '
       'checks', (tester) async {
@@ -351,7 +349,7 @@ void main() {
     expect(find.text('2 open, 1 merged'), findsOneWidget);
     expect(find.text('6 running'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   test('the store keys an item by host, repository in any case and number', () {
     const a = GitHubAddress(

@@ -36,14 +36,7 @@ import 'right_panes_fixture.dart';
 // choice. Only once the transcript is too narrow even then do the panes
 // lie over it.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// Linux too, for a few: the same layout (ADR 0123).
-const _both = TargetPlatformVariant({
-  TargetPlatform.macOS,
-  TargetPlatform.linux,
-});
-
 PanesOpen _openOf(List<PaneSpec> panes, {int previews = 0}) => (
   side: panes.contains(ChatPanes.side),
   files: panes.contains(ChatPanes.files),
@@ -176,7 +169,7 @@ void main() {
         }
         expect(showDetails.value, isTrue);
         await closeView(tester, d);
-      }, variant: {'none', 'browser'}.contains(row.name) ? _both : _mac);
+      }, variant: {'none', 'browser'}.contains(row.name) ? macAndLinux : onMac);
     }
   }
 
@@ -247,7 +240,7 @@ void main() {
     expect(_tip(tester), 'Show details');
     expect(showDetails.value, isFalse);
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   for (final tucked in [false, true]) {
     testWidgets('a peek at the hidden sidebar, the rail '
@@ -306,7 +299,7 @@ void main() {
       expect(flips, 0);
       expect(showDetails.value, isTrue);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   group('it comes back when there is room again:', () {
@@ -348,7 +341,7 @@ void main() {
       viewport(tester, Size(width + 40, 900));
       await slidesBack(tester);
       await closeView(tester, d);
-    }, variant: _both);
+    }, variant: macAndLinux);
 
     testWidgets('the pane closes', (tester) async {
       final d = await app(tester);
@@ -360,7 +353,7 @@ void main() {
       );
       await slidesBack(tester);
       await closeView(tester, d);
-    }, variant: _both);
+    }, variant: macAndLinux);
 
     testWidgets('its edge is dragged narrower', (tester) async {
       final d = await app(tester);
@@ -376,7 +369,7 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
       expect(_rail(), true);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('its edge, dragged wide, is reset with a double-click', (
       tester,
@@ -397,14 +390,14 @@ void main() {
       await slidesBack(tester);
       expect(paneWidths.value['subagent'], isNull);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the sidebar hides', (tester) async {
       final d = await app(tester);
       sidebarHidden.value = true;
       await slidesBack(tester);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the Files pane closes (⇧⌘E)', (tester) async {
       final (d, _) = await panesApp(
@@ -418,7 +411,7 @@ void main() {
       toggleFiles(_chat(tester));
       await slidesBack(tester);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the side chat hides (⇧⌘B)', (tester) async {
       final (d, _) = await panesApp(
@@ -431,7 +424,7 @@ void main() {
       _chat(tester).sideHidden.value = true;
       await slidesBack(tester);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   testWidgets("with no pane, the window's own rule (ADR 0092): too narrow "
@@ -451,7 +444,7 @@ void main() {
       expect(find.byType(DetailsPanel, skipOffstage: false), findsNothing);
       await closeView(tester, d);
     }
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a pane open in a chat area under 804: too narrow, no '
       'button or ⋯ entry, the panel gone and made once each time the area '
@@ -493,7 +486,7 @@ void main() {
       expect(asks(), asked);
     }
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("tucked, the rail still asks what fills the chat's context "
       'after a turn, as a shown one does, so it comes back current', (
@@ -525,7 +518,7 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
     expect(asked(), 1);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Artifacts… lists in the palette while the rail is tucked, '
       'and opens it where there is room', (tester) async {
@@ -553,7 +546,7 @@ void main() {
     expect(showDetails.value, isTrue);
     expect(_rail(), true);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("an archived chat's side chat takes no room", (tester) async {
     // At the Files pane's own line: the rail shows beside it, the side
@@ -568,7 +561,7 @@ void main() {
     expect(find.byType(FileView), findsOneWidget);
     expect(_rail(), true);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a chat whose session is gone is laid out as a live one: '
       'its side chat, a session of its own, takes its room (only archiving '
@@ -598,7 +591,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_rail(), true);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Changes and back, tucked: nothing slides, the header across '
       'on Changes', (tester) async {
@@ -630,7 +623,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getRect(find.byType(FileView)), preview);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('another chat with room shows its rail at once, and back '
       'the first is tucked, with no slide', (tester) async {
@@ -653,7 +646,7 @@ void main() {
     expect(_rail(), false);
     expect(tester.getRect(find.byType(FileView)), preview);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }
 
 ChatState _chat(WidgetTester tester) =>

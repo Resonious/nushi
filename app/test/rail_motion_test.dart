@@ -21,8 +21,6 @@ import 'right_panes_fixture.dart';
 // turning back from where it is; the header's buttons glide with the pane
 // in step; a tab's change or Reduce Motion puts all of it in place at once.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 PanesOpen _open({
   bool side = false,
   bool files = false,
@@ -90,7 +88,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getRect(_rail), at);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final way in ['another chat', 'another tab']) {
     testWidgets('first seen tucked ($way and back), it slides in from the '
@@ -127,7 +125,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.getRect(_rail), at);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('turned back mid-way, it goes from where it is, the same '
@@ -154,7 +152,7 @@ void main() {
       same(panel),
     );
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the transcript is laid out at its new width at once, its '
       'text gliding there', (tester) async {
@@ -182,7 +180,7 @@ void main() {
     expect(to, greaterThan(from + 100));
     expect(mid, inExclusiveRange(from, to));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("the header's buttons glide with an opening pane, in step, "
       'and come out from under one closing', (tester) async {
@@ -220,7 +218,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getRect(_menu).right, area.right - ChatHeader.end);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('opening a pane moves the buttons by its width, with the '
       'rail shown and with it tucked', (tester) async {
@@ -247,7 +245,7 @@ void main() {
       expect(tester.getRect(_menu).right, before - pane);
       await closeView(tester, d);
     }
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the details shown or hidden with a pane open move nothing in '
       'the header', (tester) async {
@@ -277,7 +275,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(marks(), before);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('another tab and back, a preview open: nothing slides, the '
       'buttons where they go on the first frame', (tester) async {
@@ -301,7 +299,7 @@ void main() {
       menu.right + ChatHeader.end,
     );
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('under Reduce Motion the rail, the pane and the buttons are '
       'where they go at once', (tester) async {
@@ -323,5 +321,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getRect(_rail), rail);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

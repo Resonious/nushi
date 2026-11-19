@@ -20,8 +20,6 @@ import 'harness.dart';
 // While a rewind or a Stop's take-back is on its way, the composer takes
 // nothing and sends nothing; the message lands in it after.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Item _you(String id, String text) => Item(
   id: id,
   kind: ItemKind.ITEM_KIND_USER_MESSAGE,
@@ -191,7 +189,7 @@ void main() {
       expect(b.text, 'Add the login page now');
       await _done(tester, b);
     },
-    variant: _mac,
+    variant: onMac,
   );
 
   testWidgets(
@@ -213,7 +211,7 @@ void main() {
       expect(b.text, 'Mind the footer\n\nAdd the login page');
       await _done(tester, b);
     },
-    variant: _mac,
+    variant: onMac,
   );
 
   testWidgets('a turn stopping: Queue, Stop and send and the pills are off', (
@@ -242,7 +240,7 @@ void main() {
 
     await _answer(tester, b, CancelTurnResponse());
     await _done(tester, b);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a failed rewind opens the box as it was, and says why', (
     tester,
@@ -262,7 +260,7 @@ void main() {
     expect(find.textContaining('the agent quit'), findsOne);
     await tester.pumpAndSettle(const Duration(seconds: 1)); // its toast
     await _done(tester, b);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a rewind running: a second one asks nothing', (tester) async {
     final b = await _box(tester);
@@ -272,7 +270,7 @@ void main() {
     expect(b.chat.rewinding.value, isTrue); // nor opens the box
     await _answer(tester, b, RewindChatResponse());
     await _done(tester, b);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('two chats do not share the lock', (tester) async {
     final other = _chat('other');
@@ -294,7 +292,7 @@ void main() {
     // A box that wasn't there takes it when it's next built.
     expect(b.chat.takeBack.value?.text, 'Add the login page');
     await _done(tester, b);
-  }, variant: _mac);
+  }, variant: onMac);
 
   group('Stop', () {
     testWidgets('of an unanswered message locks the box until it is back', (
@@ -314,7 +312,7 @@ void main() {
       expect(b.chat.stopping, isFalse);
       expect(b.text, 'Now the tests');
       await _done(tester, b);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('of an answered message leaves the box open', (tester) async {
       final b = await _box(
@@ -327,7 +325,7 @@ void main() {
       expect(_field(tester).readOnly, isFalse);
       await _answer(tester, b, CancelTurnResponse());
       await _done(tester, b);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('an agent that ignores it does not keep the box locked', (
       tester,
@@ -348,7 +346,7 @@ void main() {
       );
       expect(b.text, 'Typed meanwhile\n\nNow the tests');
       await _done(tester, b);
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the locked box', () {
@@ -367,7 +365,7 @@ void main() {
         );
         await _answer(tester, b, RewindChatResponse());
         await _done(tester, b);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   });
 

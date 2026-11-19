@@ -194,8 +194,6 @@ Finder get _buttons => find.descendant(
   matching: find.text('Preview'),
 );
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -218,7 +216,7 @@ void main() {
     expect(_previewOf('i'), findsOneWidget);
     expect(_previewOf('g'), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the phone: the preview full screen, Back to the chat', (
     tester,
@@ -332,7 +330,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(pane, findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the pane with a Markdown file, dark, wide', (tester) async {
     final d = await _app(tester);
@@ -346,5 +344,5 @@ void main() {
     expect(tester.getTopRight(find.byTooltip('Close')).dx, greaterThan(1660));
     await render(tester, find.byType(NushiApp), 'preview_markdown_dark');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

@@ -23,8 +23,6 @@ import 'right_panes_fixture.dart';
 // each crossing flips it once and holding still never does, and nothing
 // built again on the way.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const ({
   int browser,
   bool command,
@@ -181,7 +179,7 @@ void main() {
     );
     expect(asks(), asked);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('held at the line, or half a point from it, it never flips, '
       'and nothing is drawn once still', (tester) async {
@@ -214,7 +212,7 @@ void main() {
     await drag.up();
     await tester.pump(const Duration(seconds: 2));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a pointer's sub-pixel jitter at the line flips it at most "
       'once', (tester) async {
@@ -247,7 +245,7 @@ void main() {
     await drag.up();
     await tester.pump(const Duration(seconds: 2));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('beside the transcript, a drag stops at its least: the pane '
       'never jumps under the header, and stays beside once let go', (
@@ -274,7 +272,7 @@ void main() {
     expect(_over(tester), isFalse);
     expect(paneWidths.value['browser'], area.width - ChatView.leastBesideWide);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('over the transcript, a drag either way flips nothing: the '
       'preview is at its least, and its edge stays there', (tester) async {
@@ -307,7 +305,7 @@ void main() {
       expect(tester.getRect(find.byType(BrowserPane)), at);
     }
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the window resized across both lines and back, a point at '
       'a time near each: each flips at each crossing', (tester) async {
@@ -342,7 +340,7 @@ void main() {
     expect(watch.railFlips, 2);
     expect(watch.overFlips, 2);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("the sidebar dragged across the rail's line: it flips at each "
       'crossing', (tester) async {
@@ -375,5 +373,5 @@ void main() {
     await drag.up();
     await tester.pump(const Duration(seconds: 2));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

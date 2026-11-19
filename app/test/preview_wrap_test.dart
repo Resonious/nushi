@@ -39,8 +39,6 @@ final String _code = [
   for (var i = 4; i <= 200; i++) 'line $i of the kettle',
 ].join('\n');
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Item _wrote(String id, String path) => Item(
   id: id,
   kind: ItemKind.ITEM_KIND_TOOL_CALL,
@@ -218,7 +216,7 @@ void main() {
     expect(readSaved()['wrap'], isFalse);
     expect(await _wordWrap(tester), isFalse);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⌥Z leaves a rendered file alone, and wraps its Source', (
     tester,
@@ -235,7 +233,7 @@ void main() {
     await _altZ(tester);
     expect(wrapLines.value, isTrue);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⌥Z typed in the tree’s search field is a character, not '
       'wrapping', (tester) async {
@@ -246,7 +244,7 @@ void main() {
     await _altZ(tester);
     expect(wrapLines.value, isTrue);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a pane too narrow for its buttons still has Word wrap in its '
       '⋯', (tester) async {
@@ -274,7 +272,7 @@ void main() {
     expect(wrapLines.value, isFalse);
     expect(_across(tester), isNotNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('wrap off, a long line runs on: the view scrolls sideways '
       'and the numbers stay put', (tester) async {
@@ -315,7 +313,7 @@ void main() {
     expect(tester.getRect(_number(3)), number);
     expect(tester.takeException(), isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('wrapped, the long line takes many rows and nothing scrolls '
       'sideways', (tester) async {
@@ -326,7 +324,7 @@ void main() {
     );
     expect(_across(tester), isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a switch keeps the line on top', (tester) async {
     final d = await _app(tester);
@@ -363,7 +361,7 @@ void main() {
     await toggle();
     expect(topLine(), off);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('wrap off, a selection still copies the whole line', (
     tester,
@@ -386,7 +384,7 @@ void main() {
     expect(copied.last, startsWith('package main\n\n$_long\nline 4 '));
     expect(copied.last, contains('line 5 of the kettle\nline 6 of'));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, brightness) in [
     ('dark', Brightness.dark),
@@ -488,7 +486,7 @@ void main() {
         matchesGoldenFile('goldens/files_top_row_$name.png'),
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     for (final width in [1700.0, 720.0]) {
       for (final wrap in [true, false]) {
@@ -505,7 +503,7 @@ void main() {
             'preview_wrap_${width.toInt()}_${wrap ? 'on' : 'off'}_$name',
           );
           await closeView(tester, d);
-        }, variant: _mac);
+        }, variant: onMac);
       }
     }
   }

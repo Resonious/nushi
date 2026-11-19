@@ -179,7 +179,7 @@ void main() {
     expect(tester.widget<TextField>(_field).controller!.text, isEmpty);
     expect(tester.widget<TextField>(_field).focusNode!.hasFocus, isTrue);
     await close();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('Shift-Enter starts a line, the box grows upward from where '
       'it opened, and Enter sends the reply with its lines', (tester) async {
@@ -227,7 +227,7 @@ void main() {
     );
     expect(splitReplies(sent.text).$1.single.text, _lines.join('\n'));
     await end();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a click in the composer clears the selection and its toolbar', (
     tester,
@@ -244,7 +244,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(SelectionToolbar), findsNothing);
     await end();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a short window keeps the box inside, its field scrolling', (
     tester,
@@ -263,7 +263,7 @@ void main() {
     expect(box.bottom, lessThanOrEqualTo(view.bottom));
     expect(box.right, lessThanOrEqualTo(view.right));
     await end();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   // The reply box is placed in the transcript's whole box, not the strip a
   // short chat's few messages fill: there it was cut to that strip's height.
@@ -291,7 +291,7 @@ void main() {
       reason: 'every line shows',
     );
     await end();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   for (final (name, brightness) in [
     ('dark', Brightness.dark),
@@ -309,7 +309,7 @@ void main() {
         matchesGoldenFile('goldens/reply_box_$name.png'),
       );
       await end();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   // The whole window, wide and narrow, with the box open on a long reply
@@ -329,7 +329,7 @@ void main() {
       expect(box.right, lessThanOrEqualTo(view.right));
       expect(box.top, greaterThanOrEqualTo(view.top));
       await end();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   testWidgets('a reply edited from its card grows too: Shift-Enter starts '
@@ -357,7 +357,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(AlertDialog), findsNothing);
     expect(replies.value.single.text, _lines.join('\n'));
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a short rule parts a message’s cards from its typed text, '
       'and the end’s line never shows', (tester) async {

@@ -9,8 +9,6 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 import 'pull_fixture.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 final _text = GetGitHubMergeTextResponse(
   squashTitle: "Ignore q params that aren't hashes in admin filters (#412)",
   squashBody:
@@ -76,7 +74,7 @@ void main() {
             'pull_merge_${state}_${width.toInt()}_$theme',
           );
           d.dispose();
-        }, variant: _mac);
+        }, variant: onMac);
       }
     }
 
@@ -96,7 +94,7 @@ void main() {
           'pull_merged_${width.toInt()}_$theme',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     for (final width in [1700.0, 720.0]) {
@@ -121,7 +119,7 @@ void main() {
           'pull_merge_confirm_${width.toInt()}_$theme',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

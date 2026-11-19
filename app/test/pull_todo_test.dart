@@ -9,9 +9,8 @@ import 'package:nushi/settings.dart';
 import 'package:nushi/toast.dart';
 
 import 'fake_daemon.dart';
+import 'harness.dart';
 import 'pull_fixture.dart';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 GitHubComment _bot(String body) =>
     said('github-actions', body, bot: true, review: 'commented');
@@ -342,7 +341,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(d.chats['c']!.tab.value.name, 'chat');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("Settings' Findings from review bots: off, no findings; on, "
       'under their bot', (tester) async {
@@ -355,7 +354,7 @@ void main() {
     expect(find.text('spec/notebooks/page_spec.rb:68–72'), findsOneWidget);
     expect(find.text('Send all 7 to agent'), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a bot's review on an older commit: its findings' group says "
       'so, and shows it', (tester) async {
@@ -376,7 +375,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Risk:', findRichText: true), findsOneWidget);
     d2.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a check's Log: its log's failing part; Threads jumps to the "
       'list', (tester) async {
@@ -396,7 +395,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getRect(find.text('To do')).top, lessThan(100));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a check's Log that failed to come: closed and opened again, "
       'asked again, and the error goes', (tester) async {
@@ -422,7 +421,7 @@ void main() {
     expect(find.text('Bad state: down'), findsNothing);
     expect(find.textContaining('exit code 1'), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('nothing to do, a reviewer still asked: the head says who is '
       "next, To do's foot only Ping on GitHub", (tester) async {
@@ -438,7 +437,7 @@ void main() {
     );
     expect(find.text('Ping on GitHub'), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a draft with nothing to do: To do's foot says who is waited "
       "on, since the head's draft line doesn't", (tester) async {
@@ -458,5 +457,5 @@ void main() {
     );
     expect(find.text('Ping on GitHub'), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

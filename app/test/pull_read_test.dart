@@ -9,9 +9,8 @@ import 'package:nushi/pull_link.dart';
 import 'package:nushi/settings.dart';
 
 import 'fake_daemon.dart';
+import 'harness.dart';
 import 'pull_fixture.dart';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 void main() {
   setUpAll(loadFonts);
@@ -80,7 +79,7 @@ void main() {
     expect(find.text('Show less'), findsOneWidget);
     expect(tester.takeException(), isNull);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("the tab shows the chat's pull request as the chat asks for "
       'it: one GetGitHubPullRequest a minute, and a comment that comes '
@@ -96,7 +95,7 @@ void main() {
     expect(find.text('Activity 5'), findsOneWidget);
     expect(pullSeen.value['c'], commentTimes(whole).reduce(max));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the text reads in 860 points, centred, at 1440', (tester) async {
     final (d, _) = await openPullTab(tester, fixturePull());
@@ -118,7 +117,7 @@ void main() {
     expect(text.left, lessThan(pane.left + pad + 60));
     expect(text.right, lessThanOrEqualTo(pane.right - pad + 1));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a table's long cells wrap in the column", (tester) async {
     final p = fixturePull();
@@ -137,5 +136,5 @@ void main() {
       lessThanOrEqualTo(pane.right - readablePad(pane.width) + 1),
     );
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

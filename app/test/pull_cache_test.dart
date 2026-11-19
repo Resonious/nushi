@@ -14,8 +14,6 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 import 'pull_fixture.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 final _ref = GitHubRef(host: 'github.com', repo: fixtureRepo, number: 412);
 
 const _title = "Ignore q params that aren't hashes in admin filters";
@@ -48,7 +46,7 @@ void main() {
     expect(find.text(_title), findsOneWidget);
     expect(find.byKey(const ValueKey('pull-kept')), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('an open of a pull request read before: it shows at once, '
       '"Updated 2m ago · refreshing", then what GitHub says', (tester) async {
@@ -72,7 +70,7 @@ void main() {
     // And it's what shows next time.
     expect(cachedPull(_ref)!.$2.item.title, 'Renamed');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('after a restart (nothing in memory) it comes from the data '
       "folder; a failed ask keeps it and says when it's from", (tester) async {
@@ -88,7 +86,7 @@ void main() {
     expect(find.text(_title), findsOneWidget);
     expect(find.text('Updated 5m ago'), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("the PR widget's pull request is the one kept until asked", (
     tester,
@@ -106,7 +104,7 @@ void main() {
     expect(cp.pull?.item.title, _title);
     expect(cp.keptAt, fixtureNow.subtract(const Duration(minutes: 2)));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   test('kept files: one per pull request, private, the 50 newest', () {
     // Each read a minute after the one before: which are the newest is

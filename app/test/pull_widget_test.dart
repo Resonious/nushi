@@ -91,8 +91,6 @@ Finder get _rowMenu => _inPull(
   ),
 );
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// From now on FindChatPull finds #1 (opened since), and GetGitHubPull
 /// answers it whole.
 void _opened(FakeDaemon fake) => fake.answer = (input) => switch (input) {
@@ -154,7 +152,7 @@ void main() {
     expect(d.chats['c']!.pull?.number, 1);
     expect(_tab, findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('an ask the daemon was gone for is asked again once it is '
       'back, not a minute later', (tester) async {
@@ -174,7 +172,7 @@ void main() {
     expect(d.chats['c']!.pull?.number, 1);
     expect(_tab, findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the widget collapsed: linked within a minute; its tooltip says '
       'when it last looked and how often', (tester) async {
@@ -200,7 +198,7 @@ void main() {
     await tester.pump();
     expect(find.byTooltip('Checked 5 s ago · every minute'), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('asked 3 s after a push (in a cd … &&) and after a turn ends, '
       'and as the window comes to the front', (tester) async {
@@ -248,7 +246,7 @@ void main() {
     await tester.pump();
     expect(_asks(fake), ++asked);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   test('the tooltip: when last checked and how often', () {
     final at = DateTime(2026, 10, 29, 12);
@@ -278,7 +276,7 @@ void main() {
     expect(fake.calls.whereType<FindChatPullRequest>(), isNotEmpty);
     expect(fake.calls.whereType<GetGitHubPullRequest>(), isEmpty);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   // The owner's report: old chats had pull requests opened after they
   // were archived. An archived chat finds nothing new; its rows are asked
@@ -293,7 +291,7 @@ void main() {
     expect(rows.every((r) => r.chatId == 'c'), isTrue);
     expect(fake.calls.whereType<GetGitHubPullRequest>(), isNotEmpty);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('not a GitHub repository, or its default branch: no widget', (
     tester,
@@ -312,7 +310,7 @@ void main() {
     );
     expect(_pull, findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   // ADR 0117: a row a pull request; the details are the tab's.
   testWidgets("a draft: its row's icon says so; its ⋯ has Ready for review", (
@@ -345,7 +343,7 @@ void main() {
     expect(find.text('Ready for review on GitHub'), findsOneWidget);
     expect(find.textContaining('Merge…', findRichText: true), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('open with a failing check: the row, its badge and one cue; '
       'collapsed, the one-line summary', (tester) async {
@@ -365,7 +363,7 @@ void main() {
     expect(_inPull(find.byIcon(Icons.forum_outlined)), findsOneWidget);
     expect(_inPull(find.text('2')), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('merged: what it merged into; a new comment is the cue while '
       'open', (tester) async {
@@ -386,7 +384,7 @@ void main() {
       findsOneWidget,
     );
     e.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   test('a pull request named by its link, owner/name#n or its number', () {
     expect(
@@ -463,7 +461,7 @@ void main() {
       findsNothing,
     );
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   // The owner's report: the widget's ⋯, at the window's right, opened its
   // menu off to one side; and the pointer going onto it closed it. A row's
@@ -503,5 +501,5 @@ void main() {
     expect(sent.hasPull(), isFalse, reason: 'Unlink ran');
     expect(sent.unlink.number, 1);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }
