@@ -405,8 +405,8 @@ class _ToastCard extends StatelessWidget {
 }
 
 /// A toast's line: [leading] or [icon] (the failure's color when
-/// [failed]), [text], then [action] and × ([onClose]) when given, from the
-/// app's own controls, compact (ADR 0122).
+/// [failed]), [text], then [action] (a primary button) and × ([onClose])
+/// when given, from the app's own controls, compact (ADR 0122).
 class ToastLine extends StatelessWidget {
   const new(
     this.text, {
@@ -437,8 +437,14 @@ class ToastLine extends StatelessWidget {
           Icon(icon, size: 16, color: failed ? t.crashed : t.textSecondary),
         Expanded(child: Text(text)),
         if (action case final action?)
+          // The accent's fill: a plain button's lifted fill is the card's
+          // own, and its action would read as a word, not a button.
           ControlScale.compact(
-            child: Button(label: action.label, onPressed: action.onPressed),
+            child: Button(
+              label: action.label,
+              onPressed: action.onPressed,
+              kind: ButtonKind.primary,
+            ),
           ),
         if (onClose case final close?)
           IconTap(Icons.close, size: 14, tooltip: 'Dismiss', onTap: close),
