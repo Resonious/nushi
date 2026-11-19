@@ -156,16 +156,24 @@ void main() {
       ),
       findsOne,
     );
-    expect(_titleColor(tester, 'Old spike on caching'), t.textMuted);
+    expect(_titleColor(tester, 'Old spike on caching'), recededColor(t));
     expect(_titleColor(tester, 'Tidy the README'), t.textSecondary);
     // Its agent's mark muted too, as an archived chat's.
     AgentMark mark(String title) => tester.widget<AgentMark>(
       find.descendant(of: _rowOf(title), matching: find.byType(AgentMark)),
     );
-    expect(mark('Old spike on caching').color, t.textMuted);
+    expect(mark('Old spike on caching').color, recededColor(t));
     expect(mark('Tidy the README').color, isNull);
     // Pinned, it's the same.
-    expect(_titleColor(tester, 'Keep this'), t.textMuted);
+    expect(_titleColor(tester, 'Keep this'), recededColor(t));
+    expect(
+      tester.widget<Text>(find.text('Keep this').first).style?.fontStyle,
+      FontStyle.italic,
+    );
+    expect(
+      tester.widget<Text>(find.text('Tidy the README').first).style?.fontStyle,
+      isNot(FontStyle.italic),
+    );
     // An unseen end shows through sleep, the title not dimmed.
     final unseen = find.descendant(
       of: _dotIn(_rowOf('Asleep, unseen')),
@@ -211,7 +219,7 @@ void main() {
       findsNothing,
     );
     _expectSlot(tester, asleep);
-    expect(_titleColor(tester, 'Old spike on caching'), t.textMuted);
+    expect(_titleColor(tester, 'Old spike on caching'), recededColor(t));
     expect(_titleColor(tester, 'Tidy the README'), t.text);
     expect(_titleColor(tester, 'Asleep, unseen'), t.text);
     // Its state still in a word at the row's end.

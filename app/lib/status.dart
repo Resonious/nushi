@@ -290,6 +290,16 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
 /// unseen end to show ([ChatDot] draws nothing for it).
 bool recedes(ChatState chat) => chat.phase == .asleep;
 
+/// What a receding row's title and agent mark are drawn in: muted, and
+/// half as strong again, so a sleeping chat can't be taken for an idle
+/// one (the owner, 2026-11-19: muted alone, "I can't tell the
+/// difference"). Its title is italic too ([recededTitle]).
+Color recededColor(Tokens t) => t.textMuted.withValues(alpha: 0.5);
+
+/// [style] as a receding row's title wears it: [recededColor], italic.
+TextStyle recededTitle(TextStyle style, Tokens t) =>
+    style.copyWith(color: recededColor(t), fontStyle: FontStyle.italic);
+
 /// The moon beside "Asleep" in words (the chat's header), [ChatDot]'s
 /// size: a list's sleeping row has no mark, only a muted title.
 class SleepMark extends StatelessWidget {

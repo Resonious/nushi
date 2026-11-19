@@ -85,8 +85,8 @@ class _SidebarRowState extends State<SidebarRow> {
     final movable =
         widget.movable ?? (Widget child, {required bool enabled}) => child;
     final shows = sidebarShows.value;
-    // Asleep, it recedes as an archived one does: no dot, its mark and
-    // title muted; open, it reads as the open chat.
+    // Asleep, it recedes further than an archived one: no dot, its mark
+    // and title faint, the title italic; open, it reads as the open chat.
     final quiet = recedes(chat) && !shown;
     // Not the chat itself, which notifies at every streamed chunk.
     return ListenableBuilder(
@@ -162,7 +162,9 @@ class _SidebarRowState extends State<SidebarRow> {
                             chat.agentName,
                             AgentMark(
                               chat.agent,
-                              color: chat.archived || quiet
+                              color: quiet
+                                  ? recededColor(t)
+                                  : chat.archived
                                   ? t.textMuted
                                   : null,
                             ),
@@ -187,15 +189,19 @@ class _SidebarRowState extends State<SidebarRow> {
                                   overflow: TextOverflow.ellipsis,
                                   // The open chat's stands out from
                                   // the rest, which are a step quieter;
-                                  // a sleeping one's, two steps.
-                                  style: theme.ui(
-                                    chat.archived || quiet
-                                        ? t.textMuted
-                                        : shown
-                                        ? t.text
-                                        : t.textSecondary,
-                                    weight: shown ? FontWeight.w600 : null,
-                                  ),
+                                  // a sleeping one's is faint and italic.
+                                  style: quiet
+                                      ? recededTitle(theme.ui(t.textMuted), t)
+                                      : theme.ui(
+                                          chat.archived
+                                              ? t.textMuted
+                                              : shown
+                                              ? t.text
+                                              : t.textSecondary,
+                                          weight: shown
+                                              ? FontWeight.w600
+                                              : null,
+                                        ),
                                 ),
                         ),
                         if (widget.project)

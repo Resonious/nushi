@@ -44,7 +44,7 @@ Every colour is a token of `Tokens`; a theme changes values, never names. Read t
 
 **The accent**: `accent` fills (a primary button, a switch that's on; `accentPressed` pressed), `accentSoft` is its tint (the open row, a lit toggle, a choice to make), `accentInk` is the accent as text, an icon, or the focus ring (`focus`), since `accent` is too dark for that on dark surfaces.
 
-**States**, each an ink and a soft fill for its pill (`PhasePill`): `running` (on `accentSoft`), `needs`/`needsSoft` (waiting on the user; a warning), `done`/`doneSoft`, `crashed`/`crashedSoft` (failed; destructive), `idle` (off). Asleep has no mark in a list: the dot's slot stays empty and the row's title and agent mark take `textMuted`, as an archived chat's do (a moon beside the word Asleep in the chat's header only). A state that asks for nothing is `textSecondary` on `raised`.
+**States**, each an ink and a soft fill for its pill (`PhasePill`): `running` (on `accentSoft`), `needs`/`needsSoft` (waiting on the user; a warning), `done`/`doneSoft`, `crashed`/`crashedSoft` (failed; destructive), `idle` (off). Asleep has no mark in a list: the dot's slot stays empty and the row's title and agent mark take `textMuted` at half strength and the title is italic (`recededColor`, `recededTitle`: fainter than an archived chat's, since muted alone read like an idle row; a moon beside the word Asleep in the chat's header only). A state that asks for nothing is `textSecondary` on `raised`.
 
 **Shadows**: `shadow`, and `floatShadow` under what floats (twice as deep on a dark set); `scrim` behind an image opened whole.
 

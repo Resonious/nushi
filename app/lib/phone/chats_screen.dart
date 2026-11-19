@@ -294,7 +294,7 @@ class ChatRow extends StatelessWidget {
                   const SizedBox(width: 10),
                   AgentMark(
                     chat.agent,
-                    color: recedes(chat) ? t.textMuted : null,
+                    color: recedes(chat) ? recededColor(t) : null,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -303,10 +303,9 @@ class ChatRow extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       // Asleep, it recedes, as on the Mac.
-                      style: phoneText(
-                        context,
-                        color: recedes(chat) ? t.textMuted : null,
-                      ),
+                      style: recedes(chat)
+                          ? recededTitle(phoneText(context), t)
+                          : phoneText(context),
                     ),
                   ),
                   const SizedBox(width: 8),
