@@ -100,8 +100,6 @@ final _mice = <WidgetTester, TestGesture>{};
 Finder get _forkHere =>
     find.byTooltip('Fork from here: a new chat up to this message');
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -117,7 +115,7 @@ void main() {
     expect(d.selectedId, 'fork');
     expect(find.text('Fix the login redirect (fork)'), findsWidgets);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Fork chat in the palette; not offered when the agent can’t', (
     tester,
@@ -138,7 +136,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Fork'), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Fork from here on a forkable agent message, on hover', (
     tester,
@@ -159,14 +157,14 @@ void main() {
     expect(_forks(fake), ['c:m1']);
     expect(d.selectedId, 'fork');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('no Fork from here when the agent can’t fork', (tester) async {
     final (d, _) = await _app(tester, canFork: false);
     await _hover(tester, find.textContaining('So the page you asked'));
     expect(_forkHere, findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Keep as chat: the side pane closes, the chat stays, a toast '
       'goes to the kept chat', (tester) async {
@@ -204,7 +202,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(d.selectedId, 'kept');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   // The toast Keep as chat leaves, with its Go to chat, to look at
   // (`make renders`): the app's one toast (toast.dart).
@@ -231,7 +229,7 @@ void main() {
           'fork_kept_toast_${what}_${b.name}',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 
@@ -258,7 +256,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.widgetWithText(TextField, 'and the 404 page?'), findsOne);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, brightness) in [
     ('light', Brightness.light),
@@ -275,7 +273,7 @@ void main() {
         _inside(tester, find.text('Fork'), size);
         await render(tester, find.byType(NushiApp), 'fork_menu_${what}_$name');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('the palette, $what ($name)', (tester) async {
         final (d, _) = await _app(tester, size: size, brightness: brightness);
@@ -287,7 +285,7 @@ void main() {
           'fork_palette_${what}_$name',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('Fork from here, $what ($name)', (tester) async {
         final (d, _) = await _app(tester, size: size, brightness: brightness);
@@ -295,7 +293,7 @@ void main() {
         _inside(tester, _forkHere, size);
         await render(tester, find.byType(NushiApp), 'fork_here_${what}_$name');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('the side chat header, $what ($name)', (tester) async {
         final (d, _) = await _app(tester, size: size, brightness: brightness);
@@ -308,7 +306,7 @@ void main() {
           'fork_keep_side_${what}_$name',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

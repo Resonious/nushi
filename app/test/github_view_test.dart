@@ -754,7 +754,7 @@ void main() {
         matchesGoldenFile('goldens/github_window_1700_$name.png'),
       );
       await closeView(tester, d);
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
 
     // The window at both widths, the inbox, a pull request's page and its
     // files, to look at (`make renders`).
@@ -781,7 +781,7 @@ void main() {
         expect(find.byType(GitHubFiles), findsOneWidget);
         await render(tester, app, 'github_files_${w.round()}_$name');
         await closeView(tester, d);
-      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      }, variant: onMac);
     }
   }
 }

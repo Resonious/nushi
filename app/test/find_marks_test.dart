@@ -19,8 +19,6 @@ import 'long_chat.dart';
 // ⌘F's marks: the exact characters of each match, what's folded away, and
 // the text left as it was. The jump to a match is in find_jump_test.dart.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const ItemKind _user = ItemKind.ITEM_KIND_USER_MESSAGE;
 const ItemKind _agentKind = ItemKind.ITEM_KIND_AGENT_MESSAGE;
 
@@ -162,7 +160,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('None'), findsOne, reason: "not the Markdown's syntax");
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a match in each kind of text, and what's folded away", (
     tester,
@@ -189,7 +187,7 @@ void main() {
     expect(find.text('1 match'), findsNWidgets(2));
     expect(marks.where((m) => m.folded), hasLength(6));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a row opened shows its match, marked in place', (tester) async {
     final d = await _app(tester, [
@@ -205,7 +203,7 @@ void main() {
     expect(find.text('1 of 1'), findsOne);
     expect(_marks(tester).single.folded, isFalse);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a word cut off a row's title marks the row", (tester) async {
     final long = '${'word ' * 400}needle';
@@ -217,7 +215,7 @@ void main() {
     expect(find.text('1 of 1'), findsOne);
     expect(_marks(tester).single.folded, isTrue);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('marks leave the text as it was: a drag and ⌘C take the same', (
     tester,
@@ -246,7 +244,7 @@ void main() {
       'One relay here.\n\nAnd relay there.\n\nLast words',
     );
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a find coming and going leaves an entry's state alone", (
     tester,
@@ -272,7 +270,7 @@ void main() {
       reason: 'the row is still open',
     );
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("closing the bar takes every mark, the rows' too", (
     tester,
@@ -286,7 +284,7 @@ void main() {
     expect(find.textContaining(RegExp(r'^\d+ match')), findsNothing);
     expect(d.chats['c']!.find.hits, isEmpty);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a chunk looks again only at the entry it changed', (
     tester,
@@ -316,7 +314,7 @@ void main() {
       reason: 'the current one stays',
     );
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a message's actions on hover aren't looked in", (tester) async {
     final d = await _app(tester, [
@@ -337,7 +335,7 @@ void main() {
     expect(find.text('None'), findsOne);
     await mouse.removePointer();
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, size) in [
     ('wide', const Size(1700, 900)),
@@ -369,7 +367,7 @@ void main() {
           'find_marks_${name}_$theme',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

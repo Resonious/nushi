@@ -184,8 +184,6 @@ Finder get _pane => find.byType(FilesPane);
 
 Finder _inPane(Finder f) => find.descendant(of: _pane, matching: f);
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Future<void> _dark(WidgetTester tester) async {
   tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
   addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
@@ -334,7 +332,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(host.disposed, isTrue);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the pane’s edge lies beside a web view, not over it, and '
       'drags over it', (tester) async {
@@ -403,7 +401,7 @@ void main() {
     );
     d.dispose();
     await tester.pump(const Duration(seconds: 2)); // the width's saved
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('SVG and PDF in the web view; a PDF has no Source', (
     tester,
@@ -431,7 +429,7 @@ void main() {
     expect(_inPane(find.byKey(const Key('page'))), findsOneWidget);
     expect(_inPane(find.textContaining('Too large')), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a binary has no Preview; code has its source only, and '
       "isn't an artifact", (tester) async {
@@ -452,7 +450,7 @@ void main() {
     expect(_inPane(find.textContaining('"port": 8080,')), findsOneWidget);
     expect(_inPane(find.text(' 3')), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('CSV: a table of the first 500 rows, its source, dark', (
     tester,
@@ -472,7 +470,7 @@ void main() {
       findsOneWidget,
     );
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Mermaid on the Mac: drawn by the app’s page, again as it '
       'changes and with the theme; its source', (tester) async {
@@ -504,7 +502,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(diagram.disposed, isTrue);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   group('the phone', () {
     Future<Phone> phone(WidgetTester tester) async {

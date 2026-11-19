@@ -22,8 +22,6 @@ import 'package:nushi/theme/theme.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const _model = 'claude-opus-5-5[1m]';
 
 void main() {
@@ -156,6 +154,6 @@ void main() {
         '${file}_${width.toInt()}_$name',
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

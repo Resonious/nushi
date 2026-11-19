@@ -157,7 +157,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Not installed'), findsWidgets);
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('the last agent is picked: Enter starts it at once', (
     tester,
@@ -293,7 +293,7 @@ void main() {
     await _key(tester, LogicalKeyboardKey.enter);
     expect(fake.started.single.agent, 'codex');
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('→ lists the agent’s sessions; Enter opens one there', (
     tester,
@@ -421,7 +421,7 @@ void main() {
     // On the Mac: as a phone (a test's platform unless it says), the
     // filter's caret has a handle under it, over the first row, which
     // took the click meant for Busy.
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('the arrows keep the selected session in view', (tester) async {
     final (fake, d) = await _sidebar(tester);

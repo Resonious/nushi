@@ -21,8 +21,6 @@ import 'harness.dart';
 
 const _roadmap = '# Roadmap\n\n## Previews\n\nWhat a preview shows.\n';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The daemon: a chat whose folder holds `docs/roadmap.md`; any file is
 /// its text.
 FakeDaemon _fake() {
@@ -109,7 +107,7 @@ void main() {
     expect(copied, ['docs/roadmap.md']);
     expect(find.text('Copied'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the source button: View source, then lit, View preview', (
     tester,
@@ -152,7 +150,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_inPane(find.byTooltip('View source')), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a file outside the folder shows its path from ~', (
     tester,
@@ -161,7 +159,7 @@ void main() {
     final d = await _app(tester, file: '$home/elsewhere/todo.md');
     expect(_inPane(find.text('~ / elsewhere / todo.md')), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, brightness) in [
     ('dark', Brightness.dark),
@@ -210,6 +208,6 @@ void main() {
         find.byKey(const ValueKey('lines')),
         matchesGoldenFile('goldens/preview_path_line_$name.png'),
       );
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

@@ -132,8 +132,6 @@ Future<(Daemon, FakeDaemon)> _app(
   return (d, fake);
 }
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -237,7 +235,7 @@ void main() {
           expect(find.byType(GitHubCard), findsNothing);
           await closeView(tester, d);
         },
-        variant: _mac,
+        variant: onMac,
       );
     }
   }

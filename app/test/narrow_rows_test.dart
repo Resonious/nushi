@@ -151,7 +151,7 @@ void main() {
       );
       await render(tester, find.byType(NushiApp), 'narrow_rows_pane_$width');
       d.dispose();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   testWidgets('a run and its rows fit from a narrow pane up, with big '

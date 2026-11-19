@@ -25,8 +25,6 @@ const PanesOpen _files = (
   browser: 0,
 );
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   // The engine gives each press a pointer of its own, on the one mouse.
   var pointers = 10;
@@ -96,7 +94,7 @@ void main() {
     expect(layout(tester), before);
     expect(paneWidths.value, isEmpty);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('fingers resting, a click-drag of the Files edge: its release '
       'ends the drag, the fingers moving after move nothing', (tester) async {
@@ -118,7 +116,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(layout(tester), after);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("the tree's edge: a hover mid-drag ends it, and the press's "
       'moves after move nothing', (tester) async {
@@ -143,7 +141,7 @@ void main() {
     expect(layout(tester), after);
     expect(paneWidths.value['filesTree'], saved);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('expanded mid-drag, then collapsed: dropped, the layout as '
       'before', (tester) async {
@@ -160,7 +158,7 @@ void main() {
     expect(layout(tester), before);
     expect(tester.takeException(), isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('closed mid-drag, then opened: dropped, the layout as before', (
     tester,
@@ -177,5 +175,5 @@ void main() {
     expect(layout(tester), before);
     expect(tester.takeException(), isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

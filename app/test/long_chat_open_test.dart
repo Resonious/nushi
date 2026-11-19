@@ -72,5 +72,5 @@ void main() {
     expect(asked.recent, Daemon.macRecentItems);
     expect(frames, lessThan(12), reason: 'the recent part, a few frames');
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

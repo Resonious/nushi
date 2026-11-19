@@ -17,8 +17,6 @@ import 'long_chat.dart';
 // ⌘F's jump: the current match in view, whatever its distance, on a chat
 // as long as the owner's. Its marks are in find_marks_test.dart.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The app on chat c with [items]; [settle] lets it fill in first.
 Future<Daemon> _app(
   WidgetTester tester,
@@ -150,7 +148,7 @@ void main() {
     expect(find.text('1 of 1'), findsOne);
     _inView(tester, 'needle');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a long chat still filling in: typing goes to the match', (
     tester,
@@ -162,7 +160,7 @@ void main() {
     await _type(tester, 'needle');
     _inView(tester, 'needle');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a long chat still filling in: a match halfway up', (
     tester,
@@ -175,7 +173,7 @@ void main() {
     await _type(tester, 'needle');
     _inView(tester, 'needle');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a match deep in a long message comes into view itself', (
     tester,
@@ -187,7 +185,7 @@ void main() {
     await _type(tester, 'needle');
     _inView(tester, 'needle');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⏎ goes on to the next match in the same long message', (
     tester,
@@ -201,7 +199,7 @@ void main() {
     await tester.pumpAndSettle();
     _inView(tester, 'needle', n: 1);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⇧⏎ from the first match goes round to the last, far below', (
     tester,
@@ -220,7 +218,7 @@ void main() {
     expect(find.text('2 of 2'), findsOne);
     _inView(tester, 'needle at the end');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a match that shows stays where it is', (tester) async {
     final d = await _app(tester, [
@@ -232,7 +230,7 @@ void main() {
     await _type(tester, 'needle');
     expect(_scroll(tester).pixels, before);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a match under the find bar is brought out from under it', (
     tester,
@@ -246,7 +244,7 @@ void main() {
     final at = _rect(tester, 'far right');
     expect(at.overlaps(bar), isFalse, reason: '$at under $bar');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a chat's first message, right under the find bar, comes out "
       'from under it', (tester) async {
@@ -263,7 +261,7 @@ void main() {
     final at = _rect(tester, 'needle');
     expect(at.overlaps(bar), isFalse, reason: '$at under $bar');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a match off a code block's right edge comes into view", (
     tester,
@@ -280,7 +278,7 @@ void main() {
     expect(at.left, greaterThanOrEqualTo(list.left));
     _inView(tester, 'needle');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a streaming chat stays where a jump put it, until the user '
       'goes back to the bottom', (tester) async {
@@ -300,7 +298,7 @@ void main() {
     await _stream(tester, d, 1);
     expect(s.pixels, s.maxScrollExtent);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a jump to the very bottom doesn't follow it from there", (
     tester,
@@ -319,7 +317,7 @@ void main() {
     await _stream(tester, d, 2);
     expect(s.pixels, at);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a jump the follower would pull back as the chat fills in', (
     tester,
@@ -335,5 +333,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(_scroll(tester).pixels, at);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

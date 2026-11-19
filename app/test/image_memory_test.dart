@@ -195,5 +195,5 @@ void main() {
     }
     expect(left.rows, 0, reason: said);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

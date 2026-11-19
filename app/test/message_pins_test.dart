@@ -23,8 +23,6 @@ import 'package:nushi/theme/theme.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Int64 _ago(int minutes) =>
     Int64(fixtureNow.millisecondsSinceEpoch - minutes * 60000);
 
@@ -252,7 +250,7 @@ void main() {
     expect(d.chats['c']!.pinnedMessages, isEmpty);
     expect(find.byType(Rail), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('no Pin on the message still being written', (tester) async {
     final (d, _) = await _window(tester, busy: true);
@@ -276,7 +274,7 @@ void main() {
     await over('The tests, line 39');
     expect(find.byTooltip('Pin'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a pin the daemon refuses goes back', (tester) async {
     final (d, fake) = await _window(tester);
@@ -288,7 +286,7 @@ void main() {
     expect(d.chats['c']!.pinnedMessages, isEmpty);
     expect(find.byType(Rail), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('what can be pinned: an agent message of the chat’s own, '
       'shown by a daemon that keeps pins', (tester) async {
@@ -355,7 +353,7 @@ void main() {
     await _scrollTo(tester, a2 - third + 40);
     expect(_current(tester, 4), 2);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('two short answers at the end: each is current somewhere, '
       'and a pick is current until the list scrolls', (tester) async {
@@ -388,7 +386,7 @@ void main() {
     await _scrollTo(tester, p.maxScrollExtent);
     expect(_current(tester, 4), 3);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a call opened above a pin moves it: the current entry '
       'follows, though nothing scrolled', (tester) async {
@@ -410,7 +408,7 @@ void main() {
     expect(_topOf(tester, 'The tests, line 0') - before, greaterThan(third));
     expect(_current(tester, 3), 1);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the pointer over the rail opens its menu; leaving both '
       'closes it; a pick goes there', (tester) async {
@@ -469,7 +467,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_scroll(tester).pixels, 0);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a click on a menu row over the rail picks it, and the '
       'menu stays closed until the pointer leaves the rail', (tester) async {
@@ -493,7 +491,7 @@ void main() {
     await _move(tester, at);
     expect(_row('Session start'), findsOneWidget, reason: 'back over it');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the rail from the keyboard: focus opens its menu at the '
       'current entry, ↑↓ move, Enter picks, Esc closes', (tester) async {
@@ -526,7 +524,7 @@ void main() {
     expect(_current(tester, 3), 1);
     await tester.pumpAndSettle();
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a title from the agent repaints the open menu', (tester) async {
     final (d, fake) = await _window(tester, pins: ['a1']);
@@ -539,7 +537,7 @@ void main() {
     expect(_row('How the relay restarts'), findsOneWidget);
     expect(_row('Relay restart plan'), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   test('the menu’s dim titles are told from the current one’s, and read, '
       'in every built-in theme', () {
@@ -670,7 +668,7 @@ void main() {
         find.byKey(const ValueKey(#host)),
         matchesGoldenFile('goldens/pins_menu_${b.name}.png'),
       );
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   for (final (width, b) in [
@@ -703,7 +701,7 @@ void main() {
       expect(menu.right, lessThan(width));
       await render(tester, find.byType(NushiApp), '${name}_menu');
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   for (final (size, b) in [

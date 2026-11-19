@@ -22,8 +22,6 @@ import 'right_panes_fixture.dart';
 // the Files pane's tree opens a provisional tab, in italics, which the
 // next click's file takes the place of until it's kept.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const PanesOpen _files = (
   side: false,
   files: true,
@@ -107,7 +105,7 @@ void main() {
     expect(_italic(tester, 'README.md'), isTrue);
     await render(tester, find.byType(NushiApp), 'files_preview_tab');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a double click in the tree keeps the tab; two slow clicks, '
       'or quick ones on two rows, don’t', (tester) async {
@@ -147,7 +145,7 @@ void main() {
     expect(_italics(tester).single, isNot('README.md'), reason: 'auth’s');
     await render(tester, find.byType(NushiApp), 'files_preview_tabs');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a double click on its tab or its name keeps it; so do ⏎ in '
       'the tree, any other way of opening it, and a pin', (tester) async {
@@ -191,7 +189,7 @@ void main() {
     togglePin(c, 'b.md');
     expect(c.files.provisional.value, isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('one click on its tab shows it and leaves it provisional, '
       'so the next click in the tree takes its place', (tester) async {
@@ -227,7 +225,7 @@ void main() {
       PreviewFile('README.md'),
     ]);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the lone name’s first click shows it in the tree, as a '
       'single click does, and leaves it provisional; the second keeps it', (
@@ -251,7 +249,7 @@ void main() {
     expect(c.files.provisional.value, isNull);
     expect(tree.selected, 'README.md');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('two quick clicks further apart than a double click’s slop '
       'are two clicks: the tab stays provisional', (tester) async {
@@ -278,7 +276,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(c.files.provisional.value, isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('with Preview tabs off, every click keeps its tab', (
     tester,
@@ -299,7 +297,7 @@ void main() {
     expect(c.files.tabs.value, hasLength(2));
     expect(c.files.provisional.value, isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('an edit keeps it: its first unsaved change', (tester) async {
     final (d, _) = await openEditor(tester, {
@@ -315,7 +313,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(c.files.tabs.value, hasLength(2), reason: 'not in its place');
     await endEditor(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),
@@ -349,6 +347,6 @@ void main() {
         matchesGoldenFile('goldens/files_preview_tabs_$name.png'),
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

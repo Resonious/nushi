@@ -14,8 +14,6 @@ import 'harness.dart';
 // Claude's /plan, which the daemon runs in claude's place (claude refuses
 // it headless) and lists with claude's own commands.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// /plan as the daemon lists it in a Claude chat (internal/claude).
 final _plan = Command(
   name: 'plan',
@@ -63,7 +61,7 @@ void main() {
       '/plan ',
     );
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a /plan the daemon ran leaves no message waiting for its echo', (
     tester,
@@ -85,7 +83,7 @@ void main() {
     await tester.pump();
     expect(chat.outbox.sending.map((it) => it.text), ['hello']);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   // What /plan leaves in the transcript, as the daemon sends it: its notice
   // line, muted as the agent's own notices, then the description it sent.

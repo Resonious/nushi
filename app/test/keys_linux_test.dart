@@ -356,5 +356,5 @@ void main() {
     expect(find.text('Quit Nushi'), findsNothing);
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

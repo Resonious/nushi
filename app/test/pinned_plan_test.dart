@@ -24,8 +24,6 @@ import 'harness.dart';
 import 'pinned_plan_fixture.dart';
 import 'update_fixtures.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The app on chat `c` with [items] (and chat `d` with [other]), working
 /// unless [idle], at [size]; with Reduce Motion when [still].
 Future<(Daemon, FakeDaemon)> _app(
@@ -146,7 +144,7 @@ void main() {
     final box = tester.getRect(find.byType(TextField));
     expect(card.bottom, lessThanOrEqualTo(box.top));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('it stays once the turn ends with steps not done, and goes '
       'once they all are, its card back in the transcript', (tester) async {
@@ -171,7 +169,7 @@ void main() {
     expect(_inTranscript('shown over the box'), findsNothing);
     expect(find.text('A cursor in store.ListPosts'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a new plan takes the old one’s place', (tester) async {
     final (d, fake) = await _app(tester);
@@ -196,7 +194,7 @@ void main() {
     expect(_inTranscript('A cursor in store.ListPosts'), findsOneWidget);
     expect(_inTranscript('shown over the box'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a chat without a plan, or with one all done, pins none', (
     tester,
@@ -209,7 +207,7 @@ void main() {
     expect(_pinned('Plan'), findsNothing);
     expect(_inTranscript('Plan · 4 of 4 done'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the line collapses and expands it, its chevron staying put, '
       'remembered for every chat', (tester) async {
@@ -249,7 +247,7 @@ void main() {
     expect(_pinned('Step 1 of the long plan'), findsOneWidget);
     expect(planCollapsed.value, isFalse);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('open, a long plan scrolls inside it, the composer in its '
       'place', (tester) async {
@@ -269,7 +267,7 @@ void main() {
     expect(position.maxScrollExtent, greaterThan(0));
     expect(_pinned('Step 12 of the long plan'), findsOneWidget); // laid out
     await closeView(tester, d2);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the update card and Jump to latest sit above it', (
     tester,
@@ -289,7 +287,7 @@ void main() {
       lessThanOrEqualTo(card.top),
     );
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a plan pinned no longer keeps what the reader sees in place', (
     tester,
@@ -313,7 +311,7 @@ void main() {
     expect(anchor, findsOneWidget);
     expect(_inTranscript('Plan · 4 of 4 done'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('with Reduce Motion it comes, goes and folds at once', (
     tester,
@@ -328,7 +326,7 @@ void main() {
     expect(_pinned('Plan'), findsNothing);
     expect(_inTranscript('Plan · 4 of 4 done'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, tokens) in [
     ('light', Tokens.light),

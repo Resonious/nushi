@@ -144,8 +144,6 @@ int _spans(WidgetTester tester) {
 
 const _note = 'Can’t show this file: it isn’t text.';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -288,7 +286,7 @@ void main() {
       findsOneWidget,
     );
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, brightness) in [
     ('light', Brightness.light),
@@ -325,7 +323,7 @@ void main() {
           'sniff_binary_${size}_$name',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

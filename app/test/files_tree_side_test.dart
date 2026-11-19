@@ -21,12 +21,6 @@ import 'right_panes_fixture.dart';
 // The Files pane's File tree position (ADR 0123), Claude desktop's:
 // Automatic (the right, away from the transcript), Left or Right.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-const _both = TargetPlatformVariant({
-  TargetPlatform.macOS,
-  TargetPlatform.linux,
-});
-
 const PanesOpen _files = (
   side: false,
   files: true,
@@ -141,7 +135,7 @@ void main() {
     expect(tester.getRect(_tree), tree);
     expect(tester.getRect(find.byType(FileView)), view);
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   for (final width in [200.0, 260.0, 480.0]) {
     testWidgets('opening, switching and closing files never move the tree, on '
@@ -182,7 +176,7 @@ void main() {
         expect(tree.width, width);
         await closeView(tester, d);
       }
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('a file opening Files puts the tree where opening Files and '
@@ -208,7 +202,7 @@ void main() {
       expect(tester.getRect(_tree), tree, reason: '$side');
       await closeView(tester, d);
     }
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the tree keeps its search and the viewer its file as it '
       'changes sides; its edge drags from the viewer’s side', (tester) async {
@@ -256,7 +250,7 @@ void main() {
     expect(paneWidths.value['filesTree'], from + 40);
     expect(tester.getRect(_tree).left, tree.left);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('View › File Tree Position and the palette set it too, the '
       'value now unavailable in each', (tester) async {
@@ -295,7 +289,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(filesTreeSide.value, TreeSide.automatic);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),
@@ -321,7 +315,7 @@ void main() {
         matchesGoldenFile('goldens/files_tree_left_$name.png'),
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   for (final side in [TreeSide.right, TreeSide.left]) {
@@ -379,6 +373,6 @@ void main() {
             : ['top', 'bar', 'viewer', 'search', 'tree'],
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

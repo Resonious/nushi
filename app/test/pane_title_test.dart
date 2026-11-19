@@ -14,8 +14,6 @@ import 'right_panes_fixture.dart';
 // A pane narrowed for a narrow window shortens the words in its top row,
 // never its buttons, and never runs past its edge (ADR 0123).
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -124,5 +122,5 @@ void main() {
     await tester.pumpAndSettle();
     await render(tester, find.byType(NushiApp), 'pane_title_720_sidebar');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

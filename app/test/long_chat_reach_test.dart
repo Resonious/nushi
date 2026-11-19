@@ -17,8 +17,6 @@ import 'harness.dart';
 import 'long_chat.dart';
 import 'paged_chat.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Future<void> _settle(WidgetTester tester) async {
   await frames(tester, 40, const Duration(milliseconds: 16));
 }
@@ -69,7 +67,7 @@ void main() {
     expect(c.items.any((it) => it.id == 'c-sa3'), isTrue);
     expect(find.text('This subagent is no longer in the chat.'), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('left scrolled to its start and let go (not among the last '
       'six), a chat reopens where it was', (tester) async {
@@ -125,7 +123,7 @@ void main() {
     expect(start.top, greaterThanOrEqualTo(list.top));
     expect(start.bottom, lessThanOrEqualTo(list.bottom));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Up recalls the last message when the last turn is longer '
       'than the recent part', (tester) async {
@@ -168,7 +166,7 @@ void main() {
     );
     expect(c.older, greaterThan(0), reason: 'only the pages back to it');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a background command started early and still running shows '
       'in Background tasks, and its events keep it up', (tester) async {
@@ -213,5 +211,5 @@ void main() {
     expect(c.runningBefore.single.backgroundCommand.state, 'completed');
     expect(find.byTooltip('Stop'), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

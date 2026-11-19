@@ -135,7 +135,7 @@ void main() {
       expect(frames, inInclusiveRange(pulses * 0.9, pulses + span.inSeconds));
 
       await close();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   testWidgets('a project’s animated tile: nothing is drawn while it '
@@ -198,7 +198,7 @@ void main() {
     expect(await _framesOver(tester, const Duration(seconds: 12)), 0);
 
     await close();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('every chat idle: the window draws nothing at all', (
     tester,
@@ -213,5 +213,5 @@ void main() {
     expect(await _framesOver(tester, const Duration(seconds: 12)), 0);
 
     await close();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

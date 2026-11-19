@@ -676,7 +676,7 @@ void main() {
         matchesGoldenFile('goldens/jira_window_1700_$name.png'),
       );
       await closeView(tester, d);
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
 
     // The window at both widths, the list and then an issue's page, to
     // look at (`make renders`).
@@ -698,7 +698,7 @@ void main() {
         expectTextInside(tester, w);
         await render(tester, app, 'jira_issue_${w.round()}_$name');
         await closeView(tester, d);
-      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      }, variant: onMac);
     }
   }
 }

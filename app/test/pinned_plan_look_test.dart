@@ -18,8 +18,6 @@ import 'harness.dart';
 import 'pinned_plan_fixture.dart';
 import 'update_fixtures.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The app on a chat with [items], working unless [idle], its details
 /// hidden, at [size] in [brightness].
 Future<(Daemon, FakeDaemon)> _app(
@@ -76,7 +74,7 @@ void main() {
           'plan_running_${w}_${b.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('a running plan collapsed, ${b.name}, $w wide', (
         tester,
@@ -90,7 +88,7 @@ void main() {
           'plan_collapsed_${w}_${b.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('a long plan, ${b.name}, $w wide', (tester) async {
         final (d, _) = await _app(
@@ -102,7 +100,7 @@ void main() {
         expectTextInside(tester, size.width);
         await render(tester, find.byType(NushiApp), 'plan_long_${w}_${b.name}');
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('a question under a plan, ${b.name}, $w wide', (
         tester,
@@ -125,7 +123,7 @@ void main() {
           'plan_question_${w}_${b.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('queued messages under a plan, ${b.name}, $w wide', (
         tester,
@@ -147,7 +145,7 @@ void main() {
           'plan_queued_${w}_${b.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('the update card over a plan, ${b.name}, $w wide', (
         tester,
@@ -168,7 +166,7 @@ void main() {
           'plan_update_${w}_${b.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('a 360-wide chat, ${b.name}', (tester) async {
@@ -192,7 +190,7 @@ void main() {
         'plan_narrow_collapsed_${b.name}',
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the phone, ${b.name}', (tester) async {
       viewport(tester, const Size(390, 844), ratio: 2, brightness: b);
