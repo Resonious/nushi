@@ -1,6 +1,8 @@
 # 0066. Claude through Nushi's Go agent (draft)
 
-A draft: the Go agent is in, off by default. The default flips by an amendment once the conditions below hold.
+No longer a draft: since the amendment of 2026-11-04 (below) the Go agent is Claude's only agent.
+
+As first written: a draft, the Go agent in and off by default, the default to flip by an amendment once the conditions below hold.
 
 ## Context
 Claude runs through claude-agent-acp 0.94.0 under the user's Node ([0037](0037-agents-you-set-up.md)): a Set up that downloads 9 MB into 73 MB, Node on `PATH`, a Node process per chat beside each `claude`, and the TypeScript Agent SDK inside, whose code is all rights reserved, so its behaviour can only be observed. Nushi reads the adapter's wire shape and a few vendor extensions (`_meta.claudeCode`, `_claude/origin`, the subagents RFD, fork-at).

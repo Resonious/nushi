@@ -5,7 +5,7 @@ A chat is a conversation with one agent, in one folder. This page covers the win
 ## The window
 
 - **First run.** With no chat open, the pane offers New chat, Open a folder…, and the recent folders: the chats' folders, or before there are any, the folders Claude's sessions were found in. Each starts a new chat there.
-- **The sidebar** lists Pinned, then your sections, then the projects and their chats, each project's tile before its name ([below](#starting-and-arranging-chats)); its Arrange button groups and sorts them otherwise ([Arrange](#arrange)). Its foot has Jira, GitHub and Settings, and under them a card that counts working, awake and sleeping agents and shows the memory Nushi takes (a click on the memory lists each awake chat's). ⌘\ or the sidebar button at the window's top left (past the traffic lights, where it stays whether the sidebar shows or not) hides it, and the main area takes the window, with those counts and the memory on a line under it; the same button, ⌘\, the palette or View › Show Sidebar brings it back. Beside it, Back and Forward (⌘[ and ⌘]) go through the chats you opened, and Jira and GitHub, as a browser's do, greyed out when there's nowhere to go. While it's hidden, the pointer on that button (or resting on the window's left edge) slides the sidebar in over the chat, on a floating card, without moving the chat; pick a chat or a project there, open its menus, and it slides away once the pointer leaves it (after a moment, and never while one of its menus is open). Clicking the button then keeps it shown. Nushi remembers which, and the sidebar's width. Hidden, ⌘K still goes to any chat, Jira, GitHub and Settings, and a chat's color is a chip before its title in its header.
+- **The sidebar** lists Pinned, then your sections, then the projects and their chats, each project's tile before its name ([below](#starting-and-arranging-chats)); its Arrange button groups and sorts them otherwise ([Arrange](#starting-and-arranging-chats)). Its foot has Jira, GitHub and Settings, and under them a card that counts working, awake and sleeping agents and shows the memory Nushi takes (a click on the memory lists each awake chat's). ⌘\ or the sidebar button at the window's top left (past the traffic lights, where it stays whether the sidebar shows or not) hides it, and the main area takes the window, with those counts and the memory on a line under it; the same button, ⌘\, the palette or View › Show Sidebar brings it back. Beside it, Back and Forward (⌘[ and ⌘]) go through the chats you opened, and Jira and GitHub, as a browser's do, greyed out when there's nowhere to go. While it's hidden, the pointer on that button (or resting on the window's left edge) slides the sidebar in over the chat, on a floating card, without moving the chat; pick a chat or a project there, open its menus, and it slides away once the pointer leaves it (after a moment, and never while one of its menus is open). Clicking the button then keeps it shown. Nushi remembers which, and the sidebar's width. Hidden, ⌘K still goes to any chat, Jira, GitHub and Settings, and a chat's color is a chip before its title in its header.
 - **Settings** (⌘,) opens over the window, which stays in sight behind it, dimmed, and grows with the window; its sections in a list on the left, grouped (App, Agents, Connections, then Logs & advanced), a green dot on GitHub or Jira once an account there works. Esc, Close, ⌘, again or a click outside shut it, and you're where you were ([ADR 0087](adr/0087-settings-is-a-modal.md)). What starts work elsewhere (a chat from New skill…, a chat opened from Chat history, a menu bar item) shuts it first. Settings › Appearance's Mode (System, Light or Dark; also in the View menu) is remembered.
 - **Chat width.** Settings › Appearance's Layout (Centered or Full width) or the palette (⌘K): a centered column, or the whole width of the window.
 - **Themes.** Settings › Appearance (or the palette's Appearance and themes) picks the palette, first on the page: Mode, then a card for each theme, a small picture of Nushi in it, the picked one ringed and checked. The cards show the set the app shows; Mode shows the other. A card names its set where the palette does (Catppuccin Mocha, Tokyo Night Day). A pick repaints at once and is remembered. Built in: Nushi, Vivid (bolder fills), Solarized, Nord, Catppuccin (Mocha when dark, Latte when light) and Tokyo Night (Night when dark, Tokyo Night Day when light). A theme others publish keeps its published colors in code, diffs, the terminal and the transcript's text, even where those read fainter than Nushi's own. The phone's Settings picks one of these for the phone, from the same pictures. See [Themes](#themes) for your own.
@@ -114,7 +114,7 @@ Nushi remembers all of it. ⌘1–⌘9 and ⌥⌘↑ ⌥⌘↓ go through the ch
 | ⌘K, ⌘⇧P | The command palette. |
 | ⌘F | Find. |
 | Any character | Typed with nothing that takes text focused (after a click on the transcript, say), it goes at the end of the chat's box, which takes the focus, as if typed there: `/` opens the commands. Keys with ⌘, ⌃ or ⌥ (but AltGr's characters on Windows), Esc, the arrows, Tab, Enter and Space keep their meaning, as do R on a selection (reply), a field, a terminal, the Files pane's editor, an open menu and a dialog ([ADR 0121](adr/0121-type-to-write.md)). |
-| ⌘; | The next typo in the composer ([Spell check](#spell-check)). |
+| ⌘; | The next typo in the composer ([Spell check](#spell-check)). On Linux F7 (IBus takes Ctrl+; for its emoji). |
 | ⌘P | Open file. |
 | ⇧⌘E | Show or hide the Files pane (its open files stay). |
 | ⇧⌘Y | Show or hide the Files pane's tree (View › Show File Tree); with the pane closed, open it with its tree. |
@@ -122,7 +122,7 @@ Nushi remembers all of it. ⌘1–⌘9 and ⌥⌘↑ ⌥⌘↓ go through the ch
 | Esc | Stop a running turn. |
 | Esc Esc | Rewind: list your messages. |
 
-The chat keys work in a terminal too.
+The chat keys work in a terminal too: on the Mac every ⌘ key but ⌘F and ⌘W, which the terminal keeps. On Linux, where Ctrl and a key is the shell's, only Ctrl+Shift+P, Ctrl+Shift+B, Ctrl+Shift+E, Ctrl+Shift+Y, Ctrl+,, Ctrl+\`, Ctrl+Alt+1–3, Ctrl+1–9, Ctrl+Page Up and Down, Ctrl+Tab and Ctrl+Shift+Tab get past a focused terminal.
 
 ## The palette
 
@@ -174,11 +174,11 @@ Messages waiting in the queue stay held after a failed turn, or one you stopped:
 
 ## Spell check
 
-On the Mac the composer checks spelling as you type, with macOS's own checker, languages and dictionary; on Windows with Windows's, in your language (Settings › General's Check spelling while typing, on at first). A misspelled word gets a dotted underline once you've moved on from it, by a space, punctuation or the caret; a word isn't judged while the caret's in it. Typos never stop a message going.
+On the Mac the composer checks spelling as you type, with macOS's own checker, languages and dictionary; on Linux with enchant, over your Hunspell, Nuspell or Aspell dictionary; on Windows with Windows's, in your language (Settings › General's Check spelling while typing, on at first). A misspelled word gets a dotted underline once you've moved on from it, by a space, punctuation or the caret; a word isn't judged while the caret's in it. Typos never stop a message going.
 
 - **Click a flagged word**, or press ⌘; (Chat › Next Typo) to go to the next one after the caret: a menu opens above it with up to four suggestions, Ignore and Add to dictionary. ⏎ takes the first suggestion and 1–4 take that one; esc closes, and any other key closes it and carries on. After ⌘;, a suggestion taken, Ignore, Add or esc puts the caret back where it was before the key, so fixing a word doesn't take your place in the text; after a click it stays at the word. ⌘Z undoes a suggestion, which keeps the word's capital.
 - **Right-click a flagged word** for the same, over Cut, Copy and Paste.
-- **Ignore** lasts until Nushi quits, in every chat. **Add to dictionary** goes in the macOS user dictionary, or Windows's for your language, which every app shares.
+- **Ignore** lasts until Nushi quits, in every chat. **Add to dictionary** goes in the macOS user dictionary, enchant's personal list on Linux (`$XDG_CONFIG_HOME/enchant/<language>.dic`), or Windows's for your language, which every app shares.
 - **Left alone**: anything in backticks or fences, paths, URLs, words starting with `/ @ # ~ $ -`, anything with digits, dots, underscores or colons in it, camelCase and ALLCAPS, words under three letters, capitalized words mid-sentence (probably names; one starting a sentence is checked), and any word of the agent's messages in this chat, which covers the project's own. A hyphenated word is checked part by part. A prompt past 20,000 characters is checked up to there.
 
 A subagent's box, a reply box and a review comment aren't checked.
@@ -318,7 +318,7 @@ A chat in a git repository can run in a worktree of its own, `.worktrees/<two wo
 
 - The daemon owns them, so they keep running when the app quits and reopens. A daemon restart ends them.
 - The shell is your login shell; on Windows, the one Windows Terminal's default profile opens, else PowerShell ([ADR 0132](adr/0132-terminals-on-windows-run-on-conpty.md)). Archiving or deleting the chat closes its terminals.
-- ⌘T opens another, ⌘W closes one, ⌥⌘1 – ⌥⌘9 pick one, and ⌘F finds in its scrollback.
+- ⌘T opens another, ⌘W closes one, ⌥⌘1 – ⌥⌘9 pick one, ⌘F finds in its scrollback and ⌘K clears it. On Linux Ctrl+Shift+T, Ctrl+Shift+W, Alt+1 – Alt+9, Ctrl+Shift+F and Ctrl+Shift+K, since Ctrl and a letter is the shell's.
 
 ### Running a code block
 

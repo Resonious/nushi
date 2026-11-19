@@ -11,7 +11,7 @@ Until 2026-10-23 a chat could only be removed: Nushi forgot it, and Claude's his
 ## Consequences
 - A deleted chat can't be resumed with `claude --resume`; the confirmation lists the session ids that go.
 - The daemon learns whether the agent can delete by starting it once (when the first Delete dialog opens, unless it did already).
-- The `RemoveChat` RPC stays for older apps (the API only grows).
+- The `RemoveChat` RPC stays for older apps (the API only grows). Since removed: it is no longer in the proto.
 - Claude leaves the folder's (now empty) history folder behind; that's Claude's.
 - codex-acp 2.2.2's `session/delete` archives the session (`$CODEX_HOME/archived_sessions`) rather than deleting it: `codex resume <id>` offers to unarchive it, and the dialog says so (`Agent.delete_archives`).
 

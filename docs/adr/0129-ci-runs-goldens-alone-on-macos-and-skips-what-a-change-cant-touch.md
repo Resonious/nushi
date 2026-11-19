@@ -1,6 +1,6 @@
 # 0129. CI runs goldens alone on macOS and skips what a change can't touch
 
-Status: proposed in pull request 41 (the owner, 2026-11-16: "Is there any way we can improve CI? It seems to have grown and takes a long time now").
+Status: accepted and in use (`ci.yml` follows it); proposed in pull request 41 (the owner, 2026-11-16: "Is there any way we can improve CI? It seems to have grown and takes a long time now").
 
 ## Context
 A full CI run took 10–16 minutes (median 12) on 2026-11-16, and `make check` plus `make check-app` 15–18 minutes before each push, with the Flutter suite run twice. The app's suite had grown from 168 test files on 10-30 to 366. The two macOS app shards were always the critical path: each ran half of all files, split every nth file by name, so a shard's slowest files started last. A macOS runner is 1.5–4× slower than a Mac and the account runs five macOS jobs at once. Only 122 files need a Mac: 121 compare goldens, which are drawn with macOS's text rendering, and `tile_mark` reads the Mac's emoji font. Every push ran every job, though of main's last 59 pushes 22 changed only docs, 17 only the app and 12 only Go. The measurements: `nushi-review/2026-11-16-ci-speed/measure.md`, outside the repository.

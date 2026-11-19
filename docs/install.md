@@ -1,6 +1,6 @@
 # Installing Nushi
 
-Nushi runs on a Mac with Apple silicon and macOS 13 or later, and on Linux ([below](#on-linux)). Windows isn't supported yet. The relay runs anywhere ([Remote access](remote.md)).
+Nushi runs on a Mac with Apple silicon and macOS 13 or later, and on Linux ([below](#on-linux)). Windows isn't supported yet. The relay, the small server the phone connects through, runs anywhere ([Remote access](remote.md)).
 
 ## With Homebrew
 
@@ -13,14 +13,14 @@ brew uninstall --cask nushi            # the app; chats' data stays
 brew uninstall --zap --cask nushi      # the app and Nushi's data
 ```
 
-Releases are signed ad hoc, not notarized. The cask clears macOS's quarantine flag, so installing from the tap stands in for Gatekeeper's check.
+Releases are signed ad hoc and aren't notarized by Apple. The cask clears macOS's quarantine flag, so Gatekeeper doesn't block the first launch. Installing from the tap takes the place of that check.
 
 ## Without Homebrew
 
 1. Download `Nushi-X.Y.Z.zip` and its `.sha256` from [Releases](https://github.com/afrase/nushi/releases).
 2. Check it: `shasum -a 256 -c Nushi-X.Y.Z.zip.sha256`.
 3. Unzip it, move Nushi.app to Applications and open it.
-4. macOS refuses the first time. Go to System Settings › Privacy & Security and click Open Anyway.
+4. macOS blocks it the first time. Go to **System Settings › Privacy & Security** and click **Open Anyway**.
 
 ## On Linux
 
@@ -40,22 +40,22 @@ tar -xzf nushi-X.Y.Z-linux-amd64.tar.gz
 nushi/install.sh
 ```
 
-`install.sh` puts Nushi in `~/.local/opt/nushi`, and its menu entry and icon in `~/.local/share` (nothing outside your home, no root). Open Nushi from your applications. A newer release installs the same way, over the old one. `~/.local/opt/nushi/install.sh --uninstall` removes it, with Start at login's entry; the data folder stays.
+`install.sh` puts Nushi in `~/.local/opt/nushi`, and its menu entry and icon in `~/.local/share`. It writes nothing outside your home folder and needs no root. Open Nushi from your applications. To upgrade, install a newer release the same way, over the old one. To uninstall, run `~/.local/opt/nushi/install.sh --uninstall`. It also removes the Start at login entry. The data folder stays.
 
 On Linux:
 
-- Pages (an HTML or PDF preview, a browser tab) open in your default browser when you click Open, not inside Nushi, and a diagram shows its source. Ubuntu's Firefox and Chromium are snaps, which can't read hidden folders in your home, so a scratch chat's page (in the data folder) doesn't open in them; a page in a project does.
+- Pages (an HTML or PDF preview, a browser tab) open in your default browser when you click **Open in …**, not inside Nushi, and a diagram shows its source. Ubuntu's Firefox and Chromium are snaps, which can't read hidden folders in your home, so a scratch chat's page (in the data folder) doesn't open in them; a page in a project does.
 - The window has your desktop's own title bar.
-- Shortcuts take Ctrl where the Mac's take ⌘ (Ctrl+K for the palette, Ctrl+N for a new chat), as the palette and tooltips show them; Ctrl+Q quits. In a terminal, Ctrl+Shift+C and Ctrl+Shift+V copy and paste, and Ctrl with a letter goes to the shell.
-- Start at login is an autostart entry, which your desktop session starts as you log in.
+- Shortcuts use Ctrl where the Mac's use ⌘ (Ctrl+K for the palette, Ctrl+N for a new chat). The palette and tooltips show them that way. Ctrl+Q quits. In a terminal, Ctrl+Shift+C and Ctrl+Shift+V copy and paste, and Ctrl with a letter goes to the shell.
+- Start at login is an autostart entry. Your desktop session starts it when you log in.
 
 ## Updates
 
-The daemon asks GitHub for the latest release when it starts and every 2 hours, with no token ([ADR 0061](adr/0061-the-daemon-checks-for-a-newer-release.md)). A newer one shows as a small card in the bottom right corner of the window, whatever is open there, raised above a message box under it ("Nushi 0.1.17 is available."):
+The daemon (Nushi's background service) asks GitHub for the latest release when it starts and every 2 hours, without a token ([ADR 0061](adr/0061-the-daemon-checks-for-a-newer-release.md)). When there's a newer one, a small card appears in the bottom right corner of the window, above anything there, including a message box ("Nushi 0.1.17 is available."):
 
 - **Update** installs it, when Homebrew installed the app: the daemon runs `brew update && brew upgrade --cask nushi` ([ADR 0109](adr/0109-update-runs-homebrew.md)); another tap that `brew update` can't fetch doesn't stop it. The card says "Updating to Nushi 0.1.17…" until Homebrew quits the app and opens the new one. **Release notes** opens the release.
-- If it fails, the card says why, with **Retry**, **Copy** (the same command on the clipboard, for a terminal) and Release notes; the end of Homebrew's output is in `nushid.log`. "Homebrew doesn't have 0.1.17 yet" means the release is out but its cask isn't: Retry in a few minutes. If macOS refused, allow Nushi Daemon in System Settings › Privacy & Security › App Management.
-- If the card says "Nushi 0.1.17 is installed. Quit Nushi and open it again.", Homebrew couldn't quit the app: do that.
+- If it fails, the card says why, with **Retry**, **Copy** (copies the same command, to run in a terminal) and Release notes. The end of Homebrew's output is in `nushid.log`. "Homebrew doesn't have 0.1.17 yet" means the release is out but its cask isn't yet: retry in a few minutes. If macOS refused, allow Nushi Daemon in **System Settings › Privacy & Security › App Management**.
+- If the card says "Nushi 0.1.17 is installed. Quit Nushi and open it again.", Homebrew couldn't quit the app. Quit it and open it again yourself.
 - **Download** opens the release's page, when Homebrew didn't install it (and on Linux).
 - **×** hides the card until a newer release.
 
@@ -63,32 +63,32 @@ Settings › General › Updates turns the check off, and its Nushi row has Chec
 
 ### Beta versions
 
-A beta is a version to try before its release, such as 0.29.0-beta.1 ([ADR 0108](adr/0108-beta-versions.md)). The tap has a second cask that follows them, and each release that passes them:
+A beta is a version you can try before it's released, such as 0.29.0-beta.1 ([ADR 0108](adr/0108-beta-versions.md)). The tap has a second cask that installs betas, and also each release that's newer than them:
 
 ```sh
 brew uninstall --cask nushi && brew install --cask afrase/tap/nushi@beta   # follow betas; chats' data stays
 brew uninstall --cask nushi@beta && brew install --cask afrase/tap/nushi   # back to releases only
 ```
 
-There's no setting. A Nushi the beta cask installed is told of a newer beta as of any update, and Update runs `brew update && brew upgrade --cask nushi@beta`. Without Homebrew (and on Linux), a beta installed from its [release's page](https://github.com/afrase/nushi/releases) is told of newer ones too, with Download. A beta keeps chats and settings readable by the latest release.
+There's no setting for this. A Nushi installed from the beta cask tells you about a newer beta the same way it tells you about any update, and **Update** runs `brew update && brew upgrade --cask nushi@beta`. Without Homebrew (and on Linux), a beta installed from its [release's page](https://github.com/afrase/nushi/releases) tells you about newer betas too, with **Download**. A beta keeps chats and settings readable by the latest release.
 
 ## Upgrading
 
-Upgrading quits the app and opens the new one. The daemon keeps running, and its chats with it. It restarts into the new version by itself once nothing would be lost:
+Upgrading quits the app and opens the new one. The daemon keeps running, and so do its chats. The daemon restarts into the new version by itself once nothing would be lost:
 
 - no chat has a turn running or waiting on you;
 - nothing is queued;
 - no terminal runs a command.
 
-Until then a bar under the header (in a row of its own, so it covers nothing) says "Nushi will update its daemon when the chats are idle", with what it waits for (each a link to its chat) and Restart now. Chats reopen where they were on their next message; terminals sitting at their prompt close.
+Until then, a bar under the header says "Nushi will update its daemon when the chats are idle". It lists what it's waiting for (each a link to its chat) and has **Restart now**. The bar has a row of its own, so it covers nothing. After the restart, chats pick up where they were on their next message. Terminals sitting at their prompt close.
 
-Each release is a new program to macOS. After an upgrade, a Jira token (and a GitHub token you pasted) needs your OK once more: click Allow…, then Always Allow in macOS's prompt ([Jira](jira.md)). gh's own login isn't affected.
+To macOS, each release is a new program. So after an upgrade, a Jira token (and a GitHub token you pasted) needs your OK once more. Click **Allow…**, then **Always Allow** in macOS's prompt ([Jira](jira.md)). gh's own login isn't affected.
 
 ## Uninstalling
 
 On Linux, `~/.local/opt/nushi/install.sh --uninstall` (above); the rest of this section is the Mac's.
 
-Uninstalling quits the app. The daemon stops by itself within about a minute once the app is gone, also when you drag it to the Trash. Start at login's item goes with the app.
+Uninstalling quits the app. Once the app is gone, the daemon stops by itself within about a minute. That's true when you drag the app to the Trash too. The Start at login item goes with the app.
 
 Chats' data stays in `~/Library/Application Support/Nushi`. **`--zap` deletes it**:
 
@@ -97,15 +97,15 @@ Chats' data stays in `~/Library/Application Support/Nushi`. **`--zap` deletes it
 - the adapters and the logs;
 - the app's preferences.
 
-It doesn't touch the agents' own history (`~/.claude`, `~/.codex`, `~/.ante`, `~/.omp`, `~/.local/share/opencode`, `~/.pi`, `~/.pig`): those chats still resume in a terminal. The keychain's "Nushi Jira" and "Nushi GitHub" items stay too. Remove the sites in Settings first, or delete them in Keychain Access.
+It doesn't touch the agents' own history (`~/.claude`, `~/.codex`, `~/.ante`, `~/.omp`, `~/.local/share/opencode`, `~/.pi`, `~/.pig`), so those chats still resume in a terminal. The keychain's "Nushi Jira" and "Nushi GitHub" items stay too. To remove them, remove the sites in Settings first, or delete the items in Keychain Access.
 
 ## The daemon
 
-Nushi, an agentic development environment (ADE), is two programs: a Go daemon, `nushid`, that runs the agents, and a Flutter app that is the window.
+Nushi is two programs: a background service (the daemon, `nushid`, written in Go) that runs the agents, and a Flutter app that is the window.
 
-- The packaged app carries `nushid` in `Contents/Helpers/Nushi Daemon.app`, a background-only app (on Linux in `lib/nushid`). It starts it when no daemon is running, and leaves it running when it quits ([ADR 0013](adr/0013-app-starts-its-daemon.md), [ADR 0036](adr/0036-the-daemon-is-a-background-helper-app.md)).
+- The packaged app carries `nushid` in `Contents/Helpers/Nushi Daemon.app`, a background-only app (on Linux in `lib/nushid`). The app starts the daemon when none is running, and leaves it running when the app quits ([ADR 0013](adr/0013-app-starts-its-daemon.md), [ADR 0036](adr/0036-the-daemon-is-a-background-helper-app.md)).
 - Settings › General › Startup and updates › Start at login also starts it at login.
-- A daemon whose app is deleted stops within about a minute. One whose app is replaced (an upgrade, `make install`) keeps running until it restarts.
+- If its app is deleted, the daemon stops within about a minute. If its app is replaced (by an upgrade or `make install`), it keeps running until it restarts.
 - Settings › Logs & advanced shows the app's version and the running daemon's. `nushid -version` in the helper app says the same.
 
 ## Data and logs
