@@ -20,10 +20,10 @@ import 'package:nushi/theme/theme.dart';
 /// A turn you watched end (normally, after [Sparks.after] or more, Nushi
 /// in front) leaves a receipt for [receiptFor]: its mark draws into the
 /// green check, sparks leave it, and the text says "Done in 2m 30s". Then
-/// the line folds away over 200 ms, so the composer slides down rather
-/// than jumps; as a turn starts it grows in the same way, so the composer
-/// slides up. With Reduce Motion the receipt shows still and the line
-/// comes and goes at once. Between turns it takes no room.
+/// the line fades out over 200 ms; as a turn starts it fades in the same
+/// way. Its room is kept between turns, empty, so the composer never moves
+/// as a turn starts or ends. With Reduce Motion the receipt shows still and
+/// the line comes and goes at once.
 class TurnStatus extends StatefulWidget {
   const new(this.chat, {super.key, this.what});
 
@@ -152,7 +152,7 @@ class _TurnStatusState extends State<TurnStatus> with ClockRun {
     }
     if (!running) {
       _shows = 0;
-      return const SizedBox.shrink();
+      return _reserved(context);
     }
     final ms = ranMs;
     final fold = part(
@@ -165,15 +165,26 @@ class _TurnStatusState extends State<TurnStatus> with ClockRun {
     return _folded(line, fold);
   }
 
-  /// [line] [fold] of the way folded away: its height and opacity.
+  /// [line] [fold] of the way faded out. Its height stays: the line's
+  /// room is kept between turns ([_reserved]), so nothing under or over it
+  /// moves as a turn starts or ends.
   Widget _folded(Widget line, double fold) {
     _shows = 1 - fold;
     if (fold == 0) return line;
-    return ClipRect(
-      child: Align(
-        alignment: Alignment.topCenter,
-        heightFactor: 1 - fold,
-        child: Opacity(opacity: 1 - fold, child: line),
+    return Opacity(opacity: 1 - fold, child: line);
+  }
+
+  /// The line's room between turns, empty: the composer stays where a
+  /// turn's line puts it. Not for a chat with no box (archived, or its
+  /// session gone), whose bar takes the place.
+  Widget _reserved(BuildContext context) {
+    final chat = widget.chat;
+    if (chat.archived || chat.sessionGone) return const SizedBox.shrink();
+    final theme = NushiTheme.of(context);
+    return ExcludeSemantics(
+      child: _row(
+        const SizedBox.square(dimension: 12),
+        Text(' ', style: theme.ui(theme.t.textSecondary, size: 12)),
       ),
     );
   }
