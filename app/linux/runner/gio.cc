@@ -20,27 +20,12 @@
 // it), "failed" (the app didn't start), as the Mac's "refused" and
 // "failed".
 
-// Answers [call] with [response], or says why it couldn't.
-static void gio_respond(FlMethodCall* call, FlMethodResponse* response) {
-  g_autoptr(GError) error = nullptr;
-  if (!fl_method_call_respond(call, response, &error)) {
-    g_warning("%s: %s", fl_method_call_get_name(call), error->message);
-  }
-}
-
 // Answers [call] with an error of [code], saying [message].
 static void gio_refuse(FlMethodCall* call, const gchar* code,
                        const gchar* message) {
   g_autoptr(FlMethodResponse) response =
       FL_METHOD_RESPONSE(fl_method_error_response_new(code, message, nullptr));
-  gio_respond(call, response);
-}
-
-// Answers [call] with [result].
-static void gio_answer(FlMethodCall* call, FlValue* result) {
-  g_autoptr(FlMethodResponse) response =
-      FL_METHOD_RESPONSE(fl_method_success_response_new(result));
-  gio_respond(call, response);
+  channel_respond(call, response);
 }
 
 // The string [call] carries, or null.
@@ -67,7 +52,7 @@ static void gio_launched(GObject* source, GAsyncResult* result,
     return;
   }
   g_autoptr(FlValue) none = fl_value_new_null();
-  gio_answer(call, none);
+  channel_answer(call, none);
 }
 
 // Whether [pair], an environment's NAME=value, is one of Nushi's own
@@ -143,7 +128,7 @@ static void browser_name(FlMethodCall* call) {
       browser != nullptr
           ? fl_value_new_string(g_app_info_get_display_name(browser))
           : fl_value_new_null();
-  gio_answer(call, name);
+  channel_answer(call, name);
 }
 
 // Opens the absolute path [call] carries with the default app for
@@ -189,9 +174,7 @@ static void gio_call(FlMethodChannel* channel, FlMethodCall* call,
     desktop_open_with(call, "inode/directory", "no-file-manager",
                       "No default app for folders is set");
   } else {
-    g_autoptr(FlMethodResponse) response =
-        FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
-    gio_respond(call, response);
+    channel_not_implemented(call);
   }
 }
 

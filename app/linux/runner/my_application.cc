@@ -32,6 +32,25 @@ void channel_register(FlView* view, const gchar* name,
   g_object_set_data_full(G_OBJECT(view), name, channel, g_object_unref);
 }
 
+void channel_respond(FlMethodCall* call, FlMethodResponse* response) {
+  g_autoptr(GError) error = nullptr;
+  if (!fl_method_call_respond(call, response, &error)) {
+    g_warning("%s: %s", fl_method_call_get_name(call), error->message);
+  }
+}
+
+void channel_answer(FlMethodCall* call, FlValue* result) {
+  g_autoptr(FlMethodResponse) response =
+      FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+  channel_respond(call, response);
+}
+
+void channel_not_implemented(FlMethodCall* call) {
+  g_autoptr(FlMethodResponse) response =
+      FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
+  channel_respond(call, response);
+}
+
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
