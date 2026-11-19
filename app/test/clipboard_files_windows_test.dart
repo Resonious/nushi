@@ -123,7 +123,8 @@ void main() {
       bits: 24,
       pixels: [0, 0, 255, 0, 255, 0, 0, 0, 0, 255, 0, 255, 255, 255, 0, 0],
     );
-    final png = (await dibAsPng(dib))!;
+    final (width, height, rgba) = dibPixels(dib)!;
+    final png = (await rgbaAsPng(width, height, rgba))!;
     expect(png.sublist(1, 4), 'PNG'.codeUnits);
     final codec = await ui.instantiateImageCodec(png);
     final image = (await codec.getNextFrame()).image;
