@@ -180,6 +180,7 @@ extension DaemonEvents on Daemon {
       chat.moved(c.folder);
       closeSide(chat); // it ran on the old agent
     }
+    if (!remote) keepFileTabs(this, chat);
     // An archived chat's draft goes; one unarchived is followed again.
     if (c.archived) {
       drafts?.forget(c.id);

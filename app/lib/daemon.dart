@@ -17,6 +17,7 @@ import 'package:nushi/context_cache.dart';
 import 'package:nushi/dev_servers.dart';
 import 'package:nushi/drafts.dart';
 import 'package:nushi/errors.dart';
+import 'package:nushi/files_kept.dart';
 import 'package:nushi/gen/nushi/v1/nushi.connect.client.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/issue_chat.dart';

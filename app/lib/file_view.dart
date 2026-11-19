@@ -151,11 +151,7 @@ final class ShownFile {
   /// Shows its Source, or its rendering again.
   void showSource({required bool on}) {
     source.value = on;
-    if (on) {
-      chat.files.sources.add(path);
-    } else {
-      chat.files.sources.remove(path);
-    }
+    chat.files.showSource(path, on: on);
   }
 
   /// A page's actions: Reload (in the app's own web view, ADR 0104) and

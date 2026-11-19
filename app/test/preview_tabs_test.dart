@@ -531,11 +531,6 @@ void main() {
           findsNothing,
         );
       }
-      // The tabs aren't saved: no open file's name is anywhere in app.json
-      // (the Preview tabs option, a pref, is).
-      for (final name in ['report.md', 'plan.md', 'notes.md']) {
-        expect(jsonEncode(readSaved()), isNot(contains(name)));
-      }
       d.dispose();
     }, variant: _mac);
 

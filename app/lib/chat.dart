@@ -468,10 +468,7 @@ class ChatState extends ChangeNotifier {
   void openInFiles(String path, {bool keep = true}) {
     tab.value = ChatTab.chat;
     files.open(path, folder: folder, keep: keep || !previewTabs.value);
-    // Opened by a file, it isn't kept for the next launch (its tabs
-    // aren't either), unless the pane's own button opens it later.
     if (!filesChats.value.contains(id)) {
-      filesPassing.add(id);
       filesChats.value = {...filesChats.value, id};
     }
     lastTabbed = TabKind.file;

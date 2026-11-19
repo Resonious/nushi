@@ -8,8 +8,8 @@ import 'package:flutter/material.dart' show ThemeMode;
 import 'package:nushi/arrangement.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/file_mode.dart';
+import 'package:nushi/file_tabs.dart' show KeptTabs;
 import 'package:nushi/fonts.dart';
-import 'package:nushi/run_state.dart';
 import 'package:nushi/tile_images.dart';
 import 'package:nushi/tile_look.dart';
 import 'package:nushi/tile_picture.dart';
@@ -19,8 +19,8 @@ import 'package:nushi/tile_picture.dart';
 /// are collapsed and their order, what each chat's Changes view shows, the
 /// side panes' widths (not the details panel's, which is fixed), whether
 /// changed files show flat and diffs unified, which chats show their
-/// terminals and their Files pane (opened by its own button, not a file's
-/// opening), whether it lists ignored files and
+/// terminals and their Files pane, its file tabs, whether it lists ignored
+/// files and
 /// shows its tree and on which side, whether its clicks open preview tabs,
 /// its tab size, indent guides and scrolling past the end, the
 /// terminal's font, the app's and code's fonts, whether the chat takes the
@@ -74,23 +74,29 @@ final Pref<bool> diffUnified = _plain('unified', false);
 /// The chats whose terminal panel is open.
 final Pref<Set<String>> terminalChats = _set('terminals', chats: true);
 
-/// The chats whose Files pane is open, and whether the pane lists what git
-/// ignores. Saved only for the chats whose pane was opened by its own
-/// button, key or menu: one a file's opening opened ([filesPassing]) is
-/// left out, as its file tabs are (ADR 0123).
-final Pref<Set<String>> filesChats = Pref(
-  'files',
-  (v) => {..._strings(v) ?? const []},
-  write: (s) => s.difference(filesPassing).toList(),
-  chats: (s) => s,
-  without: (s, gone) => s.difference(gone),
+/// The chats whose Files pane is open, however it opened (its own button
+/// or a file's opening; ADR 0123's amendment of 2026-11-19), and whether
+/// the pane lists what git ignores.
+final Pref<Set<String>> filesChats = _set('files', chats: true);
+final Pref<bool> filesIgnored = _plain('filesIgnored', false);
+
+/// Each chat's file tabs (ADR 0070's amendment of 2026-11-19), by chat
+/// id: their names, the one that shows, the provisional one and those
+/// showing their Source (`files_kept.dart` puts them back).
+final Pref<Map<String, KeptTabs>> fileTabsKept = Pref(
+  'fileTabs',
+  (v) => _entries(v, KeptTabs.read),
+  write: (m) => {
+    for (final MapEntry(:key, :value) in m.entries) key: value.json,
+  },
+  chats: (m) => m.keys,
+  without: (m, gone) => {...m}..removeWhere((id, _) => gone.contains(id)),
 );
 
-/// The chats whose Files pane a file's opening opened (a path's click,
-/// `show`, ⌘P), not the pane's own button, while the app runs: their open
-/// pane isn't saved.
-final Set<String> filesPassing = runSet();
-final Pref<bool> filesIgnored = _plain('filesIgnored', false);
+/// The file tabs kept in [saved] (`app.json` read whole, as [readSaved]
+/// does).
+Map<String, KeptTabs> savedFileTabs(Map<String, Object?> saved) =>
+    _entries(saved['fileTabs'], KeptTabs.read);
 
 /// Whether the Files pane shows its tree beside its viewer (on at first;
 /// ⇧⌘Y, its second row's button, its ⋯ and View › Show File Tree): one
@@ -517,6 +523,7 @@ List<Pref<Object?>> get _chatPrefs => [
   changeScopes,
   terminalChats,
   filesChats,
+  fileTabsKept,
   sidebarChats,
   sidebarSections,
   chatOpened,

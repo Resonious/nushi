@@ -52,6 +52,7 @@ Opening a second file adds a tab at the top of the Files pane, after **Files**. 
 - Click a name to switch to that file.
 - Click a tab's **✕**, or press ⌘W, to close it. Closing the last one leaves the pane open and blank.
 - The pane's **×** (or ⇧⌘E) hides it; your open files are still there when it comes back.
+- Quitting Nushi (or restarting it for an update) keeps each chat's Files pane as you left it: open or not, the same tabs in the same order, the same one showing. A file deleted meanwhile doesn't come back.
 - **Expand** gives the pane the whole chat area, and **Collapse** (or Esc) gives the chat back.
 
 ## Edit a file

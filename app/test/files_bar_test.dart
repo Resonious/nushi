@@ -490,27 +490,6 @@ void main() {
     await closeView(tester, d);
   }, variant: _both);
 
-  testWidgets('a file’s opening opens Files for this run only; its own '
-      'button’s opening is kept for the next launch', (tester) async {
-    final (d, _) = await panesApp(tester, width: 1700);
-    final c = d.chats['c']!..openInFiles('PLAN.md');
-    await tester.pumpAndSettle();
-    List<Object?> saved() => [...?readSaved()['files'] as List<Object?>?];
-    expect(filesOpen(c), isTrue);
-    expect(saved(), isNot(contains('c')));
-    // Hidden and shown again with ⇧⌘E's own way: kept.
-    showOrHideFiles(c);
-    await tester.pumpAndSettle();
-    showOrHideFiles(c);
-    await tester.pumpAndSettle();
-    expect(saved(), contains('c'));
-    // A file opening in a kept pane leaves it kept.
-    c.openInFiles('NOTES.md');
-    await tester.pumpAndSettle();
-    expect(saved(), contains('c'));
-    await closeView(tester, d);
-  }, variant: _mac);
-
   testWidgets('with the tree hidden, a click on the file’s name shows the '
       'tree on it', (tester) async {
     final (d, _) = await panesApp(tester, width: 1700, open: _files);
