@@ -127,10 +127,7 @@ void main() {
         );
     await _open(tester);
     expect(find.text('Jira issue…'), findsOneWidget);
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyV);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyV);
     expect(find.text('Log in with a passkey'), findsOneWidget);
     await _key(tester, LogicalKeyboardKey.enter); // picks it
     expect(find.text('Chat on ACME-12 in nushi'), findsOneWidget);

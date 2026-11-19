@@ -71,10 +71,7 @@ List<String> _forks(FakeDaemon fake) => [
 ];
 
 Future<void> _palette(WidgetTester tester) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(LogicalKeyboardKey.keyK);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
+  await cmdKey(tester, LogicalKeyboardKey.keyK);
   await tester.enterText(
     find.descendant(of: find.byType(Palette), matching: find.byType(TextField)),
     'fork',

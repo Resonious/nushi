@@ -81,10 +81,7 @@ List<String> _clipboard(WidgetTester tester) {
 }
 
 Future<void> _copy(WidgetTester tester) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pump();
+  await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
 }
 
 void main() {

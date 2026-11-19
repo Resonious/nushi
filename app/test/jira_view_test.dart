@@ -50,10 +50,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Write the release notes'), findsOneWidget);
     // ⌘⏎: the selected row's Start work, its folders.
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.enter);
     expect(
       find.textContaining('Choose folder', findRichText: true),
       findsOneWidget,
@@ -117,10 +114,7 @@ void main() {
       isTrue,
       reason: 'out of view',
     );
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.enter);
     await tester.tap(find.textContaining('nushi', findRichText: true).last);
     await tester.pumpAndSettle();
     expect(find.text('Chat on ACME-40 in nushi'), findsOneWidget);

@@ -54,13 +54,6 @@ Future<void> _visit(WidgetTester tester, Daemon d, List<String> ids) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> _meta(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
-}
-
 /// Whether the button named [tooltip] can be pressed.
 bool _on(WidgetTester tester, String tooltip) =>
     tester
@@ -179,9 +172,9 @@ void main() {
     // The composer has the focus.
     await tester.tap(find.byType(EditableText).first);
     await tester.pump();
-    await _meta(tester, LogicalKeyboardKey.bracketLeft);
+    await cmdKey(tester, LogicalKeyboardKey.bracketLeft);
     expect(d.selectedId, 'c');
-    await _meta(tester, LogicalKeyboardKey.bracketRight);
+    await cmdKey(tester, LogicalKeyboardKey.bracketRight);
     expect(d.selectedId, 'a');
     // The sidebar's order: b, a (nushi's, the newest first), then c.
     expect(chatOrder(d).map((c) => c.id), ['a', 'b', 'c']);

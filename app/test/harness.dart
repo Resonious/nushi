@@ -1,10 +1,10 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:connectrpc/connect.dart' show Transport;
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/clock.dart';
@@ -62,6 +62,23 @@ Widget themed(Widget child, {Tokens tokens = Tokens.dark, bool? still}) {
 Future<void> frames(WidgetTester tester, int count, [Duration? step]) async {
   for (var i = 0; i < count; i++) {
     await tester.pump(step);
+  }
+}
+
+/// [key] pressed with ⌘ held, then settled, or one frame when not
+/// [settle] (what never settles: a turn's clock, a terminal).
+Future<void> cmdKey(
+  WidgetTester tester,
+  LogicalKeyboardKey key, {
+  bool settle = true,
+}) async {
+  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+  await tester.sendKeyEvent(key);
+  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
   }
 }
 

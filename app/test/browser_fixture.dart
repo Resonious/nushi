@@ -200,13 +200,6 @@ Future<Daemon> browserApp(
   return d;
 }
 
-Future<void> pressMeta(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
-}
-
 Finder get addressField => find.descendant(
   of: find.byType(BrowserBar),
   matching: find.byType(TextField),

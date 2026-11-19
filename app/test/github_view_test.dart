@@ -229,10 +229,7 @@ void main() {
       find.byType(TextField).first,
       'Fixed in the next commit.',
     );
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.enter);
     final reply = fake.calls.whereType<ReplyGitHubThreadRequest>().single;
     expect((reply.thread, reply.body), ('T1', 'Fixed in the next commit.'));
     await tester.tap(find.text('Resolve').first);
@@ -504,10 +501,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.getRect(last).top, greaterThan(view.bottom));
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.enter);
     await tester.tap(_clone.first);
     await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -526,10 +520,7 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.keyJ);
     await tester.pumpAndSettle();
     expect(find.byTooltip('Start work\u2002⌘⏎'), findsOneWidget);
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.enter);
     await tester.tap(_clone.first);
     await tester.pumpAndSettle();
     expect(find.text("the pull request's head"), findsOneWidget);

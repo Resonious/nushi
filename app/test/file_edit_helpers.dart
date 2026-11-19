@@ -132,10 +132,7 @@ Future<void> typeIn(WidgetTester tester, FileEdit e, String text) async {
 
 /// Presses ⌘ and [key].
 Future<void> cmd(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
+  await cmdKey(tester, key);
 }
 
 /// A tab's unsaved dot.

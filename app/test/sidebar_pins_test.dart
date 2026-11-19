@@ -135,13 +135,6 @@ Future<(Daemon, FakeDaemon)> _app(
 Finder _inSidebar(String title) =>
     find.descendant(of: find.byType(Sidebar), matching: find.text(title));
 
-Future<void> _key(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
-}
-
 void main() {
   final macOS = TargetPlatformVariant.only(TargetPlatform.macOS);
   setUpAll(() async {
@@ -289,7 +282,7 @@ void main() {
 
     d.select('c');
     await tester.pumpAndSettle();
-    await _key(tester, LogicalKeyboardKey.keyD);
+    await cmdKey(tester, LogicalKeyboardKey.keyD);
     expect(pinned(), ['a', 'c']);
     expect(_ys(tester, 'Cap the rates'), lessThan(_ys(tester, 'Seed data')));
 
@@ -297,7 +290,7 @@ void main() {
     d.select('d');
     await tester.pumpAndSettle();
     chatOpened.value = {...chatOpened.value, 'e': clockMs() + 1000};
-    await _key(tester, LogicalKeyboardKey.keyK);
+    await cmdKey(tester, LogicalKeyboardKey.keyK);
     final rows = find.descendant(
       of: find.byType(ListView).last,
       matching: find.byType(Text),
@@ -325,7 +318,7 @@ void main() {
 
     d.select('c');
     await tester.pumpAndSettle();
-    await _key(tester, LogicalKeyboardKey.keyK);
+    await cmdKey(tester, LogicalKeyboardKey.keyK);
     await tester.enterText(
       find.descendant(
         of: find.byType(Palette),

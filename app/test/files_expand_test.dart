@@ -49,10 +49,7 @@ Future<void> _tap(WidgetTester tester, Finder f) async {
 
 /// ⌘W.
 Future<void> _close(WidgetTester tester) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(LogicalKeyboardKey.keyW);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
+  await cmdKey(tester, LogicalKeyboardKey.keyW);
 }
 
 Future<void> _esc(WidgetTester tester) async {
@@ -333,10 +330,7 @@ void main() {
     final beside = tester.getRect(find.byType(FilesPane));
     await _tap(tester, _expand);
     await _tap(tester, find.byType(SourceEditor));
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyF);
     expect(find.byType(EditorFindBar), findsOneWidget);
     final bar = find.descendant(
       of: find.byType(EditorFindBar),
@@ -371,10 +365,7 @@ void main() {
     );
     final c = d.chats['c']!;
     Future<void> find0() async {
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-      await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-      await tester.pumpAndSettle();
+      await cmdKey(tester, LogicalKeyboardKey.keyF);
     }
 
     await _tap(tester, _expand);

@@ -352,10 +352,7 @@ void main() {
     await tester.pumpWidget(themed(DiffBox(_addedFile, fit: false)));
     await tester.pumpAndSettle();
     await _dragRows(tester, 2, 4);
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
+    await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
     expect(
       copied.single,
       '// Neg returns minus a.\nfunc Neg(a int) int {\n'

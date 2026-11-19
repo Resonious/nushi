@@ -261,10 +261,7 @@ void main() {
 
   /// ⌘K, then Artifacts… picked by typing.
   Future<void> paletteArtifacts(WidgetTester tester) async {
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyK);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyK);
     await tester.enterText(
       find.descendant(
         of: find.byType(Palette),
@@ -331,10 +328,7 @@ void main() {
   ) async {
     final d = await _app(tester);
     final keys = FocusManager.instance.primaryFocus;
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyP);
     final box = find.byType(OpenFileBox);
     expect(box, findsOneWidget);
     Finder inBox(Finder f) => find.descendant(of: box, matching: f);
@@ -375,20 +369,14 @@ void main() {
     // The keys are back where they were: Files, opening, took none.
     expect(FocusManager.instance.primaryFocus, same(keys));
     // Code isn't an artifact, but ⌘P opens it.
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyP);
     await tester.enterText(inBox(find.byType(TextField)), 'api.go');
     await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
     expect(_inPane(find.text('api.go')), findsOneWidget);
     // A script with no extension: listed, and it opens.
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyP);
     await tester.enterText(inBox(find.byType(TextField)), 'deploy');
     await tester.pumpAndSettle();
     expect(

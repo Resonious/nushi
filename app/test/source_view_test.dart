@@ -95,10 +95,7 @@ void main() {
       // A selection made after it copies only what it holds.
       await tester.tap(find.textContaining('line 3', findRichText: true).first);
       await tester.pump();
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-      await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-      await tester.pump();
+      await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
       expect(copied.last, isNot(text));
     }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
   }
@@ -126,10 +123,7 @@ void main() {
     await tester.pump();
     await drag.up();
     await tester.pump();
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
+    await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
     expect(copied.last, '$long\n');
   }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
 }

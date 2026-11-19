@@ -47,10 +47,7 @@ Future<Daemon> _app(
 }
 
 Future<void> _type(WidgetTester tester, String query) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pump();
+  await cmdKey(tester, LogicalKeyboardKey.keyF, settle: false);
   await tester.pump();
   await tester.enterText(
     find.descendant(

@@ -133,13 +133,6 @@ Future<void> _openMenu(WidgetTester tester) async {
   await tester.pump();
 }
 
-Future<void> _cmd(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pump();
-}
-
 SendPromptRequest _sent(FakeDaemon fake) =>
     fake.calls.whereType<SendPromptRequest>().single;
 
@@ -270,7 +263,7 @@ void main() {
         return [XFile(notes), XFile(spec)];
       };
       await tester.tap(find.byType(TextField));
-      await _cmd(tester, LogicalKeyboardKey.keyU);
+      await cmdKey(tester, LogicalKeyboardKey.keyU, settle: false);
       await tester.pump();
       expect(opened, 1);
       expect(find.byType(FileCard), findsNWidgets(2));
@@ -302,7 +295,7 @@ void main() {
     final spec = _file(elsewhere, 'spec sheet.pdf', bytes: 3 << 20);
     pickFiles = () async => [XFile(notes), XFile(spec)];
     await tester.tap(find.byType(TextField));
-    await _cmd(tester, LogicalKeyboardKey.keyU);
+    await cmdKey(tester, LogicalKeyboardKey.keyU, settle: false);
     await tester.pumpAndSettle();
     expect(find.byType(FileCard), findsNWidgets(2));
     await expectLater(
@@ -332,7 +325,7 @@ void main() {
     expect(opened, 1);
     panel.complete(const []);
     await tester.pump();
-    await _cmd(tester, LogicalKeyboardKey.keyU);
+    await cmdKey(tester, LogicalKeyboardKey.keyU, settle: false);
     expect(opened, 2);
     _end();
   }, variant: _mac);
@@ -381,7 +374,7 @@ void main() {
     final clipboard = Completer<List<String>>();
     native.clipboard = _Clipboard(onFiles: () => clipboard.future);
     await tester.enterText(find.byType(TextField), 'This one');
-    await _cmd(tester, LogicalKeyboardKey.keyV);
+    await cmdKey(tester, LogicalKeyboardKey.keyV, settle: false);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter); // before the read
     await tester.pump();
     expect(fake.calls.whereType<SendPromptRequest>(), isEmpty);

@@ -131,10 +131,7 @@ void main() {
         return null;
       },
     );
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
+    await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
     expect(copied, contains('No other heading'));
   }, variant: mac);
 

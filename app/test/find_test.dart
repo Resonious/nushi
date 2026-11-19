@@ -75,10 +75,7 @@ Future<Daemon> _app(WidgetTester tester) async {
 }
 
 Future<void> _cmdF(WidgetTester tester) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
+  await cmdKey(tester, LogicalKeyboardKey.keyF);
 }
 
 /// The marks of the find on the transcript.

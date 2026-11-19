@@ -78,10 +78,7 @@ String _draft(String id) => commentDraft(
 );
 
 Future<void> _post(WidgetTester tester) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
+  await cmdKey(tester, LogicalKeyboardKey.enter);
 }
 
 void main() {

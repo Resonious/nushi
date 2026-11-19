@@ -332,10 +332,7 @@ void main() {
     expect(find.byIcon(Icons.play_arrow_outlined), findsOneWidget);
     await mouse.removePointer();
     // ⌘⏎ opens the selected row's folders.
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.enter);
     expect(
       find.textContaining('Choose folder', findRichText: true),
       findsOneWidget,

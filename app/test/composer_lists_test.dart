@@ -140,10 +140,7 @@ void main() {
       await _shiftEnter(tester);
       await tester.pump(const Duration(seconds: 1));
       expect(_marked(c.value), '- one\n- |');
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-      await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-      await tester.pump();
+      await cmdKey(tester, LogicalKeyboardKey.keyZ, settle: false);
       expect(_marked(c.value), '- one|');
       await close();
     }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));

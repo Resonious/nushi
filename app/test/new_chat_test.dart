@@ -288,10 +288,7 @@ void main() {
     // Keys go where the focus is: somewhere in the window.
     Focus.of(tester.element(find.text('New chat').first)).requestFocus();
     await tester.pump();
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyN);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
+    await cmdKey(tester, LogicalKeyboardKey.keyN, settle: false);
     expect(find.text('oh-my-pi'), findsOneWidget);
     await _key(tester, LogicalKeyboardKey.enter);
     expect(fake.started.single.agent, 'codex');

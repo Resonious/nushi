@@ -143,10 +143,7 @@ Future<void> _paste(WidgetTester tester, String text) async {
     SystemChannels.platform,
     (call) async => call.method == 'Clipboard.getData' ? {'text': text} : null,
   );
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(LogicalKeyboardKey.keyV);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
+  await cmdKey(tester, LogicalKeyboardKey.keyV);
 }
 
 void main() {

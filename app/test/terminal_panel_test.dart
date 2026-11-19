@@ -24,13 +24,6 @@ import 'harness.dart';
 Terminal _term(String id) =>
     Terminal(id: id, chatId: 'chat', folder: '/tmp/veg', shell: 'zsh');
 
-Future<void> _meta(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pump();
-}
-
 Future<void> _panel(
   WidgetTester tester,
   Terminals terms, {
@@ -69,7 +62,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(shells.typedAll.join(), 'l\x1bb');
 
-    await _meta(tester, LogicalKeyboardKey.keyF); // find in the scrollback
+    await cmdKey(
+      tester,
+      LogicalKeyboardKey.keyF,
+      settle: false,
+    ); // find in the scrollback
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), r'$');
     await tester.pump();
@@ -80,14 +77,14 @@ void main() {
 
     // ⌥⌘1 the first terminal (⌘1 is the first chat's).
     await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
-    await _meta(tester, LogicalKeyboardKey.digit1);
+    await cmdKey(tester, LogicalKeyboardKey.digit1, settle: false);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
     expect(terms.active['chat'], 'a');
-    await _meta(tester, LogicalKeyboardKey.keyT);
+    await cmdKey(tester, LogicalKeyboardKey.keyT, settle: false);
     await tester.pumpAndSettle();
     expect(fake.calls, contains(isA<OpenTerminalRequest>()));
     expect(terms.active['chat'], 'new0');
-    await _meta(tester, LogicalKeyboardKey.keyW);
+    await cmdKey(tester, LogicalKeyboardKey.keyW, settle: false);
     expect(fake.calls.last, isA<CloseTerminalRequest>());
     expect(shells.typedAll.join(), 'l\x1bb'); // none of those reached the shell
 
@@ -102,7 +99,7 @@ void main() {
     final (fake, shells) = _daemon(replay: 'one x\r\ntwo x\r\nthree x\r\n\$ ');
     final terms = Terminals(NushiServiceClient(fake));
     await _panel(tester, terms);
-    await _meta(tester, LogicalKeyboardKey.keyF);
+    await cmdKey(tester, LogicalKeyboardKey.keyF, settle: false);
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'x');
     await tester.pump();
@@ -143,7 +140,7 @@ void main() {
     final terms = Terminals(NushiServiceClient(fake));
     await _panel(tester, terms);
     expect(shells.typedAll, isEmpty); // answered when it was opened
-    await _meta(tester, LogicalKeyboardKey.keyT);
+    await cmdKey(tester, LogicalKeyboardKey.keyT, settle: false);
     await tester.pumpAndSettle();
     expect(shells.typedAll.join(), startsWith('\x1b[?'));
   });

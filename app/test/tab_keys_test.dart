@@ -244,10 +244,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(b.shownTab, ChatTab.chat);
 
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyK);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyK);
     await tester.enterText(
       find.descendant(
         of: find.byType(Palette),

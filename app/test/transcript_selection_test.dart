@@ -184,10 +184,7 @@ void main() {
       _ends(tester, 'Para one').$1,
       _ends(tester, 'Para two').$2,
     );
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
+    await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
     expect(copied, 'Para one.\n\nPara two');
     await closeView(tester, d);
   }, variant: mac);
@@ -287,10 +284,7 @@ void main() {
       _ends(tester, 'pin it').$1,
       _ends(tester, 'golangci').$2,
     );
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
+    await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
     expect(copied, 'pin it in mise.toml like golangci');
     await closeView(tester, d);
   }, variant: mac);
