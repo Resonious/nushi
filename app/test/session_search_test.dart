@@ -15,8 +15,6 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 import 'session_fixtures.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The text of the excerpt under a found session's row.
 String _excerpt(WidgetTester tester, String match) => tester
     .widgetList<RichText>(find.byType(RichText))
@@ -253,7 +251,7 @@ void main() {
     expect(find.text('Open it here too?'), findsNothing);
     expect(fake.opened, hasLength(1));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),
@@ -303,6 +301,6 @@ void main() {
         'session_search_${width.toInt()}_dark',
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

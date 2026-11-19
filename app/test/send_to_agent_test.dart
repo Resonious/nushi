@@ -16,8 +16,6 @@ import 'harness.dart';
 
 const _repo = 'afrase/nushi-gh-test';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Finder get _send => find.byTooltip(
   "Send to the agent: a reply card in the chat's box, to send",
 );
@@ -169,7 +167,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ReplyCards), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a review thread: Send to agent in a tab, none in the GitHub '
       'view', (tester) async {

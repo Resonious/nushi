@@ -21,8 +21,6 @@ import 'harness.dart';
 // echo takes its place without a second rise (the fluidity review's idea
 // 13, a change the owner said yes to).
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 final Chat _chat = chat('a', 'claude', 'Fix the login');
 
 final _items = [
@@ -145,7 +143,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_inTranscript('Add a test for it'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a send that fails fades out as its text goes back in the '
       'box', (tester) async {
@@ -165,7 +163,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_inTranscript('Add a test for it'), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('sent, the status coming without an echo takes it away', (
     tester,
@@ -186,7 +184,7 @@ void main() {
     await tester.pump();
     expect(_inTranscript('Add a test for it'), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a busy chat's send is a queued pill, not in the transcript", (
     tester,
@@ -199,7 +197,7 @@ void main() {
     sends.send.complete();
     await tester.pump();
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('with Reduce Motion it shows faint at once and goes at once', (
     tester,
@@ -215,7 +213,7 @@ void main() {
     await tester.pump();
     expect(_inTranscript('Add a test for it'), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('on the phone, too', (tester) async {
     viewport(tester, const Size(390, 844), ratio: 3);

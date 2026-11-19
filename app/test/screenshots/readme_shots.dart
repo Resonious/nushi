@@ -27,8 +27,6 @@ import '../fake_daemon.dart';
 import '../harness.dart';
 import 'demo.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// Writes what [finder] shows as docs/images/[name].png, its shadows drawn
 /// as the app draws them (a test's are solid blocks): these are looked at,
 /// never compared.
@@ -256,7 +254,7 @@ void main() {
     await _pump(tester);
     await _shoot(tester, 'hero');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('agents: New chat asks which one', (tester) async {
     final (d, _) = await _app(tester, _small, select: 'feed');
@@ -264,7 +262,7 @@ void main() {
     await _pump(tester);
     await _shoot(tester, 'agents');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('changes: the branch with review comments', (tester) async {
     final cursor = demoChanges().first;
@@ -300,7 +298,7 @@ void main() {
     await _pump(tester, 10);
     await _shoot(tester, 'changes');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('preview: the design note the agent wrote', (tester) async {
     final (d, _) = await _app(tester, _small, select: 'feed', details: false);
@@ -309,7 +307,7 @@ void main() {
     await _pump(tester, 10);
     await _shoot(tester, 'preview');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('pull request: the tab', (tester) async {
     final (d, _) = await _app(tester, _small, select: 'feed', details: false);
@@ -317,7 +315,7 @@ void main() {
     await _pump(tester, 10);
     await _shoot(tester, 'pull-request');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('jira: the sprint', (tester) async {
     final (d, _) = await _app(tester, _small, select: 'feed', details: false);
@@ -327,7 +325,7 @@ void main() {
     await _pump(tester, 10);
     await _shoot(tester, 'jira');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('phone: a question, answered with a tap', (tester) async {
     tester.view
@@ -363,7 +361,7 @@ void main() {
     await phone.close();
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 5));
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('terminal: beside the chat', (tester) async {
     terminalChats.value = {heroChat.id};
@@ -371,7 +369,7 @@ void main() {
     await _pump(tester, 10);
     await _shoot(tester, 'terminal');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }
 
 /// The highlights' window.
