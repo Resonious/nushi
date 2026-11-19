@@ -19,9 +19,6 @@ import 'long_chat.dart';
 
 final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
-Item _agent(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
-
 /// The app on chat c with [items]; [settle] lets it fill in first.
 Future<Daemon> _app(
   WidgetTester tester,
@@ -128,7 +125,7 @@ Future<void> _stream(WidgetTester tester, Daemon d, int n) async {
         chatId: 'c',
         seq: Int64(_seq++),
         item: ItemEvent(
-          item: _agent('s$_seq', 'Streamed words.\n\n${'More. ' * 40}'),
+          item: agentSays('s$_seq', 'Streamed words.\n\n${'More. ' * 40}'),
           index: chat.items.length,
         ),
       ),
@@ -146,7 +143,7 @@ void main() {
     tester,
   ) async {
     final d = await _app(tester, [
-      _agent('top', 'The needle is here, far above.'),
+      agentSays('top', 'The needle is here, far above.'),
       ...longChat('a', turns: 40),
     ]);
     await _type(tester, 'needle');
@@ -159,7 +156,7 @@ void main() {
     tester,
   ) async {
     final d = await _app(tester, [
-      _agent('top', 'The needle is here, far above.'),
+      agentSays('top', 'The needle is here, far above.'),
       ...longChat('a', turns: 40),
     ], settle: false);
     await _type(tester, 'needle');
@@ -172,7 +169,7 @@ void main() {
   ) async {
     final d = await _app(tester, [
       ...longChat('a', turns: 20),
-      _agent('mid', 'The needle is here, halfway.'),
+      agentSays('mid', 'The needle is here, halfway.'),
       ...longChat('b', turns: 20),
     ], settle: false);
     await _type(tester, 'needle');
@@ -184,7 +181,7 @@ void main() {
     tester,
   ) async {
     final d = await _app(tester, [
-      _agent('m', _long(400, {350})),
+      agentSays('m', _long(400, {350})),
       ...longChat('a', turns: 4),
     ]);
     await _type(tester, 'needle');
@@ -196,7 +193,7 @@ void main() {
     tester,
   ) async {
     final d = await _app(tester, [
-      _agent('m', _long(400, {20, 350})),
+      agentSays('m', _long(400, {20, 350})),
       ...longChat('a', turns: 4),
     ]);
     await _type(tester, 'needle');
@@ -210,9 +207,9 @@ void main() {
     tester,
   ) async {
     final d = await _app(tester, [
-      _agent('top', 'A needle at the top.'),
+      agentSays('top', 'A needle at the top.'),
       ...longChat('a', turns: 30),
-      _agent('end', 'A needle at the end.'),
+      agentSays('end', 'A needle at the end.'),
     ]);
     await _type(tester, 'needle');
     _inView(tester, 'needle');
@@ -228,8 +225,8 @@ void main() {
   testWidgets('a match that shows stays where it is', (tester) async {
     final d = await _app(tester, [
       ...longChat('a', turns: 10),
-      _agent('m', 'A needle just above the end.'),
-      _agent('n', 'The last words of the chat.'),
+      agentSays('m', 'A needle just above the end.'),
+      agentSays('n', 'The last words of the chat.'),
     ]);
     final before = _scroll(tester).pixels;
     await _type(tester, 'needle');
@@ -241,7 +238,7 @@ void main() {
     tester,
   ) async {
     final d = await _app(tester, [
-      _agent('l', 'Lines.\n\n${'Words to the far right and more. ' * 400}'),
+      agentSays('l', 'Lines.\n\n${'Words to the far right and more. ' * 400}'),
       ...longChat('a', turns: 4),
     ]);
     await _type(tester, 'far right');
@@ -273,7 +270,7 @@ void main() {
   ) async {
     final wide = 'wide ' * 300;
     final d = await _app(tester, [
-      _agent('c', 'Code:\n\n```\n$wide needle\n```'),
+      agentSays('c', 'Code:\n\n```\n$wide needle\n```'),
       ...longChat('a', turns: 10),
     ]);
     await _type(tester, 'needle');
@@ -288,7 +285,7 @@ void main() {
   testWidgets('a streaming chat stays where a jump put it, until the user '
       'goes back to the bottom', (tester) async {
     final d = await _app(tester, [
-      _agent('top', 'The needle is here, far above.'),
+      agentSays('top', 'The needle is here, far above.'),
       ...longChat('a', turns: 20),
     ]);
     await _type(tester, 'needle');
@@ -309,9 +306,9 @@ void main() {
     tester,
   ) async {
     final d = await _app(tester, [
-      _agent('top', 'A needle at the top.'),
+      agentSays('top', 'A needle at the top.'),
       ...longChat('a', turns: 20),
-      _agent('end', 'A needle at the end.'),
+      agentSays('end', 'A needle at the end.'),
     ]);
     await _type(tester, 'needle');
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -329,7 +326,7 @@ void main() {
   ) async {
     final d = await _app(tester, [
       ...longChat('a', turns: 20),
-      _agent('mid', 'The needle is here, halfway.'),
+      agentSays('mid', 'The needle is here, halfway.'),
       ...longChat('b', turns: 20),
     ], settle: false);
     await _type(tester, 'needle');

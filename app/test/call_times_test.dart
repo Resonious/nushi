@@ -38,9 +38,6 @@ Item _call(String id, String title, num from, num? to) => Item(
   ended: to == null ? null : _ago(to),
 );
 
-Item _said(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
-
 /// A transcript with a call of under a second, one of 12 seconds, a run of
 /// three, a subagent that worked 3m 12s with its tokens, and a call that
 /// runs.
@@ -60,13 +57,13 @@ List<Item> _items() => [
     started: _ago(600),
     ended: _ago(599.6),
   ),
-  _said('m1', 'The tests first.'),
+  agentSays('m1', 'The tests first.'),
   _call('t', 'go test ./internal/store/...', 590, 578),
-  _said('m2', 'Now the lint, the vet and the build.'),
+  agentSays('m2', 'Now the lint, the vet and the build.'),
   _call('g1', 'make lint', 570, 540),
   _call('g2', 'go vet ./...', 538, 530),
   _call('g3', 'go build ./cmd/nushid', 528, 506),
-  _said('m3', 'An agent looks for the callers.'),
+  agentSays('m3', 'An agent looks for the callers.'),
   Item(
     id: 'x',
     kind: ItemKind.ITEM_KIND_TOOL_CALL,
@@ -81,7 +78,7 @@ List<Item> _items() => [
       tokens: Int64(48120),
     ),
   ),
-  _said('m4', 'And the whole suite, with a long name to see it give way.'),
+  agentSays('m4', 'And the whole suite, with a long name to see it give way.'),
   _call(
     'c',
     'go test -race -count=1 ./internal/features/chats/... ./internal/e2e/...',

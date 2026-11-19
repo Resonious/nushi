@@ -60,9 +60,6 @@ Item _tool(
   diffs: diffs,
 );
 
-Item _say(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
-
 const _old = '''
 func (h *Handler) Feed(w http.ResponseWriter, r *http.Request) {
 	posts, err := h.store.ListPosts(ctx)
@@ -103,7 +100,7 @@ final _items = <Item>[
   _tool('r1', 'read', 'Read', paths: ['internal/store/posts.go']),
   _tool('r2', 'read', 'Read', paths: ['internal/feed/handler.go']),
   _tool('r3', 'search', 'Search for ListPosts'),
-  _say(
+  agentSays(
     'm1',
     '`ListPosts` reads the whole table in one query. I’ll give it a keyset '
         'cursor on `(published, id)`, so a post published while someone '
@@ -188,7 +185,7 @@ final _items = <Item>[
       ),
     ],
   ),
-  _say(
+  agentSays(
     'm2',
     'The store and the handler page now.\n\n'
         '```go\nfunc ParseCursor(q url.Values) (Cursor, error) {\n'
@@ -427,7 +424,7 @@ void main() {
           idle: true,
           items: [
             _items.first,
-            _say('m', 'Two things before I go on.'),
+            agentSays('m', 'Two things before I go on.'),
             _permission(),
             _question(),
           ],

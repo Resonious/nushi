@@ -39,14 +39,11 @@ Item _show(String id, String path) => Item(
   input: jsonEncode({'path': path}),
 );
 
-Item _say(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_USER_MESSAGE, text: text);
-
-Item get _user => _say('u', 'Write the report and a chart for it.');
+Item get _user => userSays('u', 'Write the report and a chart for it.');
 
 /// Two turns: six files in the first, two in the last.
 final List<Item> _turns = [
-  _say('u1', 'Sketch the whole design.'),
+  userSays('u1', 'Sketch the whole design.'),
   for (final f in [
     'docs/brief.md',
     'docs/flows.md',
@@ -56,7 +53,7 @@ final List<Item> _turns = [
     'docs/notes.md',
   ])
     _write('w-$f', f),
-  _say('u2', 'Now the report and its chart.'),
+  userSays('u2', 'Now the report and its chart.'),
   _write('w-r', 'docs/report.md'),
   _write('w-c', 'docs/img/chart.png'),
 ];

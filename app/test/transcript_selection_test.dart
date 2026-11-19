@@ -83,9 +83,6 @@ Future<String> _quoted(WidgetTester tester) async {
   return quote;
 }
 
-Item _agent(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
-
 void main() {
   setUpAll(loadFonts);
   final mac = TargetPlatformVariant.only(TargetPlatform.macOS);
@@ -95,7 +92,7 @@ void main() {
   ) async {
     final d = await _app(tester, {
       'a': longChat('a'),
-      'b': [...longChat('b'), _agent('z', 'The last words of the chat.')],
+      'b': [...longChat('b'), agentSays('z', 'The last words of the chat.')],
     });
     d.select('b');
     await tester.pump();
@@ -112,8 +109,8 @@ void main() {
     final wide = 'wide ' * 80;
     final d = await _app(tester, {
       'a': [
-        _agent('o', 'Old words.\n\n```\nblock start $wide\n```\n\nOld end.'),
-        _agent('n', 'First pick and second pick.'),
+        agentSays('o', 'Old words.\n\n```\nblock start $wide\n```\n\nOld end.'),
+        agentSays('n', 'First pick and second pick.'),
       ],
     });
     for (final (word, times) in [
@@ -136,9 +133,9 @@ void main() {
     const block = 'Fenced:\n\n```\nprose one\nprose two\n```';
     final d = await _app(tester, {
       'a': [
-        _agent('o', block),
+        agentSays('o', block),
         Item(id: 'u', kind: ItemKind.ITEM_KIND_USER_MESSAGE, text: block),
-        _agent('n', 'First pick.'),
+        agentSays('n', 'First pick.'),
       ],
     });
     final (from, to) = _ends(tester, 'First pick');
@@ -151,7 +148,7 @@ void main() {
     final copied = clipboardCopies(tester);
     final d = await _app(tester, {
       'a': [
-        _agent(
+        agentSays(
           'o',
           'Para one.\n\nPara two.\n\n- item one\n- item two\n\n'
               '| Head | Other |\n|---|---|\n| left | right |\n\nLast words.',
@@ -184,7 +181,7 @@ void main() {
     tester,
   ) async {
     final d = await _app(tester, {
-      'a': [...longChat('a'), _agent('c', '```\ncode\n```')],
+      'a': [...longChat('a'), agentSays('c', '```\ncode\n```')],
     });
     await tester.pumpAndSettle();
     final list = find.descendant(
@@ -203,7 +200,9 @@ void main() {
 
   testWidgets('a drag through a code block takes its text', (tester) async {
     final d = await _app(tester, {
-      'a': [_agent('o', 'Words before.\n\n```\nthe code\n```\n\nWords after.')],
+      'a': [
+        agentSays('o', 'Words before.\n\n```\nthe code\n```\n\nWords after.'),
+      ],
     });
     await _drag(tester, _ends(tester, 'before').$1, _ends(tester, 'after').$2);
     final quote = await _quoted(tester);
@@ -231,7 +230,7 @@ void main() {
       tester,
       {
         'a': [
-          for (final (i, (text, _, _)) in lines.indexed) _agent('m$i', text),
+          for (final (i, (text, _, _)) in lines.indexed) agentSays('m$i', text),
         ],
       },
       files: [
@@ -279,7 +278,7 @@ void main() {
     final d = await _app(
       tester,
       {
-        'a': [_agent('o', line)],
+        'a': [agentSays('o', line)],
       },
       files: ['mise.toml'],
     );
@@ -301,7 +300,7 @@ void main() {
       tester,
       {
         'b': [
-          _agent('o', line),
+          agentSays('o', line),
           Item(
             id: 'u',
             kind: ItemKind.ITEM_KIND_USER_MESSAGE,

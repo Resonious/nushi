@@ -47,9 +47,6 @@ Item _show(
       : '{\n  "path": ${jsonEncode(path)}\n}',
 );
 
-Item _say(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
-
 Item _ask(String title, String input) => Item(
   id: 'ask',
   kind: ItemKind.ITEM_KIND_PERMISSION,
@@ -187,11 +184,11 @@ void main() {
         tester,
         items: [
           _show('a', 'docs/report.html'),
-          _say('m', 'And now.'),
+          agentSays('m', 'And now.'),
           _show('b', 'docs/report.html', codex: true),
-          _say('n', 'And then.'),
+          agentSays('n', 'And then.'),
           _show('f', 'main.go', status: 'failed', text: 'not a type'),
-          _say('p', 'And last.'),
+          agentSays('p', 'And last.'),
           _show('r', 'docs/live.html', status: 'in_progress'),
         ],
       );
@@ -496,9 +493,9 @@ void main() {
       Collapsible.opened.clear();
       final fake = _fake(
         items: [
-          _say('m', 'The report is written.'),
+          agentSays('m', 'The report is written.'),
           _show('a', 'docs/report.md'),
-          _say('n', 'And the page.'),
+          agentSays('n', 'And the page.'),
           _ask('mcp__nushi__show', '{\n  "path": "docs/report.html"\n}'),
         ],
       );
@@ -527,20 +524,20 @@ void main() {
               kind: ItemKind.ITEM_KIND_USER_MESSAGE,
               text: 'Write the release report and show it to me.',
             ),
-            _say('m', 'The report is written.'),
+            agentSays('m', 'The report is written.'),
             _show(
               'a',
               'docs/report.md',
               text: 'The preview pane beside the chat has the file.',
             ),
-            _say('n', 'Now the numbers, as a page.'),
+            agentSays('n', 'Now the numbers, as a page.'),
             _show(
               'f',
               'internal/api/api.go',
               status: 'failed',
               text: 'the preview doesn’t open this type of file',
             ),
-            _say('o', 'That was the wrong file; the page is this one.'),
+            agentSays('o', 'That was the wrong file; the page is this one.'),
             _ask(
               'mcp__nushi__show',
               '{\n  "path": "docs/history/release-timings.html"\n}',

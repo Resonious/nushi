@@ -489,6 +489,14 @@ Chat chat(
   status: status ?? ChatStatus(),
 );
 
+/// The agent's message [text], item [id] of a transcript.
+Item agentSays(String id, String text) =>
+    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
+
+/// The user's message [text], item [id] of a transcript.
+Item userSays(String id, String text) =>
+    Item(id: id, kind: ItemKind.ITEM_KIND_USER_MESSAGE, text: text);
+
 /// Loads the app's fonts (the bundled ones and Material's icons), so
 /// goldens show text rather than boxes.
 Future<void> loadFonts() async {

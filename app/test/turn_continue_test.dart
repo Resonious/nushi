@@ -36,9 +36,6 @@ Item _user(String id, String text, {List<ImageData> images = const []}) => Item(
 Item _notice([String status = 'turn_failed', String text = _failed]) =>
     Item(id: 'n', kind: ItemKind.ITEM_KIND_NOTICE, status: status, text: text);
 
-Item _agent(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
-
 Item _tool(String id, {String parent = '', bool report = false}) => Item(
   id: id,
   kind: ItemKind.ITEM_KIND_TOOL_CALL,
@@ -130,7 +127,7 @@ void main() {
 
   test('what the agent did after the message is progress', () {
     for (final it in [
-      _agent('a', 'Skipping it.'),
+      agentSays('a', 'Skipping it.'),
       Item(id: 'a', kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, images: [_image]),
       Item(id: 'th', kind: ItemKind.ITEM_KIND_THOUGHT),
       _tool('t1'),
@@ -161,9 +158,9 @@ void main() {
   test("what isn't the turn's work leaves Try again", () {
     for (final it in [
       _notice('branch_renamed', 'Branch renamed'),
-      _agent('a', '  '),
+      agentSays('a', '  '),
       // The failure repeated as the agent's message (Claude's API Error).
-      _agent('a', 'HTTP 412 Precondition Failed: Account is suspended'),
+      agentSays('a', 'HTTP 412 Precondition Failed: Account is suspended'),
       // A subagent started earlier: its step, and its report.
       _tool('x', parent: 'older'),
       _tool('r', report: true),
@@ -199,7 +196,7 @@ void main() {
   test('archived, rewinding or not last: neither', () {
     expect(_label(_worked, also: (s) => s.archived = true), isNull);
     expect(_label(_worked, also: (s) => s.rewinding.value = true), isNull);
-    final s = _state([..._worked, _agent('a', 'later')]);
+    final s = _state([..._worked, agentSays('a', 'later')]);
     expect(failedTurnRetry(s, _worked.last), isNull);
   });
 
@@ -231,7 +228,7 @@ void main() {
     final fake = FakeDaemon([]);
     final state = _state([
       _user('u', 'What is on this screen?', images: [_image]),
-      _agent('a', 'A login form.'),
+      agentSays('a', 'A login form.'),
       _notice(),
     ])..queue = [QueuedMessage(id: 'q1', text: 'then the tests')];
     final d = await _show(tester, fake, state);
