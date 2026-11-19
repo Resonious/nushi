@@ -96,9 +96,13 @@ final streamSyntaxes = <md.InlineSyntax>[_CaretSyntax(), _FreshSyntax()];
 /// The builders for [streamSyntaxes]: the [caret] in the line where the
 /// text ends, taking no room; a fresh run in its paragraph's spans, at its
 /// opacity, so it wraps as the rest.
-Map<String, MarkdownElementBuilder> streamBuilders(Widget? caret) => {
+Map<String, MarkdownElementBuilder> streamBuilders(
+  Widget? caret, {
+  Color? surfaceTint,
+  bool surfaceGlow = false,
+}) => {
   _CaretSyntax.tag: _CaretBuilder(caret),
-  _FreshSyntax.tag: _FreshBuilder(),
+  _FreshSyntax.tag: _FreshBuilder(surfaceTint, glow: surfaceGlow),
 };
 
 class _CaretSyntax extends md.InlineSyntax {
@@ -151,6 +155,14 @@ class _CaretBuilder extends MarkdownElementBuilder {
 }
 
 class _FreshBuilder extends MarkdownElementBuilder {
+  _FreshBuilder(this.tint, {required this.glow});
+
+  /// With a tint, a fresh run surfaces: it starts blurred, in [tint], and
+  /// sharpens to the text's own colour; with [glow] (a dark theme) it
+  /// also starts lit. Without one it just fades in.
+  final Color? tint;
+  final bool glow;
+
   @override
   Widget visitElementAfterWithContext(
     BuildContext context,
@@ -161,6 +173,36 @@ class _FreshBuilder extends MarkdownElementBuilder {
     final style = (parentStyle ?? const TextStyle()).merge(preferredStyle);
     final opacity = int.parse(element.attributes['tenths'] ?? '9') / 10;
     final color = style.color ?? const Color(0xFF000000);
+    final tint = this.tint;
+    if (tint != null) {
+      // [opacity] is how far it has surfaced, in tenths.
+      final p = opacity / 0.9;
+      final under = 1 - p;
+      final ink = Color.lerp(tint, color, Curves.easeIn.transform(p))!
+          .withValues(alpha: color.a * (0.15 + 0.85 * (p / 0.4).clamp(0, 1)));
+      final blur = 2.4 * under * under;
+      return Text.rich(
+        TextSpan(
+          text: element.textContent,
+          style: style.copyWith(
+            color: blur < 0.15 ? ink : null,
+            foreground: blur < 0.15
+                ? null
+                : (Paint()
+                    ..color = ink
+                    ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur)),
+            shadows: glow && under > 0.05
+                ? [
+                    Shadow(
+                      color: tint.withValues(alpha: 0.55 * under),
+                      blurRadius: 3 + 7 * under,
+                    ),
+                  ]
+                : null,
+          ),
+        ),
+      );
+    }
     return Text.rich(
       TextSpan(
         text: element.textContent,

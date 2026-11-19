@@ -6,6 +6,7 @@ import 'package:nushi/clock.dart';
 import 'package:nushi/controls.dart';
 import 'package:nushi/drawn.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/koi.dart';
 import 'package:nushi/motion.dart';
 import 'package:nushi/status.dart';
 import 'package:nushi/theme/theme.dart';
@@ -121,6 +122,16 @@ class _TurnStatusState extends State<TurnStatus> with ClockRun {
         ? 'Done in ${elapsed(lasted)}'
         : null;
     _since = null;
+    // A turn you watched end: a long one's koi leaps to the chat's dot, a
+    // short one sends a firefly.
+    if (!still && turnEnd(c, stopped: _stopped, ran: _ran) ==
+            TurnEnd.TURN_END_DONE && !c.waiting && appInFront) {
+      if (_receipt != null) {
+        KoiLeap.leap(context, c.id);
+      } else {
+        KoiLeap.firefly(context, c.id);
+      }
+    }
     if (_receipt == null && still) return;
     runFor(
       _receipt == null

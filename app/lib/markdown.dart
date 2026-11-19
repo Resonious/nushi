@@ -234,6 +234,8 @@ class AgentMarkdown extends StatelessWidget {
         shown?.text ?? text,
         streaming: live || shown != null,
         fresh: shown?.fresh ?? const [],
+        surfaceTint: t.brightness == Brightness.dark ? t.shineBand : t.accent,
+        surfaceGlow: t.brightness == Brightness.dark,
         caret: shown == null || shown.caret <= 0
             ? null
             : SoftCaret(opacity: shown.caret),
