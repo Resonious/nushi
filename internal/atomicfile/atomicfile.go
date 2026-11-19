@@ -35,16 +35,11 @@ func Rewrite(path string, data []byte) error {
 // (a fresh name, never an existing file or symlink), then renames it over
 // path.
 func Replace(path string, data []byte, mode os.FileMode) error {
-	return ReplaceFrom(path, bytes.NewReader(data), mode)
-}
-
-// ReplaceFrom is Replace with what r reads, streamed.
-func ReplaceFrom(path string, r io.Reader, mode os.FileMode) error {
 	f, err := os.CreateTemp(filepath.Dir(path), ".nushi-*")
 	if err != nil {
 		return err
 	}
-	err = write(f, r, mode)
+	err = write(f, bytes.NewReader(data), mode)
 	if err == nil {
 		err = os.Rename(f.Name(), path)
 	}
