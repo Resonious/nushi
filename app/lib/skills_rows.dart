@@ -45,7 +45,7 @@ class SkillSwitch extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 6, right: 2),
+            padding: const EdgeInsets.only(left: 6, right: 8),
             child: Text(where, style: theme.ui(theme.t.textMuted, size: 11)),
           ),
           SettingsSwitch(value: on, run: why.isNotEmpty ? null : onChanged),

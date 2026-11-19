@@ -219,7 +219,7 @@ class McpSwitch extends StatelessWidget {
         children: [
           if (label)
             Padding(
-              padding: const EdgeInsets.only(left: 6, right: 2),
+              padding: const EdgeInsets.only(left: 6, right: 8),
               child: Text('in this project', style: muted),
             ),
           SettingsSwitch(value: !server.off, run: elsewhere ? null : _set),
