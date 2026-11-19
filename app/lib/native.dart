@@ -32,10 +32,10 @@ class Native {
     required this.fonts,
     required this.install,
     required this.loginItem,
-    required this.swipes,
     required this.web,
     required this.window,
     this.speller,
+    this.swipes,
   });
 
   /// Notifications and the app icon's badge.
@@ -66,8 +66,9 @@ class Native {
   /// What starts the daemon at login.
   LoginItem loginItem;
 
-  /// The system's swipe back between pages.
-  PageSwipes swipes;
+  /// The system's swipe back between pages, where it has one beyond the
+  /// pans Flutter sees (the Mac's three-finger swipe).
+  PageSwipes? swipes;
 
   /// The web views, and the default browser.
   WebViews web;

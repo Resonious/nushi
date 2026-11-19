@@ -1,6 +1,5 @@
 import 'package:nushi/alerts_windows.dart';
 import 'package:nushi/app_install_windows.dart';
-import 'package:nushi/back_swipe_windows.dart';
 import 'package:nushi/clipboard_files_windows.dart';
 import 'package:nushi/conventions.dart';
 import 'package:nushi/desktop_windows.dart';
@@ -29,7 +28,6 @@ Native windowsNative() => Native(
   install: WindowsAppInstall(),
   loginItem: const WindowsLoginItem(),
   speller: WindowsSpeller.open(),
-  swipes: const WindowsPageSwipes(),
   web: const WindowsWebViews(),
   window: const WindowsWindow(),
 );
