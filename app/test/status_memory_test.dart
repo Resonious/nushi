@@ -39,12 +39,10 @@ void main() {
             };
       final d = await fake.connect(tester);
       await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: NushiTheme(tokens).toThemeData(),
-          home: Scaffold(
-            body: Align(alignment: Alignment.bottomCenter, child: StatusBar(d)),
-          ),
+        themed(
+          Align(alignment: Alignment.bottomCenter, child: StatusBar(d)),
+          tokens: tokens,
+          banner: false,
         ),
       );
       await tester.pumpAndSettle();

@@ -12,7 +12,6 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/rewind.dart';
 import 'package:nushi/theme/theme.dart';
-import 'package:nushi/toast.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
@@ -79,23 +78,19 @@ Future<_Box> _box(
   final c = chat ?? _chat('c');
   d.chats[c.id] = c;
   await tester.pumpWidget(
-    MaterialApp(
-      builder: (context, child) => ToastHost(child: child!),
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        backgroundColor: tokens.base,
-        body: Column(
-          children: [
-            const Expanded(child: SizedBox()),
-            // As the chat's view, which builds it again as it changes.
-            ListenableBuilder(
-              listenable: c,
-              builder: (context, _) => Composer(chat: c, daemon: d),
-            ),
-          ],
-        ),
+    themed(
+      Column(
+        children: [
+          const Expanded(child: SizedBox()),
+          // As the chat's view, which builds it again as it changes.
+          ListenableBuilder(
+            listenable: c,
+            builder: (context, _) => Composer(chat: c, daemon: d),
+          ),
+        ],
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pump();

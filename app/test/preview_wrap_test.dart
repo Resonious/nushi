@@ -443,32 +443,27 @@ void main() {
       final c = d.chats['c']!..openInFiles('src/tea.go');
       // The pane on its own, cut to its two rows.
       await tester.pumpWidget(
-        MaterialApp(
-          theme: NushiTheme(
-            brightness == Brightness.dark ? Tokens.dark : Tokens.light,
-          ).toThemeData(),
-          home: Scaffold(
-            body: Center(
-              child: RepaintBoundary(
-                key: const ValueKey('row'),
-                child: ClipRect(
-                  child: SizedBox(
-                    width: 820,
-                    height: PaneHeader.height + FilesBar.height,
-                    child: OverflowBox(
-                      alignment: Alignment.topCenter,
-                      maxHeight: 200,
-                      // On a pane's fill, as the chat's area backs it.
-                      child: ColoredBox(
-                        color:
-                            (brightness == Brightness.dark
-                                    ? Tokens.dark
-                                    : Tokens.light)
-                                .base,
-                        child: SizedBox(
-                          height: 200,
-                          child: FilesPane(chat: c, daemon: d, onClose: () {}),
-                        ),
+        themed(
+          Center(
+            child: RepaintBoundary(
+              key: const ValueKey('row'),
+              child: ClipRect(
+                child: SizedBox(
+                  width: 820,
+                  height: PaneHeader.height + FilesBar.height,
+                  child: OverflowBox(
+                    alignment: Alignment.topCenter,
+                    maxHeight: 200,
+                    // On a pane's fill, as the chat's area backs it.
+                    child: ColoredBox(
+                      color:
+                          (brightness == Brightness.dark
+                                  ? Tokens.dark
+                                  : Tokens.light)
+                              .base,
+                      child: SizedBox(
+                        height: 200,
+                        child: FilesPane(chat: c, daemon: d, onClose: () {}),
                       ),
                     ),
                   ),
@@ -476,6 +471,7 @@ void main() {
               ),
             ),
           ),
+          tokens: brightness == Brightness.dark ? Tokens.dark : Tokens.light,
         ),
       );
       await tester.pumpAndSettle();

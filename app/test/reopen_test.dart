@@ -54,13 +54,7 @@ Future<Daemon> _show(
   Tokens tokens = Tokens.dark,
 }) async {
   final d = await fake.connect(tester);
-  await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(body: child(d)),
-    ),
-  );
+  await tester.pumpWidget(themed(child(d), tokens: tokens, banner: false));
   await tester.pumpAndSettle();
   return d;
 }

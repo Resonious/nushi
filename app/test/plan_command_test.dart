@@ -116,22 +116,20 @@ void main() {
           ),
         ];
         await tester.pumpWidget(
-          MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: NushiTheme(tokens).toThemeData(),
-            home: Scaffold(
-              body: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: 12,
-                  children: [
-                    for (final it in items)
-                      ItemView(it, chat, d, live: false, still: false),
-                  ],
-                ),
+          themed(
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: 12,
+                children: [
+                  for (final it in items)
+                    ItemView(it, chat, d, live: false, still: false),
+                ],
               ),
             ),
+            tokens: tokens,
+            banner: false,
           ),
         );
         await tester.pumpAndSettle();

@@ -64,17 +64,15 @@ Future<(FakeDaemon, Daemon)> _sidebar(
     ..answer = _jira;
   final d = await fake.connect(tester);
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: Row(
-          children: [
-            SizedBox(width: 260, child: Sidebar(daemon: d)),
-            const Spacer(),
-          ],
-        ),
+    themed(
+      Row(
+        children: [
+          SizedBox(width: 260, child: Sidebar(daemon: d)),
+          const Spacer(),
+        ],
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   return (fake, d);

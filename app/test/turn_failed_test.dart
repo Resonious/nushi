@@ -16,7 +16,6 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/items.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/theme/theme.dart';
-import 'package:nushi/toast.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
@@ -72,22 +71,19 @@ Future<Daemon> _show(
   viewport(tester, Size(width, 340));
   final d = await fake.connect(tester);
   await tester.pumpWidget(
-    MaterialApp(
-      builder: (context, child) => ToastHost(child: child!),
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            spacing: 12,
-            children: [
-              for (final it in state.items)
-                ItemView(it, state, d, live: false, still: true),
-            ],
-          ),
+    themed(
+      Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          spacing: 12,
+          children: [
+            for (final it in state.items)
+              ItemView(it, state, d, live: false, still: true),
+          ],
         ),
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pump();

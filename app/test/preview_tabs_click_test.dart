@@ -327,18 +327,16 @@ void main() {
         ..openInFiles('NOTES.md', keep: false);
       viewport(tester, const Size(640, 200));
       await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: NushiTheme(tokens).toThemeData(),
-          home: Scaffold(
-            body: Align(
-              alignment: Alignment.topCenter,
-              child: SizedBox(
-                height: 200,
-                child: FilesPane(chat: c, daemon: d, onClose: () {}),
-              ),
+        themed(
+          Align(
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              height: 200,
+              child: FilesPane(chat: c, daemon: d, onClose: () {}),
             ),
           ),
+          tokens: tokens,
+          banner: false,
         ),
       );
       await tester.pumpAndSettle();

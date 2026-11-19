@@ -102,23 +102,21 @@ Future<(Daemon, ChatState)> spellBox(
   await tester.pumpWidget(
     RepaintBoundary(
       key: const Key('window'),
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: NushiTheme(tokens).toThemeData(),
-        home: Scaffold(
-          body: Column(
-            children: [
-              const Spacer(),
-              ColoredBox(
-                color: tokens.base,
-                child: ListenableBuilder(
-                  listenable: chat,
-                  builder: (context, _) => Composer(chat: chat, daemon: d),
-                ),
+      child: themed(
+        Column(
+          children: [
+            const Spacer(),
+            ColoredBox(
+              color: tokens.base,
+              child: ListenableBuilder(
+                listenable: chat,
+                builder: (context, _) => Composer(chat: chat, daemon: d),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+        tokens: tokens,
+        banner: false,
       ),
     ),
   );

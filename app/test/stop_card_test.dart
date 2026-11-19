@@ -64,22 +64,19 @@ Future<void> _pump(
 ) async {
   viewport(tester, Size(width, 240));
   await tester.pumpWidget(
-    MaterialApp(
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        backgroundColor: tokens.base,
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ItemView(_sent, chat, d, live: false, still: false),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: QueuePills(chat, onEdit: (_) {}, onRemove: (_) {}),
-            ),
-          ],
-        ),
+    themed(
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ItemView(_sent, chat, d, live: false, still: false),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: QueuePills(chat, onEdit: (_) {}, onRemove: (_) {}),
+          ),
+        ],
       ),
+      tokens: tokens,
     ),
   );
   await tester.pump();

@@ -333,21 +333,19 @@ void main() {
       final d = await FakeDaemon([]).connect(tester);
       final state = _state(_worked);
       await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: NushiTheme(tokens).toThemeData(),
-          home: Scaffold(
-            body: Padding(
-              padding: const EdgeInsets.all(16),
-              child: ItemView(
-                state.items.last,
-                state,
-                d,
-                live: false,
-                still: true,
-              ),
+        themed(
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: ItemView(
+              state.items.last,
+              state,
+              d,
+              live: false,
+              still: true,
             ),
           ),
+          tokens: tokens,
+          banner: false,
         ),
       );
       await tester.pump();
