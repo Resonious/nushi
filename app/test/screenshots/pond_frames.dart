@@ -11,6 +11,7 @@ import 'dart:ui' as ui;
 
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -281,6 +282,95 @@ void main() {
         await tester.pump(step);
         await frame();
       }
+      debugDisableShadows = true;
+      await closeView(tester, d);
+    }, variant: _mac);
+
+    testWidgets('pond splash ${brightness.name}', (tester) async {
+      viewport(tester, const Size(1280, 800), brightness: brightness);
+      showDetails.value = false;
+      final all = [
+        ..._items,
+        Item(id: 'u2', kind: ItemKind.ITEM_KIND_USER_MESSAGE, text: _sent),
+        Item(id: 'm2', kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: _answer),
+        Item(id: 'u3', kind: ItemKind.ITEM_KIND_USER_MESSAGE, text: _thanks),
+        Item(id: 'm3', kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: _welcome),
+      ];
+      final fake = FakeDaemon([_chat])
+        ..answer = (input) => switch (input) {
+          GetChatRequest() => GetChatResponse(
+            chat: _chat,
+            items: all,
+            status: ChatStatus(),
+          ),
+          _ => null,
+        };
+      final d = await fake.connect(tester);
+      d.select('a');
+      await tester.runAsync(Pond.load);
+      await tester.pumpWidget(NushiApp(daemon: d));
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      debugDisableShadows = false;
+      final dir = Directory(
+        '${Platform.environment['POND_FRAMES']}/splash-${brightness.name}',
+      )..createSync(recursive: true);
+      var n = 0;
+      Future<void> frame() async {
+        final capture = captureImage(find.byType(NushiApp).evaluate().single);
+        await tester.runAsync(() async {
+          final ui.Image image = await capture;
+          final png = await image.toByteData(format: ui.ImageByteFormat.png);
+          File(
+            '${dir.path}/${(n++).toString().padLeft(4, '0')}.png',
+          ).writeAsBytesSync(png!.buffer.asUint8List());
+          image.dispose();
+        });
+      }
+
+      const step = Duration(microseconds: 16667);
+      Future<void> frames(int count) async {
+        for (var i = 0; i < count; i++) {
+          await tester.pump(step);
+          await frame();
+        }
+      }
+
+      final mouse = TestPointer(1, PointerDeviceKind.mouse);
+      await tester.sendEventToBinding(mouse.hover(const Offset(700, 300)));
+      Future<void> wheel(double dy) async {
+        await tester.sendEventToBinding(mouse.scroll(Offset(0, dy)));
+        await tester.pump(step);
+        await frame();
+      }
+
+      await frames(15);
+      // Up a way, then a quick spin back down: it lands hard.
+      for (var i = 0; i < 8; i++) {
+        await wheel(-70);
+      }
+      await frames(30);
+      for (var i = 0; i < 12; i++) {
+        await wheel(150);
+      }
+      await frames(80);
+      // Up again, slowly down to the end: a soft landing.
+      for (var i = 0; i < 4; i++) {
+        await wheel(-60);
+      }
+      await frames(25);
+      for (var i = 0; i < 30; i++) {
+        await wheel(12);
+      }
+      await frames(70);
+      // Up again, and Jump to latest glides it home.
+      for (var i = 0; i < 8; i++) {
+        await wheel(-70);
+      }
+      await frames(30);
+      await tester.tap(find.text('Jump to latest'));
+      await frames(100);
       debugDisableShadows = true;
       await closeView(tester, d);
     }, variant: _mac);
