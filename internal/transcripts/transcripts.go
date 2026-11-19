@@ -190,8 +190,8 @@ func (s *Store) appendLocked(chat string, recs []record) error {
 
 // repairLocked cuts off a last line a crash or a failed write left without
 // its end, so the next record starts a line of its own. It reads only the
-// file's tail: the first write to an asleep chat's copy (EndStalePrompts,
-// at every start) mustn't cost the whole copy.
+// file's tail: the first write to a long copy after a start mustn't cost
+// the whole copy.
 func (s *Store) repairLocked(name string) error {
 	f, err := s.root.OpenFile(name, os.O_RDWR, 0)
 	if errors.Is(err, fs.ErrNotExist) {

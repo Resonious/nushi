@@ -177,7 +177,6 @@ func run() error {
 		Scratch: filepath.Join(dir, "scratch"), Uploads: filepath.Join(dir, "uploads"), Publish: hub.Publish, Tools: mcpTools(toolSvc, filepath.Join(dir, "nushid.sock")),
 		Viewers: remoteSvc, Processes: proctree.Tree{}, Copies: copies, CopiesOn: st.KeepTranscripts, CopyDays: st.TranscriptDays, Sleep: st})
 	shows.UseChats(chatSvc)
-	go chatSvc.EndStalePrompts() // what a daemon that stopped left pending
 	// Each terminal names its own shell (terminal.Terminal's Name).
 	termSvc := terminals.New(shellStarter(agentSvc), "", chatSvc, hub.Publish)
 	chatSvc.UseTerminals(termSvc)

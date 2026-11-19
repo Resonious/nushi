@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"slices"
 	"strings"
 
@@ -204,44 +203,4 @@ func (c *chat) endPromptsLocked() {
 			c.publishLocked(c.items[i])
 		}
 	}
-}
-
-// EndStalePrompts cancels, in the transcripts' copies, the prompts and
-// questions a daemon that stopped left pending: no agent waits on them
-// now. A chat already open is its own (restoreLocked). Run at start.
-func (s *Service) EndStalePrompts() {
-	if s.copies == nil {
-		return
-	}
-	stored, err := s.sessions.Sessions()
-	if err != nil {
-		slog.Warn("ending stale prompts", "err", err)
-		return
-	}
-	for _, sess := range stored {
-		s.mu.Lock() // no chat opens while its copy is fixed (lookup)
-		if s.chats[sess.ID] == nil && s.copies.Has(sess.ID) {
-			s.endStale(sess.ID)
-		}
-		s.mu.Unlock()
-	}
-}
-
-func (s *Service) endStale(id string) {
-	ended, after, err := s.copies.Find(id, asking) // not the whole copy: every chat's is looked at
-	if err != nil {
-		slog.Warn("ending stale prompts", "chat", id, "err", err)
-		return
-	}
-	for i := range ended {
-		ended[i].Status = "cancelled"
-	}
-	if len(ended) == 0 {
-		return
-	}
-	if err := s.copies.Append(id, ended, after); err != nil {
-		slog.Warn("ending stale prompts", "chat", id, "err", err)
-		return
-	}
-	slog.Info("stale prompts cancelled", "chat", id, "items", len(ended))
 }
