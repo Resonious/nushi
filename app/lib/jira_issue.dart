@@ -151,10 +151,7 @@ class _JiraIssuePaneState extends State<JiraIssuePane> {
       );
     }
     final now = clock();
-    String age(int ms) {
-      final when = DateTime.fromMillisecondsSinceEpoch(ms);
-      return ago(now.difference(when), when);
-    }
+    String age(int ms) => agoAt(ms, now);
 
     final images = jiraImages(widget.daemon.client, widget.site);
     Widget section(String title, List<Widget> children) => Padding(

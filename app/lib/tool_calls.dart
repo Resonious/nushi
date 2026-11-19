@@ -11,6 +11,7 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/images.dart';
 import 'package:nushi/markdown.dart';
 import 'package:nushi/motion.dart';
+import 'package:nushi/plain_text.dart';
 import 'package:nushi/preview.dart';
 import 'package:nushi/spinner.dart';
 import 'package:nushi/theme/theme.dart';
@@ -228,7 +229,7 @@ String groupLabel(List<Item> calls) {
           ? 'es'
           : 's'}',
   ].join(', ');
-  return label[0].toUpperCase() + label.substring(1);
+  return capital(label);
 }
 
 /// The end of a tool call's header: [failed] in red.

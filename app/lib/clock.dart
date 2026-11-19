@@ -2,6 +2,23 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+/// The months' names, January first; a short date takes each one's first
+/// three letters ("Nov").
+const months = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
 /// The time now, for what the app shows counted from it (an age, "Updated
 /// 3m ago", a pull request's last look); tests set their own, a fixed one
 /// before each (`flutter_test_config.dart`), so a golden's ages never move.

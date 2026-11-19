@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart' show immutable;
 
 import 'package:nushi/agents.dart';
 import 'package:nushi/chat.dart';
+import 'package:nushi/clock.dart';
+import 'package:nushi/plain_text.dart';
 import 'package:nushi/status.dart';
 
 // How the sidebar arranges its chats (its Arrange menu): what it groups
@@ -228,21 +230,6 @@ class ChatGroup {
   final List<ChatState> chats;
 }
 
-const _months = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
 /// The Date group [t] falls in at [now]: Today, Yesterday, Previous 7
 /// days, Previous 30 days, then its month ("October", or "October 2025"
 /// before this year). Its key sorts the groups, the newest first when
@@ -261,8 +248,8 @@ const _months = [
     _ => (
       'date:${t.year}-${t.month.toString().padLeft(2, '0')}',
       t.year == now.year
-          ? _months[t.month - 1]
-          : '${_months[t.month - 1]} ${t.year}',
+          ? months[t.month - 1]
+          : '${months[t.month - 1]} ${t.year}',
     ),
   };
 }
@@ -291,7 +278,7 @@ List<ChatGroup> groupChats(
       ),
       GroupBy.status => (
         'status:${c.phase.index.toString().padLeft(2, '0')}',
-        _capital(phaseName(c.phase)),
+        capital(phaseName(c.phase)),
         '',
       ),
       GroupBy.agent => ('agent:${c.agent}', agentTitle(c.agent), c.agent),
@@ -319,6 +306,3 @@ List<ChatGroup> groupChats(
       ChatGroup(k, byKey[k]!.label, byKey[k]!.chats, agent: byKey[k]!.agent),
   ];
 }
-
-String _capital(String s) =>
-    s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);

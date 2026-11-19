@@ -1,3 +1,5 @@
+import 'package:nushi/plain_text.dart';
+
 /// A word of the prompt that spell check looks at, and where it is in it.
 typedef SpellWord = ({int start, int end, String word});
 
@@ -74,6 +76,4 @@ Set<String> wordsOf(Iterable<String> messages) => {
 /// [fix] in [word]'s shape: capitalized if the word was. All capitals never
 /// come here, as [scanWords] skips them.
 String inShapeOf(String word, String fix) =>
-    fix.isEmpty || !_capital.hasMatch(word[0])
-    ? fix
-    : fix[0].toUpperCase() + fix.substring(1);
+    fix.isEmpty || !_capital.hasMatch(word[0]) ? fix : capital(fix);

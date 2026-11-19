@@ -14,3 +14,6 @@ String plainName(String name) => String.fromCharCodes([
         r == 0xFEFF))
       r,
 ]);
+
+/// [s] with its first letter a capital: "idle" as "Idle".
+String capital(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);

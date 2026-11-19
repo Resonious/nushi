@@ -158,11 +158,7 @@ String seenAt(DateTime s, {DateTime? now}) {
   if (s.year == n.year && s.month == n.month && s.day == n.day) {
     return 'last seen $time';
   }
-  const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', //
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
-  return 'last seen ${months[s.month - 1]} ${s.day}, $time';
+  return 'last seen ${months[s.month - 1].substring(0, 3)} ${s.day}, $time';
 }
 
 /// A newer version of the app is installed and waits: Reload brings it in
