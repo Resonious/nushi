@@ -1,8 +1,8 @@
 // Package acptest is a fake ACP agent for tests, shaped like Claude's
 // agent (or like Codex's adapter, with Agent.Codex: codex.go; like omp,
-// with Agent.Omp: omp.go; or like opencode, with Agent.Opencode:
-// opencode.go), behind a login with Agent.SignIn (signin.go). It answers
-// prompts by script, keyed on the prompt's text:
+// with Agent.Omp: omp.go; like opencode, with Agent.Opencode: opencode.go;
+// or like agy, with Agent.Agy: agy.go), behind a login with Agent.SignIn
+// (signin.go). It answers prompts by script, keyed on the prompt's text:
 //
 //   - containing "permission": a tool call that asks permission (options
 //     "allow" and "reject"), then a message naming the option picked, or
@@ -73,6 +73,7 @@ type Agent struct {
 	Codex    bool    // answers as codex-acp does (codex.go)
 	Omp      bool    // answers as omp does (omp.go)
 	Opencode bool    // answers as opencode does (opencode.go)
+	Agy      bool    // answers as agy does (agy.go)
 	Images   bool    // says it takes images in prompts (as plain agents don't)
 	SignIn   *SignIn // when set, it takes no session until signed in (signin.go)
 	// For the log: what it writes to its stderr, how long session/load
@@ -320,6 +321,10 @@ func (a *Agent) answer(f frame) {
 		a.opencodeAnswer(f, opened, result)
 		return
 	}
+	if a.Agy {
+		a.agyAnswer(f, opened, result)
+		return
+	}
 	r, _ := json.Marshal(result)
 	a.send(frame{ID: f.ID, Result: r})
 }
@@ -399,6 +404,9 @@ func (a *Agent) prompt(session string, blocks []string) string { //nolint:gocogn
 		}
 	}
 	if stop := a.opencodeScript(session, text); stop != "" {
+		return stop
+	}
+	if stop := a.agyScript(session, text); stop != "" {
 		return stop
 	}
 	switch {

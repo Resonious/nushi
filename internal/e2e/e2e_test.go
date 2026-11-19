@@ -157,7 +157,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 	// plain one.
 	fake := func(as string) chats.Launch {
 		return launch(func(r io.Reader, w io.Writer) {
-			(&acptest.Agent{History: history, Codex: as == "codex", Omp: as == "omp", Opencode: as == "opencode"}).Serve(r, w)
+			(&acptest.Agent{History: history, Codex: as == "codex", Omp: as == "omp", Opencode: as == "opencode", Agy: as == "agy"}).Serve(r, w)
 		})
 	}
 	anteStore := anteStores(dataDir)
@@ -206,6 +206,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		"opencode": fake("opencode"),
 		"pi":       pis(pi.Pi),
 		"pig":      pis(pi.PiG),
+		"agy":      fake("agy"),
 	}
 	kinds := []chats.Kind{{Harness: fakeHarness{}, Launch: fake("")}}
 	for _, a := range knownagents.All("", nil) { // no projects folder: Local isn't used
