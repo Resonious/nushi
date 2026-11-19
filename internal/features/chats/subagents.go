@@ -45,7 +45,7 @@ func (c *chat) subagentLocked(call *model.Item) bool { //nolint:gocyclo // one t
 	switch {
 	case sa.Said != "": // the agent said, of its session (children.go)
 		sa.State = sa.Said
-	case call.Status == "pending" || call.Status == "in_progress":
+	case callRunning(call.Status):
 		sa.State = "running"
 	case call.Status == "failed":
 		sa.State = "failed"

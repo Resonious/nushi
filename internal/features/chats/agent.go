@@ -281,7 +281,7 @@ func (c *chat) orphanLocked(stopped bool) {
 	c.ownTurn = false
 	c.pokeWorkflowsLocked() // they went with the agent
 	for i, it := range c.items {
-		running := it.Status == "pending" || it.Status == "in_progress" || it.Subagent != nil && it.Subagent.State == "running"
+		running := callRunning(it.Status) || it.Subagent != nil && it.Subagent.State == "running"
 		if it.Kind == model.ToolCall && running {
 			c.items[i].Status = "failed"
 			if it.Ended.IsZero() { // else its turn's end ended it

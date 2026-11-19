@@ -74,7 +74,7 @@ func settled(it *model.Item, last bool) bool {
 	case model.AgentMessage, model.Thought:
 		return !last
 	case model.ToolCall:
-		return it.Status == "completed" || it.Status == "failed"
+		return callEnded(it.Status)
 	case model.Permission, model.Question:
 		return it.Status != "pending"
 	case model.Plan:

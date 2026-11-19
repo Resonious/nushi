@@ -27,7 +27,7 @@ var stepKinds = []string{"agent_message_chunk", "agent_thought_chunk", "tool_cal
 
 // underWay says an item has something under way that ended would end.
 func underWay(it model.Item) bool {
-	return it.Kind == model.ToolCall && (it.Status == "pending" || it.Status == "in_progress") ||
+	return it.Kind == model.ToolCall && callRunning(it.Status) ||
 		(it.Kind == model.Permission || it.Kind == model.Question) && it.Status == "pending" ||
 		it.Subagent != nil && it.Subagent.State == "running" ||
 		it.BackgroundCommand != nil && it.BackgroundCommand.State == "running"
@@ -42,7 +42,7 @@ func ended(it *model.Item) {
 		untimed(it)
 	}
 	switch {
-	case it.Kind == model.ToolCall && (it.Status == "pending" || it.Status == "in_progress"):
+	case it.Kind == model.ToolCall && callRunning(it.Status):
 		it.Status = "failed"
 	case (it.Kind == model.Permission || it.Kind == model.Question) && it.Status == "pending":
 		it.Status = "cancelled"

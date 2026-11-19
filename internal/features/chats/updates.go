@@ -192,7 +192,7 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 		c.publishLocked(*it)
 		c.reportedLocked(*it)
 		c.passedOnLocked(*it)
-		if t.Status == "completed" || t.Status == "failed" {
+		if callEnded(string(t.Status)) {
 			c.openedPullLocked(*it)
 			c.pushedLocked(*it)
 			c.stoppedLocked(*it)
@@ -201,7 +201,7 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 				c.relatedStepLocked()
 			}
 		}
-		if (t.Status == "completed" || t.Status == "failed") && it.Parent == "" && !c.started.IsZero() {
+		if callEnded(string(t.Status)) && it.Parent == "" && !c.started.IsZero() {
 			c.deliverLocked() // between tool calls: the agent's chance to take queued messages
 		}
 	}
