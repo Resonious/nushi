@@ -112,7 +112,8 @@ class ChatScreen extends StatelessWidget {
                       ),
                     ),
             ),
-            TurnStatus(chat),
+            // The screen's room is the box's: the line folds between turns.
+            TurnStatus(chat, keepsRoom: false),
           ],
         ),
         bottom: chat.archived

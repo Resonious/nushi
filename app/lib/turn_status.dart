@@ -19,18 +19,27 @@ import 'package:nushi/theme/theme.dart';
 /// A turn you watched end (normally, after [Sparks.after] or more, Nushi
 /// in front) leaves a receipt for [receiptFor]: its mark draws into the
 /// green check, sparks leave it, and the text says "Done in 2m 30s". Then
-/// the line folds away over 200 ms, so the composer slides down rather
-/// than jumps; as a turn starts it grows in the same way, so the composer
-/// slides up. With Reduce Motion the receipt shows still and the line
-/// comes and goes at once. Between turns it takes no room.
+/// the line fades out over 200 ms; as a turn starts it fades in the same
+/// way. Its room is kept between turns, empty, so the composer never moves
+/// as a turn starts or ends; in a short window ([roomFrom]) the box needs
+/// that room, and the line folds away and grows in instead. With Reduce
+/// Motion the receipt shows still and the line comes and goes at once.
 class TurnStatus extends StatefulWidget {
-  const new(this.chat, {super.key, this.what});
+  const new(this.chat, {super.key, this.what, this.keepsRoom = true});
 
   final ChatState chat;
   final String? what;
 
+  /// Whether the line's room may be kept between turns (in a window tall
+  /// enough, [roomFrom]); the phone's screen needs it for the box.
+  final bool keepsRoom;
+
   // design: how long a state shows, not motion
   static const receiptFor = Duration(milliseconds: 1400);
+
+  /// How tall the window (less the keyboard) is for the line's room to be
+  /// kept between turns; shorter, the box needs it.
+  static const roomFrom = 480.0;
   static const Duration foldFor = Motion.standard;
 
   @override
@@ -141,7 +150,7 @@ class _TurnStatusState extends State<TurnStatus> with ClockRun {
     }
     if (!running) {
       _shows = 0;
-      return const SizedBox.shrink();
+      return _reserved(context);
     }
     final ms = ranMs;
     final fold = part(
@@ -154,15 +163,46 @@ class _TurnStatusState extends State<TurnStatus> with ClockRun {
     return _folded(line, fold);
   }
 
-  /// [line] [fold] of the way folded away: its height and opacity.
+  /// [line] [fold] of the way gone. Where its room is kept ([_keeps]),
+  /// it fades in its room, so nothing under or over it moves as a turn
+  /// starts or ends; elsewhere it folds: its height and opacity.
   Widget _folded(Widget line, double fold) {
     _shows = 1 - fold;
     if (fold == 0) return line;
+    if (_keeps(context)) return Opacity(opacity: 1 - fold, child: line);
     return ClipRect(
       child: Align(
         alignment: Alignment.topCenter,
         heightFactor: 1 - fold,
         child: Opacity(opacity: 1 - fold, child: line),
+      ),
+    );
+  }
+
+  /// Whether the line's room is kept between turns: where the window,
+  /// less the keyboard, is [TurnStatus.roomFrom] tall or more. In a short
+  /// one (a phone on its side, the keyboard up) the box needs the room
+  /// more than the line, and the line folds away between turns. Never for
+  /// a chat with no box (archived, or its session gone), whose bar takes
+  /// the place.
+  bool _keeps(BuildContext context) {
+    final chat = widget.chat;
+    if (!widget.keepsRoom || chat.archived || chat.sessionGone) return false;
+    final tall =
+        MediaQuery.sizeOf(context).height -
+        MediaQuery.viewInsetsOf(context).bottom;
+    return tall >= TurnStatus.roomFrom;
+  }
+
+  /// The line's room between turns, empty, where it's kept ([_keeps]):
+  /// the composer stays where a turn's line puts it.
+  Widget _reserved(BuildContext context) {
+    if (!_keeps(context)) return const SizedBox.shrink();
+    final theme = NushiTheme.of(context);
+    return ExcludeSemantics(
+      child: _row(
+        const SizedBox.square(dimension: 12),
+        Text(' ', style: theme.ui(theme.t.textSecondary, size: 12)),
       ),
     );
   }
