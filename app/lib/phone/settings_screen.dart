@@ -58,6 +58,10 @@ class SettingsScreen extends StatelessWidget {
             'When a chat finishes or needs you. They say only what '
                 'happened, never what’s in the chat.',
         };
+        // Whether notifications can be turned on or off now.
+        final canFlip =
+            phone.canPush && phone.push != PushState.denied && connected;
+        void flip({required bool on}) => unawaited(_push(context, on: on));
         return PhoneScreen(
           title: 'Settings',
           body: ListView(
@@ -73,9 +77,14 @@ class SettingsScreen extends StatelessWidget {
               _Line('Connection', connected ? 'Connected' : 'Not connected'),
               const PhoneHeading('Notifications'),
               // The app's one on/off (solid off track, the same knob
-              // either way), the phone's touch target around it.
+              // either way); the whole row flips it, as a switch's row
+              // did, so the touch target is the row's, not the pill's.
               MergeSemantics(
                 child: ListTile(
+                  enabled: canFlip,
+                  onTap: canFlip
+                      ? () => flip(on: phone.push != PushState.on)
+                      : null,
                   title: Text('Notifications', style: phoneText(context)),
                   subtitle: Text(
                     note,
@@ -83,12 +92,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   trailing: Toggle(
                     value: phone.push == PushState.on,
-                    onChanged:
-                        phone.canPush &&
-                            phone.push != PushState.denied &&
-                            connected
-                        ? (on) => unawaited(_push(context, on: on))
-                        : null,
+                    onChanged: canFlip ? (on) => flip(on: on) : null,
                   ),
                 ),
               ),

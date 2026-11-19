@@ -626,7 +626,13 @@ void main() {
     expect(on.endpoint, 'https://web.push.apple.com/QGuQyav');
     expect(on.auth, hasLength(16));
     expect(phone.push, PushState.on);
-    await tester.tap(find.byType(Toggle));
+    // The whole row flips it, its label too: a touch target the row's
+    // height, not the switch's.
+    final row = find.widgetWithText(ListTile, 'Notifications');
+    expect(tester.getSize(row).height, greaterThanOrEqualTo(44));
+    await tester.tap(
+      find.descendant(of: row, matching: find.text('Notifications')),
+    );
     await tester.pumpAndSettle();
     expect(
       fake.calls.whereType<SetPushSubscriptionRequest>().last.endpoint,
