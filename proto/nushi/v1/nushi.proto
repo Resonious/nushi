@@ -698,6 +698,10 @@ message Chat {
   // from, found by its branch's head, opened by its tool call, or linked by
   // hand; 10 at most (ADR 0117). API 118.
   repeated GitHubLink pulls = 22;
+  // When it was last archived, in Unix milliseconds; 0 while it isn't, and
+  // for one archived before the daemon kept the time. The sidebar lists
+  // the archived by it, the latest first. API 125.
+  int64 archived_unix_ms = 23;
 }
 
 // A pinned message: its item, and the title a client lists it by. The

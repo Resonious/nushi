@@ -1091,6 +1091,7 @@ class Chat extends $pb.GeneratedMessage {
     $fixnum.Int64? updatedUnixMs,
     $core.Iterable<MessagePin>? messagePins,
     $core.Iterable<GitHubLink>? pulls,
+    $fixnum.Int64? archivedUnixMs,
   }) {
     final result = Chat._();
     if (id != null) result.id = id;
@@ -1115,6 +1116,7 @@ class Chat extends $pb.GeneratedMessage {
     if (updatedUnixMs != null) result.updatedUnixMs = updatedUnixMs;
     if (messagePins != null) result.messagePins.addAll(messagePins);
     if (pulls != null) result.pulls.addAll(pulls);
+    if (archivedUnixMs != null) result.archivedUnixMs = archivedUnixMs;
     return result;
   }
 
@@ -1159,6 +1161,7 @@ class Chat extends $pb.GeneratedMessage {
         subBuilder: MessagePin.$_createMessage)
     ..pPM<GitHubLink>(22, _omitFieldNames ? '' : 'pulls',
         subBuilder: GitHubLink.$_createMessage)
+    ..aInt64(23, _omitFieldNames ? '' : 'archivedUnixMs')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1403,6 +1406,18 @@ class Chat extends $pb.GeneratedMessage {
   /// hand; 10 at most (ADR 0117). API 118.
   @$pb.TagNumber(22)
   $pb.PbList<GitHubLink> get pulls => $_getList(21);
+
+  /// When it was last archived, in Unix milliseconds; 0 while it isn't, and
+  /// for one archived before the daemon kept the time. The sidebar lists
+  /// the archived by it, the latest first. API 125.
+  @$pb.TagNumber(23)
+  $fixnum.Int64 get archivedUnixMs => $_getI64(22);
+  @$pb.TagNumber(23)
+  set archivedUnixMs($fixnum.Int64 value) => $_setInt64(22, value);
+  @$pb.TagNumber(23)
+  $core.bool hasArchivedUnixMs() => $_has(22);
+  @$pb.TagNumber(23)
+  void clearArchivedUnixMs() => $_clearField(23);
 }
 
 /// A pinned message: its item, and the title a client lists it by. The

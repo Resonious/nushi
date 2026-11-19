@@ -1176,9 +1176,13 @@ type Chat struct {
 	// Its pull requests, the primary (pull) first: the one it was started
 	// from, found by its branch's head, opened by its tool call, or linked by
 	// hand; 10 at most (ADR 0117). API 118.
-	Pulls         []*GitHubLink `protobuf:"bytes,22,rep,name=pulls,proto3" json:"pulls,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Pulls []*GitHubLink `protobuf:"bytes,22,rep,name=pulls,proto3" json:"pulls,omitempty"`
+	// When it was last archived, in Unix milliseconds; 0 while it isn't, and
+	// for one archived before the daemon kept the time. The sidebar lists
+	// the archived by it, the latest first. API 125.
+	ArchivedUnixMs int64 `protobuf:"varint,23,opt,name=archived_unix_ms,json=archivedUnixMs,proto3" json:"archived_unix_ms,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Chat) Reset() {
@@ -1363,6 +1367,13 @@ func (x *Chat) GetPulls() []*GitHubLink {
 		return x.Pulls
 	}
 	return nil
+}
+
+func (x *Chat) GetArchivedUnixMs() int64 {
+	if x != nil {
+		return x.ArchivedUnixMs
+	}
+	return 0
 }
 
 // A pinned message: its item, and the title a client lists it by. The
@@ -26195,7 +26206,7 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\x05chats\x18\x01 \x03(\v2\x15.nushi.v1.RemovedChatR\x05chats\".\n" +
 	"\x1aDismissRemovedChatsRequest\x12\x10\n" +
 	"\x03ids\x18\x01 \x03(\tR\x03ids\"\x1d\n" +
-	"\x1bDismissRemovedChatsResponse\"\xcb\x05\n" +
+	"\x1bDismissRemovedChatsResponse\"\xf5\x05\n" +
 	"\x04Chat\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05agent\x18\x02 \x01(\tR\x05agent\x12\x16\n" +
@@ -26220,7 +26231,8 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\x0fpinned_messages\x18\x13 \x03(\tR\x0epinnedMessages\x12&\n" +
 	"\x0fupdated_unix_ms\x18\x14 \x01(\x03R\rupdatedUnixMs\x127\n" +
 	"\fmessage_pins\x18\x15 \x03(\v2\x14.nushi.v1.MessagePinR\vmessagePins\x12*\n" +
-	"\x05pulls\x18\x16 \x03(\v2\x14.nushi.v1.GitHubLinkR\x05pulls\";\n" +
+	"\x05pulls\x18\x16 \x03(\v2\x14.nushi.v1.GitHubLinkR\x05pulls\x12(\n" +
+	"\x10archived_unix_ms\x18\x17 \x01(\x03R\x0earchivedUnixMs\";\n" +
 	"\n" +
 	"MessagePin\x12\x17\n" +
 	"\aitem_id\x18\x01 \x01(\tR\x06itemId\x12\x14\n" +

@@ -419,6 +419,7 @@ const Chat$json = {
       '6': '.nushi.v1.GitHubLink',
       '10': 'pulls'
     },
+    {'1': 'archived_unix_ms', '3': 23, '4': 1, '5': 3, '10': 'archivedUnixMs'},
   ],
 };
 
@@ -436,7 +437,8 @@ final $typed_data.Uint8List chatDescriptor = $convert.base64Decode(
     '4YESABKAVSA3BpbhIUCgVjb2xvchgSIAEoCVIFY29sb3ISJwoPcGlubmVkX21lc3NhZ2VzGBMg'
     'AygJUg5waW5uZWRNZXNzYWdlcxImCg91cGRhdGVkX3VuaXhfbXMYFCABKANSDXVwZGF0ZWRVbm'
     'l4TXMSNwoMbWVzc2FnZV9waW5zGBUgAygLMhQubnVzaGkudjEuTWVzc2FnZVBpblILbWVzc2Fn'
-    'ZVBpbnMSKgoFcHVsbHMYFiADKAsyFC5udXNoaS52MS5HaXRIdWJMaW5rUgVwdWxscw==');
+    'ZVBpbnMSKgoFcHVsbHMYFiADKAsyFC5udXNoaS52MS5HaXRIdWJMaW5rUgVwdWxscxIoChBhcm'
+    'NoaXZlZF91bml4X21zGBcgASgDUg5hcmNoaXZlZFVuaXhNcw==');
 
 @$core.Deprecated('Use messagePinDescriptor instead')
 const MessagePin$json = {

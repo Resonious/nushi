@@ -44,7 +44,7 @@ func TestClosingASideChatArchivesIt(t *testing.T) {
 	svc, agent, c, id := archivedSide(t)
 	a := svc.chats[id]
 	r := a.record
-	if !r.Archived || r.Title != "Side chat of Plans" || r.Name != "" || r.Color != "teal" || r.Pin != 0 {
+	if !r.Archived || r.ArchivedAt.IsZero() || r.Title != "Side chat of Plans" || r.Name != "" || r.Color != "teal" || r.Pin != 0 {
 		t.Errorf("archived side chat's record %+v", r)
 	}
 	if r.SideOf == nil || *r.SideOf != (model.SideOf{Chat: c.id, Base: 2}) {
