@@ -26,6 +26,7 @@ import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
+import 'preview_fixture.dart';
 
 /// A minified line of nearly 5,000 characters (past that it's cut): far
 /// wider than any pane.
@@ -91,20 +92,13 @@ Future<Daemon> _app(
   double width = 1700,
   Brightness? brightness,
   String file = 'src/tea.go',
-}) async {
-  viewport(tester, Size(width, 900), brightness: brightness);
-  showDetails.value = false;
-  final d = await _fake().connect(tester);
-  d.select('c');
-  await tester.pumpWidget(NushiApp(daemon: d));
-  await tester.pumpAndSettle();
-  d.chats['c']!.openInFiles(file);
-  await tester.pumpAndSettle();
-  return d;
-}
-
-Finder _inPane(Finder f) =>
-    find.descendant(of: find.byType(FilesPane), matching: f);
+}) => previewApp(
+  tester,
+  _fake(),
+  size: Size(width, 900),
+  brightness: brightness,
+  file: file,
+);
 
 /// Opens the Files pane's ⋯ and says whether Word wrap is checked.
 Future<bool> _wordWrap(WidgetTester tester) async {
@@ -225,7 +219,7 @@ void main() {
     await tester.tap(find.byType(PreviewBody));
     await _altZ(tester);
     expect(wrapLines.value, isFalse);
-    await tester.tap(_inPane(find.byType(SourceButton)));
+    await tester.tap(inPane(find.byType(SourceButton)));
     await tester.pumpAndSettle();
     await tester.tap(find.byType(SourceView));
     await tester.pumpAndSettle();
@@ -237,7 +231,7 @@ void main() {
   testWidgets('⌥Z typed in the tree’s search field is a character, not '
       'wrapping', (tester) async {
     final d = await _app(tester);
-    await tester.tap(_inPane(find.byType(TextField)));
+    await tester.tap(inPane(find.byType(TextField)));
     await tester.pumpAndSettle();
     await _altZ(tester);
     expect(wrapLines.value, isTrue);
@@ -263,7 +257,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(_inPane(find.byTooltip('More')));
+    await tester.tap(inPane(find.byTooltip('More')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Word wrap'));
     await tester.pumpAndSettle();

@@ -18,6 +18,7 @@ import 'package:nushi/tree_rows.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
+import 'preview_fixture.dart';
 
 const _deploy =
     '#!/usr/bin/env bash\n'
@@ -60,8 +61,6 @@ Future<Daemon> _app(
   Size size = const Size(1700, 900),
   Brightness? brightness,
 }) async {
-  viewport(tester, size, brightness: brightness);
-  showDetails.value = false;
   filesChats.value = {'c'};
   final open = <StreamController<Object>>[];
   addTearDown(() {
@@ -110,11 +109,7 @@ Future<Daemon> _app(
       );
       return s.stream;
     };
-  final d = await fake.connect(tester);
-  d.select('c');
-  await tester.pumpWidget(NushiApp(daemon: d));
-  await tester.pumpAndSettle();
-  return d;
+  return await previewApp(tester, fake, size: size, brightness: brightness);
 }
 
 Finder _row(String name) => find.ancestor(
@@ -125,13 +120,10 @@ Finder _row(String name) => find.ancestor(
 TreeRowView _view(WidgetTester tester, String name) =>
     tester.widget<TreeRowView>(_row(name));
 
-Finder _inPane(Finder f) =>
-    find.descendant(of: find.byType(FilesPane), matching: f);
-
 /// The spans the preview's source shows: more once it is highlighted.
 int _spans(WidgetTester tester) {
   var n = 0;
-  for (final r in tester.widgetList<RichText>(_inPane(find.byType(RichText)))) {
+  for (final r in tester.widgetList<RichText>(inPane(find.byType(RichText)))) {
     r.text.visitChildren((_) {
       n++;
       return true;
@@ -266,21 +258,21 @@ void main() {
     await tester.tap(_row('deploy'));
     await tester.pumpAndSettle();
     expect(d.chats['c']!.shownFile, 'scripts/deploy');
-    expect(_inPane(find.byType(SourceView)), findsOneWidget);
+    expect(inPane(find.byType(SourceView)), findsOneWidget);
     final plain = _spans(tester);
     await untilReal(tester, () => _spans(tester) > plain + 10);
 
     await tester.tap(_row('blob'));
     await tester.pumpAndSettle();
-    expect(_inPane(find.text(_note)), findsOneWidget);
-    expect(_inPane(find.text('Show in Finder')), findsOneWidget);
-    expect(_inPane(find.byType(SourceView)), findsNothing);
+    expect(inPane(find.text(_note)), findsOneWidget);
+    expect(inPane(find.text('Show in Finder')), findsOneWidget);
+    expect(inPane(find.byType(SourceView)), findsNothing);
 
     await tester.tap(_row('.envrc'));
     await tester.pumpAndSettle();
-    expect(_inPane(find.byType(SourceView)), findsOneWidget);
+    expect(inPane(find.byType(SourceView)), findsOneWidget);
     expect(
-      _inPane(find.textContaining('SITE_ENV', findRichText: true)),
+      inPane(find.textContaining('SITE_ENV', findRichText: true)),
       findsOneWidget,
     );
     await closeView(tester, d);
@@ -313,7 +305,7 @@ void main() {
         );
         await tester.tap(_row('blob'));
         await tester.pumpAndSettle();
-        expect(_inPane(find.text(_note)), findsOneWidget);
+        expect(inPane(find.text(_note)), findsOneWidget);
         expectTextInside(tester, width);
         await render(
           tester,
