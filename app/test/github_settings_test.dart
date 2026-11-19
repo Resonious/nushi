@@ -121,9 +121,10 @@ void main() {
       ),
       findsOne,
     );
-    // The jargon is behind ⋯: the token's kind and scopes, the budget.
+    // What's left this hour is on the row, which people check; the
+    // jargon is behind ⋯: the token's kind and scopes.
+    expect(find.textContaining('GraphQL 4875 of 5000'), findsOneWidget);
     expect(find.textContaining('OAuth'), findsNothing);
-    expect(find.textContaining('GraphQL'), findsNothing);
     expect(find.textContaining('needs your OK'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('account-more-github.com')));
     await tester.pumpAndSettle();
@@ -131,7 +132,6 @@ void main() {
       find.text('OAuth token · scopes gist, read:org, repo, workflow'),
       findsOneWidget,
     );
-    expect(find.textContaining('GraphQL 4875 of 5000'), findsOneWidget);
     // gh's login can't be removed here; a pasted token can.
     expect(find.text('Remove token…'), findsNothing);
     await tester.tapAt(const Offset(5, 5)); // the menu shuts

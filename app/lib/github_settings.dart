@@ -59,8 +59,9 @@ String budgetLine(GitHubHost h, DateTime now) {
 
 /// Settings › GitHub: an account row for each host gh is signed in to or
 /// given a token, who its token is (gh's login, or a pasted one, in the
-/// keychain), its kind and what's left of its rate limits (shared with gh
-/// in a terminal and agents that run gh) behind ⋯; Add a token, for a host
+/// keychain) and what's left of its rate limits (shared with gh in a
+/// terminal and agents that run gh), its kind and scopes behind ⋯; Add a
+/// token, for a host
 /// without gh, or instead of gh's. Then review bots and the reply cards'
 /// asks.
 class GitHubPage extends StatefulWidget {
@@ -234,8 +235,9 @@ bool githubConnected(Iterable<GitHubHost> hosts) =>
     hosts.any(githubHostWorks);
 
 /// A host's row: who its token is and where it's from, or what's wrong;
-/// "Signed in" once GitHub said who; its token's kind and scopes and its
-/// rate limits behind ⋯, with Remove for a pasted token.
+/// "Signed in" once GitHub said who; under it, a muted line of what's left
+/// of its rate limits this hour, which people check; its token's kind and
+/// scopes, the jargon, behind ⋯, with Remove for a pasted token.
 AccountRow _hostRow(
   Tokens t,
   GitHubHost h, {
@@ -266,6 +268,7 @@ AccountRow _hostRow(
           [who ?? 'Checking…', if (from.isNotEmpty) from].join(' · '),
           t.textSecondary,
         ),
+      if (budget.isNotEmpty) (budget, t.textMuted),
     ],
     state: switch (h) {
       _ when h.needsOk => null, // Allow… says it
@@ -277,7 +280,6 @@ AccountRow _hostRow(
     onAllow: onAllow,
     more: [
       if (token.isNotEmpty) MenuEntry.heading(token),
-      if (budget.isNotEmpty) MenuEntry.heading(budget),
       if (h.pasted) MenuEntry('Remove token…', danger: true, onPick: onRemove),
     ],
   );

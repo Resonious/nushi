@@ -10,7 +10,7 @@ If you already use the `gh` command-line tool and are signed in (`gh auth login`
 
 To check, or to use a token instead:
 
-1. Open **Settings › GitHub**. Under **Accounts** you see who you're signed in as, and **Signed in** once GitHub has answered. The **⋯** beside it shows the token's kind and scopes and what's left of this hour's requests.
+1. Open **Settings › GitHub**. Under **Accounts** you see who you're signed in as, **Signed in** once GitHub has answered, and under it what's left of this hour's requests. The **⋯** beside it shows the token's kind and scopes.
 2. To add a token, click **Add a token**, fill in **Host** (for example `github.com`) and **Token**, then click **Add**.
 
 A classic token with the `repo` and `read:org` scopes covers everything. Nushi keeps it in your system keychain and sends it only to its own host.
