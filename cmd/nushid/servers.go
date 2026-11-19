@@ -21,6 +21,6 @@ func newServers(dir string, chats servers.Chats, env servers.Env, publish func(m
 }
 
 // startServer starts a dev server's program on a terminal.
-func startServer(argv []string, dir string, env []string, exited func()) (servers.Process, error) {
-	return terminal.Start(argv, dir, env, 120, 40, exited)
+func startServer(argv []string, dir string, env []string) (servers.Process, error) {
+	return terminal.Start(argv, dir, env, 120, 40, func() {})
 }

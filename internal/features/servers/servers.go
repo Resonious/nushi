@@ -41,9 +41,9 @@ type Process interface {
 	Close()
 }
 
-// Spawn starts argv in dir with env on a terminal; exited is called when
-// the program ends.
-type Spawn func(argv []string, dir string, env []string, exited func()) (Process, error)
+// Spawn starts argv in dir with env on a terminal; the Process's Done
+// says when the program ends.
+type Spawn func(argv []string, dir string, env []string) (Process, error)
 
 // Procs reads and stops processes (proctree.Tree).
 type Procs interface {

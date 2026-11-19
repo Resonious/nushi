@@ -42,7 +42,7 @@ func (s *Service) launch(ctx context.Context, sv *server) error {
 	if program == "" {
 		return refuse("its program isn't found", fmt.Errorf("%s isn't a program on the login shell's PATH", e.Command))
 	}
-	proc, err := s.Spawn(append([]string{program}, args...), e.Cwd, env, func() {})
+	proc, err := s.Spawn(append([]string{program}, args...), e.Cwd, env)
 	if err != nil {
 		return refuse("its program didn't start", fmt.Errorf("starting it: %w", err))
 	}
