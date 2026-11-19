@@ -143,7 +143,7 @@ class ReviewComment {
   /// Whether [side] is the text it was on when last seen.
   bool saw(String side) => seen == fnv1a(side.codeUnits);
 
-  String get lines => start == end ? 'Line $start' : 'Lines $start–$end';
+  String get lines => linesWord(start, end);
 
   /// The related worktree it was made in, by its folder; null for the
   /// chat's own folder.
@@ -286,19 +286,29 @@ Reply reviewReply(ReviewComment c, {String from = myReviewComments}) {
     if (c.old) ' (the old version, before the change)',
     if (c.outdated) ' (they have changed since; they were)',
   ].join();
-  var ticks = 3;
-  while (c.quote.contains('`' * ticks)) {
-    ticks++;
-  }
-  final fence = '`' * ticks;
   return (
-    quote:
-        '`${c.path}`, ${c.lines.toLowerCase()}$side:\n'
-        '$fence${languageOf(c.path) ?? ''}\n${c.quote}\n$fence',
+    quote: quotedLines(c.path, c.lines, c.quote, side: side),
     text: c.text,
     // The user's own: Claude took them for a reviewer's once.
     from: from,
   );
+}
+
+/// "Line 4", or "Lines 4–9": lines [start] to [end], counted from 1.
+String linesWord(int start, int end) =>
+    start == end ? 'Line $start' : 'Lines $start–$end';
+
+/// A file's lines as a reply card quotes them: [path], its [lines]
+/// ([linesWord]) and what [side] says of them, then their [text] in a
+/// fence of the file's language, longer than any run of backticks in it.
+String quotedLines(String path, String lines, String text, {String side = ''}) {
+  var ticks = 3;
+  while (text.contains('`' * ticks)) {
+    ticks++;
+  }
+  final fence = '`' * ticks;
+  return '`$path`, ${lines.toLowerCase()}$side:\n'
+      '$fence${languageOf(path) ?? ''}\n$text\n$fence';
 }
 
 /// [chat]'s comments not yet in a message.

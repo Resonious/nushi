@@ -16,6 +16,7 @@ import 'package:nushi/preview_entry.dart';
 import 'package:nushi/preview_sniff.dart';
 import 'package:nushi/preview_text.dart';
 import 'package:nushi/settings.dart';
+import 'package:nushi/source_menu.dart';
 import 'package:nushi/source_spans.dart' show defaultTabSize;
 import 'package:nushi/source_view.dart';
 import 'package:nushi/spinner.dart';
@@ -343,6 +344,7 @@ class PreviewBody extends StatelessWidget {
     this.guides = false,
     this.pastEnd = false,
     this.base,
+    this.menu,
   });
 
   final FileWatch watch;
@@ -375,6 +377,9 @@ class PreviewBody extends StatelessWidget {
   /// The last commit's text, a source's lines marked against (the Mac's
   /// Files pane, ADR 0131); a rendered file's own view has none.
   final String? base;
+
+  /// A source's right-click menu (the Mac's Files pane's); null: none.
+  final SourceActions? menu;
 
   @override
   Widget build(BuildContext context) {
@@ -458,6 +463,7 @@ class PreviewBody extends StatelessWidget {
                 guides: guides,
                 pastEnd: pastEnd,
                 base: base,
+                menu: menu,
               );
               final why = readOnly?.call();
               if (why == null || why.isEmpty) return view;

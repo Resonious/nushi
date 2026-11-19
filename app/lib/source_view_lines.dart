@@ -13,6 +13,21 @@ class _Whole extends StaticSelectionContainerDelegate {
   /// Whether the last selection was Select All, not since changed.
   bool _all = false;
 
+  /// Whether the whole text is selected (Select All).
+  bool get all => _all;
+
+  /// Where the selection starts, in the list's own place: the top of its
+  /// edges' lower one's line, which [lineHeight] high; null with nothing
+  /// selected.
+  Offset? firstAt(double lineHeight) {
+    final v = value;
+    final a = v.startSelectionPoint?.localPosition;
+    final b = v.endSelectionPoint?.localPosition;
+    if (!v.hasSelection || a == null || b == null) return null;
+    final first = a.dy <= b.dy ? a : b;
+    return first.translate(0, -lineHeight / 2);
+  }
+
   @override
   SelectionResult dispatchSelectionEvent(SelectionEvent event) {
     _all = event.type == SelectionEventType.selectAll;

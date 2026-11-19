@@ -1,7 +1,10 @@
 import 'dart:async';
 
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import 'package:nushi/app_actions.dart' show findKey;
@@ -12,9 +15,10 @@ import 'package:nushi/file_edit.dart';
 import 'package:nushi/indent_guides.dart';
 import 'package:nushi/keys.dart';
 import 'package:nushi/line_changes.dart';
-import 'package:nushi/menu.dart' show Menu;
+import 'package:nushi/menu.dart' show Menu, MenuEntry;
 import 'package:nushi/motion.dart' show Waits;
 import 'package:nushi/settings.dart';
+import 'package:nushi/source_menu.dart';
 import 'package:nushi/source_spans.dart';
 import 'package:nushi/tab_indent.dart';
 import 'package:nushi/theme/theme.dart';
@@ -32,7 +36,8 @@ import 'package:re_editor/re_editor.dart';
 /// ⌘F with the focus in it finds in the file ([EditorFind]), not the chat.
 /// With a [base], the last commit's text, the lines that differ from it
 /// have change marks beside their numbers (ADR 0131), unsaved edits too,
-/// a pause in typing after each.
+/// a pause in typing after each. With [menu] a right-click opens its menu
+/// ([SourceMenu]), with Find and, when it can be written, Cut and Paste.
 class SourceEditor extends StatefulWidget {
   const new({
     required this.edit,
@@ -40,6 +45,7 @@ class SourceEditor extends StatefulWidget {
     super.key,
     this.padding = EdgeInsets.zero,
     this.base,
+    this.menu,
   });
 
   final FileEdit edit;
@@ -48,6 +54,9 @@ class SourceEditor extends StatefulWidget {
 
   /// The last commit's text, its lines marked against (null marks none).
   final ValueListenable<String?>? base;
+
+  /// What its right-click menu does; null: it has none.
+  final SourceActions? menu;
 
   @override
   State<SourceEditor> createState() => _SourceEditorState();
@@ -79,9 +88,15 @@ class _SourceEditorState extends State<SourceEditor> {
   Timer? _typing;
   int _markings = 0;
 
+  /// The selection as last drawn: a right-click keeps it, though
+  /// re_editor's own press has moved the caret by then.
+  late CodeLineSelection _drawn = widget.edit.controller.selection;
+  bool _drawing = false;
+
   @override
   void initState() {
     super.initState();
+    widget.edit.controller.addListener(_selectionMoved);
     _focus.addListener(_focusChanged);
     tabSize.addListener(_tabSizeChanged);
     widget.base?.addListener(_mark);
@@ -129,6 +144,56 @@ class _SourceEditorState extends State<SourceEditor> {
     }
   }
 
+  /// The selection changed: it's the one drawn once the frame is.
+  void _selectionMoved() {
+    if (_drawing) return;
+    _drawing = true;
+    SchedulerBinding.instance
+      ..addPostFrameCallback((_) {
+        _drawing = false;
+        if (mounted) _drawn = widget.edit.controller.selection;
+      })
+      ..ensureVisualUpdate();
+  }
+
+  /// A right-click: the selection stays as it was drawn.
+  void _rightPressed(Offset _) {
+    final c = widget.edit.controller;
+    if (c.selection != _drawn) c.selection = _drawn;
+  }
+
+  /// The line (from 0) at [at] on the screen, of those laid out: the one
+  /// across it, else the nearest; the caret's without any.
+  int _lineAt(Offset at) {
+    final box = _gutter.currentContext?.findRenderObject() as RenderBox?;
+    final lines = _lines.value?.paragraphs ?? const [];
+    if (box == null || lines.isEmpty) {
+      return widget.edit.controller.selection.extentIndex;
+    }
+    final y = box.globalToLocal(at).dy;
+    for (final p in lines) {
+      if (y < p.top + p.height) return p.index;
+    }
+    return lines.last.index;
+  }
+
+  /// The right-click menu's rows, for a press at [at].
+  List<MenuEntry> _menuAt(Offset at, SourceActions menu) {
+    final c = widget.edit.controller;
+    final s = c.selection;
+    final writable = widget.edit.readOnly == null;
+    return menu.entries(
+      context,
+      selected: s.isCollapsed ? '' : c.selectedText,
+      first: s.isCollapsed ? null : min(s.baseIndex, s.extentIndex) + 1,
+      clicked: _lineAt(at) + 1,
+      editing: true,
+      onCut: writable ? c.cut : null,
+      onPaste: writable ? c.paste : null,
+      onFind: _find.open,
+    );
+  }
+
   /// Tab size set: the lines' runs are made again, to the new stops
   /// (`FileEdit`'s spans read it), in the same editor and its edits.
   void _tabSizeChanged() => widget.edit.controller.forceRepaint();
@@ -143,7 +208,9 @@ class _SourceEditorState extends State<SourceEditor> {
   void dispose() {
     _typing?.cancel();
     widget.base?.removeListener(_mark);
-    widget.edit.controller.removeListener(_edited);
+    widget.edit.controller
+      ..removeListener(_edited)
+      ..removeListener(_selectionMoved);
     _cells.dispose();
     tabSize.removeListener(_tabSizeChanged);
     _unfollow();
@@ -317,7 +384,14 @@ class _SourceEditorState extends State<SourceEditor> {
         builder: (context, editor) => Stack(
           fit: StackFit.expand,
           children: [
-            editor!,
+            switch (widget.menu) {
+              final menu? => SourceMenu(
+                entries: (at) => _menuAt(at, menu),
+                onPress: _rightPressed,
+                child: editor!,
+              ),
+              null => editor!,
+            },
             // Over its fill, in the indentation, where no text is.
             if (indentGuides.value)
               IndentGuideOverlay(

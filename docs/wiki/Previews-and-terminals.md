@@ -65,6 +65,18 @@ A dot by the file's name means unsaved changes. With your next message, the agen
 
 If the agent changes the lines you're editing, you'll see **Changed on disk**, with **Compare**, **Overwrite with mine** and **Use theirs**.
 
+## Right-click in a file
+
+Right-click in a file's text in the Files pane for an editor's menu.
+
+- **Copy**: the selected text.
+- **Copy path**: the file's path with a line, as `docs/roadmap.md:12`: the selection's first line, or the line you clicked.
+- **Quote in reply**: the selected lines go into the chat's message box as a quote, with the file and line numbers. Type your message under it and send.
+- **Find…** (⌘F): find in the file, while you're editing it.
+- **Show in Finder** (Show in Folder on Linux, Show in Explorer on Windows) and **Open in your editor**, your default text editor.
+
+While you're editing, **Cut** and **Paste** are there too. Copy, Cut and Quote in reply need a selection. Right-clicking keeps your selection where it is.
+
 ## Use the browser
 
 A browser tab shows a web page beside the chat, such as the dev server the agent just started.

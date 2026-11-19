@@ -8,8 +8,10 @@ import 'package:flutter/rendering.dart';
 import 'package:nushi/change_marks.dart';
 import 'package:nushi/indent_guides.dart';
 import 'package:nushi/line_changes.dart';
+import 'package:nushi/menu.dart' show MenuEntry;
 import 'package:nushi/preview_text.dart';
 import 'package:nushi/settings.dart';
+import 'package:nushi/source_menu.dart';
 import 'package:nushi/source_spans.dart';
 import 'package:nushi/syntax.dart';
 import 'package:nushi/theme/theme.dart';
@@ -31,7 +33,8 @@ const _blank = '\u200B';
 /// put; a switch keeps the top line. With a [base], the last commit's
 /// text, the lines that differ from it have change marks in the gutter
 /// (ADR 0131); pretty-printed JSON's lines aren't the file's, so it has
-/// none.
+/// none. With [menu] (the Files pane's) a right-click opens its menu
+/// ([SourceMenu]).
 class SourceView extends StatefulWidget {
   const new(
     this.text, {
@@ -43,6 +46,7 @@ class SourceView extends StatefulWidget {
     this.guides = false,
     this.pastEnd = false,
     this.base,
+    this.menu,
   });
 
   final String text;
@@ -63,6 +67,9 @@ class SourceView extends StatefulWidget {
 
   /// The last commit's text, its lines marked against; null marks none.
   final String? base;
+
+  /// What its right-click menu does; null: it has none.
+  final SourceActions? menu;
 
   @override
   State<SourceView> createState() => _SourceViewState();
@@ -89,6 +96,9 @@ class _SourceViewState extends State<SourceView> {
   /// Each list's selection, which copies the whole text after Select All.
   late final _wholeWrapped = _Whole(() => _text);
   late final _wholeRunOn = _Whole(() => _text);
+
+  /// What a list's selection holds, a right-click menu's place.
+  final GlobalKey _content = GlobalKey();
 
   @override
   void initState() {
@@ -280,6 +290,58 @@ class _SourceViewState extends State<SourceView> {
     );
   }
 
+  /// The line (from 0) at [at] on the screen, of those laid out: the one
+  /// across it, else the nearest.
+  int _lineAt(Offset at) {
+    final s = _sliver(wrapped: widget.wrap);
+    if (s == null) return 0;
+    var last = 0;
+    for (var c = s.firstChild; c != null; c = s.childAfter(c)) {
+      last = s.indexOf(c);
+      if (at.dy < c.localToGlobal(Offset.zero).dy + c.size.height) break;
+    }
+    return last;
+  }
+
+  /// The right-click menu's rows, for a press at [at].
+  List<MenuEntry> _menuAt(Offset at, SourceActions menu) {
+    final whole = widget.wrap ? _wholeWrapped : _wholeRunOn;
+    // As copying it gives it.
+    final selected = whole.getSelectedContent()?.plainText ?? '';
+    final box = _content.currentContext?.findRenderObject() as RenderBox?;
+    final local = whole.firstAt(_lineHeight);
+    final top = local == null || box == null ? null : box.localToGlobal(local);
+    final first = selected.isEmpty
+        ? null
+        : whole.all
+        ? 1
+        : top == null
+        ? null
+        : _lineAt(top) + 1;
+    return menu.entries(
+      context,
+      selected: selected,
+      first: first,
+      clicked: _lineAt(at) + 1,
+    );
+  }
+
+  /// A list's selection area, its menu inside it when it has one, so its
+  /// right-click is the menu's.
+  Widget _selectable(_Whole whole, Widget child) => SelectionArea(
+    child: SelectionContainer(
+      delegate: whole,
+      child: switch (widget.menu) {
+        // The selection's points are in its place, which [_content]'s is.
+        final menu? => KeyedSubtree(
+          key: _content,
+          child: SourceMenu(entries: (at) => _menuAt(at, menu), child: child),
+        ),
+        null => child,
+      },
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final theme = NushiTheme.of(context);
@@ -352,45 +414,43 @@ class _SourceViewState extends State<SourceView> {
     }
 
     if (widget.wrap) {
-      return SelectionArea(
-        child: SelectionContainer(
-          delegate: _wholeWrapped,
-          child: LayoutBuilder(
-            builder: (context, box) => ListView.builder(
-              key: _wrapped,
-              controller: _down,
-              padding: padded(box.maxHeight),
-              itemCount: _lines.length,
-              itemBuilder: (context, i) => _marked(
-                i,
-                cell: digits * char + markGap + markBar + markRoom,
-                bar: digits * char + markGap,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SelectionContainer.disabled(
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                          right: markGap + markBar + markRoom,
-                        ),
-                        child: Text(number(i), style: gutter),
+      return _selectable(
+        _wholeWrapped,
+        LayoutBuilder(
+          builder: (context, box) => ListView.builder(
+            key: _wrapped,
+            controller: _down,
+            padding: padded(box.maxHeight),
+            itemCount: _lines.length,
+            itemBuilder: (context, i) => _marked(
+              i,
+              cell: digits * char + markGap + markBar + markRoom,
+              bar: digits * char + markGap,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SelectionContainer.disabled(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        right: markGap + markBar + markRoom,
                       ),
+                      child: Text(number(i), style: gutter),
                     ),
-                    Expanded(
-                      child: _Line(
-                        Text.rich(
-                          text(i),
-                          strutStyle: strut,
-                          selectionColor: Colors.transparent,
-                        ),
-                        whole: _lines[i],
-                        column: char,
-                        level: level(i),
-                        step: step,
+                  ),
+                  Expanded(
+                    child: _Line(
+                      Text.rich(
+                        text(i),
+                        strutStyle: strut,
+                        selectionColor: Colors.transparent,
                       ),
+                      whole: _lines[i],
+                      column: char,
+                      level: level(i),
+                      step: step,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -413,77 +473,74 @@ class _SourceViewState extends State<SourceView> {
           child: ScrollConfiguration(
             behavior: ScrollConfiguration.of(context)
                 .copyWith(scrollbars: false),
-            child: SelectionArea(
-              child: SelectionContainer(
-                delegate: _wholeRunOn,
-                child: SingleChildScrollView(
-                  controller: _across,
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: max(box.maxWidth, width),
-                    child: ListView.builder(
-                      key: _runOn,
-                      controller: _down,
-                      padding: EdgeInsets.only(
-                        top: pad.top,
-                        bottom: padded(box.maxHeight).bottom,
-                      ),
-                      itemExtent: _lineHeight,
-                      itemCount: _lines.length,
-                      itemBuilder: (context, i) => Stack(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(left: numbers),
-                            child: _Line(
-                              Text.rich(
-                                text(i),
-                                softWrap: false,
-                                strutStyle: strut,
-                                selectionColor: Colors.transparent,
-                              ),
-                              whole: _lines[i],
-                              column: char,
-                              level: level(i),
-                              step: step,
+            child: _selectable(
+              _wholeRunOn,
+              SingleChildScrollView(
+                controller: _across,
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: max(box.maxWidth, width),
+                  child: ListView.builder(
+                    key: _runOn,
+                    controller: _down,
+                    padding: EdgeInsets.only(
+                      top: pad.top,
+                      bottom: padded(box.maxHeight).bottom,
+                    ),
+                    itemExtent: _lineHeight,
+                    itemCount: _lines.length,
+                    itemBuilder: (context, i) => Stack(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(left: numbers),
+                          child: _Line(
+                            Text.rich(
+                              text(i),
+                              softWrap: false,
+                              strutStyle: strut,
+                              selectionColor: Colors.transparent,
                             ),
+                            whole: _lines[i],
+                            column: char,
+                            level: level(i),
+                            step: step,
                           ),
-                          Positioned(
-                            left: 0,
-                            top: 0,
-                            bottom: 0,
-                            width: numbers,
-                            child: SelectionContainer.disabled(
-                              child: ListenableBuilder(
-                                listenable: _across,
-                                builder: (context, child) =>
-                                    Transform.translate(
-                                      offset: Offset(
-                                        _across.hasClients ? _across.offset : 0,
-                                        0,
-                                      ),
-                                      child: child,
-                                    ),
-                                child: ColoredBox(
-                                  color: t.base,
-                                  child: _marked(
-                                    i,
-                                    cell: numbers,
-                                    bar: pad.left + digits * char + markGap,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(left: pad.left),
-                                      child: Text(
-                                        number(i),
-                                        style: gutter,
-                                        softWrap: false,
-                                      ),
+                        ),
+                        Positioned(
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: numbers,
+                          child: SelectionContainer.disabled(
+                            child: ListenableBuilder(
+                              listenable: _across,
+                              builder: (context, child) => Transform.translate(
+                                offset: Offset(
+                                  _across.hasClients ? _across.offset : 0,
+                                  0,
+                                ),
+                                child: child,
+                              ),
+                              child: ColoredBox(
+                                color: t.base,
+                                child: _marked(
+                                  i,
+                                  cell: numbers,
+                                  bar: pad.left + digits * char + markGap,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(left: pad.left),
+                                    child: Text(
+                                      number(i),
+                                      style: gutter,
+                                      softWrap: false,
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

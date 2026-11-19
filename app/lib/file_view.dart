@@ -18,6 +18,7 @@ import 'package:nushi/preview_text.dart' show prettyJson;
 import 'package:nushi/settings.dart' show indentGuides, scrollPastEnd, tabSize;
 import 'package:nushi/skills_list.dart';
 import 'package:nushi/source_editor.dart';
+import 'package:nushi/source_menu.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/web_page.dart';
 import 'package:nushi/web_views.dart';
@@ -101,6 +102,19 @@ final class ShownFile {
 
   /// Shows it in Finder (Folder on Linux).
   void reveal() => revealInFinder(abs).ignore();
+
+  /// What its source's right-click menu does (issue 75): a quote goes to
+  /// the chat's box as a reply card, the chat's transcript showing.
+  late final menu = SourceActions(
+    folder: chat.folder,
+    path: path,
+    onQuote: (r) {
+      chat.draft.addReply(r);
+      chat.tab.value = ChatTab.chat;
+    },
+    onReveal: reveal,
+    onOpen: () => native.desktop.openAsText(abs).ignore(),
+  );
 
   /// Whether it has the source button: a file that renders, but a diagram
   /// only with something to draw it (Linux has none, ADR 0104).
@@ -204,6 +218,7 @@ class _FileViewState extends State<FileView> {
       wrap: wrap,
       padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
       base: _shown.lines,
+      menu: _shown.menu,
     ),
     null => null,
   };
@@ -275,6 +290,7 @@ class _FileViewState extends State<FileView> {
                       pastEnd: scrollPastEnd.value,
                       base: shown.lines.value,
                       onReveal: shown.reveal,
+                      menu: shown.menu,
                       editor: _editor,
                       readOnly: shown.readOnly,
                       page: switch ((shown.page, shown.diagram)) {
