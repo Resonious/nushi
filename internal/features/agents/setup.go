@@ -11,9 +11,10 @@ import (
 	"time"
 )
 
-// Adapter is the npm package an agent's ACP side comes in (Claude's and
-// Codex's), pinned by a lockfile Nushi keeps: every package's version and
-// hash. It's installed into Nushi's data folder only when asked (SetUp).
+// Adapter is the npm package an agent's ACP side comes in (Codex's;
+// Claude's is Nushi's own, ADR 0066), pinned by a lockfile Nushi keeps:
+// every package's version and hash. It's installed into Nushi's data
+// folder only when asked (SetUp).
 type Adapter struct {
 	Lock     fs.FS  // package.json and package-lock.json
 	Package  string // the package with the adapter's program
