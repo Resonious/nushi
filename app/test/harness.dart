@@ -256,9 +256,9 @@ Future<void> untilReal(
   }
 }
 
-/// The window narrowed from [from] to [to] (each [height] high), [check]
+/// The window narrowed from [from] to [to] (each 900 high), [check]
 /// run at each width laid out, as a point at a time would, at a fraction
-/// of the layouts: every [step]th width, then every width between two
+/// of the layouts: every 8th width, then every width between two
 /// whose widget tree differs (a part folded, a pane gone), where the
 /// layout jumps rather than glides. Those are walked in an app [reopen]
 /// builds again at [from], so every width is still reached narrowing.
@@ -270,9 +270,9 @@ Future<void> narrowing(
   required double to,
   required void Function(double width) check,
   required Future<void> Function() reopen,
-  double height = 900,
-  double step = 8,
 }) async {
+  const height = 900.0;
+  const step = 8.0;
   Future<int> at(double w) async {
     viewport(tester, Size(w, height));
     await tester.pump();
