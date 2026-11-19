@@ -1,4 +1,3 @@
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/agent_mark.dart';
@@ -20,8 +19,6 @@ import 'sidebar_fixture.dart';
 // green dot. The rows of every state side by side, in goldens and in the
 // window at full size (`make renders TEST=test/sleeping_rows_test.dart`).
 
-Int64 _ago(Duration d) => Int64(fixtureNow.subtract(d).millisecondsSinceEpoch);
-
 Chat _chat(
   String id,
   String agent,
@@ -34,8 +31,8 @@ Chat _chat(
   agent: agent,
   title: title,
   folder: folder,
-  createdUnixMs: _ago(Duration(minutes: minutes)),
-  updatedUnixMs: _ago(Duration(minutes: minutes)),
+  createdUnixMs: msAgo(Duration(minutes: minutes)),
+  updatedUnixMs: msAgo(Duration(minutes: minutes)),
   status: status ?? ChatStatus(),
 );
 
@@ -46,7 +43,7 @@ List<Chat> _chats() => [
     'w',
     'claude',
     'Wire the ledger',
-    status: ChatStatus(busy: true, started: _ago(Duration.zero)),
+    status: ChatStatus(busy: true, started: msAgo(Duration.zero)),
   ),
   _chat(
     'n',

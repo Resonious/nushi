@@ -80,9 +80,7 @@ Future<(Daemon, FakeDaemon)> _app(
 /// nothing settles while the agent works.
 Future<void> _settle(WidgetTester tester) async {
   await tester.pump();
-  for (var i = 0; i < 6; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, 6, const Duration(milliseconds: 100));
 }
 
 var _seq = 10;

@@ -42,9 +42,7 @@ Future<void> _shoot(WidgetTester tester, String name, [Finder? finder]) =>
     );
 
 Future<void> _pump(WidgetTester tester, [int times = 6]) async {
-  for (var i = 0; i < times; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, times, const Duration(milliseconds: 100));
 }
 
 /// What the fake daemon answers for the demo, beyond its own.

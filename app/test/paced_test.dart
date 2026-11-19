@@ -211,9 +211,7 @@ void main() {
       stream(chat, _words);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 16));
-      for (var i = 0; i < 9; i++) {
-        await tester.pump(const Duration(milliseconds: 33));
-      }
+      await frames(tester, 9, const Duration(milliseconds: 33));
       await expectLater(
         find.byType(FittedBox),
         matchesGoldenFile('goldens/paced_reply_$name.png'),

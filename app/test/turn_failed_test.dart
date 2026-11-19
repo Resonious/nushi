@@ -409,9 +409,7 @@ void main() {
           : null);
     final phone = await startPhone(tester, fake);
     await tester.tap(find.text('Fix the login redirect'));
-    for (var i = 0; i < 20; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+    await frames(tester, 20, const Duration(milliseconds: 50));
     expect(_button, findsOneWidget);
     _wraps(tester, 390);
     await tester.tap(_button);

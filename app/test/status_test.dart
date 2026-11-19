@@ -70,8 +70,6 @@ void main() {
 
   test("a running subagent's time counts to the app's clock, its waits "
       'left out', () {
-    Int64 ago(Duration d) =>
-        Int64(fixtureNow.subtract(d).millisecondsSinceEpoch);
     // It started ten minutes ago, worked 20s, waited, and has worked again
     // for 2m 40s.
     final subs = subagentsOf([
@@ -82,9 +80,9 @@ void main() {
         status: 'in_progress',
         subagent: Subagent(
           state: 'running',
-          started: ago(const Duration(minutes: 10)),
+          started: msAgo(const Duration(minutes: 10)),
           worked: Int64(20000),
-          workingSince: ago(const Duration(minutes: 2, seconds: 40)),
+          workingSince: msAgo(const Duration(minutes: 2, seconds: 40)),
         ),
       ),
     ]);

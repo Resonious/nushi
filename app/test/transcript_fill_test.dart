@@ -40,9 +40,7 @@ Future<(Daemon, PagedChat)> _window(
 }
 
 Future<void> _settle(WidgetTester tester, [int n = 40]) async {
-  for (var i = 0; i < n; i++) {
-    await tester.pump(const Duration(milliseconds: 16));
-  }
+  await frames(tester, n, const Duration(milliseconds: 16));
 }
 
 /// How many entries are built.

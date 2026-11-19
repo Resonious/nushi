@@ -1,4 +1,3 @@
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
@@ -14,9 +13,6 @@ import 'package:nushi/workflows.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
-
-Int64 _ms(Duration ago) =>
-    Int64(fixtureNow.subtract(ago).millisecondsSinceEpoch);
 
 /// A workflow's call, its run in [state].
 Item workflowCall(String state, {bool stalled = false, String id = 'wf'}) {
@@ -41,9 +37,9 @@ Item workflowCall(String state, {bool stalled = false, String id = 'wf'}) {
         _ => '',
       },
       summary: state == 'failed' ? 'Error: the script threw' : '',
-      started: _ms(const Duration(minutes: 4, seconds: 12)),
-      ended: ended ? _ms(Duration.zero) : null,
-      active: stalled ? _ms(const Duration(hours: 1, minutes: 5)) : null,
+      started: msAgo(const Duration(minutes: 4, seconds: 12)),
+      ended: ended ? msAgo(Duration.zero) : null,
+      active: stalled ? msAgo(const Duration(hours: 1, minutes: 5)) : null,
       stalled: stalled,
       // While it runs, as workflow_pane_test's agents are: the pane's
       // tree and the card count alike.
@@ -118,7 +114,7 @@ void main() {
       'no activity for 1h · Review 4/7 · 3 running',
     );
     expect(
-      workflowState(Workflow(state: 'running', started: _ms(Duration.zero))),
+      workflowState(Workflow(state: 'running', started: msAgo(Duration.zero))),
       'starting · 0s',
     );
     expect(

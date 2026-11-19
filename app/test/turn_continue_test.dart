@@ -320,9 +320,7 @@ void main() {
           : null);
     final phone = await startPhone(tester, fake);
     await tester.tap(find.text('Wrap the events'));
-    for (var i = 0; i < 20; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+    await frames(tester, 20, const Duration(milliseconds: 50));
     expect(tester.getRect(_continue).right, lessThanOrEqualTo(390));
     await render(tester, find.byType(PhoneApp), 'turn_continue_phone_dark');
     await tester.tap(_continue);

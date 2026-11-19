@@ -98,9 +98,7 @@ Object? _demo(Object input) => switch (input) {
 };
 
 Future<void> _pump(WidgetTester tester, [int times = 8]) async {
-  for (var i = 0; i < times; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, times, const Duration(milliseconds: 100));
 }
 
 /// The Mac app at [size] in [b], on the demo's chats, the hero's open.

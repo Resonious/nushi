@@ -108,9 +108,7 @@ Future<void> _decode(WidgetTester tester) async {
 
 /// Frames enough for a fetch, without settling (a spinner never does).
 Future<void> _frames(WidgetTester tester) async {
-  for (var i = 0; i < 6; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, 6, const Duration(milliseconds: 100));
 }
 
 /// The phone on a [size] screen in chat c, whose agent message has

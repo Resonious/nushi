@@ -207,9 +207,7 @@ void main() {
   ) async {
     await open(tester);
     chat.scope = 'commits';
-    for (var i = 0; i < 5; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 5);
     await answer(tester, 'two', 'two.txt');
     diffs.remove('two');
     await tester.tap(find.byTooltip('Reload'));

@@ -94,9 +94,7 @@ void main() {
   /// Lets the view take what changed: a busy chat's spinner never
   /// settles.
   Future<void> settle(WidgetTester tester) async {
-    for (var i = 0; i < 6; i++) {
-      await tester.pump(const Duration(milliseconds: 200));
-    }
+    await frames(tester, 6, const Duration(milliseconds: 200));
   }
 
   /// Send to agent, which shows the chat, then back to Changes to look.

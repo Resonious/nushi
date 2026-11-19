@@ -90,9 +90,7 @@ Future<(Daemon, FakeDaemon)> _open(
 
 /// A while of frames: a turn running never settles (its shine moves).
 Future<void> _pump(WidgetTester tester) async {
-  for (var i = 0; i < 6; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, 6, const Duration(milliseconds: 100));
 }
 
 void main() {

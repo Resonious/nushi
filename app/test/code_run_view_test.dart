@@ -95,9 +95,7 @@ Future<_View> _view(
 
 /// Lets the calls, the stream's messages and the frames through.
 Future<void> _settle(WidgetTester tester) async {
-  for (var i = 0; i < 10; i++) {
-    await tester.pump();
-  }
+  await frames(tester, 10);
 }
 
 /// Runs the bash block and lets it write [output], then end with [exit]

@@ -177,9 +177,7 @@ void main() {
             : null);
       final phone = await startPhone(tester, fake);
       await tester.tap(find.text('Why make check vets twice'));
-      for (var i = 0; i < 10; i++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
+      await frames(tester, 10, const Duration(milliseconds: 50));
       final t = b == Brightness.dark ? Tokens.dark : Tokens.light;
       final vet = _styleOf(tester, find.byType(PhoneApp), 'vet');
       expect(vet?.color, t.inlineCodeText);

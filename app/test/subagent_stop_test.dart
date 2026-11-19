@@ -130,9 +130,7 @@ Future<(Daemon, FakeDaemon)> _app(WidgetTester tester, double width) async {
 }
 
 Future<void> _pump(WidgetTester tester) async {
-  for (var i = 0; i < 5; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, 5, const Duration(milliseconds: 100));
 }
 
 /// A mouse over [finder]'s middle.

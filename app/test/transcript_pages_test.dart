@@ -65,9 +65,7 @@ final _fakes = Expando<FakeDaemon>();
 
 /// Frames until nothing moves; a spinner that turns doesn't settle.
 Future<void> _settle(WidgetTester tester) async {
-  for (var i = 0; i < 40; i++) {
-    await tester.pump(const Duration(milliseconds: 16));
-  }
+  await frames(tester, 40, const Duration(milliseconds: 16));
 }
 
 /// How many entries are built.
@@ -180,9 +178,7 @@ void main() {
     });
     paged.hold = null;
     hold.complete();
-    for (var i = 0; i < 12; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 12);
     watching = false;
     expect(tops.length, greaterThan(2));
     expect(tops, everyElement(moreOrLessEquals(y, epsilon: 1)));

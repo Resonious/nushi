@@ -121,9 +121,7 @@ Future<(Daemon, FakeDaemon)> _window(
   await tester.pumpWidget(NushiApp(daemon: d));
   if (busy) {
     // A running turn's spinner never settles.
-    for (var i = 0; i < 40; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+    await frames(tester, 40, const Duration(milliseconds: 50));
   } else {
     await tester.pumpAndSettle();
   }
@@ -265,9 +263,7 @@ void main() {
       await mouse.moveTo(
         tester.getCenter(find.textContaining(text, findRichText: true).last),
       );
-      for (var i = 0; i < 6; i++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
+      await frames(tester, 6, const Duration(milliseconds: 50));
     }
 
     await over('Done: the relay restarts without dropping a phone.');
@@ -384,9 +380,7 @@ void main() {
     ]) {
       await _openMenu(tester);
       await tester.tap(_row(row));
-      for (var i = 0; i < 4; i++) {
-        await tester.pump();
-      }
+      await frames(tester, 4);
       await tester.pumpAndSettle();
       expect(_current(tester, 4), want, reason: row);
     }
@@ -449,9 +443,7 @@ void main() {
     // transcript's, and tints it for a moment.
     await _openMenu(tester);
     await tester.tap(_row('The tests reasoned through'));
-    for (var i = 0; i < 4; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 4);
     final p = _scroll(tester);
     expect(p.pixels, greaterThan(0));
     expect(p.pixels, lessThan(p.maxScrollExtent));
@@ -529,9 +521,7 @@ void main() {
     expect(_current(tester, 3), 2); // at the bottom: a2
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp); // a1
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    for (var i = 0; i < 4; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 4);
     expect(_row('Session start'), findsNothing);
     expect(_current(tester, 3), 1);
     await tester.pumpAndSettle();
@@ -745,9 +735,7 @@ void main() {
         };
       final phone = await startPhone(tester, fake);
       await tester.tap(find.text('Relay restarts'));
-      for (var i = 0; i < 10; i++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
+      await frames(tester, 10, const Duration(milliseconds: 50));
       // Every pin on the rail, though one is on a page not taken yet; no
       // Pin on the phone, which has no actions row.
       expect(_railDashes, findsNWidgets(4));
@@ -758,9 +746,7 @@ void main() {
       // A tall screen takes the older page to fill itself.
       final filled = [...pages];
       await tester.tap(_railDashes.first);
-      for (var i = 0; i < 10; i++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
+      await frames(tester, 10, const Duration(milliseconds: 50));
       // Listed by its title, no page taken for it.
       expect(pages, filled);
       expect(_row('Relay restart plan'), findsOneWidget);
@@ -779,9 +765,7 @@ void main() {
       }
 
       await tester.tap(_row('Relay restart plan'));
-      for (var i = 0; i < 10; i++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
+      await frames(tester, 10, const Duration(milliseconds: 50));
       expect(pages, ['u2']); // by the pick, or the fill before
       final at = tester.getRect(
         find.textContaining('The relay, line 0', findRichText: true).first,
@@ -815,13 +799,9 @@ void main() {
       };
     final phone = await startPhone(tester, fake);
     await tester.tap(find.text('Relay restarts'));
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+    await frames(tester, 10, const Duration(milliseconds: 50));
     await tester.tap(_railDashes.first);
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+    await frames(tester, 10, const Duration(milliseconds: 50));
     // Listed by its first line, from the page it's on.
     expect(pages, ['u2']);
     expect(_row('The plan'), findsOneWidget);

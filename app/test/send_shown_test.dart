@@ -74,9 +74,7 @@ Future<(FakeDaemon, _Sends, Daemon)> _app(
   d.select('a');
   await tester.pumpWidget(NushiApp(daemon: d));
   // Not pumpAndSettle: a busy chat's turn line shines on.
-  for (var i = 0; i < 10; i++) {
-    await tester.pump(const Duration(milliseconds: 50));
-  }
+  await frames(tester, 10, const Duration(milliseconds: 50));
   return (fake, sends, d);
 }
 

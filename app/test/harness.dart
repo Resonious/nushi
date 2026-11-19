@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:connectrpc/connect.dart' show Transport;
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
@@ -56,6 +57,17 @@ Widget themed(Widget child, {Tokens tokens = Tokens.dark, bool? still}) {
   );
 }
 
+/// [count] frames, each [step] after the one before (none: at once), for
+/// what never settles (a spinner, a turn's shine) or a path frame by frame.
+Future<void> frames(WidgetTester tester, int count, [Duration? step]) async {
+  for (var i = 0; i < count; i++) {
+    await tester.pump(step);
+  }
+}
+
+/// [fixtureNow] less [d], as the daemon sends a time.
+Int64 msAgo(Duration d) => Int64(fixtureNow.subtract(d).millisecondsSinceEpoch);
+
 /// Takes the app away and disposes [d], so its timers end with the test.
 Future<void> closeView(WidgetTester tester, Daemon d) async {
   await tester.pumpWidget(const SizedBox());
@@ -92,9 +104,7 @@ Future<Phone> startPhone(
   );
   await tester.pumpWidget(PhoneApp(phone));
   await phone.start();
-  for (var i = 0; i < 8; i++) {
-    await tester.pump();
-  }
+  await frames(tester, 8);
   return phone;
 }
 

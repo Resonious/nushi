@@ -107,9 +107,7 @@ Future<void> _window(
   final d = await fake.connect(tester);
   d.select('c');
   await tester.pumpWidget(NushiApp(daemon: d));
-  for (var i = 0; i < 5; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, 5, const Duration(milliseconds: 100));
   expect(find.text('12s'), findsWidgets); // the run's and the running call's
   expect(find.text('1m 04s'), findsOne); // the run's span
   expect(
@@ -230,9 +228,7 @@ void main() {
     scroll.jumpTo(1000);
     await tester.pump();
     final hidden = built;
-    for (var i = 0; i < 4; i++) {
-      await tester.pump(const Duration(seconds: 1));
-    }
+    await frames(tester, 4, const Duration(seconds: 1));
     expect(built, hidden);
     scroll.jumpTo(0);
     await tester.pump(const Duration(seconds: 1));

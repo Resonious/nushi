@@ -99,9 +99,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
         await render(tester, find.byType(NushiApp), 'tiles_menu_$name');
         await tester.tap(find.text('Change tile…'));
-        for (var i = 0; i < 4; i++) {
-          await tester.pump(const Duration(milliseconds: 300));
-        }
+        await frames(tester, 4, const Duration(milliseconds: 300));
         await tester.enterText(find.byType(TextField), 'G7');
         await tester.tap(find.byTooltip('Amber'));
         await tester.pump();
@@ -154,9 +152,7 @@ void main() {
           'tiles_dialog_framed_$name',
         );
         await tester.tap(find.widgetWithText(Button, 'Save'));
-        for (var i = 0; i < 4; i++) {
-          await tester.pump(const Duration(milliseconds: 300));
-        }
+        await frames(tester, 4, const Duration(milliseconds: 300));
         expect(projectTiles.value[garden]!.crop, isNotNull);
         await untilReal(
           tester,
@@ -179,9 +175,7 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 300));
         await tester.tap(find.text('Change tile…'));
-        for (var i = 0; i < 4; i++) {
-          await tester.pump(const Duration(milliseconds: 300));
-        }
+        await frames(tester, 4, const Duration(milliseconds: 300));
         await tester.tap(find.widgetWithText(Button, 'Choose image…'));
         await untilReal(
           tester,
@@ -220,9 +214,7 @@ void main() {
         await render(tester, find.byType(NushiApp), 'tiles_dialog_trim_$name');
         await end.up();
         await tester.tap(find.widgetWithText(Button, 'Cancel'));
-        for (var i = 0; i < 4; i++) {
-          await tester.pump(const Duration(milliseconds: 300));
-        }
+        await frames(tester, 4, const Duration(milliseconds: 300));
         await closeView(tester, d);
       }, variant: macOS);
 
@@ -322,9 +314,7 @@ void main() {
 
         // Narrowed to a project.
         await tester.tap(find.byTooltip('ledger-poc\n$ledger'));
-        for (var i = 0; i < 5; i++) {
-          await tester.pump(const Duration(milliseconds: 300));
-        }
+        await frames(tester, 5, const Duration(milliseconds: 300));
         expectTextInside(tester, width);
         await render(tester, find.byType(NushiApp), 'rail_one_$name');
 
@@ -337,18 +327,14 @@ void main() {
         expectTextInside(tester, width);
         await render(tester, find.byType(NushiApp), 'rail_menu_$name');
         await tester.tap(find.text('Change tile…'));
-        for (var i = 0; i < 4; i++) {
-          await tester.pump(const Duration(milliseconds: 300));
-        }
+        await frames(tester, 4, const Duration(milliseconds: 300));
         await tester.enterText(find.byType(TextField), 'G7');
         await tester.tap(find.byTooltip('Amber'));
         await tester.pump();
         expectTextInside(tester, width);
         await render(tester, find.byType(NushiApp), 'rail_tile_dialog_$name');
         await tester.tap(find.widgetWithText(Button, 'Save'));
-        for (var i = 0; i < 4; i++) {
-          await tester.pump(const Duration(milliseconds: 300));
-        }
+        await frames(tester, 4, const Duration(milliseconds: 300));
         await closeView(tester, d);
       }, variant: macOS);
     }

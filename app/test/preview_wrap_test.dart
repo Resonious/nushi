@@ -426,9 +426,7 @@ void main() {
         );
         await tester.pumpWidget(PhoneApp(phone));
         await phone.start();
-        for (var i = 0; i < 8; i++) {
-          await tester.pump();
-        }
+        await frames(tester, 8);
         await tester.tap(find.text('Brew the tea'));
         await tester.pumpAndSettle();
         PreviewScreen.open(

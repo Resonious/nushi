@@ -20,9 +20,7 @@ import 'paged_chat.dart';
 final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 Future<void> _settle(WidgetTester tester) async {
-  for (var i = 0; i < 40; i++) {
-    await tester.pump(const Duration(milliseconds: 16));
-  }
+  await frames(tester, 40, const Duration(milliseconds: 16));
 }
 
 /// The window on chat c, [items] paged, with another chat s to switch to.

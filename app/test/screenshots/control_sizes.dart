@@ -29,9 +29,7 @@ import 'demo.dart';
 final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 Future<void> _pump(WidgetTester tester, [int times = 8]) async {
-  for (var i = 0; i < times; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, times, const Duration(milliseconds: 100));
 }
 
 /// A permission the agent asks for, beside the demo's question.

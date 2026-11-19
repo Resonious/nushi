@@ -9,6 +9,7 @@ import 'package:nushi/slop_draggable.dart';
 import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
+import 'harness.dart';
 import 'project_tile_fixture.dart';
 import 'sidebar_fixture.dart';
 
@@ -234,9 +235,7 @@ void main() {
     expect(position.pixels, 0);
     final edge = tester.getRect(rail).bottom;
     final drag = await _drag(tester, 'cappy', edge - 4);
-    for (var i = 0; i < 20; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+    await frames(tester, 20, const Duration(milliseconds: 50));
     expect(position.pixels, greaterThan(0));
     await drag.up();
     await tester.pumpAndSettle();
