@@ -2,10 +2,24 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
-/// A camera scanning for QR codes, in memory: a test says what it sees
-/// ([codes]) or why it can't start ([refuse]).
+/// Native camera QR scanner backend (Android's `scanner_android.dart`); null in
+/// tests, where [Scanner] runs in memory.
+abstract interface class ScannerBackend {
+  Stream<String> get codes;
+  Future<String?> start();
+  Widget view();
+  void stop();
+}
+
+/// Makes a native [ScannerBackend] on Android; null in tests.
+ScannerBackend Function()? scannerBackendFactory;
+
+/// A camera scanning for a QR code, in memory in tests or backed by
+/// [scannerBackendFactory] on Android.
 final class Scanner {
-  new();
+  new() : _backend = scannerBackendFactory?.call();
+
+  final ScannerBackend? _backend;
 
   /// Why [start] fails, if a test wants it to.
   static String? refuse;
@@ -17,21 +31,28 @@ final class Scanner {
   bool stopped = false;
 
   /// The text of each QR code it reads.
-  Stream<String> get codes => _codes.stream;
+  Stream<String> get codes => _backend?.codes ?? _codes.stream;
 
   /// A test's code in front of the camera.
   void see(String text) => _codes.add(text);
 
   Future<String?> start() async {
     last = this;
+    if (_backend case final b?) return await b.start();
     return refuse;
   }
 
-  // design: where the camera's picture would be, black as it starts.
-  Widget view() => const ColoredBox(color: Color(0xFF000000));
+  Widget view() =>
+      _backend?.view() ??
+      // design: where the camera's picture would be, black as it starts.
+      const ColoredBox(color: Color(0xFF000000));
 
   void stop() {
     stopped = true;
+    if (_backend case final b?) {
+      b.stop();
+      return;
+    }
     unawaited(_codes.close());
   }
 }

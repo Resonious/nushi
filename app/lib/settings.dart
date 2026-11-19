@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show ThemeMode;
 
 import 'package:nushi/arrangement.dart';
+import 'package:nushi/conventions.dart' show isPhone;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/file_mode.dart';
 import 'package:nushi/file_tabs.dart' show KeptTabs;
@@ -707,6 +708,7 @@ final String? _launchText = _readText();
 final Map<String, Object?> _saved = _decode(_launchText);
 
 String? _readText() {
+  if (isPhone) return null;
   try {
     return _settings.readAsStringSync();
   } on Object {
@@ -747,6 +749,7 @@ void _saveSoon() {
 /// Writes the prefs made over `app.json` as it was at launch: those not
 /// read in this run, and keys a newer app saved, stay as they were.
 void _save() {
+  if (isPhone) return;
   try {
     writeWhole(
       _settings,

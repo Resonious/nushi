@@ -1,5 +1,4 @@
-import 'package:flutter/foundation.dart';
-
+import 'package:nushi/conventions.dart';
 import 'package:nushi/native.dart';
 
 /// What judges words for spell check (ADR 0083). A failing call is for its
@@ -24,4 +23,4 @@ abstract interface class Speller {
 /// the phone, whose browser has its own spell check. A test sets its own:
 /// it must never reach the real checker, whose [Speller.learn] writes the
 /// user's own dictionary.
-Speller? get speller => kIsWeb ? null : native.speller;
+Speller? get speller => isPhone ? null : native.speller;

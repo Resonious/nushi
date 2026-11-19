@@ -90,12 +90,17 @@ const windowsConventions = Conventions(
   altGr: true,
 );
 
-/// The platform's conventions, as a widget reads them: on the phone, whose
-/// web app shares the widgets but has no native edge, the paired
-/// computer's words ([phoneHost]) with the phone's own modifier, ⌘, as an
-/// iPad's keyboard has it: its keys never follow the computer's system.
+/// Whether this process runs the phone app (web or Android), rather than the
+/// desktop app: shared widgets read this instead of [kIsWeb] so the Android
+/// phone app never reaches [native] or assumes a local daemon's files.
+bool isPhone = kIsWeb;
+
+/// The platform's conventions, as a widget reads them: on the phone, which
+/// shares the widgets but has no native edge, the paired computer's words
+/// ([phoneHost]) with the phone's own modifier, ⌘, as an iPad's keyboard has
+/// it: its keys never follow the computer's system.
 Conventions get conventions =>
-    kIsWeb ? phoneHost.withKey(CommandKey.meta) : native.conventions;
+    isPhone ? phoneHost.withKey(CommandKey.meta) : native.conventions;
 
 /// The phone's paired computer's conventions, by the system its daemon
 /// says it runs on ([conventionsOf]); the phone sets them.

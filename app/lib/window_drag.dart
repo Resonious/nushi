@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
+import 'package:nushi/conventions.dart';
 import 'package:nushi/inline_edit.dart';
 import 'package:nushi/native.dart';
 
@@ -43,7 +43,7 @@ abstract interface class AppWindow {
 
 /// Whether the headers move the window ([AppWindow.headersMoveWindow]), as
 /// a widget reads it: the phone has no window to move.
-bool get headersMoveWindow => !kIsWeb && native.window.headersMoveWindow;
+bool get headersMoveWindow => !isPhone && native.window.headersMoveWindow;
 
 /// A header at the window's top, which has no title bar to hold (the
 /// content runs under the traffic lights), doing what a title bar did

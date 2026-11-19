@@ -198,7 +198,7 @@ class Phone extends ChangeNotifier {
         offer,
         device: _key!,
         name: name,
-        kind: 'web',
+        kind: platform.nativeApp ? null : 'web',
         onCode: (code) {
           pairing = code;
           notifyListeners();

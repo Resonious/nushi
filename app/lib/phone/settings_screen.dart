@@ -50,7 +50,9 @@ class SettingsScreen extends StatelessWidget {
         final connected = phone.daemon?.connected ?? false;
         final note = switch (phone.push) {
           PushState.unsupported =>
-            'Notifications work once Nushi is on the Home Screen.',
+            phone.platform.nativeApp
+                ? 'Push notifications aren’t available in the Android app yet.'
+                : 'Notifications work once Nushi is on the Home Screen.',
           PushState.denied =>
             'Notifications are off for Nushi in the phone’s Settings.',
           _ when !connected => 'Connect to the $machine to change this.',

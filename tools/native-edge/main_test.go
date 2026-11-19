@@ -9,14 +9,17 @@ import (
 
 // What each kind of use is called, outside the files that may hold it.
 const (
-	channel   = "a platform channel outside a *_macos.dart or *_linux.dart or *_windows.dart file"
-	message   = "a platform message outside a *_macos.dart or *_linux.dart or *_windows.dart file"
-	ffi       = "dart:ffi outside a *_macos.dart or *_linux.dart or *_windows.dart file"
-	webKit    = "webview_flutter_wkwebview (macOS's WebKit) outside a *_macos.dart file"
-	dbus      = "dbus (Linux's D-Bus) outside a *_linux.dart file"
-	macFile   = "a Mac implementation's file "
-	linuxFile = "a Linux implementation's file "
-	winFile   = "a Windows implementation's file "
+	channel     = "a platform channel outside a *_macos.dart or *_linux.dart or *_windows.dart or *_android.dart file"
+	message     = "a platform message outside a *_macos.dart or *_linux.dart or *_windows.dart or *_android.dart file"
+	ffi         = "dart:ffi outside a *_macos.dart or *_linux.dart or *_windows.dart or *_android.dart file"
+	webKit      = "webview_flutter_wkwebview (macOS's WebKit) outside a *_macos.dart file"
+	androidWeb  = "webview_flutter_android (Android's WebView) outside a *_android.dart file"
+	androidScan = "mobile_scanner (Android's camera scanner) outside a *_android.dart file"
+	dbus        = "dbus (Linux's D-Bus) outside a *_linux.dart file"
+	macFile     = "a Mac implementation's file "
+	linuxFile   = "a Linux implementation's file "
+	winFile     = "a Windows implementation's file "
+	androidFile = "an Android implementation's file "
 )
 
 func TestCheck(t *testing.T) {
@@ -63,6 +66,10 @@ func TestCheck(t *testing.T) {
 		"file_mode_windows.dart": "import 'dart:ffi';\nimport 'package:dbus/dbus.dart';\n",
 		"native_windows.dart":    "import 'package:nushi/file_mode_windows.dart';\n",
 		"install.dart":           "import 'package:nushi/app_install_windows.dart';\n",
+		// Android's: WebView and camera scanner its own, set in native_android.
+		"phone/page_frame_android.dart": "import 'package:webview_flutter_android/webview_flutter_android.dart';\nimport 'package:mobile_scanner/mobile_scanner.dart';\n",
+		"native_android.dart":           "import 'package:nushi/phone/page_frame_android.dart';\n",
+		"bad_phone.dart":                "import 'package:webview_flutter_android/webview_flutter_android.dart';\nimport 'package:mobile_scanner/mobile_scanner.dart';\nimport 'package:nushi/phone/page_frame_android.dart';\n",
 	}
 	for name, body := range files {
 		path := filepath.Join(root, name)
@@ -86,6 +93,10 @@ func TestCheck(t *testing.T) {
 	want := []string{
 		"alerts_macos.dart: " + linuxFile + "(package:nushi/alerts_linux.dart)",
 		"alerts_macos.dart: " + dbus,
+		"bad_phone.dart: " + androidFile + "(package:nushi/phone/page_frame_android.dart)",
+		"bad_phone.dart: " + androidFile + "(package:webview_flutter_android/webview_flutter_android.dart)",
+		"bad_phone.dart: " + androidScan,
+		"bad_phone.dart: " + androidWeb,
 		"basic.dart: " + channel,
 		"chmod.dart: " + ffi,
 		"cond.dart: " + macFile + "(package:nushi/x_macos.dart)",

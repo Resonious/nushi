@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:markdown_view/markdown_view.dart' show MarkdownStyle;
 import 'package:nushi/chat.dart';
 import 'package:nushi/code_run_view.dart';
 import 'package:nushi/controls.dart' show TouchTargets;
+import 'package:nushi/conventions.dart' show isPhone;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/errors.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -181,7 +181,7 @@ class _LinkedMarkdownState extends State<LinkedMarkdown> {
   Widget build(BuildContext context) {
     // A shell block runs in a terminal of the chat's: on the Mac only, the
     // phone has none.
-    _block = kIsWeb || TouchTargets.of(context)
+    _block = isPhone || TouchTargets.of(context)
         ? null
         : (language, code, style) =>
               runnableBlock(language, code, style, widget.chat, widget.daemon);

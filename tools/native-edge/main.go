@@ -34,10 +34,11 @@ var (
 	mac     = platform{"macos", "a Mac implementation's file"}
 	linux   = platform{"linux", "a Linux implementation's file"}
 	windows = platform{"windows", "a Windows implementation's file"}
+	android = platform{"android", "an Android implementation's file"}
 )
 
 // platforms are every platform with files of its own.
-var platforms = []platform{mac, linux, windows}
+var platforms = []platform{mac, linux, windows, android}
 
 // native is what only some platforms' files may use, what to call it, and
 // those platforms.
@@ -51,18 +52,20 @@ var native = []struct {
 	{regexp.MustCompile(`['"]dart:ffi['"]`), "dart:ffi", platforms},
 	{regexp.MustCompile(`['"]package:ffi/`), "package:ffi", platforms},
 	{regexp.MustCompile(`['"]package:webview_flutter_wkwebview/`), "webview_flutter_wkwebview (macOS's WebKit)", []platform{mac}},
+	{regexp.MustCompile(`['"]package:webview_flutter_android/`), "webview_flutter_android (Android's WebView)", []platform{android}},
+	{regexp.MustCompile(`['"]package:mobile_scanner/`), "mobile_scanner (Android's camera scanner)", []platform{android}},
 	{regexp.MustCompile(`['"]package:dbus/`), "dbus (Linux's D-Bus)", []platform{linux}},
 }
 
 // platformFile is a URI of a platform's file, as an import, export or part
 // names it (on its own line too, as a conditional import's), and its suffix.
-var platformFile = regexp.MustCompile(`['"]([^'"]*_(macos|linux|windows)\.dart)['"]`)
+var platformFile = regexp.MustCompile(`['"]([^'"]*_(macos|linux|windows|android)\.dart)['"]`)
 
 // picksASet is the one file that may name another platform's file, and
 // theSets the ones it may name: main.dart sets the machine's at startup.
 const picksASet = "main.dart"
 
-var theSets = []string{"native_macos.dart", "native_linux.dart", "native_windows.dart"}
+var theSets = []string{"native_macos.dart", "native_linux.dart", "native_windows.dart", "native_android.dart"}
 
 func main() {
 	os.Exit(dartcheck.Run("native-edge", "Native code goes behind an interface its user declares, each platform's implementation in "+

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:file_selector/file_selector.dart' show XFile;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nushi/attached_files.dart';
@@ -10,6 +9,7 @@ import 'package:nushi/chat_column.dart';
 import 'package:nushi/completions.dart';
 import 'package:nushi/composer_parts.dart';
 import 'package:nushi/composer_plus.dart';
+import 'package:nushi/conventions.dart' show isPhone;
 import 'package:nushi/copy_command.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/draft.dart';
@@ -222,7 +222,7 @@ class _ComposerState extends State<Composer> {
       unawaited(_attach());
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.keyV && meta && !kIsWeb) {
+    if (key == LogicalKeyboardKey.keyV && meta && !isPhone) {
       // Text, if any, pastes as usual.
       unawaited(attached(context, pasteFiles(widget.chat, api: _api)));
     }

@@ -95,6 +95,12 @@ final class PhonePlatform {
       web.window.matchMedia('(display-mode: standalone)').matches ||
       (web.window.navigator as JSObject)['standalone'].dartify() == true;
 
+  /// Whether this runs as a native mobile app rather than in a browser.
+  bool get nativeApp => false;
+
+  /// The default device name offered on the pairing screen.
+  String get defaultName => iPhone ? 'iPhone' : 'Web browser';
+
   /// Whether it's an iPhone's or iPad's browser.
   bool get iPhone {
     final ua = web.window.navigator.userAgent;

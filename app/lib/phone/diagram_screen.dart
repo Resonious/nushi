@@ -35,7 +35,7 @@ class _DiagramFrameState extends State<DiagramFrame> {
     return FutureBuilder(
       future: _page,
       builder: (context, snap) => switch (snap.data) {
-        final html? => PageFrame(html, key: ValueKey(html)),
+        final html? => PageFrame(html, mermaid: true, key: ValueKey(html)),
         _ => const SizedBox.expand(),
       },
     );

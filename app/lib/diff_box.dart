@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:nushi/back_swipe.dart';
+import 'package:nushi/conventions.dart' show isPhone;
 import 'package:nushi/diff_box_find.dart';
 import 'package:nushi/diff_comment_button.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -527,7 +528,7 @@ class _DiffBoxState extends State<DiffBox> {
       builder: (context, box) => _box(
         unified ||
             oneSided(widget.change) ||
-            kIsWeb ||
+            isPhone ||
             box.maxWidth < oneColumnBelow,
       ),
     ),
@@ -575,7 +576,7 @@ class _DiffBoxState extends State<DiffBox> {
     // A line that takes a comment shows a + under the pointer; the phone
     // has none (no pointer hovers there).
     final commentable =
-        !kIsWeb && (widget.review != null || widget.onLines != null);
+        !isPhone && (widget.review != null || widget.onLines != null);
     final diff = Listener(
       onPointerUp: _pointerUp,
       // diff_view's views have no scrollbar; one at the right edge, for

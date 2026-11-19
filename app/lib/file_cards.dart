@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:nushi/attached_files.dart';
 import 'package:nushi/chat.dart';
@@ -205,7 +204,7 @@ Widget? messageFiles(BuildContext context, Item item, ChatState chat) {
           onOpen: open != null && !f.startsWith('/') && opensInPreview(f)
               ? () => open(f)
               : null,
-          onReveal: kIsWeb || !f.startsWith('/') && chat.folder.isEmpty
+          onReveal: isPhone || !f.startsWith('/') && chat.folder.isEmpty
               ? null
               : () =>
                     native.desktop.reveal(absoluteIn(chat.folder, f)).ignore(),

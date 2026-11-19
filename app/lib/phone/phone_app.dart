@@ -111,11 +111,17 @@ class _PhoneAppState extends State<PhoneApp> with WidgetsBindingObserver {
 
   Widget _app(ColorTheme theme) => MaterialApp(
     navigatorKey: _navigator,
-    navigatorObservers: [_history],
+    navigatorObservers: [if (!widget.phone.platform.nativeApp) _history],
     title: 'Nushi',
     debugShowCheckedModeBanner: false,
-    theme: _phone(NushiTheme.forTheme(theme, Brightness.light)),
-    darkTheme: _phone(NushiTheme.forTheme(theme, Brightness.dark)),
+    theme: _phone(
+      NushiTheme.forTheme(theme, Brightness.light),
+      nativeApp: widget.phone.platform.nativeApp,
+    ),
+    darkTheme: _phone(
+      NushiTheme.forTheme(theme, Brightness.dark),
+      nativeApp: widget.phone.platform.nativeApp,
+    ),
     // The theme kept is read with the pairing, as the chats first show:
     // no fade from Nushi's into it.
     themeAnimationDuration: Duration.zero,
@@ -173,9 +179,9 @@ class _RootState extends State<_Root> {
 }
 
 /// Material's touch sizes for a phone, over the Mac's theme.
-ThemeData _phone(ThemeData d) => d.copyWith(
+ThemeData _phone(ThemeData d, {required bool nativeApp}) => d.copyWith(
   materialTapTargetSize: MaterialTapTargetSize.padded,
   visualDensity: VisualDensity.standard,
-  platform: TargetPlatform.iOS,
-  pageTransitionsTheme: browserBackTransitions,
+  platform: nativeApp ? TargetPlatform.android : TargetPlatform.iOS,
+  pageTransitionsTheme: nativeApp ? null : browserBackTransitions,
 );

@@ -54,7 +54,7 @@ class AttachedFile {
   /// The file at [path] on this Mac, its size read when it can be.
   factory at(String path) {
     var size = -1;
-    if (!kIsWeb) {
+    if (!isPhone) {
       try {
         size = File(path).statSync().size;
       } on Object {

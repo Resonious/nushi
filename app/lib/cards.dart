@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:markdown_view/markdown_view.dart';
 
 import 'package:nushi/chat.dart';
+import 'package:nushi/conventions.dart' show isPhone;
 import 'package:nushi/diff_box.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/markdown.dart';
@@ -285,7 +285,7 @@ class _PermissionCardState extends State<PermissionCard> {
         // The host's app shows it: the Mac's own web view runs it unasked,
         // Linux's browser waits for a click (ADR 0104). The phone can't
         // tell which app its host has, so it says so.
-        if (pending && runs && (kIsWeb || webEmbedded))
+        if (pending && runs && (isPhone || webEmbedded))
           Text('A page runs as it opens in the preview.', style: muted),
         // What the entry runs, as the daemon resolved it when it asked
         // (ADR 0100): the start that follows runs only this.

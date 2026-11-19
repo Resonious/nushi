@@ -98,6 +98,7 @@ void startAfresh() {
     ..speller = null
     ..install = FakeAppInstall()
     ..desktop = FakeDesktop();
+  isPhone = kIsWeb;
   phoneHost = macConventions;
   // The prefs as at launch, and `app.json` on disk as it was then.
   resetAppSettings();

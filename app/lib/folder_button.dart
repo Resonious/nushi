@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:nushi/chat.dart';
+import 'package:nushi/conventions.dart' show isPhone;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/menu.dart';
@@ -13,7 +13,7 @@ import 'package:nushi/widgets.dart';
 
 /// [path] with the home folder as "~".
 String tildePath(String path) {
-  final home = kIsWeb ? remoteHome(path) : Platform.environment['HOME'] ?? '';
+  final home = isPhone ? remoteHome(path) : Platform.environment['HOME'] ?? '';
   return home.isNotEmpty && (path == home || path.startsWith('$home/'))
       ? '~${path.substring(home.length)}'
       : path;

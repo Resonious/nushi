@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart';
-
 import 'package:nushi/browser_page.dart';
+import 'package:nushi/conventions.dart';
 import 'package:nushi/diagram_page.dart';
 import 'package:nushi/native.dart';
 import 'package:nushi/preview_entry.dart';
@@ -63,19 +62,19 @@ abstract interface class WebViews {
 }
 
 /// Whether the app's own web views show pages, as a widget reads it: the
-/// phone's web app, which shares the widgets but has no native edge, has
-/// frames of its own instead.
-bool get webEmbedded => !kIsWeb && native.web.embedded;
+/// phone app, which shares the widgets but has no native edge, has frames of
+/// its own instead.
+bool get webEmbedded => !isPhone && native.web.embedded;
 
 /// Opens [url], a web link the user clicked (Jira's, GitHub's, a
 /// terminal's, the agents' or an account's page), in the default browser:
-/// the platform's [WebViews.openLink], or, in the phone's web app, which
-/// has no native edge, a new tab (url_launcher). Throws as
+/// the platform's [WebViews.openLink], or, in the phone app, which has no
+/// native edge, the system browser (url_launcher). Throws as
 /// [WebViews.openLink] does; a click goes through `openLinkOrSay`, which
 /// says why.
 Future<void> openInDefaultBrowser(Uri url) async {
-  if (kIsWeb) {
-    await launchUrl(url);
+  if (isPhone) {
+    await launchUrl(url, mode: LaunchMode.externalApplication);
   } else {
     await native.web.openLink(url);
   }

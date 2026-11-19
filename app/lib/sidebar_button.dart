@@ -1,12 +1,12 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import 'package:nushi/app_actions.dart';
 import 'package:nushi/chat_view.dart';
 import 'package:nushi/controls.dart';
+import 'package:nushi/conventions.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/native.dart';
 import 'package:nushi/panes.dart';
@@ -25,7 +25,7 @@ part 'sidebar_glide.dart';
 /// (`AppWindow.titleInset`), less the window's margin, which the pane is
 /// already in by (ADR 0111). The phone, whose sidebar never hides, has none.
 double get lightsInset =>
-    kIsWeb ? 0 : max(8, native.window.titleInset - NushiTheme.windowPad);
+    isPhone ? 0 : max(8, native.window.titleInset - NushiTheme.windowPad);
 
 /// Where a header's own content starts with the sidebar hidden, from the
 /// pane's left edge: past the lights and [TitleButtons], with the room a
@@ -36,7 +36,8 @@ double get hiddenHeaderStart =>
 /// Whether the sidebar is hidden, so the main area reaches the window's left
 /// edge: hidden by the user, or tucked away for a narrow window
 /// ([sidebarTucked]). The phone has none, whatever is saved.
-bool get sidebarShut => !kIsWeb && (sidebarHidden.value || sidebarTucked.value);
+bool get sidebarShut =>
+    !isPhone && (sidebarHidden.value || sidebarTucked.value);
 
 /// Whether the sidebar, shown by the user, is tucked away because the
 /// window would leave the main area beside it narrower than a chat's least

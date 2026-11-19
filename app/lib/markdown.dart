@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:markdown_view/markdown_view.dart';
 import 'package:nushi/browser_address.dart' show isWebPage;
 import 'package:nushi/browser_local.dart' show isLocalNetwork;
+import 'package:nushi/conventions.dart' show isPhone;
 import 'package:nushi/github_link_chip.dart';
 import 'package:nushi/images.dart';
 import 'package:nushi/mermaid.dart';
@@ -39,7 +39,7 @@ Uri? webLink(String href) {
 /// browser, opened as every page there is ([openInBrowserOrSay]), which
 /// says why when none opens.
 Future<void> openWebLink(BuildContext context, Uri url) async {
-  if (!kIsWeb && !webEmbedded) {
+  if (!isPhone && !webEmbedded) {
     await openInBrowserOrSay(context, url);
     return;
   }

@@ -3,9 +3,9 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:nushi/chat_images.dart';
+import 'package:nushi/conventions.dart' show isPhone;
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/image_ref.dart';
 import 'package:nushi/svg_image.dart';
@@ -311,14 +311,14 @@ Widget markdownImage(Uri uri, String? alt) {
         !uri.hasQuery &&
         !uri.hasFragment &&
         !uri.pathSegments.any((s) => s.contains('/'));
-    if (local && !kIsWeb) {
+    if (local && !isPhone) {
       return _LocalImage(uri.toFilePath(), alt ?? uri.toString());
     }
     return Text('[image: ${alt ?? uri} (not an image file Nushi reads)]');
   }
   if (uri.scheme == 'http' || uri.scheme == 'https') {
-    // The phone's web app loads nothing from other origins (its CSP).
-    if (kIsWeb) return Text('[image: ${alt ?? uri}]');
+    // The phone app loads nothing from other origins.
+    if (isPhone) return Text('[image: ${alt ?? uri}]');
     return _RemoteImage(uri, alt);
   }
   return Text('[image: ${alt ?? uri}]');

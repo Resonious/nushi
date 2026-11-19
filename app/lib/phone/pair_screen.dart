@@ -30,7 +30,7 @@ class _PairScreenState extends State<PairScreen> {
     text: widget.phone.platform.openedWith ?? '',
   );
   late final _name = TextEditingController(
-    text: widget.phone.platform.iPhone ? 'iPhone' : 'Web browser',
+    text: widget.phone.platform.defaultName,
   );
   bool _pairing = false;
   String _error = '';

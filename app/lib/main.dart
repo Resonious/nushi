@@ -25,6 +25,7 @@ import 'package:nushi/images.dart' show limitImageCache;
 import 'package:nushi/jira_view.dart';
 import 'package:nushi/murk.dart';
 import 'package:nushi/native.dart';
+import 'package:nushi/native_android.dart';
 import 'package:nushi/native_linux.dart';
 import 'package:nushi/native_macos.dart';
 import 'package:nushi/native_windows.dart';
@@ -52,6 +53,10 @@ import 'package:nushi/widgets.dart' show ToastHost, confirm;
 
 void main() => runZonedGuarded(() {
   WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isAndroid) {
+    unawaited(runAndroidPhone());
+    return;
+  }
   // The machine's native edge, the app's one test of the platform (ADR
   // 0097, 0104), before anything that may reach it.
   native = Platform.isLinux

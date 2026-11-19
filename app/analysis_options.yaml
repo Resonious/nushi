@@ -10,6 +10,7 @@ analyzer:
     - macos/**
     - web/**
     - windows/**
+    - android/**
 
 linter:
   rules:

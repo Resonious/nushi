@@ -1,12 +1,12 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'package:nushi/chat.dart';
 import 'package:nushi/clock.dart';
 import 'package:nushi/commits.dart';
 import 'package:nushi/controls.dart';
+import 'package:nushi/conventions.dart' show isPhone;
 import 'package:nushi/folder_button.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/preview.dart';
@@ -246,7 +246,7 @@ String folderOf(String path) {
 DateTime? Function(String path) fileChanged = _modified;
 
 DateTime? _modified(String path) {
-  if (kIsWeb) return null;
+  if (isPhone) return null;
   final s = FileStat.statSync(path);
   return s.type == FileSystemEntityType.notFound ? null : s.modified;
 }

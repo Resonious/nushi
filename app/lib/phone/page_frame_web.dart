@@ -6,10 +6,11 @@ import 'package:web/web.dart' as web;
 /// The relay serves it with its own headers (`relay/web.go`).
 const _frame = 'frame.html';
 
-Widget frameView(String html) => HtmlElementView.fromTagName(
-  tagName: 'iframe',
-  onElementCreated: (e) => setUpFrame(e as web.HTMLIFrameElement, html),
-);
+Widget frameView(String html, {bool mermaid = false}) =>
+    HtmlElementView.fromTagName(
+      tagName: 'iframe',
+      onElementCreated: (e) => setUpFrame(e as web.HTMLIFrameElement, html),
+    );
 
 /// Makes [f] the frame of [html]: sandboxed to scripts only, loading
 /// `frame.html`, and sent the page each time it loads (a reload brings

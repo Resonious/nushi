@@ -11,10 +11,14 @@ import 'package:nushi/phone/page_frame_stub.dart'
 /// `srcdoc` or `blob:` frame would take the app's CSP, which runs no
 /// inline script (seen in WebKit). Its files beside it don't load.
 class PageFrame extends StatelessWidget {
-  const new(this.html, {super.key});
+  const new(this.html, {this.mermaid = false, super.key});
 
   final String html;
 
+  /// Whether [html] is Nushi's own Mermaid diagram page, which needs the
+  /// bundled `mermaid.min.js` asset alongside it.
+  final bool mermaid;
+
   @override
-  Widget build(BuildContext context) => frameView(html);
+  Widget build(BuildContext context) => frameView(html, mermaid: mermaid);
 }
