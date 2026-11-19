@@ -21,6 +21,7 @@ import 'package:nushi/folder_button.dart';
 import 'package:nushi/github_view.dart';
 import 'package:nushi/images.dart' show limitImageCache;
 import 'package:nushi/jira_view.dart';
+import 'package:nushi/murk.dart';
 import 'package:nushi/native.dart';
 import 'package:nushi/native_linux.dart';
 import 'package:nushi/native_macos.dart';
@@ -611,20 +612,24 @@ class _Shell extends StatelessWidget {
                           bars: inChat ? null : bars,
                           child: daemon.trustAsk != null
                               ? pane(TrustCard(daemon.trustAsk!), header: true)
-                              : switch (daemon.place) {
-                                  JiraPlace() => pane(JiraView(daemon)),
-                                  GitHubPlace() => pane(GitHubView(daemon)),
-                                  ChatPlace() when chat == null => pane(
-                                    NothingOpen(daemon),
-                                    header: true,
-                                  ),
-                                  ChatPlace() => ChatArea(
-                                    key: ValueKey(chat!.id),
-                                    chat,
-                                    daemon,
-                                    notices: (bars: bars, card: card),
-                                  ),
-                                },
+                              : Murk(
+                                  murky: daemon.starting != null,
+                                  place: chat?.id,
+                                  child: switch (daemon.place) {
+                                    JiraPlace() => pane(JiraView(daemon)),
+                                    GitHubPlace() => pane(GitHubView(daemon)),
+                                    ChatPlace() when chat == null => pane(
+                                      MurkWater(child: NothingOpen(daemon)),
+                                      header: true,
+                                    ),
+                                    ChatPlace() => ChatArea(
+                                      key: ValueKey(chat!.id),
+                                      chat,
+                                      daemon,
+                                      notices: (bars: bars, card: card),
+                                    ),
+                                  },
+                                ),
                         ),
                       ),
                       // The newer release's card; the bars and the toasts are

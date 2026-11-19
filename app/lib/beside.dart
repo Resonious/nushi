@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import 'package:nushi/beside_fit.dart';
+import 'package:nushi/murk.dart';
 import 'package:nushi/panes.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/sidebar_button.dart';
@@ -390,13 +391,20 @@ class _BesideState extends State<Beside> {
                         : SizedBox(
                             key: ValueKey(details.name),
                             width: details.width,
-                            // Over the rail, whose own fill would hide it.
-                            child: DecoratedBox(
-                              position: DecorationPosition.foreground,
-                              decoration: BoxDecoration(
-                                border: Border(left: BorderSide(color: t.line)),
+                            // Its edge too: new with a new chat, it
+                            // glides in whole.
+                            child: MurkFrame(
+                              slide: true,
+                              // Over the rail, whose own fill would hide it.
+                              child: DecoratedBox(
+                                position: DecorationPosition.foreground,
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    left: BorderSide(color: t.line),
+                                  ),
+                                ),
+                                child: details.child,
                               ),
-                              child: details.child,
                             ),
                           ),
                   ),

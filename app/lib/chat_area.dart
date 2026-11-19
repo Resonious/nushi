@@ -10,6 +10,7 @@ import 'package:nushi/chat_view.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/details_panel.dart';
 import 'package:nushi/files_open.dart';
+import 'package:nushi/murk.dart';
 import 'package:nushi/panes.dart' show Pane;
 import 'package:nushi/preview.dart';
 import 'package:nushi/preview_entry.dart';
@@ -308,33 +309,37 @@ class _ChatAreaState extends State<ChatArea> {
               // closing doesn't build them again.
               final head = ListenableBuilder(
                 listenable: chat,
-                builder: (context, _) => ChatHeader(
-                  chat,
-                  widget.daemon,
-                  tab: chat.shownTab,
-                  onTab: (t) => _tab.value = t,
-                  panel: panel,
-                  onPanel: fits && onChat
-                      ? () => showDetails.value = !show
-                      : null,
+                builder: (context, _) => MurkFrame(
+                  child: ChatHeader(
+                    chat,
+                    widget.daemon,
+                    tab: chat.shownTab,
+                    onTab: (t) => _tab.value = t,
+                    panel: panel,
+                    onPanel: fits && onChat
+                        ? () => showDetails.value = !show
+                        : null,
+                  ),
                 ),
               );
-              final main = switch (tab) {
-                ChatTab.changes => ChangesView(
-                  chat: chat,
-                  daemon: widget.daemon,
-                ),
-                ChatTab.pull => PullTab(
-                  chat: chat,
-                  daemon: widget.daemon,
-                  onChat: () => _tab.value = ChatTab.chat,
-                ),
-                ChatTab.chat => ChatView(
-                  chat: chat,
-                  daemon: widget.daemon,
-                  onPull: () => _tab.value = ChatTab.pull,
-                ),
-              };
+              final main = MurkWater(
+                child: switch (tab) {
+                  ChatTab.changes => ChangesView(
+                    chat: chat,
+                    daemon: widget.daemon,
+                  ),
+                  ChatTab.pull => PullTab(
+                    chat: chat,
+                    daemon: widget.daemon,
+                    onChat: () => _tab.value = ChatTab.chat,
+                  ),
+                  ChatTab.chat => ChatView(
+                    chat: chat,
+                    daemon: widget.daemon,
+                    onPull: () => _tab.value = ChatTab.pull,
+                  ),
+                },
+              );
               final foot = TerminalFoot(
                 chat: chat,
                 daemon: widget.daemon,
