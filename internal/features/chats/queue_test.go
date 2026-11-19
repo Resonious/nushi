@@ -124,10 +124,7 @@ func TestQueueSteersBetweenToolCalls(t *testing.T) {
 	if _, steered := agent.texts(); len(steered) != 0 {
 		t.Fatalf("steered %q before the agent's chance", steered)
 	}
-	send(c, acp.SessionUpdate{SessionUpdate: "tool_call",
-		ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "ls", Status: "in_progress"}})
-	send(c, acp.SessionUpdate{SessionUpdate: "tool_call_update",
-		ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}})
+	ranTool(c, "t1")
 	eventually(t, c, func() bool { return len(c.items) == 3 && c.items[2].Text == "two" })
 	eventually(t, c, func() bool { _, steered := agent.texts(); return reflect.DeepEqual(steered, []string{"two"}) })
 	agent.release()
@@ -219,8 +216,7 @@ func TestStopEndsTheSteering(t *testing.T) {
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "one"}, SendIdle))
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "two"}, SendQueue))
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "three"}, SendQueue))
-	send(c, acp.SessionUpdate{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "ls", Status: "in_progress"}})
-	send(c, acp.SessionUpdate{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}})
+	ranTool(c, "t1")
 	eventually(t, c, func() bool { return len(c.queue) == 1 }) // "two" is out
 	if _, err := svc.Stop(context.Background(), c.id, false); err != nil {
 		t.Fatal(err)
@@ -262,8 +258,7 @@ func TestQueuedImagesGoOnlyToAnAgentThatTakesThem(t *testing.T) {
 		c.queue = append(c.queue, pic)
 		c.mu.Unlock()
 		if steer {
-			send(c, acp.SessionUpdate{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "ls", Status: "in_progress"}})
-			send(c, acp.SessionUpdate{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}})
+			ranTool(c, "t1")
 			eventually(t, c, func() bool { _, steered := agent.texts(); return len(steered) == 1 })
 		} else {
 			agent.release()

@@ -42,10 +42,7 @@ func TestAFailedSteerTakesTheMessageOut(t *testing.T) {
 	agent.gate, agent.steerGate = make(chan struct{}), make(chan struct{})
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "one"}, SendIdle))
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "two"}, SendQueue))
-	send(c, acp.SessionUpdate{SessionUpdate: "tool_call",
-		ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "ls", Status: "in_progress"}})
-	send(c, acp.SessionUpdate{SessionUpdate: "tool_call_update",
-		ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}})
+	ranTool(c, "t1")
 	eventually(t, c, func() bool { return len(c.queue) == 0 })
 	send(c, chunk("m1", "more")) // after the steered item
 	agent.mu.Lock()
