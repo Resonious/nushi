@@ -34,6 +34,7 @@ final _items = <Item>[
       state: 'stopped',
       started: Int64(1793088263304),
       ended: Int64(1793088325304),
+      worked: Int64(62000),
       session: 'ab89b68fab85fc5e7',
     ),
   ),
@@ -167,8 +168,12 @@ void main() {
     // The stopped one: its row says "stopped", time frozen (its pane and
     // the card's finished ones below).
     final card = find.byType(DetailsPanel);
-    final stopped = find.textContaining('stopped · 2 tool calls · 1m 02s');
+    final stopped = find.textContaining('stopped · 2 tool calls');
     expect(find.descendant(of: _line('a'), matching: stopped), findsOne);
+    expect(
+      find.descendant(of: _line('a'), matching: find.text('1m 02s')),
+      findsOne,
+    );
     final cardStops = find.descendant(of: card, matching: _stops);
     // The card's running ones show theirs, as Claude's rail; the rows
     // none until under the pointer.

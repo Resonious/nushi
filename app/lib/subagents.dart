@@ -83,23 +83,51 @@ List<Item> subagentSteps(SubagentRun s) => [
 ];
 
 /// A subagent's state in a few words: "Reading notes.md · 6 tool calls ·
-/// 40s" while it works, "done · 6 tool calls · 1m 02s" once done, "failed".
-/// The count shows only when its steps are known (a background subagent's
-/// aren't after the chat reopened), the time only when the daemon saw it
-/// start.
-String subagentState(SubagentRun s) {
+/// 40s" while it works, "done · 6 tool calls · 3m 12s · 48k tokens" once
+/// done, "failed". The count shows only when its steps are known (a
+/// background subagent's aren't after the chat reopened), the time only
+/// when the daemon knows it, the tokens once the agent reported them.
+/// Without [time], its time and tokens are left to [subagentTime]; with
+/// [timeFirst], they lead, so a line cut short keeps them.
+String subagentState(
+  SubagentRun s, {
+  bool time = true,
+  bool timeFirst = false,
+}) {
   final sa = s.call.subagent;
   final calls = subagentSteps(s)
       .where((it) => it.kind == ItemKind.ITEM_KIND_TOOL_CALL)
       .length;
-  final running = subagentRunning(s);
-  final since = msTime(sa.started.toInt());
-  final end = running ? clock() : msTime(sa.ended.toInt());
+  final spent = time ? subagentTime(s) : '';
   return [
-    if (running) doing(s.items) else sa.state,
+    if (timeFirst && spent.isNotEmpty) spent,
+    if (subagentRunning(s)) doing(s.items) else sa.state,
     if (calls > 0) '$calls tool call${calls == 1 ? '' : 's'}',
-    if (since != null && end != null) elapsed(end.difference(since)),
+    if (!timeFirst && spent.isNotEmpty) spent,
   ].join(' · ');
+}
+
+/// A subagent's time and tokens: "3m 12s · 48k tokens", "40s" while it
+/// works and the agent hasn't said; '' when neither is known.
+String subagentTime(SubagentRun s) {
+  final sa = s.call.subagent;
+  final worked = subagentWorked(sa, running: subagentRunning(s));
+  return [
+    if (worked != null) elapsed(worked),
+    if (sa.tokens > 0) tokenCount(sa.tokens.toInt()),
+  ].join(' · ');
+}
+
+/// How long a subagent worked, its waits left out: what it worked before,
+/// and, while it works ([running]), since it began to again; null when the
+/// daemon doesn't know (it didn't see it start, or was gone as it ended).
+Duration? subagentWorked(Subagent sa, {required bool running}) {
+  final since = msTime(sa.workingSince.toInt());
+  // design: the daemon's figure, not a motion's length
+  final worked = Duration(milliseconds: sa.worked.toInt());
+  final now = running && since != null ? clock().difference(since) : null;
+  if (now == null && worked == Duration.zero) return null;
+  return worked + (now == null || now.isNegative ? Duration.zero : now);
 }
 
 /// What a subagent runs on: its model (the one it ran on, else the one it
@@ -135,14 +163,24 @@ String settingText(Setting s) => s.name.isEmpty
 /// [subagentState] in [style] (red once it failed), its time ticking while
 /// the subagent works.
 class SubagentState extends StatelessWidget {
-  const new(this.s, {required this.style, super.key});
+  const new(
+    this.s, {
+    required this.style,
+    super.key,
+    this.time = true,
+    this.timeFirst = false,
+  });
 
   final SubagentRun s;
   final TextStyle style;
 
+  /// Whether its time and tokens show, and lead ([subagentState]).
+  final bool time;
+  final bool timeFirst;
+
   @override
   Widget build(BuildContext context) => LiveText(
-    () => subagentState(s),
+    () => subagentState(s, time: time, timeFirst: timeFirst),
     live: subagentRunning(s),
     style: s.call.subagent.state == 'failed'
         ? style.copyWith(color: NushiTheme.of(context).t.crashed)
@@ -268,6 +306,8 @@ class SubagentLine extends StatelessWidget {
                       // The name takes the room; the state ends the line,
                       // a third of it at most where the row is narrow (a
                       // phone's), so the name still says which it is.
+                      // Its words give way before its time and tokens,
+                      // which lead it; wide, they are apart, muted.
                       ConstrainedBox(
                         constraints: BoxConstraints(
                           maxWidth: math.min(240, box.maxWidth / 3),
@@ -275,8 +315,17 @@ class SubagentLine extends StatelessWidget {
                         child: SubagentState(
                           s,
                           style: theme.ui(t.textSecondary, size: 12),
+                          time: box.maxWidth < _timeApart,
+                          timeFirst: true,
                         ),
                       ),
+                      if (box.maxWidth >= _timeApart)
+                        if (subagentTime(s).isNotEmpty || subagentRunning(s))
+                          LiveText(
+                            () => subagentTime(s),
+                            live: subagentRunning(s),
+                            style: theme.ui(t.textMuted, size: 12),
+                          ),
                       if (hover && daemon != null && subagentStoppable(s))
                         stopButton(context, daemon, chat, s.call.id, size: 13)
                       else
@@ -297,6 +346,10 @@ class SubagentLine extends StatelessWidget {
     );
   }
 }
+
+/// The narrowest subagent row whose time and tokens show apart from its
+/// state, at its end.
+const double _timeApart = 420;
 
 /// "Explore: find the scroll handling", the type in bold and the subagents'
 /// accent, on one line.

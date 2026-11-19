@@ -68,8 +68,12 @@ void main() {
     expect(subagentState(subs.single), 'done · 1 tool call');
   });
 
-  test("a running subagent's time counts to the app's clock", () {
-    final started = fixtureNow.subtract(const Duration(minutes: 3));
+  test("a running subagent's time counts to the app's clock, its waits "
+      'left out', () {
+    Int64 ago(Duration d) =>
+        Int64(fixtureNow.subtract(d).millisecondsSinceEpoch);
+    // It started ten minutes ago, worked 20s, waited, and has worked again
+    // for 2m 40s.
     final subs = subagentsOf([
       Item(
         id: 'a',
@@ -78,11 +82,25 @@ void main() {
         status: 'in_progress',
         subagent: Subagent(
           state: 'running',
-          started: Int64(started.millisecondsSinceEpoch),
+          started: ago(const Duration(minutes: 10)),
+          worked: Int64(20000),
+          workingSince: ago(const Duration(minutes: 2, seconds: 40)),
         ),
       ),
     ]);
     expect(subagentState(subs.single), 'Thinking · 3m 00s');
+    // Ended, its worked time and the tokens the agent reported.
+    subs.single.call.subagent
+      ..state = 'done'
+      ..workingSince = Int64.ZERO
+      ..worked = Int64(192500)
+      ..tokens = Int64(48120);
+    expect(subagentState(subs.single), 'done · 3m 12s · 48k tokens');
+    // One the daemon didn't see work (replayed): neither.
+    subs.single.call.subagent
+      ..worked = Int64.ZERO
+      ..tokens = Int64.ZERO;
+    expect(subagentState(subs.single), 'done');
   });
 
   test("what a subagent runs on: asked for, else the chat's", () {

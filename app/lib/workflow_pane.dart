@@ -402,7 +402,7 @@ class _AgentRow extends StatelessWidget {
                 ),
               ),
             ),
-            if (a.tokens > 0) Text(_tokens(a.tokens), style: small),
+            if (a.tokens > 0) Text(tokenCount(a.tokens), style: small),
             LiveText(
               () => _agentTime(a),
               live: a.state == 'running' && a.started != 0,
@@ -414,11 +414,6 @@ class _AgentRow extends StatelessWidget {
     );
   }
 }
-
-/// "12.4k tokens".
-String _tokens(int n) => n < 1000
-    ? '$n tokens'
-    : '${(n / 1000).toStringAsFixed(n < 10000 ? 1 : 0)}k tokens';
 
 /// How long an agent ran, or runs; '' when not known.
 String _agentTime(WorkflowAgent a) {

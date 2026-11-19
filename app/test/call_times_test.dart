@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' hide LiveText;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/call_times.dart';
+import 'package:nushi/chat.dart';
 import 'package:nushi/clock.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -10,6 +11,7 @@ import 'package:nushi/live_text.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/status.dart';
+import 'package:nushi/subagents.dart' hide LiveText;
 import 'package:nushi/theme/tokens.dart';
 import 'package:nushi/tool_calls.dart';
 
@@ -39,7 +41,8 @@ Item _said(String id, String text) =>
     Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
 
 /// A transcript with a call of under a second, one of 12 seconds, a run of
-/// three, and a call that runs.
+/// three, a subagent that worked 3m 12s with its tokens, and a call that
+/// runs.
 List<Item> _items() => [
   Item(
     id: 'u',
@@ -62,6 +65,21 @@ List<Item> _items() => [
   _call('g1', 'make lint', 570, 540),
   _call('g2', 'go vet ./...', 538, 530),
   _call('g3', 'go build ./cmd/nushid', 528, 506),
+  _said('m3', 'An agent looks for the callers.'),
+  Item(
+    id: 'x',
+    kind: ItemKind.ITEM_KIND_TOOL_CALL,
+    agent: 'Explore',
+    title: 'Find every caller of store.Get',
+    status: 'completed',
+    subagent: Subagent(
+      state: 'done',
+      started: _ago(500),
+      ended: _ago(200),
+      worked: Int64(192500),
+      tokens: Int64(48120),
+    ),
+  ),
   _said('m4', 'And the whole suite, with a long name to see it give way.'),
   _call(
     'c',
@@ -93,6 +111,10 @@ Future<void> _window(
   }
   expect(find.text('12s'), findsWidgets); // the run's and the running call's
   expect(find.text('1m 04s'), findsOne); // the run's span
+  expect(
+    find.textContaining('3m 12s · 48k tokens', findRichText: true),
+    findsOne,
+  );
   expectTextInside(tester, size.width);
   await render(tester, find.byType(NushiApp), name);
   await tester.pumpWidget(const SizedBox());
@@ -112,6 +134,10 @@ void main() {
   test('times read as a row shows them', () {
     expect(elapsed(const Duration(seconds: 12)), '12s');
     expect(elapsed(const Duration(seconds: 64)), '1m 04s');
+    expect(tokenCount(950), '950 tokens');
+    expect(tokenCount(12400), '12k tokens');
+    expect(tokenCount(9400), '9.4k tokens');
+    expect(tokenCount(1240000), '1.2M tokens');
     // Under a second, replayed (no times), or never ended: nothing.
     expect(callTime(_call('a', 'ls', 1, 0.4)), isNull);
     expect(callTime(Item(status: 'completed')), isNull);
@@ -220,6 +246,7 @@ void main() {
     addTearDown(width.dispose);
     final long = _call('c', 'go test -race ./internal/features/...', 64, null);
     final run = [_call('a', 'make lint', 90, 70), long];
+    final sub = subagentsOf(_items()).single;
     for (final tokens in [Tokens.dark, Tokens.light]) {
       await tester.pumpWidget(
         themed(
@@ -230,7 +257,15 @@ void main() {
               alignment: Alignment.topLeft,
               child: SizedBox(
                 width: w,
-                child: Column(children: [ToolCallView(long), RunView(run)]),
+                child: Column(
+                  children: [
+                    ToolCallView(long),
+                    RunView(run),
+                    // Narrower than a chat gets, its line has no room.
+                    if (w >= 200)
+                      SubagentLine(sub, ChatState('c', '/x'), still: true),
+                  ],
+                ),
               ),
             ),
           ),
@@ -247,6 +282,11 @@ void main() {
         );
         // The subagent's line keeps its time and tokens before its words.
         if (w >= 200) {
+          expect(
+            find.textContaining('3m 12s', findRichText: true),
+            findsOne,
+            reason: 'at $w',
+          );
           expect(time, findsOne, reason: 'at $w');
           expect(tester.getRect(time).right, closeTo(row.right - 12, 12));
           expect(tester.getSize(time).width, lessThan(callTimeRoom));

@@ -118,6 +118,8 @@ Each tool call's row ends with how long it ran, such as **12s**; while it runs, 
 - Calls from before Nushi saw the chat (resumed from a terminal, or replayed by the agent) have no time.
 - A call still running when the turn ends stops counting there.
 
+A helper's (subagent's) row shows the time it actually worked, such as **3m 12s**: its clock stops while it waits for a message. Once a Claude helper is done, its row adds the tokens it used, such as **48k tokens**. Other agents don't report tokens, so their helpers show the time only.
+
 ## Follow the agent's plan
 
 When the agent keeps a to-do list, its plan stays over the box until every step is done, so you always see where it is, even after the turn ends: "Plan · 2 of 5 done", a bar, and the steps with a dot on the one being worked on.
