@@ -22,12 +22,12 @@ func TestParseStat(t *testing.T) {
 		file string
 		want Stat // zero: an error
 	}{
-		{"cat", Stat{Pid: 53695, Ppid: 53477, Pgid: 8, Session: 8, State: 'R', Comm: "cat", Started: at(70323525)}},
-		{"systemd", Stat{Pid: 1, Pgid: 1, Session: 1, State: 'S', Comm: "systemd", Started: at(69168466)}},
-		{"odd-comm", Stat{Pid: 4242, Ppid: 4200, Pgid: 4242, Session: 4100, TTY: 34816, State: 'S', Comm: "a) (b c)", Started: at(70400000)}},
-		{"newline-comm", Stat{Pid: 777, Ppid: 1, Pgid: 777, Session: 777, State: 'S', Comm: "two\nlines", Started: at(1000)}},
+		{"cat", Stat{Pid: 53695, Ppid: 53477, Pgid: 8, State: 'R', Comm: "cat", Started: at(70323525)}},
+		{"systemd", Stat{Pid: 1, Pgid: 1, State: 'S', Comm: "systemd", Started: at(69168466)}},
+		{"odd-comm", Stat{Pid: 4242, Ppid: 4200, Pgid: 4242, TTY: 34816, State: 'S', Comm: "a) (b c)", Started: at(70400000)}},
+		{"newline-comm", Stat{Pid: 777, Ppid: 1, Pgid: 777, State: 'S', Comm: "two\nlines", Started: at(1000)}},
 		{"kworker", Stat{Pid: 57, Ppid: 2, State: 'I', Comm: "kworker/3:1-events", Started: at(150)}},
-		{"zombie", Stat{Pid: 60001, Ppid: 53477, Pgid: 60001, Session: 53477, TTY: 34817, State: 'Z', Comm: "sh", Started: at(70500123)}},
+		{"zombie", Stat{Pid: 60001, Ppid: 53477, Pgid: 60001, TTY: 34817, State: 'Z', Comm: "sh", Started: at(70500123)}},
 		{"short", Stat{}},
 		{"no-parens", Stat{}},
 		{"bad-pid", Stat{}},
@@ -36,9 +36,6 @@ func TestParseStat(t *testing.T) {
 			b, err := os.ReadFile(filepath.Join("testdata", "stat", tc.file))
 			testcheck.NoErr(t, err)
 			got, err := parseStat(b, boot)
-			if tc.want != (Stat{}) {
-				tc.want.SinceBoot = tc.want.Started.Sub(boot)
-			}
 			switch {
 			case tc.want == Stat{} && err == nil:
 				t.Fatalf("parsed %+v, want an error", got)
@@ -61,12 +58,9 @@ func TestStartedAsLstart(t *testing.T) {
 	if got, want := s.Started.Truncate(time.Second), time.Unix(1793405909+703235, 0); !got.Equal(want) {
 		t.Fatalf("started %v, want %v", got, want)
 	}
-	if want := 703235*time.Second + 250*time.Millisecond; s.SinceBoot != want {
-		t.Fatalf("since boot %v, want %v", s.SinceBoot, want)
-	}
 }
 
-// A clock step moves btime, and Started with it, but not SinceBoot.
+// A clock step moves btime, and Started with it.
 func TestClockStep(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join("testdata", "stat", "cat"))
 	testcheck.NoErr(t, err)
@@ -74,7 +68,7 @@ func TestClockStep(t *testing.T) {
 	testcheck.NoErr(t, err)
 	after, err := parseStat(b, boot.Add(2*time.Second))
 	testcheck.NoErr(t, err)
-	if after.Started.Sub(before.Started) != 2*time.Second || after.SinceBoot != before.SinceBoot {
+	if after.Started.Sub(before.Started) != 2*time.Second {
 		t.Fatalf("before %+v\nafter %+v", before, after)
 	}
 }
