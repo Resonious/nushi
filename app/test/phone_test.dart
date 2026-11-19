@@ -620,13 +620,13 @@ void main() {
     );
     await tester.tap(find.bySemanticsLabel('Settings'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byType(Toggle));
     await tester.pumpAndSettle();
     final on = fake.calls.whereType<SetPushSubscriptionRequest>().single;
     expect(on.endpoint, 'https://web.push.apple.com/QGuQyav');
     expect(on.auth, hasLength(16));
     expect(phone.push, PushState.on);
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byType(Toggle));
     await tester.pumpAndSettle();
     expect(
       fake.calls.whereType<SetPushSubscriptionRequest>().last.endpoint,

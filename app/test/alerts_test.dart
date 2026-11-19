@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/alerts.dart';
 import 'package:nushi/alerts_macos.dart';
 import 'package:nushi/alerts_settings.dart';
+import 'package:nushi/controls.dart' show Toggle;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/settings.dart';
@@ -365,10 +366,10 @@ void main() {
 
     Finder switchOf(String label) => find.descendant(
       of: find.ancestor(of: find.text(label), matching: find.byType(Row)).first,
-      matching: find.byType(Switch),
+      matching: find.byType(Toggle),
     );
-    expect(tester.widget<Switch>(switchOf('Sound')).value, false);
-    expect(tester.widget<Switch>(switchOf('Dock badge')).value, true);
+    expect(tester.widget<Toggle>(switchOf('Sound')).value, false);
+    expect(tester.widget<Toggle>(switchOf('Dock badge')).value, true);
     await tester.tap(switchOf('A turn ends'));
     await tester.tap(switchOf('Sound'));
     await tester.pump();

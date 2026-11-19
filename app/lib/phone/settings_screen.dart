@@ -72,17 +72,25 @@ class SettingsScreen extends StatelessWidget {
               _Line('This device', phone.name),
               _Line('Connection', connected ? 'Connected' : 'Not connected'),
               const PhoneHeading('Notifications'),
-              SwitchListTile(
-                title: Text('Notifications', style: phoneText(context)),
-                subtitle: Text(
-                  note,
-                  style: phoneText(context, color: t.textMuted, size: 13),
+              // The app's one on/off (solid off track, the same knob
+              // either way), the phone's touch target around it.
+              MergeSemantics(
+                child: ListTile(
+                  title: Text('Notifications', style: phoneText(context)),
+                  subtitle: Text(
+                    note,
+                    style: phoneText(context, color: t.textMuted, size: 13),
+                  ),
+                  trailing: Toggle(
+                    value: phone.push == PushState.on,
+                    onChanged:
+                        phone.canPush &&
+                            phone.push != PushState.denied &&
+                            connected
+                        ? (on) => unawaited(_push(context, on: on))
+                        : null,
+                  ),
                 ),
-                value: phone.push == PushState.on,
-                onChanged:
-                    phone.canPush && phone.push != PushState.denied && connected
-                    ? (on) => unawaited(_push(context, on: on))
-                    : null,
               ),
               const PhoneHeading('Theme'),
               _Themes(phone),

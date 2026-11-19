@@ -357,7 +357,7 @@ void main() {
   ) async {
     final fake = _fake(30);
     final d = await open(tester, fake);
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byType(Toggle));
     await tester.pumpAndSettle();
     expect(find.text('Stop keeping transcripts?'), findsOneWidget);
     await tester.tap(find.text('Delete copies'));

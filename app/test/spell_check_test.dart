@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/composer.dart';
+import 'package:nushi/controls.dart' show Toggle;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/native.dart';
@@ -367,7 +368,7 @@ void main() {
       expect(row(), findsOne);
       expect(checkSpelling.value, isTrue);
       await tester.tap(
-        find.descendant(of: row(), matching: find.byType(Switch)),
+        find.descendant(of: row(), matching: find.byType(Toggle)),
       );
       await tester.pumpAndSettle();
       expect(checkSpelling.value, isFalse);

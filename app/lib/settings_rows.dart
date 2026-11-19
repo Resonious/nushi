@@ -242,7 +242,7 @@ class SettingsRow extends StatelessWidget {
   }
 }
 
-/// A switch, Settings' size everywhere. [onChanged] takes a change; or
+/// A switch ([Toggle]), Settings' everywhere. [onChanged] takes a change; or
 /// [run] makes it as a call, the switch off while it runs (a double click
 /// sends once) and its error shown, as a [RunButton]. Off with neither.
 class SettingsSwitch extends StatefulWidget {
@@ -268,18 +268,13 @@ class _SettingsSwitchState extends State<SettingsSwitch> {
   @override
   Widget build(BuildContext context) => ValueListenableBuilder(
     valueListenable: _runner,
-    builder: (context, running, _) => SizedBox(
-      height: 22,
-      child: FittedBox(
-        child: Switch(
-          value: widget.value,
-          onChanged: switch (widget.run) {
-            null => widget.onChanged,
-            _ when running => null,
-            final run => (on) => _runner.run(context, () => run(on: on)),
-          },
-        ),
-      ),
+    builder: (context, running, _) => Toggle(
+      value: widget.value,
+      onChanged: switch (widget.run) {
+        null => widget.onChanged,
+        _ when running => null,
+        final run => (on) => _runner.run(context, () => run(on: on)),
+      },
     ),
   );
 }

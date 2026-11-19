@@ -414,6 +414,14 @@ Widget _fields() => page('Fields and pickers', [
     ('off', const SettingsSwitch(value: false, onChanged: _toggle)),
     ('disabled', const SettingsSwitch(value: true)),
   ]),
+  stateRow(
+    'Toggle, on',
+    ({required on}) => Toggle(value: true, onChanged: on ? _toggle : null),
+  ),
+  stateRow(
+    'Toggle, off',
+    ({required on}) => Toggle(value: false, onChanged: on ? _toggle : null),
+  ),
   plainRow('checkbox', [
     ('on', Checkbox(value: true, onChanged: (_) {})),
     ('off', Checkbox(value: false, onChanged: (_) {})),

@@ -77,3 +77,7 @@ The owner found the app's look dated and approved a mock of a fresh one (2026-11
 - A waiting card filled with `needsSoft`, as before: the look says a state with a pill or a mark, and a tinted card makes every button on it a different grey.
 - A round Stop filled solid red (the transcript pass, with `stop` and `onStop` tokens), as the mock has it: the owner didn't want it bright red, and the tokens went with it.
 - Queue and Stop and send only as icons, as before: on a phone they were the only way to do either, and nothing said what they were.
+
+## Amendment (2026-11-19): a switch reads as on or off at a glance
+- The switch's off look (a `lifted` track, a small `textMuted` thumb) was hard to tell from a disabled one, a faint dot on a card. A switch is now Nushi's own `Toggle` (`controls_toggle.dart`), not Material's `Switch` and its theme: a solid track, `accent` on and a solid grey off (`textMuted` at 55%), and one white knob, the same size on and off and pressed, so only its place moves. Every on/off is one: `SettingsSwitch` in Settings and the details, and the phone's Notifications.
+

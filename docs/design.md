@@ -151,7 +151,8 @@ Everything clickable is one of these (`controls.dart` and its parts, ADR [0049](
 | `Pressable` | the base of every control: hover, focus, press and its tooltip, for a new shared control in `controls*.dart` | a view's one-off button |
 | `PhoneIcon`, `PhoneButton` (`phone/ui.dart`) | the phone's icon button (44 square, a round tint pressed) and its full-width button (`primary` on the accent, `destructive` in red): on `Pressable`, so the focus ring and a press at once, as the Mac's | the Mac (`IconTap`, `Button`) |
 | `Swatch`, `DragGrip`, `KeyCap`, `keyHint`, `LineSlider` | a colour to pick; what can be dragged; a key's cap beside its action; a shortcut in small code; a value along a line | |
-| `SettingsSwitch` | an on/off, Settings' size everywhere; `run` makes it a call | |
+| `Toggle` | an on/off: a solid track, `accent` on and a solid grey off (`Toggle.offTrack`, the muted text's at half strength), the same round knob either way, so only the knob moves | a faint dot on a bare track; Material's `Switch` |
+| `SettingsSwitch` | a `Toggle` in a settings row, and everywhere else an on/off sits; `run` makes it a call | |
 | `nushiDialog` (`widgets.dart`) | every dialog: a title, content 460 wide (`width` for a form), actions large at the right; `onClose` puts a × at the title's end (a list to manage) | an `AlertDialog` of a view's own |
 | `confirm` | a yes/no question: Cancel and the action, `destructive` in red (Cancel then has the focus) | |
 | `cardBox`, `floatBox`, `framed` (`theme.dart`) | a card on a pane; what floats (hairline, soft shadow); a picture that needs an edge | an outlined box |
