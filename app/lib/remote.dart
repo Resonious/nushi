@@ -129,6 +129,8 @@ class _RemoteSectionState extends State<RemoteSection> {
                 ),
               ],
               empty: 'No phones paired',
+              // Why a button is off, where its fade alone said nothing.
+              footer: _phonesNote(r),
               children: [
                 for (final d in r.devices) _DeviceRow(d, widget.client),
               ],
@@ -138,6 +140,18 @@ class _RemoteSectionState extends State<RemoteSection> {
       },
     );
   }
+}
+
+/// The Phones group's note of why its buttons are off, if any are: Pair
+/// a phone while Remote access is off, a test notification for a phone
+/// whose notifications are off.
+Widget? _phonesNote(Remote r) {
+  final lines = [
+    if (!r.on) 'Turn on Remote access to pair a phone.',
+    if (r.devices.any((d) => !d.push))
+      'A test notification needs the phone’s notifications on.',
+  ];
+  return lines.isEmpty ? null : Text(lines.join(' '));
 }
 
 /// A paired device: its name, whether it's the web app or an app, whether

@@ -389,6 +389,21 @@ void main() {
     await closeView(tester, d);
   }, variant: macOS);
 
+  testWidgets('Phones says why its buttons are off', (tester) async {
+    final d = await pumpSettingsApp(
+      tester,
+      settingsFake(),
+      SettingsSection.remote,
+    );
+    // Remote access off, the phone's notifications off: both said.
+    expect(find.textContaining('Turn on Remote access to pair'), findsOne);
+    expect(
+      find.textContaining('A test notification needs the phone’s'),
+      findsOne,
+    );
+    await closeView(tester, d);
+  }, variant: macOS);
+
   testWidgets('900 wide, they stay beside', (tester) async {
     final d = await pumpSettingsApp(
       tester,
