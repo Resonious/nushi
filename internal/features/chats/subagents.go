@@ -24,7 +24,7 @@ func (c *chat) subagentLocked(call *model.Item) bool { //nolint:gocyclo // one t
 	}
 	old := sa
 	var background, elsewhere bool
-	if sub := c.kind.subagents; sub != nil {
+	if sub := c.kind.subOutput; sub != nil {
 		if call.AgentID == "" {
 			call.AgentID = sub.SubagentID(call.Text)
 		}

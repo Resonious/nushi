@@ -77,6 +77,11 @@ type Subagents interface {
 	// Parent reads the subagent tool call an update comes from, from its
 	// _meta.
 	Parent(meta map[string]any) string
+}
+
+// SubagentOutput reads what a subagent call's output tells of its
+// subagent (Claude's), beyond Subagents.
+type SubagentOutput interface {
 	// Background says a subagent call's output tells it started the
 	// subagent in the background: it runs on past the call, until its
 	// report.
