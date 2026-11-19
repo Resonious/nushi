@@ -71,9 +71,7 @@ func aPiChat(t *testing.T, agent string) {
 	must(a.c.RewindChat(ctx, connect.NewRequest(&nushiv1.RewindChatRequest{ChatId: id, ItemId: second})))
 	a.waitFor("the rewind", idle)
 
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	snap = a.get(id)
 	if got := transcript(a.follow(id, snap)); got != "USER_MESSAGE:hello:\nAGENT_MESSAGE:You said: hello:" {
 		t.Errorf("replayed:\n%s", got)

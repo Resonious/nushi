@@ -57,8 +57,6 @@ func TestPinChats(t *testing.T) {
 	want("an archived chat pinned", map[string]int32{x: 0, y: 1})
 
 	// Kept across a restart.
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	want("after a restart", map[string]int32{x: 0, y: 1, z: 0})
 }

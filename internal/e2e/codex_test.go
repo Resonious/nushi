@@ -55,9 +55,7 @@ func TestACodexChat(t *testing.T) {
 		t.Errorf("transcript:\n%s\nwant:\n%s", got, want)
 	}
 
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	snap = a.get(first.ChatId)
 	if got := transcript(a.follow(first.ChatId, snap)); got != want {
 		t.Errorf("replayed:\n%s\nwant:\n%s", got, want)

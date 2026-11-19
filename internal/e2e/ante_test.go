@@ -75,9 +75,7 @@ func TestAnAnteChat(t *testing.T) {
 		t.Errorf("rewound:\n%s", rewound)
 	}
 
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	snap = a.get(id)
 	if got := transcript(a.follow(id, snap)); got != "USER_MESSAGE:hello:\nAGENT_MESSAGE:You said: hello:" {
 		t.Errorf("replayed:\n%s", got)
@@ -136,9 +134,7 @@ func TestAnAnteSubagent(t *testing.T) {
 		t.Errorf("%d still running", snap.Status.Background)
 	}
 
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	snap = a.get(id)
 	if got := subagentView(a.follow(id, snap)); got != live {
 		t.Errorf("reopened:\n%s\nlive:\n%s", got, live)

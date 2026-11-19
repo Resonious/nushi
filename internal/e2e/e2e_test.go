@@ -64,6 +64,17 @@ type daemon struct {
 	claudes *claudes      // the fake claudes Claude's Go agent ran
 	tools   *tools.Service
 	hub     *events.Hub
+	dataDir string           // what it was started on, for reopen
+	history *acptest.History // and the fake agent's sessions
+}
+
+// reopen stops d and starts it again in its place, on the same data folder
+// and fake agent's sessions, as after a restart, and opens an app on it.
+func (d *daemon) reopen(t *testing.T) *app {
+	t.Helper()
+	d.stop()
+	*d = *startDaemon(t, d.dataDir, d.history)
+	return open(t, d)
 }
 
 // fakeHarness is the "fake" agent's: Claude's notices, as startDaemon says,
@@ -246,7 +257,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		svc.Close()
 	}
 	t.Cleanup(stop)
-	return &daemon{url: srv.URL, devices: devices.URL, stop: stop, chats: svc, restart: restarts, looks: looks, lapsed: lapsed, claudes: cls, tools: toolSvc, hub: hub, kill: func() {
+	return &daemon{url: srv.URL, devices: devices.URL, stop: stop, chats: svc, restart: restarts, looks: looks, lapsed: lapsed, claudes: cls, tools: toolSvc, hub: hub, dataDir: dataDir, history: history, kill: func() {
 		mu.Lock()
 		defer mu.Unlock()
 		kill()
@@ -504,10 +515,7 @@ func TestDaemonRestartReopensChats(t *testing.T) {
 	a.waitFor("the second reply", turnEnded(chatID))
 	before := transcript(a.get(chatID).Items)
 
-	d.stop() // the daemon goes, and its agents with it
-	d = startDaemon(t, dataDir, history)
-
-	a = open(t, d)
+	a = d.reopen(t) // the daemon goes, and its agents with it
 	list := must(a.c.ListChats(ctx, connect.NewRequest(&nushiv1.ListChatsRequest{}))).Chats
 	if len(list) != 1 || list[0].Id != chatID {
 		t.Fatalf("chats = %v", list)
@@ -600,9 +608,7 @@ func TestRenameArchiveAndDelete(t *testing.T) {
 
 	// After a restart the chat is still archived and renamed; unarchived,
 	// it is replayed and carries on.
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	if c := list(); len(c) != 1 || !c[kept].Archived || c[kept].Title != "Greeting" {
 		t.Fatalf("chats after restart = %v", c)
 	}

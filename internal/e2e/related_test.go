@@ -62,8 +62,7 @@ func TestRelatedWorktrees(t *testing.T) {
 	}
 	event("removed")
 
-	d.stop()
-	a = open(t, startDaemon(t, data, history))
+	a = d.reopen(t)
 	if got := read(); len(got) != 1 || !is(got[0], "removed") {
 		t.Errorf("after a restart: %v", got)
 	}

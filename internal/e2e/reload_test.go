@@ -51,9 +51,7 @@ func TestAnEmptyChatReopensAfterARestart(t *testing.T) {
 	d := startDaemon(t, dataDir, history)
 	a := open(t, d)
 	chatID := a.start(&nushiv1.StartChatRequest{Folder: t.TempDir()})
-	d.stop()
-
-	a = open(t, startDaemon(t, dataDir, history))
+	a = d.reopen(t)
 	items := a.follow(chatID, a.get(chatID))
 	if got := transcript(items); got != "" {
 		t.Errorf("transcript after a restart:\n%s", got)
@@ -80,8 +78,7 @@ func TestAResponseStoppedBySafeguards(t *testing.T) {
 		t.Errorf("transcript:\n%s\nwant:\n%s", got, want)
 	}
 
-	d.stop()
-	a = open(t, startDaemon(t, dataDir, history))
+	a = d.reopen(t)
 	if got := transcript(a.follow(chatID, a.get(chatID))); got != want {
 		t.Errorf("after a restart:\n%s\nwant:\n%s", got, want)
 	}
