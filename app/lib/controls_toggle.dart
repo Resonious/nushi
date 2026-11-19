@@ -2,7 +2,9 @@ part of 'controls.dart';
 
 /// An on/off that can't be misread: a solid track in the accent when on,
 /// a solid grey one when off (never a faint dot on a bare track), and a
-/// round white knob the same size either way, so only the knob moves.
+/// round knob in the theme's on-accent colour (white in most sets, near
+/// black where the accent is pastel), the same size either way, so only
+/// the knob moves.
 /// Clicking it, or Enter or Space with the focus, flips it; without
 /// [onChanged] it's disabled (faded, as every control). Settings' rows use
 /// it through `SettingsSwitch`.
