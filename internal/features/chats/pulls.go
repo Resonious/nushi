@@ -15,19 +15,17 @@ import (
 // A chat's pull requests (ADR 0117): found by the head of a branch it
 // pushed (they follow the branch; ADR 0059's amendment of 2026-11-16),
 // opened by one of its tool calls, or linked by hand; at most
-// model.MaxPulls. The record keeps them in Pulls, and the first in Pull
-// for a release before Pulls (ADR 0108).
+// model.MaxPulls. The record keeps them in Pulls; one written before
+// Pulls has its first in Pull, read still, and cleared on the next write.
 
 // errTooManyPulls refuses one pull request too many picked by hand.
 var errTooManyPulls = fmt.Errorf("a chat holds at most %d pull requests", model.MaxPulls)
 
-// setPulls writes a chat's linked pull requests, the first also as Pull.
+// setPulls writes a chat's linked pull requests, and clears an older
+// record's Pull, which they replace.
 func setPulls(s *model.ChatRecord, pulls []model.ChatGitHub) {
 	s.Pulls, s.Pull = pulls, nil
-	if len(pulls) > 0 {
-		p := pulls[0]
-		s.Pull = &p
-	} else {
+	if len(pulls) == 0 {
 		s.Pulls = nil
 	}
 }
@@ -188,7 +186,7 @@ func (s *Service) UnlinkPull(chatID string, pull model.ChatGitHub) error {
 	if i < 0 && !startedFrom(r, pull) {
 		return errors.New("not one of the chat's pull requests")
 	}
-	gone := pull
+	var gone model.ChatGitHub
 	if i >= 0 {
 		gone = linked[i]
 		linked = slices.Delete(linked, i, i+1)
@@ -211,7 +209,6 @@ func (s *Service) UnlinkPull(chatID string, pull model.ChatGitHub) error {
 				s.NoPulls = append(s.NoPulls, k)
 			}
 		}
-		s.NoPull = gone.Number // a release before Pulls doesn't find it again either
 	})
 	c.logLocked().Info("pull request unlinked")
 	return nil
