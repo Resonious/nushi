@@ -174,9 +174,24 @@ void keepGitHubLogins(Iterable<GitHubHost> hosts) {
       for (final h in hosts)
         if (h.login.isNotEmpty) h.host: h.login,
     });
+  _working
+    ..clear()
+    ..addAll(hosts.where(githubHostWorks).map((h) => h.host));
 }
 
 final Map<String, String> _logins = runMap();
+
+/// The hosts the last listing found signed in and working.
+final Set<String> _working = runSet();
+
+/// Whether [h] is signed in (GitHub said who) and works.
+bool githubHostWorks(GitHubHost h) =>
+    h.login.isNotEmpty && h.problem.isEmpty && !h.needsOk;
+
+/// Whether a listing of the hosts this launch (by any GitHub view, or
+/// Settings › GitHub) found one that works: Settings' nav dot, known
+/// without asking GitHub again.
+bool get githubSignedInKnown => _working.isNotEmpty;
 
 /// A comment in the pull request's conversation, for the agent.
 Reply commentReply(GitHubComment c) => (

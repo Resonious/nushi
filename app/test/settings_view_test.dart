@@ -341,10 +341,67 @@ void main() {
     final page = tester.getRect(find.text('General').last);
     final modal = tester.getRect(find.byKey(const ValueKey('settings-modal')));
     expect(page.top - modal.top, lessThan(30));
-    // GitHub's host is signed in, Jira's site has a token: both dotted.
+    // Nothing known yet this launch: no dot, and nothing asked for one.
+    expect(find.byKey(const ValueKey('settings-nav-dot-github')), findsNothing);
+    expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsNothing);
+    // GitHub's host is signed in, Jira said who the site's token is: once
+    // each page found so, both dotted, and still on the next opening.
+    for (final s in ['github', 'jira', 'general']) {
+      await tester.tap(find.byKey(ValueKey('settings-nav-$s')));
+      await tester.pumpAndSettle();
+    }
     expect(find.byKey(const ValueKey('settings-nav-dot-github')), findsOne);
     expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsOne);
     expect(find.byKey(const ValueKey('settings-nav-dot-remote')), findsNothing);
+    d.closeSettings();
+    await tester.pumpAndSettle();
+    d.openSettings(section: SettingsSection.general);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('settings-nav-dot-github')), findsOne);
+    expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsOne);
+    await closeView(tester, d);
+  }, variant: macOS);
+
+  testWidgets('opening Settings asks GitHub and Jira nothing: their pages '
+      'do, as they show', (tester) async {
+    final fake = settingsFake();
+    final inner = fake.answer!;
+    final asked = <String>[];
+    fake.answer = (input) {
+      if (input is ListGitHubHostsRequest ||
+          input is ListJiraSitesRequest ||
+          input is CheckJiraSiteRequest) {
+        asked.add(input.runtimeType.toString());
+      }
+      return inner(input);
+    };
+    final d = await pumpSettingsApp(tester, fake, SettingsSection.appearance);
+    expect(asked, isEmpty);
+    await closeView(tester, d);
+  }, variant: macOS);
+
+  testWidgets('a Jira site whose token Jira turns down has no dot, though '
+      'listed without a problem', (tester) async {
+    final fake = settingsFake();
+    final inner = fake.answer!;
+    var works = true;
+    fake.answer = (input) => switch (input) {
+      CheckJiraSiteRequest() when !works => throw ConnectException(
+        Code.unauthenticated,
+        'Jira turned the token down',
+      ),
+      _ => inner(input),
+    };
+    final d = await pumpSettingsApp(tester, fake, SettingsSection.jira);
+    expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsOne);
+    // The token revoked: the next check takes the dot away.
+    works = false;
+    await tester.tap(find.byKey(const ValueKey('settings-nav-general')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('settings-nav-jira')));
+    await tester.pumpAndSettle();
+    expect(find.text('Not connected'), findsOne);
+    expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsNothing);
     await closeView(tester, d);
   }, variant: macOS);
 

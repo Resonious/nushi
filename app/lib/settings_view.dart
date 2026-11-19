@@ -14,6 +14,7 @@ import 'package:nushi/keys.dart';
 import 'package:nushi/logs_section.dart';
 import 'package:nushi/mcp.dart';
 import 'package:nushi/remote.dart';
+import 'package:nushi/send_to_agent.dart';
 import 'package:nushi/settings_appearance.dart';
 import 'package:nushi/settings_general.dart';
 import 'package:nushi/settings_nav.dart';
@@ -50,8 +51,8 @@ class _SettingsViewState extends State<SettingsView> {
   /// (SetSettings), so each starts from what the one before set.
   Future<void> _changes = Future.value();
 
-  /// The integrations with an account that works, for the nav's dots:
-  /// asked once Settings opens, then as their pages say.
+  /// The integrations with an account that works, for the nav's dots: as
+  /// known when Settings opens, then as their pages say.
   final Set<SettingsSection> _connected = {};
 
   Daemon get daemon => widget.daemon;
@@ -62,25 +63,12 @@ class _SettingsViewState extends State<SettingsView> {
     setState(() => on ? _connected.add(s) : _connected.remove(s));
   }
 
-  /// Asks which integrations have an account that works: a GitHub host
-  /// signed in, a Jira site without a problem. A failure is no dot.
-  void _askConnected() {
-    unawaited(
-      daemon.client
-          .listGitHubHosts(ListGitHubHostsRequest())
-          .then(
-            (r) => _connect(.github, on: githubConnected(r.hosts)),
-            onError: (_) {},
-          ),
-    );
-    unawaited(
-      daemon.client
-          .listJiraSites(ListJiraSitesRequest())
-          .then(
-            (r) => _connect(.jira, on: jiraConnected(r.sites)),
-            onError: (_) {},
-          ),
-    );
+  /// The integrations already known to work this launch, without asking
+  /// anything: a GitHub listing that found a host signed in, a Jira check
+  /// that said who. Each page then marks its own as it finds it.
+  void _knownConnected() {
+    if (githubSignedInKnown) _connected.add(.github);
+    if (jiraConnectedKnown) _connected.add(.jira);
   }
 
   @override
@@ -91,7 +79,7 @@ class _SettingsViewState extends State<SettingsView> {
       if (mounted && !_focus.hasFocus) _focus.requestFocus();
     });
     _ask();
-    _askConnected();
+    _knownConnected();
   }
 
   @override

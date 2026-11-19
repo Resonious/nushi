@@ -9,6 +9,7 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.connect.client.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/menu.dart';
+import 'package:nushi/run_state.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
@@ -90,6 +91,8 @@ class _JiraPageState extends State<JiraPage> {
       }
       return;
     }
+    final ids = {for (final s in r.sites) s.id};
+    _jiraWorks.removeWhere((id, _) => !ids.contains(id));
     if (!mounted) return;
     widget.onSites?.call(r.sites);
     setState(() {
@@ -111,10 +114,15 @@ class _JiraPageState extends State<JiraPage> {
         CheckJiraSiteRequest(site: id),
       );
       said = 'Connected as ${r.name}';
+      _jiraWorks[id] = true;
     } on Object catch (e) {
       said = errorText(e);
+      _jiraWorks[id] = false;
     }
-    if (mounted) setState(() => _checked[id] = said);
+    if (!mounted) return;
+    setState(() => _checked[id] = said);
+    // The nav's dot follows what Jira said, not only the listing.
+    if (_sites case final sites?) widget.onSites?.call(sites);
   }
 
   Future<void> _remove(JiraSite s) async {
@@ -153,6 +161,7 @@ class _JiraPageState extends State<JiraPage> {
       _adding = false;
       _checked[r.site.id] = 'Connected as ${r.site.name}';
     });
+    _jiraWorks[r.site.id] = true;
     unawaited(_load());
   }
 
@@ -235,8 +244,17 @@ class _JiraPageState extends State<JiraPage> {
 }
 
 /// Whether any of [sites] has a token that works: Settings' nav dot.
-bool jiraConnected(Iterable<JiraSite> sites) =>
-    sites.any((s) => s.problem.isEmpty && !s.needsOk);
+bool jiraConnected(Iterable<JiraSite> sites) => sites.any(
+  (s) => s.problem.isEmpty && !s.needsOk && (_jiraWorks[s.id] ?? false),
+);
+
+/// Whether Jira, asked this launch (Settings › Jira checks each site as it
+/// opens), said who a site's token is: Settings' nav dot, known without
+/// asking Jira again.
+bool get jiraConnectedKnown => _jiraWorks.values.any((on) => on);
+
+/// Each site checked this launch: whether Jira took its token.
+final Map<String, bool> _jiraWorks = runMap();
 
 /// A site's row: who its token is (Jira was asked: [checked]) and its
 /// email, or what's wrong, and when the token expires if soon; "Connected"
