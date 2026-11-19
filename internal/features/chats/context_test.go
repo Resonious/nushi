@@ -2,7 +2,6 @@ package chats
 
 import (
 	"context"
-	"log/slog"
 	"testing"
 
 	acp "github.com/afrase/acp-go/unstable"
@@ -13,7 +12,7 @@ import (
 func TestContextUsageLeavesNoTrace(t *testing.T) {
 	agent := &fakeAgent{updates: []acp.SessionUpdate{chunk("m1", "## Context"), chunk("m2", "## Context Usage")}}
 	var events int
-	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) { agent.h = h; return agent, nil }}}, Options{Publish: func(model.Event) { events++ }})
+	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: agent.launch}}, Options{Publish: func(model.Event) { events++ }})
 	c := startChat(t, svc, t.TempDir())
 	if _, err := svc.ContextUsage(context.Background(), c.id); err == nil {
 		t.Error("ran /context for an agent without the command")

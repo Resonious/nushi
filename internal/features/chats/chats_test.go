@@ -3,7 +3,6 @@ package chats
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -34,7 +33,7 @@ func TestPromptStreamsTheReply(t *testing.T) {
 		}
 	}
 	agent := &fakeAgent{updates: []acp.SessionUpdate{chunk("m1", "Hel"), chunk("m1", "lo"), chunk("", "!"), chunk("m2", "Bye")}}
-	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) { agent.h = h; return agent, nil }}}, Options{Publish: publish})
+	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: agent.launch}}, Options{Publish: publish})
 
 	folder := t.TempDir()
 	id, err := svc.Start(context.Background(), "", folder, false)
@@ -330,7 +329,7 @@ func TestUsageIsWhatTheAgentReported(t *testing.T) {
 		updates: []acp.SessionUpdate{usage(100, &acp.Cost{Amount: 0.5, Currency: "USD"}), usage(120, nil)},
 		usage:   &acp.Usage{InputTokens: 3, OutputTokens: 4, CachedReadTokens: new(uint64(5)), TotalTokens: 12},
 	}
-	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) { agent.h = h; return agent, nil }}}, Options{Publish: publish})
+	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: agent.launch}}, Options{Publish: publish})
 	id := startChat(t, svc, t.TempDir()).id
 	if err := svc.Prompt(t.Context(), id, model.Message{Text: "hi"}, SendIdle); err != nil {
 		t.Fatal(err)
@@ -513,7 +512,7 @@ func TestToolsForAChatOnAnIssue(t *testing.T) {
 		asked = append(asked, chat+" "+agent+" "+issue.Key)
 		return []acp.MCPServer{{Stdio: &acp.MCPServerStdio{Name: "nushi", Command: "/bin/true"}}}
 	}
-	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake", ClientMCP: true}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) { agent.h = h; return agent, nil }}}, Options{Tools: tools})
+	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake", ClientMCP: true}, Launch: agent.launch}}, Options{Tools: tools})
 	startChat(t, svc, t.TempDir())
 	if len(agent.mcp) != 0 {
 		t.Errorf("a chat without an issue got %v", agent.mcp)
@@ -537,7 +536,7 @@ func TestNoToolsForAnAgentThatTakesNone(t *testing.T) {
 	tools := func(string, string, *model.ChatIssue) []acp.MCPServer {
 		return []acp.MCPServer{{Stdio: &acp.MCPServerStdio{Name: "nushi", Command: "/bin/true"}}}
 	}
-	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) { agent.h = h; return agent, nil }}}, Options{Tools: tools})
+	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: agent.launch}}, Options{Tools: tools})
 	startChat(t, svc, t.TempDir())
 	if len(agent.mcp) != 0 {
 		t.Errorf("session/new got %v", agent.mcp)

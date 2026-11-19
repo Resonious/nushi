@@ -2,7 +2,6 @@ package chats
 
 import (
 	"context"
-	"log/slog"
 	"reflect"
 	"slices"
 	"testing"
@@ -17,7 +16,7 @@ import (
 func TestSideChatKeepsToItself(t *testing.T) {
 	agent := &fakeAgent{}
 	sessions := &memSessions{}
-	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) { agent.h = h; return agent, nil }}}, Options{Sessions: sessions})
+	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: agent.launch}}, Options{Sessions: sessions})
 	ctx := context.Background()
 	id := startChat(t, svc, t.TempDir()).id
 	side, err := svc.Fork(ctx, id)
