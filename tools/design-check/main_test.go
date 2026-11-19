@@ -54,8 +54,8 @@ func TestCheck(t *testing.T) {
 	}
 	var got []string
 	for _, u := range uses {
-		rel, _ := filepath.Rel(root, u.path)
-		got = append(got, rel+":"+strconv.Itoa(u.line)+": "+u.what)
+		rel, _ := filepath.Rel(root, u.Path)
+		got = append(got, rel+":"+strconv.Itoa(u.Line)+": "+u.What)
 	}
 	slices.Sort(got)
 	const (
