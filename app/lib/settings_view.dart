@@ -13,7 +13,6 @@ import 'package:nushi/jira_settings.dart';
 import 'package:nushi/keys.dart';
 import 'package:nushi/logs_section.dart';
 import 'package:nushi/mcp.dart';
-import 'package:nushi/panes.dart';
 import 'package:nushi/remote.dart';
 import 'package:nushi/settings_appearance.dart';
 import 'package:nushi/settings_general.dart';
@@ -21,7 +20,6 @@ import 'package:nushi/settings_nav.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/settings_terminal.dart';
 import 'package:nushi/skills.dart';
-import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 
 const settingsKey = Cmd(LogicalKeyboardKey.comma);
@@ -52,7 +50,38 @@ class _SettingsViewState extends State<SettingsView> {
   /// (SetSettings), so each starts from what the one before set.
   Future<void> _changes = Future.value();
 
+  /// The integrations with an account that works, for the nav's dots:
+  /// asked once Settings opens, then as their pages say.
+  final Set<SettingsSection> _connected = {};
+
   Daemon get daemon => widget.daemon;
+
+  /// Marks [s] connected or not, as its page or a listing found it.
+  void _connect(SettingsSection s, {required bool on}) {
+    if (!mounted || _connected.contains(s) == on) return;
+    setState(() => on ? _connected.add(s) : _connected.remove(s));
+  }
+
+  /// Asks which integrations have an account that works: a GitHub host
+  /// signed in, a Jira site without a problem. A failure is no dot.
+  void _askConnected() {
+    unawaited(
+      daemon.client
+          .listGitHubHosts(ListGitHubHostsRequest())
+          .then(
+            (r) => _connect(.github, on: githubConnected(r.hosts)),
+            onError: (_) {},
+          ),
+    );
+    unawaited(
+      daemon.client
+          .listJiraSites(ListJiraSitesRequest())
+          .then(
+            (r) => _connect(.jira, on: jiraConnected(r.sites)),
+            onError: (_) {},
+          ),
+    );
+  }
 
   @override
   void initState() {
@@ -62,6 +91,7 @@ class _SettingsViewState extends State<SettingsView> {
       if (mounted && !_focus.hasFocus) _focus.requestFocus();
     });
     _ask();
+    _askConnected();
   }
 
   @override
@@ -136,11 +166,18 @@ class _SettingsViewState extends State<SettingsView> {
     ),
     SettingsSection.jira => SettingsPage(
       title: s.title,
-      children: [JiraPage(daemon)],
+      children: [
+        JiraPage(daemon, onSites: (s) => _connect(.jira, on: jiraConnected(s))),
+      ],
     ),
     SettingsSection.github => SettingsPage(
       title: s.title,
-      children: [GitHubPage(daemon)],
+      children: [
+        GitHubPage(
+          daemon,
+          onHosts: (h) => _connect(.github, on: githubConnected(h)),
+        ),
+      ],
     ),
     SettingsSection.logs => LogsSection(
       daemon: daemon,
@@ -151,8 +188,6 @@ class _SettingsViewState extends State<SettingsView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = NushiTheme.of(context);
-    final t = theme.t;
     final section = daemon.settingsOpen?.section ?? daemon.lastSettings;
     return CallbackShortcuts(
       bindings: {
@@ -163,42 +198,36 @@ class _SettingsViewState extends State<SettingsView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // The modal's title bar: no sidebar button or window drag, as
-            // a view's header at the window's top has (ADR 0087).
-            Container(
-              height: PaneHeader.height,
-              padding: const EdgeInsets.only(left: 16, right: 8),
-              decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: t.line)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Settings',
-                      style: theme.ui(t.text, weight: FontWeight.w600),
-                    ),
-                  ),
-                  IconTap(
-                    Icons.close,
-                    tooltip: withKey('Close', 'Esc'),
-                    onTap: daemon.closeSettings,
-                  ),
-                ],
-              ),
-            ),
             Expanded(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SettingsNav(
                     section: section,
+                    connected: _connected,
                     onPick: (s) => daemon.openSettings(section: s),
                   ),
                   Expanded(
-                    child: KeyedSubtree(
-                      key: ValueKey(section),
-                      child: _page(section),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: KeyedSubtree(
+                            key: ValueKey(section),
+                            child: _page(section),
+                          ),
+                        ),
+                        // One title: Close sits in the page's corner, not
+                        // on a bar of its own over the page's title.
+                        Positioned(
+                          top: 12,
+                          right: 12,
+                          child: IconTap(
+                            Icons.close,
+                            tooltip: withKey('Close', 'Esc'),
+                            onTap: daemon.closeSettings,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

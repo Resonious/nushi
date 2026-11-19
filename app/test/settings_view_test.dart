@@ -288,4 +288,85 @@ void main() {
     expect(find.text('Sleep idle chats'), findsOneWidget);
     await closeView(tester, d);
   });
+
+  testWidgets('the nav: its one title, the sections in their groups in '
+      'order, a dot on each integration that works', (tester) async {
+    final d = await pumpSettingsApp(
+      tester,
+      settingsFake(),
+      SettingsSection.general,
+    );
+    // Every section once.
+    expect([
+      for (final (_, g) in settingsGroups) ...g,
+    ], unorderedEquals(SettingsSection.values));
+    // The nav's words, top to bottom: the title, then each heading and its
+    // sections.
+    final nav = find.byType(SettingsNav);
+    final words = [
+      for (final e
+          in find.descendant(of: nav, matching: find.byType(Text)).evaluate())
+        (tester.getRect(find.byWidget(e.widget)).top, (e.widget as Text).data!),
+    ]..sort((a, b) => a.$1.compareTo(b.$1));
+    expect(
+      [for (final (_, w) in words) w],
+      [
+        'Settings',
+        'App',
+        'General',
+        'Appearance',
+        'Terminal',
+        'Agents',
+        'Agents',
+        'MCP servers',
+        'Skills',
+        'Chat history',
+        'Connections',
+        'GitHub',
+        'Jira',
+        'Remote access',
+        'Logs & advanced',
+      ],
+    );
+    // Logs & advanced is set apart from Remote access, under no heading.
+    expect(words.last.$1 - words[words.length - 2].$1, greaterThan(40));
+    // One title in the modal, the nav's: no bar of its own over the page.
+    expect(
+      find.descendant(
+        of: find.byType(SettingsView),
+        matching: find.text('Settings'),
+      ),
+      findsOne,
+    );
+    final page = tester.getRect(find.text('General').last);
+    final modal = tester.getRect(find.byKey(const ValueKey('settings-modal')));
+    expect(page.top - modal.top, lessThan(30));
+    // GitHub's host is signed in, Jira's site has a token: both dotted.
+    expect(find.byKey(const ValueKey('settings-nav-dot-github')), findsOne);
+    expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsOne);
+    expect(find.byKey(const ValueKey('settings-nav-dot-remote')), findsNothing);
+    await closeView(tester, d);
+  }, variant: macOS);
+
+  testWidgets('no dot on an integration without a working account, and one '
+      'once its page finds it', (tester) async {
+    final fake = settingsFake();
+    final inner = fake.answer!;
+    var hosts = <GitHubHost>[];
+    fake.answer = (input) => switch (input) {
+      ListGitHubHostsRequest() => ListGitHubHostsResponse(hosts: hosts),
+      ListJiraSitesRequest() => ListJiraSitesResponse(
+        sites: [JiraSite(id: 'acme.atlassian.net', problem: 'Token expired')],
+      ),
+      _ => inner(input),
+    };
+    final d = await pumpSettingsApp(tester, fake, SettingsSection.general);
+    expect(find.byKey(const ValueKey('settings-nav-dot-github')), findsNothing);
+    expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsNothing);
+    hosts = [GitHubHost(host: 'github.com', login: 'octo', source: 'gh')];
+    await tester.tap(find.byKey(const ValueKey('settings-nav-github')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('settings-nav-dot-github')), findsOne);
+    await closeView(tester, d);
+  }, variant: macOS);
 }

@@ -40,9 +40,12 @@ DateTime? _date(String text) => text.isEmpty ? null : DateTime.tryParse(text);
 /// Settings › Jira: the sites added, each with who its token is (asked of
 /// Jira when the page opens) or what's wrong; Add a site; Remove.
 class JiraPage extends StatefulWidget {
-  const new(this.daemon, {super.key});
+  const new(this.daemon, {super.key, this.onSites});
 
   final Daemon daemon;
+
+  /// Told each listing of the sites (Settings' nav marks Jira by it).
+  final ValueChanged<List<JiraSite>>? onSites;
   NushiServiceClient get client => daemon.client;
 
   @override
@@ -87,6 +90,7 @@ class _JiraPageState extends State<JiraPage> {
       return;
     }
     if (!mounted) return;
+    widget.onSites?.call(r.sites);
     setState(() {
       _sites = r.sites;
       _error = null;
@@ -238,6 +242,10 @@ class _JiraPageState extends State<JiraPage> {
     );
   }
 }
+
+/// Whether any of [sites] has a token that works: Settings' nav dot.
+bool jiraConnected(Iterable<JiraSite> sites) =>
+    sites.any((s) => s.problem.isEmpty && !s.needsOk);
 
 /// A site's row: its email and token's kind, who its token is (Jira was
 /// asked: [checked]) or what's wrong, and when the token expires if soon.

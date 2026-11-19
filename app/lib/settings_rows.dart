@@ -27,7 +27,11 @@ class SettingsPage extends StatelessWidget {
   });
 
   /// The content's widest.
-  static const maxWidth = 720.0;
+  static const maxWidth = 740.0;
+
+  /// The room the modal's Close takes at the page's top right corner,
+  /// kept clear of the title's actions.
+  static const closeRoom = 44.0;
 
   /// The space between the nav and the content, and at least this on the
   /// right.
@@ -61,8 +65,12 @@ class SettingsPage extends StatelessWidget {
         final narrow =
             box.maxWidth - gutter - right(box.maxWidth) < 520 &&
             actions.isNotEmpty;
+        // The title's line stays clear of Close in the corner.
         final heading = Padding(
-          padding: const EdgeInsets.only(bottom: 18),
+          padding: EdgeInsets.only(
+            bottom: 18,
+            right: max(0, closeRoom - right(box.maxWidth)),
+          ),
           child: narrow
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,7 +99,7 @@ class SettingsPage extends StatelessWidget {
                 controller: controller,
                 slivers: [
                   SliverPadding(
-                    padding: pad.copyWith(top: 22),
+                    padding: pad.copyWith(top: 18),
                     sliver: SliverList.list(children: [heading, ...children]),
                   ),
                   for (final s in slivers)

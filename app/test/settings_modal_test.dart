@@ -56,9 +56,12 @@ bool _focusInside(WidgetTester tester) {
 void main() {
   setUpAll(loadFonts);
 
+  // It grows with the window, 40 in from each edge, to 1120 wide at most
+  // and with no height limit: a taller window shows more of a page.
   for (final (size, want) in [
-    (const Size(1700, 1000), SettingsModal.maxSize),
-    (const Size(720, 900), const Size(640, 720)),
+    (const Size(1700, 1000), const Size(1120, 920)),
+    (const Size(2400, 1400), const Size(1120, 1320)),
+    (const Size(720, 900), const Size(640, 820)),
     (const Size(900, 600), const Size(820, 520)),
   ]) {
     testWidgets('${size.width.toInt()}×${size.height.toInt()}: '

@@ -61,9 +61,12 @@ String budgetLine(GitHubHost h, DateTime now) {
 /// left of its rate limits (shared with gh in a terminal and agents that
 /// run gh); Add a token, for a host without gh, or instead of gh's.
 class GitHubPage extends StatefulWidget {
-  const new(this.daemon, {super.key});
+  const new(this.daemon, {super.key, this.onHosts});
 
   final Daemon daemon;
+
+  /// Told each listing of the hosts (Settings' nav marks GitHub by it).
+  final ValueChanged<List<GitHubHost>>? onHosts;
   NushiServiceClient get client => daemon.client;
 
   @override
@@ -98,6 +101,7 @@ class _GitHubPageState extends State<GitHubPage> {
       final r = await widget.client.listGitHubHosts(ListGitHubHostsRequest());
       keepGitHubLogins(r.hosts);
       if (!mounted) return;
+      widget.onHosts?.call(r.hosts);
       setState(() {
         _hosts = r.hosts;
         _error = null;
@@ -224,6 +228,10 @@ class _GitHubPageState extends State<GitHubPage> {
     );
   }
 }
+
+/// Whether any of [hosts] is signed in and works: Settings' nav dot.
+bool githubConnected(Iterable<GitHubHost> hosts) =>
+    hosts.any((h) => h.login.isNotEmpty && h.problem.isEmpty && !h.needsOk);
 
 /// A host's row: who its token is or what's wrong, where the token
 /// comes from, and what's left of its rate limits.
