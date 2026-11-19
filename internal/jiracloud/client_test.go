@@ -268,7 +268,7 @@ func TestBoardsSprintJQL(t *testing.T) {
 		t.Errorf("sprint %d %q, %v", id, name, err)
 	}
 	jql, err := c.JQL(t.Context())
-	if err != nil || len(jql.Fields) == 0 || len(jql.Words) == 0 || len(jql.Functions) == 0 {
+	if err != nil || len(jql.Fields) == 0 || len(jql.Functions) == 0 {
 		t.Errorf("jql %+v, %v", jql, err)
 	}
 	sugg, err := c.Suggestions(t.Context(), "status", "In")

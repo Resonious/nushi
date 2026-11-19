@@ -113,7 +113,7 @@ func (s *server) GetJiraJql(ctx context.Context, req *connect.Request[nushiv1.Ge
 	if err != nil {
 		return nil, refused(err)
 	}
-	out := &nushiv1.GetJiraJqlResponse{Functions: jql.Functions, Words: jql.Words}
+	out := &nushiv1.GetJiraJqlResponse{Functions: jql.Functions}
 	for _, f := range jql.Fields {
 		out.Fields = append(out.Fields, &nushiv1.JiraJqlField{Name: f.Name, Display: f.Display, Operators: f.Operators})
 	}

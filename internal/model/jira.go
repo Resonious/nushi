@@ -91,11 +91,10 @@ type JiraBoard struct {
 }
 
 // JiraJQL is what a site's JQL autocompletes from: its fields (with the
-// operators each takes), functions and reserved words.
+// operators each takes) and functions.
 type JiraJQL struct {
 	Fields    []JiraJQLField
 	Functions []string
-	Words     []string
 }
 
 // JiraJQLField is a field JQL can search on: Name as typed in JQL,
