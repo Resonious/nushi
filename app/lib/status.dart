@@ -443,20 +443,6 @@ String phaseName(ChatPhase p) => switch (p) {
   .archived => 'archived',
 };
 
-/// What a chat is doing, in a word ([phaseWord]).
-class ChatStatusWord extends StatelessWidget {
-  const new(this.chat, {required this.style, super.key});
-
-  final ChatState chat;
-  final TextStyle style;
-
-  @override
-  Widget build(BuildContext context) {
-    final (word, color) = phaseWord(chat.phase, NushiTheme.of(context).t);
-    return Text(word, style: style.copyWith(color: color));
-  }
-}
-
 /// A time the daemon sent in milliseconds since the epoch; null for 0
 /// (it didn't see it).
 DateTime? msTime(int ms) =>

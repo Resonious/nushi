@@ -499,7 +499,8 @@ void main() {
     await tester.tap(_inPane(find.byType(SourceButton)));
     await tester.pumpAndSettle();
     expect(_inPane(find.textContaining('Plan --> Build')), findsOneWidget);
-    d.chats['c']!.files.closeAll();
+    final files = d.chats['c']!.files;
+    files.tabs.value.toList().forEach(files.close);
     await tester.pumpAndSettle();
     expect(diagram.disposed, isTrue);
     d.dispose();

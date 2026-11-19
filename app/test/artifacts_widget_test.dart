@@ -353,7 +353,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_names(tester).take(3), ['chart.png', 'report.md', 'flows.md']);
     // Closed, it stays recent for the hour.
-    c.files.closeAll();
+    c.files.tabs.value.toList().forEach(c.files.close);
     clock = () => start.add(const Duration(minutes: 59));
     await tester.pump(const Duration(minutes: 1)); // the widget's tick
     expect(_names(tester).take(3), ['chart.png', 'report.md', 'flows.md']);

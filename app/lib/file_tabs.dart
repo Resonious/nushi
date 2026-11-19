@@ -96,14 +96,6 @@ final class FileTabs {
     }
   }
 
-  /// Closes every tab.
-  void closeAll() {
-    tabs.value = const [];
-    shown.value = null;
-    provisional.value = null;
-    sources.clear();
-  }
-
   /// The tabs to keep across launches, each named [relativeIn] [folder],
   /// so they're found again should the chat's folder move; null with none
   /// open.

@@ -106,10 +106,6 @@ Indents indents(List<String> lines, int size) {
   return (levels: levels, unit: unit);
 }
 
-/// [indents]' levels alone.
-List<int> indentLevels(List<String> lines, int size) =>
-    indents(lines, size).levels;
-
 /// The guides' x, from a line's start: each level's first column, [step]
 /// (a level's columns' width) apart, [level] of them.
 Iterable<double> guidesAt(int level, double step) sync* {

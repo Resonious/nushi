@@ -100,7 +100,7 @@ void main() {
           await tester.pumpAndSettle();
           await render(tester, app, '${_at}_${w}_tree_hidden_$theme');
           filesTree.value = true;
-          c.files.closeAll();
+          c.files.tabs.value.toList().forEach(c.files.close);
           await tester.pumpAndSettle();
           await render(tester, app, '${_at}_${w}_blank_$theme');
 

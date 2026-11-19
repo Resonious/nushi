@@ -88,7 +88,7 @@ Future<List<String>> _sweep(WidgetTester tester, {String? file}) async {
     for (final open in _opens) {
       filesTree.value = shown;
       filesTreeSide.value = side;
-      c.files.closeAll();
+      c.files.tabs.value.toList().forEach(c.files.close);
       open.forEach(c.openInFiles);
       for (var w = 500.0; w >= 100; w -= 10) {
         final errors = await _errors(() => _pane(tester, d, w));
