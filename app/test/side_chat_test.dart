@@ -105,8 +105,6 @@ void _ended(Daemon d, FakeDaemon fake) {
   expect(fake.calls.whereType<CloseSideChatRequest>().single.chatId, 's');
 }
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -118,7 +116,7 @@ void main() {
     expect(_dialog, findsNothing);
     _ended(d, fake);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('an older daemon: one with messages asks first; Cancel, Esc '
       'and ⏎ keep it', (tester) async {
@@ -151,7 +149,7 @@ void main() {
     expect(_dialog, findsNothing);
     _open(d, fake, side);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('an older daemon: End ends it', (tester) async {
     final (d, fake, side) = await _app(tester, old: true);
@@ -163,7 +161,7 @@ void main() {
     expect(_dialog, findsNothing);
     _ended(d, fake);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⇧⌘B or − hides it, alive: its transcript and draft stay; '
       '⇧⌘B or the chip shows it again', (tester) async {
@@ -189,7 +187,7 @@ void main() {
       expect(find.text('And the fragment?'), findsOne); // the side's box
     }
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⇧⌘B opens one when the chat has none', (tester) async {
     final (d, fake, _) = await _app(tester);
@@ -199,7 +197,7 @@ void main() {
     await _shiftCmdB(tester);
     expect(fake.calls.whereType<ForkChatRequest>().single.chatId, 'c');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("the chip's dot: working, then a turn ended unseen until "
       'shown; the daemon ending it takes the chip away', (tester) async {
@@ -235,7 +233,7 @@ void main() {
     expect(_chip, findsNothing);
     expect(d.chats['c']!.side.value, isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("its composer has the chat's pickers, which set the side "
       "chat's own options", (tester) async {
@@ -261,7 +259,7 @@ void main() {
     final set = fake.calls.whereType<SetConfigOptionRequest>().single;
     expect((set.chatId, set.configId, set.value), ('s', 'mode', 'default'));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, brightness) in [
     ('light', Brightness.light),
@@ -278,7 +276,7 @@ void main() {
         matchesGoldenFile('goldens/side_chat_pickers_$name.png'),
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     for (final (what, size) in [
       ('wide', const Size(1700, 900)),
@@ -315,7 +313,7 @@ void main() {
           'side_chat_pickers_${what}_$name',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 
@@ -344,7 +342,7 @@ void main() {
           'side_chat_end_${what}_$name',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 
@@ -374,7 +372,7 @@ void main() {
           'side_chat_chip_${what}_$name',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

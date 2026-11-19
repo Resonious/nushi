@@ -87,7 +87,7 @@ void main() {
     }
     expect(_items(), all);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a row shows the press as the pointer goes down, before the '
       'click ends', (tester) async {
@@ -105,7 +105,7 @@ void main() {
     expect(_rowColor(tester, 'Beta long chat'), t.accentSoft);
     await tester.pumpAndSettle();
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a long chat stays at its bottom in every frame it fills in', (
     tester,
@@ -140,7 +140,7 @@ void main() {
     expect(painted.length, greaterThan(2), reason: 'it fills in over frames');
     expect(painted, everyElement(moreOrLessEquals(0)));
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('scrolled up while it fills in, what shows stays put', (
     tester,
@@ -159,7 +159,7 @@ void main() {
     expect(_items(), 81);
     expect(tester.getTopLeft(reply).dy, moreOrLessEquals(y, epsilon: 1));
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('only the chats picked last keep their items; one let go '
       'loads again when picked', (tester) async {

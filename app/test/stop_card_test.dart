@@ -85,8 +85,6 @@ Future<void> _pump(
   await tester.pump();
 }
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -125,7 +123,7 @@ void main() {
     }
     expect(find.textContaining('stopped', findRichText: true), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),
@@ -143,7 +141,7 @@ void main() {
           matchesGoldenFile('goldens/stop_card_${size}_$name.png'),
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

@@ -32,8 +32,6 @@ import 'harness.dart';
 import 'long_chat.dart';
 import 'paged_chat.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The window on chat c: [turns] turns of a long chat (about 11 items
 /// each), its messages [pins] pinned.
 Future<(Daemon, PagedChat)> _window(
@@ -148,7 +146,7 @@ void main() {
     final p = _scroll(tester);
     expect(p.pixels, p.maxScrollExtent);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('near the top the page before comes under a spinner, and '
       'what shows stays where it was in every frame it fills in', (
@@ -189,7 +187,7 @@ void main() {
     );
     expect(_chat(d).older, lessThan(paged.items.length - 200));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('page by page to the start, where no spinner shows', (
     tester,
@@ -207,7 +205,7 @@ void main() {
     await tester.pump();
     expect(find.textContaining('Turn 0:', findRichText: true), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a failed page says so and asks no more until Try again', (
     tester,
@@ -231,7 +229,7 @@ void main() {
     expect(find.text('Couldn’t load earlier messages · '), findsNothing);
     expect(_chat(d).olderFailed, isFalse);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a page that fails after a fresh snapshot leaves it unfailed', (
     tester,
@@ -252,7 +250,7 @@ void main() {
     expect(c.olderFailed, isFalse);
     expect(find.text('Couldn’t load earlier messages · '), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a pin on a message not loaded yet goes there, built over '
       'frames', (tester) async {
@@ -299,7 +297,7 @@ void main() {
     expect(flash.on, isTrue);
     await tester.pump(const Duration(seconds: 2));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('going to several messages pages only for those not loaded', (
     tester,
@@ -317,7 +315,7 @@ void main() {
     await Future.wait([first, second]);
     expect(paged.pages.length, 2);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⌘F says it looks in what’s loaded; Load all takes the rest, '
       'built over frames, and finds there', (tester) async {
@@ -348,7 +346,7 @@ void main() {
     expect(hit.top, greaterThanOrEqualTo(list.top));
     expect(hit.bottom, lessThanOrEqualTo(list.bottom));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('at the bottom while a page comes in above, it follows what '
       'streams in', (tester) async {
@@ -398,7 +396,7 @@ void main() {
     expect(painted, isNotEmpty);
     expect(painted, everyElement(moreOrLessEquals(0)));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the rewind list takes every page into the list, not the '
       'transcript, and lists the first message', (tester) async {
@@ -425,7 +423,7 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await _settle(tester);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('left at its bottom a chat goes back to its recent part; '
       'left scrolled up it keeps what it loaded', (tester) async {
@@ -468,7 +466,7 @@ void main() {
     expect(c.items.length, had);
     expect(c.kept, isNotNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('what a chat let go scrolled up kept is taken back once, not '
       'on every reload after', (tester) async {
@@ -483,7 +481,7 @@ void main() {
     await _settle(tester);
     expect(paged.asked.whereType<GetChatRequest>().last.recent, had);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Rewind… in a long chat is offered only when the chat may '
       'rewind now', (tester) async {
@@ -506,7 +504,7 @@ void main() {
       ..canRewind = false;
     expect(rewind(), isFalse, reason: "the agent can't rewind");
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('taken again (the daemon restarted), it takes as much as it '
       'had', (tester) async {
@@ -524,7 +522,7 @@ void main() {
     expect(again.recent, had);
     expect(c.items.length, had);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final width in [1700.0, 720.0]) {
     testWidgets('the scrollbar runs down past the composer to the pane’s '
@@ -595,7 +593,7 @@ void main() {
         greaterThanOrEqualTo(status.bottom),
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   for (final b in Brightness.values) {
@@ -655,7 +653,7 @@ void main() {
           'pages_failed_${b.name}_$width',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

@@ -180,7 +180,7 @@ void main() {
     expect(pinnedEveryProject.value, isTrue);
     expect(readSaved()['pinnedEveryProject'], isTrue);
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   for (final width in [1700.0, 720.0]) {
     for (final brightness in Brightness.values) {
@@ -218,7 +218,7 @@ void main() {
         expectTextInside(tester, width);
         await render(tester, find.byType(NushiApp), 'pins_setting_$name');
         d.dispose();
-      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      }, variant: onMac);
     }
   }
 }

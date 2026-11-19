@@ -96,8 +96,6 @@ Future<Daemon> _show(
 
 final Finder _button = find.widgetWithText(Button, 'Try again');
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The full window on [items], chat 'c'.
 Future<(FakeDaemon, Daemon)> _window(
   WidgetTester tester,
@@ -375,7 +373,7 @@ void main() {
     expect(find.text('Branch renamed'), findsOneWidget);
     expect(_button, findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final width in [1700.0, 720.0]) {
     testWidgets('a long error wraps in the window at $width', (tester) async {
@@ -386,7 +384,7 @@ void main() {
       expect(_button, findsOneWidget);
       _wraps(tester, width);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('a long error wraps on the phone, and a tap sends', (

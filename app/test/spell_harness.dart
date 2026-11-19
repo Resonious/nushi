@@ -29,7 +29,7 @@ void spellTest(String name, Future<void> Function(WidgetTester) body) =>
       await body(tester);
       if (_open case final d?) await closeView(tester, d);
       _open = null;
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
 
 /// A stand-in for the Mac's checker: [wrong] are misspelled, and it records
 /// what it was asked. It never reaches the real one, whose `learnWord` writes

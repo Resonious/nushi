@@ -74,7 +74,7 @@ void main() {
     );
     expect(toastButtons(tester), ['Download']);
     d2.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),

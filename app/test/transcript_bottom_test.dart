@@ -23,8 +23,6 @@ import 'harness.dart';
 import 'long_chat.dart';
 import 'paged_chat.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Future<(Daemon, PagedChat)> _window(
   WidgetTester tester, {
   Size size = const Size(1700, 1000),
@@ -98,7 +96,7 @@ void main() {
     await mouse.up();
     await _settle(tester, 4);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   // Busy, the turn line shows over the list's foot as well as the
   // composer: wide, only then is the toolbar placed under them.
@@ -144,7 +142,7 @@ void main() {
         'selection_toolbar_$width${busy ? '_busy' : ''}',
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('the thumb dragged up as a page lands keeps what shows', (
@@ -228,7 +226,7 @@ void main() {
     await mouse.up();
     await _settle(tester, 20);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }
 
 ChatState _chat(Daemon d) => d.chats['c']!;

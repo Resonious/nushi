@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/settings.dart';
@@ -13,8 +12,6 @@ import 'view_options_fixture.dart';
 // The Files pane's view options as another run saved them, none at its
 // default (ADR 0123): the ⋯, the View menu and the palette show each as
 // saved from the start.
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 const PanesOpen _files = (
   side: false,
@@ -78,5 +75,5 @@ void main() {
       await closeMenus(tester);
     }
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

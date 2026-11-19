@@ -71,7 +71,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(NoticeBar), findsNothing);
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   test('what each unanswered card says', () {
     for (final (action, said) in [
@@ -184,5 +184,5 @@ void main() {
     expect(await again, isNull);
     expect(fake.started, hasLength(3));
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

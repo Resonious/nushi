@@ -22,8 +22,6 @@ import 'harness.dart';
 // column for an added file and a narrow view, and what works on a diff
 // working in the unified view.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const _old = '''
 package calc
 
@@ -254,7 +252,7 @@ void main() {
     act.run();
     expect(diffUnified.value, isFalse);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   test('unified rows stand for lines of one side, as a comment is', () {
     final doc = TextDiff.compute('a\nb\nc\nd\n', 'a\nB\nC\nd\n').document;
@@ -340,7 +338,7 @@ void main() {
       '// Neg returns minus a.\nfunc Neg(a int) int {\n'
       '\treturn -a\n',
     );
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a finding opens the unified view at its line, selected', (
     tester,
@@ -418,7 +416,7 @@ void main() {
         }
         await closeView(tester, d);
       },
-      variant: _mac,
+      variant: onMac,
       skip: rendersDir == null,
     );
   }

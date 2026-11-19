@@ -175,8 +175,6 @@ Future<(FakeDaemon, Daemon)> _app(
   return (fake, d);
 }
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
   setUp(() => Shine.stopAt = 0.3);
@@ -362,7 +360,7 @@ void main() {
     paneWidths.value = {};
     showDetails.value = true;
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the run ending leaves the pane with its last tree; its call '
       'going leaves the pane a workflow’s, saying so', (tester) async {
@@ -409,7 +407,7 @@ void main() {
     paneWidths.value = {};
     showDetails.value = true;
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),

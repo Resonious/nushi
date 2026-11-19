@@ -26,8 +26,6 @@ import 'package:nushi/trust_ask.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const _hide = 'Hide the sidebar\u2002⌘\\';
 const _show = 'Show the sidebar\u2002⌘\\';
 
@@ -133,7 +131,7 @@ void main() {
       expect(tester.element(header), same(element), reason: 'the chat stayed');
       expect(readSaved()['sidebarHidden'], isFalse);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the list comes back where it was scrolled to', (tester) async {
       final fake = FakeDaemon([
@@ -152,7 +150,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.state<ScrollableState>(list.first).position.pixels, 300);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     // The owner, of the beta: the button at a header's left was smaller
     // than the icon buttons at its right. It's the same control: the same
@@ -209,7 +207,7 @@ void main() {
         await tester.pump();
         await render(tester, find.byType(NushiApp), '${shot}_pointer');
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('it keeps its clicks, and the strip’s empty space moves and '
@@ -273,7 +271,7 @@ void main() {
       expect(sidebarHidden.value, isFalse);
       expect(calls, ['arm', 'arm', 'zoom', 'arm']);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the headers, hidden', () {
@@ -372,7 +370,7 @@ void main() {
               await render(tester, find.byType(NushiApp), shot);
             }
             d.dispose();
-          }, variant: _mac);
+          }, variant: onMac);
         }
       }
     }
@@ -401,7 +399,7 @@ void main() {
         NushiTheme.windowPad + hiddenHeaderStart,
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a full header at 720 wide folds rather than overflows, ⋯ at '
         'its end', (tester) async {
@@ -424,7 +422,7 @@ void main() {
         header.right - ChatHeader.end,
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the bars, hidden', () {
@@ -512,7 +510,7 @@ void main() {
           greaterThanOrEqualTo(tester.getRect(find.byType(Sidebar)).right),
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('the daemon’s banner too', (tester) async {
@@ -534,7 +532,7 @@ void main() {
       await tester.pump(DaemonBanner.backFor);
       await tester.pump(DaemonBanner.slideFor);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the action', () {
@@ -575,7 +573,7 @@ void main() {
       await cmdKey(tester, LogicalKeyboardKey.backslash);
       expect(sidebarHidden.value, isFalse);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets(r'⌘\ still works once the button that had the focus has gone', (
       tester,
@@ -598,7 +596,7 @@ void main() {
       await cmdKey(tester, LogicalKeyboardKey.backslash);
       expect(sidebarHidden.value, isFalse);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('hidden, ⌘K reaches Jira, GitHub, Settings and the sidebar', (
       tester,
@@ -633,7 +631,7 @@ void main() {
       await run('sidebar', 'Show the sidebar');
       expect(sidebarHidden.value, isFalse);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the chat’s menu is in its ⋯ while the sidebar is hidden', (
       tester,
@@ -643,7 +641,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Color'), findsOneWidget);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   testWidgets('the phone: no button, no key, whatever is saved', (

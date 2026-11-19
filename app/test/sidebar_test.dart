@@ -123,7 +123,7 @@ void main() {
       // A card's fill, not the accent: that is for the one action of a card.
       expect(box.height, WideButton.height);
       d.dispose();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   // An idle app's sidebar goes on with the clock: the ages its rows show,
@@ -156,5 +156,5 @@ void main() {
     expect(find.text('Today'), findsNothing);
     expect(find.text('Yesterday'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

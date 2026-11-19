@@ -130,8 +130,6 @@ Future<void> _settle(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -154,7 +152,7 @@ void main() {
     await _open(tester, 'docs');
     expect(_dot(tester, 'report.md'), isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('opening a dotted file shows its marks and says so; one the '
       'chat wrote that equals the base says No changes', (tester) async {
@@ -171,7 +169,7 @@ void main() {
     // The marks and the dots asked for the same base, found once.
     expect(fake.calls.whereType<GetFolderStatusRequest>(), hasLength(1));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the dots follow a commit, a turn ending, a listing that '
       'changed and a new base, a moment later', (tester) async {
@@ -226,7 +224,7 @@ void main() {
     await _settle(tester);
     expect(_names(fake).last.base, 'main');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('outside git, the files the chat wrote keep the dot', (
     tester,
@@ -238,7 +236,7 @@ void main() {
     await _open(tester, 'docs');
     expect(_dot(tester, 'report.md'), 'the chat wrote it');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('an older daemon is not asked, and keeps the old dots', (
     tester,
@@ -290,7 +288,7 @@ void main() {
         'tree_dots_${width.toInt()}_${brightness.name}',
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('the pane closed asks nothing, even as the chat changes', (
@@ -301,5 +299,5 @@ void main() {
     await _settle(tester);
     expect(_names(fake), isEmpty);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

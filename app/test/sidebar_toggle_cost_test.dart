@@ -112,7 +112,7 @@ void main() {
     );
     expect(row(), shown, reason: 'the sidebar came back');
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a new appearance or theme shows at once, not blended over '
       'frames that each rebuild the transcript', (tester) async {
@@ -136,7 +136,7 @@ void main() {
       same(builtInTheme('nord')!.dark),
     );
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('pinning the open chat rebuilds no row of its transcript', (
     tester,
@@ -164,5 +164,5 @@ void main() {
     expect(frames.skip(1).where((f) => f.builds > _mostPerFrame), hasLength(1));
     expect(find.text('Pinned'), findsOne);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

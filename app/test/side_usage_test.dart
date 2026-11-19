@@ -91,8 +91,6 @@ Finder _says(String text) => find.descendant(
   matching: find.text(text),
 );
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -118,7 +116,7 @@ void main() {
       expect(find.byType(ContextMeter), findsOne);
       expect(find.text(r'$0.42'), findsOne);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets("it follows the side chat's usage live", (tester) async {
@@ -130,7 +128,7 @@ void main() {
     expect(_says(r'$0.11'), findsOne);
     expect(_says(r'$0.03'), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('its line goes when the side chat ends', (tester) async {
     final (d, fake, _) = await _app(tester);
@@ -141,7 +139,7 @@ void main() {
     expect(_label, findsNothing);
     expect(find.byType(ContextMeter), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('and when the daemon ends it (a reload, a move), hidden', (
     tester,
@@ -152,7 +150,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_label, findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   // Both lines, as the window shows them: wide with the side chat beside
   // the chat; narrow with it hidden, where the details panel doesn't fit
@@ -194,7 +192,7 @@ void main() {
         expect(tester.takeException(), isNull);
         await render(tester, find.byType(NushiApp), 'side_usage_${size}_$name');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

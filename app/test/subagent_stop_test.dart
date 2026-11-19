@@ -148,8 +148,6 @@ Finder _line(String id) =>
 Finder get _stops =>
     find.byWidgetPredicate((w) => w is Tooltip && w.message == 'Stop');
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
   setUp(
@@ -224,7 +222,7 @@ void main() {
     await _pump(tester);
     expect(find.descendant(of: card, matching: find.text('stopped')), findsOne);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, mode) in [
     ('dark', Brightness.dark),
@@ -258,7 +256,7 @@ void main() {
           'subagent_stop_${size}_$name',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

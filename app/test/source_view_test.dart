@@ -82,7 +82,7 @@ void main() {
       await tester.pump();
       await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
       expect(copied.last, isNot(text));
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   testWidgets('a line cut short copies its own text, not the note', (
@@ -110,5 +110,5 @@ void main() {
     await tester.pump();
     await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
     expect(copied.last, '$long\n');
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

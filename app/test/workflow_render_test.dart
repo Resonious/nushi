@@ -134,7 +134,7 @@ void main() {
         sidebarHidden.value = false;
         showDetails.value = true;
         await closeView(tester, d);
-      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      }, variant: onMac);
     }
   }
 

@@ -19,8 +19,6 @@ import 'harness.dart';
 // row, the current one apart, ⏎ to each, the split view's count, and a
 // switch of views while it's open.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const _old = '''
 package calc
 
@@ -206,7 +204,7 @@ void main() {
     // view shows only its new side.
     expect(_marks(c, _also.$1, _also.$2), [(12, 6, 'find')]);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⏎ goes to each hit in the unified view, scrolled to it, '
       'and round to the first', (tester) async {
@@ -232,7 +230,7 @@ void main() {
     expect(_shown(c, _row(c, 3)), isTrue);
     _expectMarked(c, 3);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a switch of views keeps the marks and the current hit, '
       'where it was', (tester) async {
@@ -262,7 +260,7 @@ void main() {
       }
     }
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a switch away from the current hit doesn't go back to it", (
     tester,
@@ -280,7 +278,7 @@ void main() {
     final y = c.viewportYOfLine(PaneSide.old, 2)!;
     expect(y, lessThan(0), reason: 'still scrolled past it');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('closing the bar takes the unified marks', (tester) async {
     diffUnified.value = true;
@@ -294,7 +292,7 @@ void main() {
     }
     expect(_marks(c, _also.$1, _also.$2), isEmpty);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, tokens, brightness) in [
     ('light', Tokens.light, Brightness.light),
@@ -313,7 +311,7 @@ void main() {
         matchesGoldenFile('goldens/unified_find_$name.png'),
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('renders: find in Changes unified, 1700 and 720 wide '
         '($name)', (tester) async {
@@ -349,6 +347,6 @@ void main() {
         );
       }
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

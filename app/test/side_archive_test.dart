@@ -84,8 +84,6 @@ Future<void> _undo(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -114,7 +112,7 @@ void main() {
       findsOne,
     );
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('an empty one just ends: no toast', (tester) async {
     final (d, fake, _) = await _app(tester, talked: false);
@@ -123,7 +121,7 @@ void main() {
     expect(d.chats['c']!.side.value, isNull);
     expect(_toast, findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the toast stays ten seconds; its × takes it away', (
     tester,
@@ -149,7 +147,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_toast, findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Undo brings it back beside its chat, shown, its box as it '
       'was, from another chat too', (tester) async {
@@ -170,7 +168,7 @@ void main() {
     expect(_toast, findsNothing);
     expect(_failed, findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("Undo says why when it can't: another side chat open, the "
       'chat archived, the daemon refusing', (tester) async {
@@ -227,7 +225,7 @@ void main() {
     await undoFails('the chat it came from was deleted');
     expect(c.side.value, isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a daemon that can't archive it asks, saying why, and End "
       'deletes it', (tester) async {
@@ -252,7 +250,7 @@ void main() {
     expect(d.chats['c']!.side.value, isNull);
     expect(_toast, findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, brightness) in [
     ('light', Brightness.light),
@@ -269,7 +267,7 @@ void main() {
         matchesGoldenFile('goldens/side_chat_archived_toast_$name.png'),
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     for (final (what, size) in [
       ('wide', const Size(1700, 900)),
@@ -307,7 +305,7 @@ void main() {
         );
         c.archived = false;
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

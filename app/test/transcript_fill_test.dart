@@ -16,8 +16,6 @@ import 'harness.dart';
 import 'long_chat.dart';
 import 'paged_chat.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Future<(Daemon, PagedChat)> _window(
   WidgetTester tester,
   List<Item> items, {
@@ -109,7 +107,7 @@ void main() {
       reason: 'the page, about 120 entries, a few frames',
     );
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a page fills in over frames while a find looks, and the '
       'find keeps what it found', (tester) async {
@@ -128,5 +126,5 @@ void main() {
     expect(c.find.count, '1 of 1');
     expect(c.find.current, hit);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

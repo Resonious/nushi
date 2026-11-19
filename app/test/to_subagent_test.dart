@@ -96,7 +96,7 @@ void main() {
       lessThan(tester.getRect(inPane('Look at auth/session.go too')).top),
     );
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('what is typed while a message to a subagent sends stays, '
       'and a failed one comes back before it', (tester) async {
@@ -144,5 +144,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(typed(), 'Look at the tests too\n\nand the docs');
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

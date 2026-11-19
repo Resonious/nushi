@@ -71,7 +71,7 @@ void main() {
             'arrange_${group.name}_$name',
           );
           await closeView(tester, d);
-        }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+        }, variant: onMac);
       }
 
       testWidgets('the Arrange menu open, Group by shown, $name', (
@@ -89,7 +89,7 @@ void main() {
         await render(tester, find.byType(NushiApp), 'arrange_menu_$name');
         await mouse.removePointer();
         await closeView(tester, d);
-      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      }, variant: onMac);
     }
   }
 }

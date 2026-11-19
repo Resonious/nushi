@@ -78,11 +78,7 @@ double _menuBottom(WidgetTester tester) => _menuPanel(tester).bottom;
 
 /// A widget test on a fake Mac that ends what it opened itself.
 void spellTestApp(String name, Future<void> Function(WidgetTester) body) =>
-    testWidgets(
-      name,
-      body,
-      variant: TargetPlatformVariant.only(TargetPlatform.macOS),
-    );
+    testWidgets(name, body, variant: onMac);
 
 bool _open(WidgetTester tester, ChatState chat) =>
     chat.draft.text.spell!.menu.controller.isOpen;

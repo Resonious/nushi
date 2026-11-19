@@ -99,8 +99,6 @@ Future<(FakeDaemon, Daemon)> _window(
 final Finder _continue = find.widgetWithText(Button, 'Continue');
 final Finder _again = find.widgetWithText(Button, 'Try again');
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The label [items] (ending with the notice) give its button, or null.
 String? _label(List<Item> items, {void Function(ChatState)? also}) {
   final s = _state(items);
@@ -298,7 +296,7 @@ void main() {
     await tester.pump();
     expect(_sent(fake).last.text, continuePrompt);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('on the phone, Continue sends', (tester) async {
     viewport(
@@ -379,7 +377,7 @@ void main() {
           'turn_${name}_${width.toInt()}_dark',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }
