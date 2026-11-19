@@ -32,7 +32,6 @@ Future<Daemon> _app(
 }) async {
   viewport(tester, Size(width, 700), brightness: brightness);
   sidebarHidden.value = hidden;
-  paneWidths.value = {};
   final d = await FakeDaemon([
     chat('a', 'claude', 'Fix the login redirect'),
     chat('b', 'codex', 'Bump the API version', age: 1),

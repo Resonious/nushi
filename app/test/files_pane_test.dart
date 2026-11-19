@@ -143,9 +143,7 @@ Future<(Daemon, _Folder)> _app(
 }) async {
   viewport(tester, size, brightness: brightness);
   showDetails.value = false;
-  paneWidths.value = {};
   filesChats.value = open ? {'c'} : {};
-  filesIgnored.value = false;
   final folder = _Folder();
   addTearDown(folder.close);
   final previews = <StreamController<WatchChatFileResponse>>[];
@@ -730,7 +728,6 @@ void main() {
       tester.platformDispatcher.accessibilityFeaturesTestValue =
           const FakeAccessibilityFeatures(disableAnimations: true);
       addTearDown(tester.platformDispatcher.clearAllTestValues);
-      filesIgnored.value = false;
       final folder = _Folder();
       addTearDown(folder.close);
       final previews = <StreamController<WatchChatFileResponse>>[];

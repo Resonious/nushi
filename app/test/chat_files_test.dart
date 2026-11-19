@@ -19,7 +19,6 @@ import 'package:nushi/phone/artifacts_screen.dart';
 import 'package:nushi/phone/platform.dart';
 import 'package:nushi/phone/preview_screen.dart';
 import 'package:nushi/settings.dart';
-import 'package:nushi/tool_calls.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
@@ -122,8 +121,6 @@ const _minutes = {'report.md': 2, 'chart.png': 15, 'sub.md': 125};
 Future<Daemon> _app(WidgetTester tester) async {
   viewport(tester, const Size(1700, 900));
   showDetails.value = false;
-  paneWidths.value = {};
-  Collapsible.opened.clear();
   final was = fileChanged;
   fileChanged = (p) => switch (_minutes[p.split('/').last]) {
     final m? => clock().subtract(Duration(minutes: m, seconds: 5)),

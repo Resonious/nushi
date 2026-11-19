@@ -60,7 +60,6 @@ Future<Future<void> Function()> _open(
   Brightness brightness = Brightness.dark,
 }) async {
   viewport(tester, Size(width, 620), brightness: brightness);
-  showDetails.value = true;
   paneWidths.value = {'details': details};
   final c =
       chat(

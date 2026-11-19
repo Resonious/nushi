@@ -12,7 +12,6 @@ import 'package:nushi/details_panel.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/panel_widgets.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/toast.dart';
 import 'package:nushi/worktree.dart';
@@ -162,7 +161,6 @@ Finder _row(String label) => find.ancestor(
 
 void main() {
   setUpAll(loadFonts);
-  setUp(() => collapsedWidgets.value = {});
 
   // The whole window, wide and as narrow as shows the panel: the menu
   // opens under the row, inside the window; the row's ▾ at the panel's
@@ -170,7 +168,6 @@ void main() {
   for (final width in [1700.0, 1140.0]) {
     testWidgets('the Branch menu in a ${width.round()} window', (tester) async {
       viewport(tester, Size(width, 620));
-      showDetails.value = true;
       final c = Chat(
         id: 'c',
         agent: 'claude',

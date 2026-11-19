@@ -27,7 +27,6 @@ Future<(Daemon, FakeDaemon)> _app(
   bool deleteFails = false,
 }) async {
   viewport(tester, size, brightness: brightness);
-  paneWidths.value = {};
   showDetails.value = false;
   final c = chat('c', 'claude', 'Fix the login redirect');
   final status = ChatStatus(canFork: true, canRewind: true);

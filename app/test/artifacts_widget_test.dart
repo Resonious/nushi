@@ -208,7 +208,6 @@ void main() {
     // show call's path is the agent's own (a page as the owner saw it, but
     // Markdown: a test has no web view).
     const page = '/Users/me/nushi/mock/page.md';
-    pinnedFiles.value = {};
     final (d, fake) = await _app(tester, [
       ..._three,
       _write('w4', 'mock/page.md'),

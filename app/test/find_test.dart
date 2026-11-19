@@ -30,7 +30,6 @@ Future<Daemon> _app(WidgetTester tester) async {
         const MethodChannel('nushi/fonts'),
         (_) async => <String>[],
       );
-  paneWidths.value = {};
   showDetails.value = false;
   const user = ItemKind.ITEM_KIND_USER_MESSAGE;
   const agent = ItemKind.ITEM_KIND_AGENT_MESSAGE;

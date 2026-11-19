@@ -41,7 +41,6 @@ Future<Daemon> _app(
   Brightness brightness = Brightness.dark,
 }) async {
   viewport(tester, size, brightness: brightness);
-  paneWidths.value = {};
   showDetails.value = false;
   final c = chat('c', 'claude', 'Flaky relay');
   final fake = FakeDaemon([c])

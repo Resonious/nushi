@@ -95,8 +95,6 @@ Future<List<String>> _sweep(WidgetTester tester, {String? file}) async {
       }
     }
   }
-  filesTree.value = true;
-  filesTreeSide.value = TreeSide.automatic;
   await closeView(tester, d);
   return found;
 }

@@ -8,7 +8,6 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/panel_widgets.dart';
 import 'package:nushi/pull_rows.dart';
-import 'package:nushi/settings.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
@@ -53,7 +52,6 @@ Future<(Daemon, FakeDaemon)> _open(
   Brightness brightness = Brightness.dark,
   Object? Function(Object input)? more,
 }) async {
-  cleanUpLater.value = {};
   final r = await openPullTab(
     tester,
     pull ?? _merged(),

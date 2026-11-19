@@ -13,7 +13,6 @@ import 'package:nushi/main.dart';
 import 'package:nushi/menu.dart';
 import 'package:nushi/phone/chats_screen.dart';
 import 'package:nushi/phone/phone_app.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/sidebar.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
@@ -387,7 +386,6 @@ void main() {
     testWidgets('the whole window, $width wide, ${b.name}: the menu open', (
       tester,
     ) async {
-      paneWidths.value = {};
       final d = await _window(
         tester,
         FakeDaemon(_chats()),

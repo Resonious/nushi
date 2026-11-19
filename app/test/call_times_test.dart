@@ -289,7 +289,6 @@ void main() {
       width.value = 266;
       await tester.pump();
     }
-    Collapsible.opened.clear();
   });
 
   testWidgets("a narrow subagent line never cuts its state to a bare '…'", (

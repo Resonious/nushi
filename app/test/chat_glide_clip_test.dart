@@ -48,9 +48,6 @@ final _items = [
 Future<Daemon> _app(WidgetTester tester, double width) async {
   viewport(tester, Size(width, 800));
   showDetails.value = false;
-  sidebarHidden.value = false;
-  filesChats.value = {};
-  paneWidths.value = {};
   final c = chat('c', 'claude', 'Fix the login redirect');
   final fake = FakeDaemon([c])
     ..answer = ((input) => switch (input) {

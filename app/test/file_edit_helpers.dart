@@ -74,7 +74,6 @@ Future<(Daemon, FakeDaemon)> openEditor(
 }) async {
   viewport(tester, Size(width, 900), brightness: brightness);
   showDetails.value = false;
-  paneWidths.value = {};
   final fake = FakeDaemon([editChat, ...more])
     ..answer = ((input) =>
         answer?.call(input) ??

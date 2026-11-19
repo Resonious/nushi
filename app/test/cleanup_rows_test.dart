@@ -54,11 +54,7 @@ Future<(Daemon, FakeDaemon)> _app(
   required String state221,
 }) async {
   viewport(tester, const Size(1700, 900));
-  showDetails.value = true;
-  collapsedWidgets.value = {};
   widgetOrder.value = ['Pull request'];
-  cleanUpLater.value = {};
-  pullSeen.value = {};
   final items = {
     215: _item(215, 'merged', 'feed-cursor'),
     221: _item(221, state221, 'cursor-ties'),

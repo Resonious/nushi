@@ -139,7 +139,6 @@ void main() {
           "composer's code", (tester) async {
         viewport(tester, Size(width, 900), brightness: b);
         showDetails.value = false;
-        paneWidths.value = {};
         final c = chat('c', 'claude', 'Why make check vets twice');
         final fake = FakeDaemon([c])
           ..answer = ((input) => input is GetChatRequest

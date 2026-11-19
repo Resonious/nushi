@@ -170,7 +170,6 @@ Future<Daemon> browserApp(
 }) async {
   viewport(tester, Size(width, 900), brightness: brightness);
   showDetails.value = false;
-  paneWidths.value = {};
   final fake =
       FakeDaemon([
           chat('c', 'claude', 'Build the tea shop'),
