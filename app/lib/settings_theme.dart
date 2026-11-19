@@ -4,32 +4,23 @@ import 'package:flutter/material.dart';
 
 import 'package:nushi/controls.dart';
 import 'package:nushi/conventions.dart';
-import 'package:nushi/plain_tabs.dart';
 import 'package:nushi/settings.dart';
+import 'package:nushi/settings_appearance.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/theme/contrast.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/theme_files.dart';
 import 'package:nushi/theme_preview.dart';
 
-/// Settings › Appearance's Theme (ADR 0086): the picked theme large, its
-/// dark and light sets side by side, then a card for each theme, the
-/// built-ins then the user's, each a picture of Nushi in it; a pick applies
-/// at once. The cards show the set the app shows unless Dark or Light over
-/// them says otherwise (a look, not the appearance). A user's card says
-/// what's wrong with its file and its pairs under AA (a warning, never a
-/// refusal); a file that's no theme at all says so under the cards. Then
-/// New from the current one and Show folder.
-class ThemeGroup extends StatefulWidget {
+/// Settings › Appearance's Theme (ADR 0086): Mode (System, Light, Dark)
+/// first, then a card for each theme, the built-ins then the user's, each
+/// a picture of Nushi in it in the set the app shows; a pick applies at
+/// once, and the picked card, ringed and checked, is the one place it
+/// shows. A user's card says what's wrong with its file and its pairs
+/// under AA (a warning, never a refusal); a file that's no theme at all
+/// says so under the cards. Then New from the current one and Show folder.
+class ThemeGroup extends StatelessWidget {
   const new({super.key});
-
-  @override
-  State<ThemeGroup> createState() => _ThemeGroupState();
-}
-
-class _ThemeGroupState extends State<ThemeGroup> {
-  /// The set the cards show, when it isn't the app's.
-  Brightness? _look;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -37,7 +28,7 @@ class _ThemeGroupState extends State<ThemeGroup> {
     builder: (context, _) {
       final theme = NushiTheme.of(context);
       final t = theme.t;
-      final look = _look ?? t.brightness;
+      final look = t.brightness;
       final picked = pickedTheme();
       final files = themeFiles.value;
       final cards = [
@@ -69,38 +60,8 @@ class _ThemeGroupState extends State<ThemeGroup> {
       return SettingsGroup(
         title: 'Theme',
         children: [
-          _Picked(picked),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 6,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Themes',
-                        style: theme.ui(t.textSecondary, size: 12),
-                      ),
-                    ),
-                    PlainTabs(
-                      key: const ValueKey('theme-look'),
-                      value: look,
-                      tabs: const [
-                        (Brightness.dark, 'Dark'),
-                        (Brightness.light, 'Light'),
-                      ],
-                      tooltip: (_) => 'Previews only; Appearance stays',
-                      onChanged: (b) =>
-                          setState(() => _look = b == t.brightness ? null : b),
-                    ),
-                  ],
-                ),
-                _Grid(cards),
-              ],
-            ),
-          ),
+          const ModeRow(),
+          Padding(padding: const EdgeInsets.all(12), child: _Grid(cards)),
           if (unread.isNotEmpty)
             Padding(
               key: const ValueKey('theme-notes'),
@@ -124,68 +85,6 @@ class _ThemeGroupState extends State<ThemeGroup> {
 /// The first of a set's contrast warnings [w] on a card, and how many more.
 String _warning(String set, List<String> w) =>
     '$set: ${w.first}${w.length > 1 ? ' (and ${w.length - 1} more)' : ''}';
-
-/// The picked theme, large: its name, then its dark and its light set
-/// side by side, or one over the other where the group is narrow.
-class _Picked extends StatelessWidget {
-  const new(this.picked);
-
-  final ColorTheme picked;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = NushiTheme.of(context);
-    final t = theme.t;
-    // A set a palette names (Tokyo Night Day) says so: "Light: Tokyo
-    // Night Day".
-    Widget set(String name, Tokens tokens, String? known) => Column(
-      key: ValueKey('picked-${name.toLowerCase()}'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 5,
-      children: [
-        _Framed(ThemePreview(tokens, dark: picked.dark)),
-        Text(
-          known == null ? name : '$name: $known',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.ui(t.textMuted, size: 12),
-        ),
-      ],
-    );
-    return Padding(
-      key: const ValueKey('theme-picked'),
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 8,
-        children: [
-          Text(
-            picked.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.ui(t.text, size: 15, weight: FontWeight.w600),
-          ),
-          LayoutBuilder(
-            builder: (context, box) {
-              final dark = set('Dark', picked.dark, picked.darkName);
-              final light = set('Light', picked.light, picked.lightName);
-              return box.maxWidth >= 480
-                  ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      spacing: 12,
-                      children: [
-                        Expanded(child: dark),
-                        Expanded(child: light),
-                      ],
-                    )
-                  : Column(spacing: 10, children: [dark, light]);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 /// A preview with a hairline where its edge meets the card (another
 /// theme's window can be the card's own color), its corners rounded.
@@ -259,6 +158,14 @@ class ThemeCard extends StatelessWidget {
   final String? file;
   final List<String> warnings;
 
+  /// The shown set's own name, where its palette names it otherwise than
+  /// the theme (Catppuccin's Mocha, Tokyo Night's Day); else null.
+  String? get setName =>
+      switch (look == Brightness.dark ? theme.darkName : theme.lightName) {
+        final n? when n != theme.name => n,
+        _ => null,
+      };
+
   @override
   Widget build(BuildContext context) {
     final nushi = NushiTheme.of(context);
@@ -315,7 +222,8 @@ class ThemeCard extends StatelessWidget {
   }
 }
 
-/// A card's name and where it's from; the user's, Show in Finder.
+/// A card's name, a check when it's the picked one; a user's says
+/// "Yours" and its file, with Show in Finder.
 class _Name extends StatelessWidget {
   const new(this.card);
 
@@ -333,31 +241,41 @@ class _Name extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  spacing: 4,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        card.theme.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: nushi.ui(t.text, weight: FontWeight.w500),
-                      ),
-                    ),
-                    if (card.picked)
-                      Icon(Icons.check, size: 15, color: t.accentInk),
-                  ],
-                ),
                 Text(
-                  card.file == null ? 'Built in' : 'Yours · ${card.file}',
+                  card.theme.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: nushi.ui(t.textMuted, size: 11.5),
+                  style: nushi.ui(
+                    t.text,
+                    weight: card.picked ? FontWeight.w600 : FontWeight.w500,
+                  ),
                 ),
+                // A set its palette names apart (Tokyo Night Day) says so.
+                if (card.setName case final set?)
+                  Text(
+                    set,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: nushi.ui(t.textMuted, size: 11.5),
+                  ),
+                if (card.file case final f?)
+                  Text(
+                    'Yours · $f',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: nushi.ui(t.textMuted, size: 11.5),
+                  ),
               ],
             ),
           ),
         ),
+        if (card.picked)
+          Icon(
+            Icons.check_circle,
+            key: const ValueKey('theme-check'),
+            size: 15,
+            color: t.accentInk,
+          ),
         if (card.file case final f?)
           IconTap(
             Icons.folder_open_outlined,
@@ -398,8 +316,7 @@ class _Actions extends StatelessWidget {
         ),
       ],
     );
-    const about =
-        'A JSON file each in the themes folder, read again when it changes.';
+    const about = 'A JSON file each in the themes folder.';
     return LayoutBuilder(
       builder: (context, box) => box.maxWidth >= 560
           ? SettingsRow('Your themes', description: about, control: buttons)

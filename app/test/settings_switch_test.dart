@@ -77,9 +77,9 @@ void main() {
           matching: find.byType(Container),
         );
         Color fill() =>
-            ((tester.widget<AnimatedContainer>(track).decoration!
+            (tester.widget<AnimatedContainer>(track).decoration!
                     as BoxDecoration)
-                .color)!;
+                .color!;
         final offFill = fill();
         final offKnob = tester.getRect(knob.last);
         // Off: a grey of real strength, not the card's own fill.

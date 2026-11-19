@@ -86,17 +86,28 @@ Archived chats wait at the bottom of the sidebar, newest archived first, so a ch
 
 If you've picked a sort in the Arrange menu's **Sort by**, Archived uses it too. Chats archived before Nushi kept the time come after the rest, newest made first.
 
-## Change the fonts
+## Change the theme
 
-Nushi comes with its own fonts. You can use any font installed on your computer instead, one for the app's text and one for code.
+Nushi comes in a few color themes, each with a dark and a light look. Settings stays open over the window, so you see a theme on your chats as you pick it.
 
 1. Open **Settings**, then **Appearance**.
-2. Under **Fonts**, click **App font** and pick a font. The whole window changes at once.
-3. Click **Code font** and pick a font for code in chats, diffs and files.
+2. Under **Theme**, pick **System**, **Light** or **Dark** beside **Mode**. **System** follows your computer.
+3. Click a theme's card. The picked one has a ring and a check.
+
+To make your own, click **New from** and the theme's name: Nushi writes a JSON file of its colors to the themes folder, which **Show folder** opens. Change the colors in the file; Nushi reads it again as you save it.
+
+## Change the fonts
+
+Nushi comes with its own fonts. You can use any font installed on your computer instead: one for the app's text, one for code, and one for the terminal.
+
+1. Open **Settings**, then **Appearance**.
+2. Under **Fonts**, click the menu beside **App** and pick a font. The whole window changes at once.
+3. Beside **Code**, pick a font for code in chats, diffs and files.
+4. Beside **Terminal**, pick the terminal's font and its size.
 
 The list is long: type a few letters to find a font. To go back, pick the first font in the list, the one marked **bundled**. On a Mac, **System** is the font macOS itself uses.
 
-The terminal has its own font, in **Settings**, then **Terminal**. The phone always uses Nushi's own fonts.
+**Settings**, then **Terminal** has the terminal's font and size too, beside a preview. The phone always uses Nushi's own fonts.
 
 ## Send a message
 

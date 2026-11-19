@@ -20,3 +20,9 @@ Nushi had one palette, `Tokens.light` and `Tokens.dark`, picked by Appearance. T
 - A theme as a few seeds (base, accent, a hue per accent) that Nushi derives tokens from: less to write, but no one could fix the one pair that reads badly, and the built-ins' hand-held contrast would be a formula's.
 - Themes from VS Code or iTerm files: their roles don't map onto Nushi's tokens (a tool call's tint, a subagent's, the findings card) without guessing.
 - Refusing a custom theme under AA: Nushi gives warnings, not enforced flows.
+
+## Amendment (2026-11-19): the picker comes first, Mode beside it, the picked theme once
+- Settings › Appearance opens on its Theme group: Mode (System, Light, Dark, as segments) is its first row, then the cards, then Your themes. There's no row named Appearance on the Appearance page, and the Layout and Fonts groups follow.
+- The picked theme shows once: its card, ringed in `accentInk` with a check. The large picture of its dark and light sets above the cards, and the cards' own Dark and Light tabs (a look that left the appearance alone, beside the real setting), are gone: two light/dark controls that did different things. The cards draw the set the app shows; Mode shows the other.
+- A card says the shown set's own name where its palette names it apart from the theme (Catppuccin Mocha and Latte, Tokyo Night Day), as the picked one's large pictures did. A built-in card is its name alone; a user's still says Yours and its file.
+

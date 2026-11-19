@@ -60,17 +60,33 @@ List<String> _many(int n) => [
   'IBM Plex Sans',
 ];
 
+/// Settings › Appearance in the app, scrolled to its Fonts, which come
+/// after the theme and the layout.
 Future<Daemon> _settings(
   WidgetTester tester, {
   Size size = const Size(1700, 1000),
   Brightness b = Brightness.dark,
-}) => pumpSettingsApp(
-  tester,
-  settingsFake(),
-  SettingsSection.appearance,
-  size: size,
-  brightness: b,
-);
+}) async {
+  final d = await pumpSettingsApp(
+    tester,
+    settingsFake(),
+    SettingsSection.appearance,
+    size: size,
+    brightness: b,
+  );
+  await tester.scrollUntilVisible(
+    _field('terminal-font'),
+    200,
+    scrollable: find
+        .descendant(
+          of: find.byType(SettingsPage),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  await tester.pumpAndSettle();
+  return d;
+}
 
 Finder _field(String key) => find.byKey(ValueKey(key));
 
@@ -274,9 +290,18 @@ void main() {
       expect(tester.takeException(), isNull);
       final field = tester.getRect(_field('app-font'));
       expect(field.width, lessThanOrEqualTo(FontField.maxWidth));
-      final row = tester.getRect(find.widgetWithText(SettingsRow, 'App font'));
+      final appRow = find.ancestor(
+        of: _field('app-font'),
+        matching: find.byType(SettingsRow),
+      );
+      final row = tester.getRect(appRow);
       expect(field.right, moreOrLessEquals(row.right - 14, epsilon: 0.5));
-      expect(tester.getRect(find.text('App font')).right, lessThan(field.left));
+      expect(
+        tester
+            .getRect(find.descendant(of: appRow, matching: find.text('App')))
+            .right,
+        lessThan(field.left),
+      );
       expectTextInside(tester, width);
       await _tap(tester, _field('app-font'));
       expect(tester.takeException(), isNull);

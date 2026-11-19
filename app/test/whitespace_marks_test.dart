@@ -261,7 +261,7 @@ void main() {
   ) async {
     final d = await FakeDaemon([]).connect(tester);
     await pumpSettings(tester, d, SettingsSection.appearance);
-    final row = find.text('Show whitespace');
+    final row = find.text('Show whitespace in files');
     expect(row, findsOneWidget);
     await tester.ensureVisible(row);
     await tester.pumpAndSettle();

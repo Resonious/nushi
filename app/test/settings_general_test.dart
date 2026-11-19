@@ -70,22 +70,14 @@ void main() {
   testWidgets('the appearance is a setting, kept in app.json', (tester) async {
     Directory(dataDir).createSync(recursive: true);
     final (_, d) = await _open(tester, SettingsSection.appearance);
-    expect(find.text('As the system'), findsOne);
-    await tester.tap(find.text('As the system'));
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.descendant(
-        of: find.byType(MenuItemButton),
-        matching: find.text('Dark', findRichText: true),
-      ),
-    );
+    final mode = find.byKey(const ValueKey('appearance-mode'));
+    expect(find.descendant(of: mode, matching: find.text('System')), findsOne);
+    await tester.tap(find.descendant(of: mode, matching: find.text('Dark')));
     await tester.pumpAndSettle();
     expect(appearance.value, ThemeMode.dark);
     expect(readSaved()['appearance'], 'dark');
-    expect(
-      find.descendant(of: find.byType(MenuField), matching: find.text('Dark')),
-      findsOne,
-    ); // the field says it
+    // The segments say it.
+    expect(tester.widget<Segmented<ThemeMode>>(mode).value, ThemeMode.dark);
     d.dispose();
   });
 }

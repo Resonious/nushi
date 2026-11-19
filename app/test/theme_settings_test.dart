@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nushi/controls.dart' show IconTap;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/settings.dart';
@@ -98,12 +99,15 @@ void main() {
     expect(_painted(tester, find.byType(SettingsView)), same(tokyo.dark));
     expect(readSaved()['theme'], 'tokyo-night');
     expect(pickedTheme(), same(tokyo));
-    // Its sets by the names they're known by.
-    expect(find.text('Dark: Tokyo Night'), findsOneWidget);
-    expect(find.text('Light: Tokyo Night Day'), findsOneWidget);
+    // A card names the set it shows where its palette names it apart:
+    // Tokyo Night's dark set is the theme's name, its light set Day.
+    expect(find.text('Tokyo Night Day'), findsNothing);
+    expect(find.text('Catppuccin Mocha'), findsOneWidget);
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
     await tester.pumpAndSettle();
     expect(_painted(tester, find.byType(SettingsView)), same(tokyo.light));
+    expect(find.text('Tokyo Night Day'), findsOneWidget);
+    expect(find.text('Catppuccin Latte'), findsOneWidget);
     await closeView(tester, d);
   }, variant: _mac);
 
@@ -228,7 +232,9 @@ void main() {
     );
     expect(onCard('Dim', find.textContaining('Light:')), findsNothing);
     expect(onCard('Good', find.text('Yours · Good.json')), findsOne);
-    expect(onCard('Nord', find.text('Built in')), findsOne);
+    // A built-in card is its name alone: no file, no Yours line.
+    expect(onCard('Nord', find.textContaining('Yours')), findsNothing);
+    expect(onCard('Nord', find.byType(IconTap)), findsNothing);
     // The custom card's colors are its own: its preview draws in them.
     final mine = tester.widget<ThemeCard>(
       find.ancestor(of: find.text('Good'), matching: find.byType(ThemeCard)),
