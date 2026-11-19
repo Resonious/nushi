@@ -116,9 +116,10 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-/// A group of rows in a card, an optional [title] over it (and
-/// [about], what the group holds, under the title) and a [footer] under it;
-/// a hairline between rows, and [empty] ("None") in the box without any.
+/// A group of rows in a card, an optional [title] over it (with [actions]
+/// at the end of its line, and [about], what the group holds, under it)
+/// and a [footer] under it; a hairline between rows, and [empty] ("None")
+/// in the box without any.
 class SettingsGroup extends StatelessWidget {
   const new({
     required this.children,
@@ -127,9 +128,11 @@ class SettingsGroup extends StatelessWidget {
     this.about,
     this.footer,
     this.empty,
+    this.actions = const [],
   });
 
   final String? title;
+  final List<Widget> actions;
   final String? about;
   final Widget? footer;
   final String? empty;
@@ -149,16 +152,27 @@ class SettingsGroup extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(left: 2, bottom: 7),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (title case final title?)
-                    Text(
-                      title,
-                      style: theme.ui(
-                        t.textSecondary,
-                        size: 12,
-                        weight: FontWeight.w600,
+                    SizedBox(
+                      height: actions.isEmpty ? null : 30,
+                      child: Row(
+                        spacing: 8,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: theme.ui(
+                                t.textSecondary,
+                                size: 12,
+                                weight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          ...actions,
+                        ],
                       ),
                     ),
                   if (about case final about?) Text(about, style: muted),
@@ -199,8 +213,9 @@ class SettingsGroup extends StatelessWidget {
 /// A row's height at least.
 const settingsRowHeight = 46.0;
 
-/// A row of a [SettingsGroup]: [label] and its [description] on the left,
-/// [control] on the right, at the group's edge.
+/// A row of a [SettingsGroup]: [label] and its [description] on the left
+/// (cut to [descriptionLines] when given: text that isn't Nushi's own, as
+/// a reply card's words), [control] on the right, at the group's edge.
 class SettingsRow extends StatelessWidget {
   const new(
     this.label, {
@@ -208,12 +223,14 @@ class SettingsRow extends StatelessWidget {
     this.description,
     this.control,
     this.descriptionColor,
+    this.descriptionLines,
   });
 
   final String label;
   final String? description;
   final Widget? control;
   final Color? descriptionColor;
+  final int? descriptionLines;
 
   @override
   Widget build(BuildContext context) {
@@ -234,6 +251,10 @@ class SettingsRow extends StatelessWidget {
                   if (description case final d? when d.isNotEmpty)
                     Text(
                       d,
+                      maxLines: descriptionLines,
+                      overflow: descriptionLines == null
+                          ? null
+                          : TextOverflow.ellipsis,
                       style: theme.ui(
                         descriptionColor ?? t.textMuted,
                         size: 12,

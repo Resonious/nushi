@@ -8,6 +8,7 @@ import 'package:nushi/conventions.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.connect.client.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/menu.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
@@ -187,21 +188,29 @@ class _JiraPageState extends State<JiraPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ?error,
-        if (sites.isNotEmpty)
-          SettingsGroup(
-            title: 'Sites',
-            children: [
-              for (final s in sites)
-                _siteRow(
-                  t,
-                  s,
-                  checked: _checked[s.id],
-                  warning: expiryWarning(s, clock()),
-                  onAllow: () => _allow(s),
-                  onRemove: () => _remove(s),
-                ),
-            ],
-          ),
+        SettingsGroup(
+          title: 'Sites',
+          actions: [
+            if (!_adding)
+              Button(
+                label: 'Add a site',
+                icon: Icons.add,
+                onPressed: () => setState(() => _adding = true),
+              ),
+          ],
+          empty: 'No Jira sites',
+          children: [
+            for (final s in sites)
+              _siteRow(
+                t,
+                s,
+                checked: _checked[s.id],
+                warning: expiryWarning(s, clock()),
+                onAllow: () => _allow(s),
+                onRemove: () => _remove(s),
+              ),
+          ],
+        ),
         if (_adding)
           TokenForm(
             title: 'Add a Jira Cloud site',
@@ -219,24 +228,6 @@ class _JiraPageState extends State<JiraPage> {
             onCancel: sites.isEmpty
                 ? null
                 : () => setState(() => _adding = false),
-          )
-        else
-          Row(
-            children: [
-              Button(
-                label: 'Add a site',
-                icon: Icons.add,
-                onPressed: () => setState(() => _adding = true),
-              ),
-            ],
-          ),
-        if (sites.isEmpty && !_adding)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              'No Jira sites',
-              style: theme.ui(t.textMuted, size: 12),
-            ),
           ),
       ],
     );
@@ -247,8 +238,9 @@ class _JiraPageState extends State<JiraPage> {
 bool jiraConnected(Iterable<JiraSite> sites) =>
     sites.any((s) => s.problem.isEmpty && !s.needsOk);
 
-/// A site's row: its email and token's kind, who its token is (Jira was
-/// asked: [checked]) or what's wrong, and when the token expires if soon.
+/// A site's row: who its token is (Jira was asked: [checked]) and its
+/// email, or what's wrong, and when the token expires if soon; "Connected"
+/// once Jira said who; Remove behind ⋯.
 AccountRow _siteRow(
   Tokens t,
   JiraSite s, {
@@ -257,25 +249,37 @@ AccountRow _siteRow(
   required VoidCallback onAllow,
   required VoidCallback onRemove,
 }) {
-  final ok = checked?.startsWith('Connected as ') ?? false;
+  const connected = 'Connected as ';
+  final ok = checked?.startsWith(connected) ?? false;
+  final who = ok ? checked!.substring(connected.length) : null;
   return AccountRow(
+    icon: Icons.task_alt,
     title: s.id,
     lines: [
-      ([s.email, if (s.scoped) 'scoped token'].join(' · '), t.textSecondary),
+      (
+        [?who, s.email, if (s.scoped) 'scoped token'].join(' · '),
+        t.textSecondary,
+      ),
       if (s.needsOk)
         (needsOkStatus, t.needs)
       else if (s.problem.isNotEmpty)
         (s.problem, t.crashed)
-      else
-        (
-          checked ?? 'Checking…',
-          ok || checked == null ? t.textMuted : t.crashed,
-        ),
+      else if (!ok)
+        (checked ?? 'Checking…', checked == null ? t.textMuted : t.crashed),
       if (warning case final w?)
         ('$w: make a new one and add the site again.', t.needs),
     ],
+    state: switch (s) {
+      _ when s.needsOk => null, // Allow… says it
+      _ when ok => ('Connected', NoteTone.done),
+      _ when s.problem.isNotEmpty || checked != null => (
+        'Not connected',
+        NoteTone.crashed,
+      ),
+      _ => null,
+    },
     needsOk: s.needsOk,
     onAllow: onAllow,
-    onRemove: onRemove,
+    more: [MenuEntry('Remove site…', danger: true, onPick: onRemove)],
   );
 }

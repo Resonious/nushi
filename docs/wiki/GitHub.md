@@ -10,7 +10,7 @@ If you already use the `gh` command-line tool and are signed in (`gh auth login`
 
 To check, or to use a token instead:
 
-1. Open **Settings › GitHub**. Under **Hosts** you see who you're signed in as.
+1. Open **Settings › GitHub**. Under **Accounts** you see who you're signed in as, and **Signed in** once GitHub has answered. The **⋯** beside it shows the token's kind and scopes and what's left of this hour's requests.
 2. To add a token, click **Add a token**, fill in **Host** (for example `github.com`) and **Token**, then click **Add**.
 
 A classic token with the `repo` and `read:org` scopes covers everything. Nushi keeps it in your system keychain and sends it only to its own host.
@@ -79,7 +79,11 @@ Click **Pull request** next to **Chat** and **Changes** at the top of the chat, 
 
 Comments and threads elsewhere in the tab have **Send to agent**, and **Fix checks** sends every failed check at once.
 
-By default, review cards tell the agent not to reply on GitHub, and failed-check cards tell it not to commit or push. Change what each kind of card asks in **Settings › GitHub › What reply cards ask**.
+By default, review cards tell the agent not to reply on GitHub, and failed-check cards tell it not to commit or push. Change what each kind of card asks in **Settings › GitHub › What reply cards ask**:
+
+1. Click **Edit** beside the kind of card.
+2. Change the words and click **Save**. Empty asks the default.
+3. A changed kind says **Edited**. Click **Reset** beside it to go back to the default.
 
 ## Reply, review and resolve
 

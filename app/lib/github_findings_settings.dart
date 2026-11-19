@@ -3,7 +3,7 @@ import 'package:nushi/settings.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/theme/theme.dart';
 
-/// Settings › GitHub's Findings from review bots: off at first; on, a
+/// Settings › GitHub's Review bots: off at first; on, a
 /// pull request's To do lists the must-address findings read out of the
 /// named bots' reviews (the list items under a heading with one of the
 /// words given), a guess at one bot's Markdown that only fits some.
@@ -47,17 +47,17 @@ class _FindingsGroupState extends State<FindingsGroup> {
     return ValueListenableBuilder(
       valueListenable: githubFindings,
       builder: (context, on, _) => SettingsGroup(
-        title: 'Findings from review bots',
-        footer: const Text(
-          "Reads a bot's newest review or comment for what it says must be "
-          'addressed: the list items under a heading with one of these '
-          'words. Only a bot that writes this way has any; its message '
-          'stays in Activity either way.',
-        ),
+        title: 'Review bots',
+        footer: on
+            ? const Text(
+                "The list items under such a heading in a bot's newest "
+                'review; Activity keeps its message.',
+              )
+            : null,
         children: [
           SettingsRow(
             "Show bots' findings in To do",
-            description: 'Off, To do has only what GitHub itself tracks',
+            description: 'What a review bot says must be fixed.',
             control: SettingsSwitch(
               value: on,
               onChanged: (v) => githubFindings.value = v,

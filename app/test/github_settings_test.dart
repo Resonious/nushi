@@ -112,24 +112,41 @@ void main() {
       'its budget', (tester) async {
     final (fake, d) = await _open(tester);
     expect(find.text('github.com'), findsOneWidget);
-    expect(find.text('Signed in as octo (Octo Cat)'), findsOneWidget);
+    // Who and from where in the row, its state in a pill.
+    expect(find.text("octo (Octo Cat) · from gh's login"), findsOneWidget);
     expect(
-      find.text(
-        "From gh's login · OAuth token · scopes gist, read:org, repo, workflow",
+      find.descendant(
+        of: find.byKey(const ValueKey('account-state-github.com')),
+        matching: find.text('Signed in'),
       ),
+      findsOne,
+    );
+    // The jargon is behind ⋯: the token's kind and scopes, the budget.
+    expect(find.textContaining('OAuth'), findsNothing);
+    expect(find.textContaining('GraphQL'), findsNothing);
+    expect(find.textContaining('needs your OK'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('account-more-github.com')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('OAuth token · scopes gist, read:org, repo, workflow'),
       findsOneWidget,
     );
     expect(find.textContaining('GraphQL 4875 of 5000'), findsOneWidget);
-    expect(find.textContaining('needs your OK'), findsOneWidget);
     // gh's login can't be removed here; a pasted token can.
-    expect(find.text('Remove'), findsOneWidget);
+    expect(find.text('Remove token…'), findsNothing);
+    await tester.tapAt(const Offset(5, 5)); // the menu shuts
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Allow…'));
     await tester.pumpAndSettle();
     expect(
       fake.calls.whereType<AllowGitHubTokenRequest>().single.host,
       'git.corp.example',
     );
-    await tester.tap(find.text('Remove'));
+    await tester.tap(
+      find.byKey(const ValueKey('account-more-git.corp.example')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Remove token…'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(Button, 'Remove').last);
     await tester.pumpAndSettle();
@@ -198,7 +215,7 @@ void main() {
     expect(await githubLogin(d, 'github.com'), 'octo');
     login = 'other';
     await pumpSettings(tester, d, SettingsSection.github);
-    expect(find.textContaining('Signed in as other'), findsOneWidget);
+    expect(find.textContaining('other'), findsOneWidget);
     expect(await githubLogin(d, 'github.com'), 'other');
     d.dispose();
   });

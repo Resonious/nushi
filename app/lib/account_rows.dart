@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:nushi/conventions.dart';
+import 'package:nushi/menu.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/web_page.dart' show openLinkOrSay;
 import 'package:nushi/widgets.dart';
@@ -16,54 +17,78 @@ String get needsOkStatus =>
     'This build of Nushi needs your OK to read the token: '
     '${conventions.system} asks for your password.';
 
-/// A Jira site's or a GitHub host's row: its [title], then [lines] (each
-/// its words and their color); Allow… while the keychain needs the
-/// user's OK ([needsOk]), and Remove when it can go ([onRemove]).
+/// A Jira site's or a GitHub host's row, both alike: the integration's
+/// [icon] in a small tile, its [title] and [lines] (each its words and
+/// their color: who, or what's wrong), then its [state] in a pill
+/// ("Signed in", "Connected"), Allow… while the keychain needs the user's
+/// OK ([needsOk]), and a ⋯ of [more]: the details that are jargon in the
+/// main view (a token's kind and scopes), and Remove.
 class AccountRow extends StatelessWidget {
   const new({
+    required this.icon,
     required this.title,
     required this.lines,
     required this.onAllow,
     super.key,
+    this.state,
     this.needsOk = false,
-    this.onRemove,
+    this.more = const [],
   });
 
+  final IconData icon;
   final String title;
   final List<(String, Color)> lines;
+  final (String, NoteTone)? state;
   final bool needsOk;
   final VoidCallback onAllow;
-  final VoidCallback? onRemove;
+  final List<MenuEntry> more;
 
   @override
   Widget build(BuildContext context) {
     final theme = NushiTheme.of(context);
     final t = theme.t;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 14),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: t.lifted,
+              borderRadius: BorderRadius.circular(NushiTheme.control),
+            ),
+            child: Icon(icon, size: 16, color: t.textSecondary),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(title, style: theme.ui(t.text, weight: FontWeight.w600)),
+                Text(title, style: theme.ui(t.text)),
                 for (final (words, color) in lines)
                   Text(words, style: theme.ui(color, size: 12)),
               ],
             ),
           ),
+          const SizedBox(width: 12),
           if (needsOk)
             Padding(
               padding: const EdgeInsets.only(right: 6),
               child: Button(label: 'Allow…', onPressed: onAllow),
             ),
-          if (onRemove case final remove?)
-            Button(
-              label: 'Remove',
-              kind: ButtonKind.destructive,
-              onPressed: remove,
+          if (state case (final words, final tone))
+            NotePill(words, key: ValueKey('account-state-$title'), tone: tone),
+          if (more.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 6),
+              child: MenuIcon(
+                Icons.more_horiz,
+                key: ValueKey('account-more-$title'),
+                tooltip: 'More',
+                entries: more,
+              ),
             ),
         ],
       ),

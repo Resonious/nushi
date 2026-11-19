@@ -19,7 +19,7 @@ Make the token on Atlassian's site: click **Make a token** in Nushi's form, or g
 3. Fill in **Site**, **Email** and **API token**. **Expires** is optional: give the token's end date to get a warning before it runs out.
 4. Click **Add**.
 
-Nushi checks the token with Jira, then the site's row says **Connected as** and your name. **Remove** disconnects a site.
+Nushi checks the token with Jira, then the site's row says **Connected**, with your name and email. To disconnect a site, click **⋯** beside it, then **Remove site…**.
 
 ## Open your issues
 
@@ -77,7 +77,7 @@ On Linux, use Ctrl wherever the Mac uses ⌘. The one exception: ⌥⌘1–9 is 
 
 ## Good to know
 
-- Your token is kept in your Mac's keychain (the keyring on Linux), never in a file. **Remove** deletes it from there.
+- Your token is kept in your Mac's keychain (the keyring on Linux), never in a file. **Remove site…** deletes it from there.
 - If Nushi says it needs your OK to read the token (after an update, say), click **Allow…** and enter your password when asked. If it offers **Restart daemon** instead, click that; it stops running turns and closes terminals.
 - The list refreshes every minute while it's open, showing the last results while new ones load.
 - A chat started on an issue gives the agent tools for that one issue: read it, comment on it, and move it. The agent's own permission mode decides whether it asks you first. The issue's details show which comments and moves came from an agent.

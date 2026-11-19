@@ -355,10 +355,7 @@ void main() {
       themed(const SingleChildScrollView(child: NotificationsGroup())),
     );
     await tester.pump();
-    expect(
-      find.text('An error, or the agent quit mid-turn.'),
-      findsOne,
-    );
+    expect(find.text('An error, or the agent quit mid-turn.'), findsOne);
     expect(find.text('macOS has notifications off for Nushi.'), findsOne);
     await tester.tap(find.text('Open Notifications…'));
     await tester.pump();

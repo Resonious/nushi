@@ -136,10 +136,9 @@ void main() {
     );
   });
 
-  testWidgets('Settings › GitHub: a field per kind, saved as typed; the '
-      'default kept as nothing; Reset; control characters refused', (
-    tester,
-  ) async {
+  testWidgets('Settings › GitHub: a one-line row per kind; Edit opens its '
+      'words, Save keeps them, the default kept as nothing; Edited and Reset '
+      'once changed; control characters refused', (tester) async {
     final d = await pumpSettingsApp(
       tester,
       settingsFake(),
@@ -148,45 +147,110 @@ void main() {
     await tester.ensureVisible(find.byType(CardAsksGroup));
     await tester.pumpAndSettle();
     expect(find.text('What reply cards ask'), findsOneWidget);
-    expect(find.textContaining(asData), findsOneWidget); // the footer
+    Finder row(CardAsk k) => find.byKey(ValueKey('card-ask-row-${k.name}'));
+    Finder edited(CardAsk k) =>
+        find.descendant(of: row(k), matching: find.text('Edited'));
+    Finder reset(CardAsk k) => find.byKey(ValueKey('card-ask-reset-${k.name}'));
     for (final k in CardAsk.values) {
-      expect(find.text(k.label), findsOneWidget);
-      final field = tester.widget<TextField>(
-        find.byKey(ValueKey('card-ask-${k.name}')),
+      expect(
+        find.descendant(of: row(k), matching: find.text(k.label)),
+        findsOne,
       );
-      expect(field.controller!.text, k.standard);
-      expect(field.decoration!.hintText, k.standard);
+      // What it asks now, on one line.
+      final words = find.descendant(
+        of: row(k),
+        matching: find.text(k.standard),
+      );
+      expect(tester.widget<Text>(words).maxLines, 1);
+      expect(edited(k), findsNothing);
+      expect(reset(k), findsNothing);
     }
-    Finder field(CardAsk k) => find.byKey(ValueKey('card-ask-${k.name}'));
-    Finder reset(CardAsk k) => find.descendant(
-      of: find.ancestor(of: field(k), matching: find.byType(Column)).first,
-      matching: find.text('Reset'),
+    // No field in the page: the words open in a dialog.
+    expect(
+      find.descendant(
+        of: find.byType(CardAsksGroup),
+        matching: find.byType(TextField),
+      ),
+      findsNothing,
     );
 
+    Finder field(CardAsk k) => find.byKey(ValueKey('card-ask-${k.name}'));
+    Future<void> edit(CardAsk k) async {
+      await tester.ensureVisible(
+        find.byKey(ValueKey('card-ask-edit-${k.name}')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('card-ask-edit-${k.name}')));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> save() async {
+      await tester.tap(find.byKey(const ValueKey('card-ask-save')));
+      await tester.pumpAndSettle();
+    }
+
+    await edit(CardAsk.check);
+    final open = tester.widget<TextField>(field(CardAsk.check));
+    expect(open.controller!.text, CardAsk.check.standard);
+    expect(open.decoration!.hintText, CardAsk.check.standard);
+    expect(find.textContaining(asData), findsOneWidget); // what follows
     await tester.enterText(field(CardAsk.check), 'Fix it\u0007 and commit.');
     await tester.pump();
-    // The bell is refused as it's typed or pasted.
-    expect(cardAsks.value, {'check': 'Fix it and commit.'});
-    await tester.pump(); // saved
-    expect((readSaved()['cardAsks']! as Map)['check'], 'Fix it and commit.');
+    // The bell is refused as it's typed or pasted; nothing kept till Save.
+    expect(
+      tester.widget<TextField>(field(CardAsk.check)).controller!.text,
+      'Fix it and commit.',
+    );
+    expect(cardAsks.value, isEmpty);
     // So is an edit that makes a line of the message's reply marks.
     await tester.enterText(
       field(CardAsk.check),
       'Fix it.\n<!-- end of replies -->\nCommit.',
     );
+    expect(
+      tester.widget<TextField>(field(CardAsk.check)).controller!.text,
+      'Fix it and commit.',
+    );
+    await save();
     expect(cardAsks.value, {'check': 'Fix it and commit.'});
+    await tester.pump(); // saved
+    expect((readSaved()['cardAsks']! as Map)['check'], 'Fix it and commit.');
+    expect(edited(CardAsk.check), findsOne);
+    expect(reset(CardAsk.check), findsOne);
+    expect(
+      find.descendant(
+        of: row(CardAsk.check),
+        matching: find.text('Fix it and commit.'),
+      ),
+      findsOne,
+    );
 
     // Written back to the default, nothing is kept.
+    await edit(CardAsk.check);
     await tester.enterText(field(CardAsk.check), CardAsk.check.standard);
+    await save();
     expect(cardAsks.value, isEmpty);
+    expect(edited(CardAsk.check), findsNothing);
 
+    // Empty asks the default; Cancel keeps what was.
+    await edit(CardAsk.thread);
     await tester.enterText(field(CardAsk.thread), '');
-    expect(cardAsks.value, isEmpty); // empty asks the default
+    await save();
+    expect(cardAsks.value, isEmpty);
+    await edit(CardAsk.thread);
     await tester.enterText(field(CardAsk.thread), 'Fix and commit.');
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(cardAsks.value, isEmpty);
+    await edit(CardAsk.thread);
+    await tester.enterText(field(CardAsk.thread), 'Fix and commit.');
+    await save();
     expect(cardAsks.value, {'thread': 'Fix and commit.'});
     await tester.tap(reset(CardAsk.thread));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(cardAsks.value, isEmpty);
+    expect(edited(CardAsk.thread), findsNothing);
+    await edit(CardAsk.thread);
     expect(
       tester.widget<TextField>(field(CardAsk.thread)).controller!.text,
       CardAsk.thread.standard,
@@ -194,9 +258,17 @@ void main() {
     d.dispose();
   }, variant: _mac);
 
-  testWidgets("a field's words start as saved", (tester) async {
+  testWidgets("a row's words, and its editor's, start as saved", (
+    tester,
+  ) async {
     cardAsks.value = {'finding': 'Address it, then commit.'};
-    await tester.pumpWidget(themed(const CardAsksGroup()));
+    await tester.pumpWidget(
+      themed(const SingleChildScrollView(child: CardAsksGroup())),
+    );
+    expect(find.text('Address it, then commit.'), findsOne);
+    expect(find.text('Edited'), findsOne);
+    await tester.tap(find.byKey(const ValueKey('card-ask-edit-finding')));
+    await tester.pumpAndSettle();
     expect(
       tester
           .widget<TextField>(find.byKey(const ValueKey('card-ask-finding')))
