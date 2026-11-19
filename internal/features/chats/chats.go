@@ -148,24 +148,13 @@ type chat struct {
 	kind    *kind  // the agent it runs, for good
 	agent   Agent
 	publish func(model.Event)
-	// remembered is the service's, for the commands the agent listed.
-	remembered Remembered
-	sessions   Sessions
+	// svc is the service the chat is one of, for what New gave it, which
+	// never changes after (never its lock, nor what that covers).
+	svc *Service
 	// worktrees are the service's, for naming the chat's branch (branch.go).
 	worktrees Worktrees
-	// owned lists the worktrees and folders that are a chat's own, for
-	// related.go.
-	owned    func(chatID string) ([]string, error)
-	copies   Copies          // the service's; nil for a side chat (copies.go)
-	copiesOn func() bool     // and whether it writes them
-	viewers  Viewers         // the service's
-	ctx      context.Context //nolint:containedctx // the service's life, which ends what the chat follows on its own
-	timing   Timing          // the service's
-	procs    Processes       // the service's, for whether a background command's shell runs (followCommand)
-	// serverCommand and serverAnswered are the service's, for a
-	// preview_start ask's card.
-	serverCommand  func(chatID, name string) (command, askID string)
-	serverAnswered func(askID string, allowed bool)
+	copies    Copies      // the service's; nil for a side chat (copies.go)
+	copiesOn  func() bool // and whether it writes them
 	// gitHubHost is the service's, for a pull request a tool call opened.
 	gitHubHost func(host string) bool
 
@@ -329,7 +318,7 @@ func (c *chat) snapshotLocked(items []model.Item) model.Chat {
 // before its kind hid a command (CommandHider) is offered without it.
 func (c *chat) commandsLocked() []model.Command {
 	if len(c.commands) == 0 {
-		return c.kind.withTerminalCommands(c.kind.offered(c.remembered.Commands(c.kind.Name)))
+		return c.kind.withTerminalCommands(c.kind.offered(c.svc.remembered.Commands(c.kind.Name)))
 	}
 	return slices.Clone(c.commands)
 }
@@ -344,7 +333,7 @@ func checkFolder(folder string) error {
 }
 
 func (s *Service) newChat(k *kind) *chat {
-	return &chat{kind: k, remembered: s.remembered, publish: s.publish, sessions: s.sessions, worktrees: s.worktrees, owned: s.ownedWorktrees, copies: s.copies, copiesOn: s.copiesOn, viewers: s.viewers, ctx: s.ctx, timing: s.timing, procs: s.procs, serverCommand: s.serverCommand, serverAnswered: s.serverAnswered, gitHubHost: s.gitHubHost, waiting: map[string]chan<- string{},
+	return &chat{kind: k, svc: s, publish: s.publish, worktrees: s.worktrees, copies: s.copies, copiesOn: s.copiesOn, gitHubHost: s.gitHubHost, waiting: map[string]chan<- string{},
 		questions: map[string]chan<- []model.Field{}, sides: map[string]*chat{}, children: map[string]*child{}, probes: map[string]*silentRun{}, unsaved: map[string]bool{},
 		mirrored: true} // a new chat's copy is as empty as its transcript
 }
@@ -391,7 +380,7 @@ func (c *chat) saveLocked(change func(*model.ChatRecord)) {
 
 func (c *chat) storeLocked() {
 	if c.parent == nil { // side chats aren't stored
-		if err := c.sessions.SaveSession(c.record); err != nil {
+		if err := c.svc.sessions.SaveSession(c.record); err != nil {
 			c.logLocked().Error("saving the chat", "err", err)
 		}
 	}
@@ -468,16 +457,16 @@ func (c *chat) cancelLocked() error {
 	if own {
 		c.ownTurn = false
 		c.statusChangedLocked()
-		return cancelTurn(agent, cancel, c.timing.stopGrace())
+		return cancelTurn(agent, cancel, c.svc.timing.stopGrace())
 	}
 	select {
 	case <-c.sent:
-		return cancelTurn(agent, cancel, c.timing.stopGrace())
+		return cancelTurn(agent, cancel, c.svc.timing.stopGrace())
 	default: // the cancel must not reach the agent before the prompt
 		sent := c.sent
 		go func() {
 			<-sent
-			if err := cancelTurn(agent, cancel, c.timing.stopGrace()); err != nil {
+			if err := cancelTurn(agent, cancel, c.svc.timing.stopGrace()); err != nil {
 				c.log().Warn("cancelling the turn", "err", err)
 			}
 		}()

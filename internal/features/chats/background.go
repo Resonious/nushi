@@ -132,8 +132,8 @@ func (c *chat) followCommand(callID, id, file string, agent Agent) {
 	f := commandFollower{c: c, callID: callID, id: id, file: file, agent: agent}
 	for f.step() {
 		select {
-		case <-time.After(c.timing.commandPoll()):
-		case <-c.ctx.Done():
+		case <-time.After(c.svc.timing.commandPoll()):
+		case <-c.svc.ctx.Done():
 			return // the service closed: its agents end, and nobody is left to tell
 		}
 	}
@@ -247,13 +247,13 @@ func (c *chat) commandStoppedLocked(id string, stopped bool) {
 func (c *chat) commandShellRuns(callID string, agent Agent) bool {
 	c.mu.Lock()
 	call := c.itemLocked(callID)
-	if c.procs == nil || c.kind.background == nil || call == nil || agent.Pid() <= 0 {
+	if c.svc.procs == nil || c.kind.background == nil || call == nil || agent.Pid() <= 0 {
 		c.mu.Unlock()
 		return false
 	}
 	cp, tasks := *call, c.kind.background
 	c.mu.Unlock()
-	found, err := commandShells(c.procs, agent.Pid(), tasks, cp)
+	found, err := commandShells(c.svc.procs, agent.Pid(), tasks, cp)
 	return err == nil && len(found) > 0
 }
 

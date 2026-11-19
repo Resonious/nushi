@@ -43,7 +43,7 @@ func (c *chat) pushedLocked(it model.Item) {
 	if c.replaying || c.quiet || c.parent != nil || c.worktrees == nil || !pushed(it) {
 		return
 	}
-	ctx, cancel := context.WithTimeout(c.ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.svc.ctx, 5*time.Second)
 	defer cancel()
 	branch := c.worktrees.Branch(ctx, c.record.Folder)
 	if branch == "" {

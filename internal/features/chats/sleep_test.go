@@ -118,7 +118,7 @@ func TestAutoSleep(t *testing.T) {
 			return func() { c.items = c.items[:len(c.items)-1] }
 		},
 		"a side chat": func(c *chat) func() {
-			c.sides["x"] = &chat{remembered: &memModes{}}
+			c.sides["x"] = &chat{svc: &Service{remembered: &memModes{}}}
 			return func() { delete(c.sides, "x") }
 		},
 	}

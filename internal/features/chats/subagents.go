@@ -59,7 +59,7 @@ func (c *chat) subagentLocked(call *model.Item) bool { //nolint:gocyclo // one t
 	default:
 		sa.State = "done"
 	}
-	now := c.timing.now()
+	now := c.svc.timing.now()
 	switch {
 	case sa.State == "running" && sa.Started.IsZero() && !c.reopeningLocked():
 		sa.Started = now

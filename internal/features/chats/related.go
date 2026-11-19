@@ -135,7 +135,7 @@ func (c *chat) lookRelatedLocked() {
 	c.relating = true
 	go func() {
 		for again := true; again; {
-			ctx, cancel := context.WithTimeout(c.ctx, relatedTimeout)
+			ctx, cancel := context.WithTimeout(c.svc.ctx, relatedTimeout)
 			c.lookRelated(ctx)
 			cancel()
 			c.mu.Lock()
@@ -300,7 +300,7 @@ func (c *chat) related(ctx context.Context, folder string, known []model.Related
 		}
 		r.moveBase(ctx, &next[i])
 	}
-	owned, err := c.owned(c.id)
+	owned, err := c.svc.ownedWorktrees(c.id)
 	if err != nil {
 		return nil, err
 	}

@@ -139,11 +139,11 @@ func (c *chat) retire(ctx context.Context, old Agent) error {
 			return false, nil
 		}
 	}
-	done, err := ended(2 * c.timing.stopGrace())
+	done, err := ended(2 * c.svc.timing.stopGrace())
 	if !done && err == nil {
 		c.log().Warn("the agent the chat slept from outlived its stop: killing it", "pid", old.Pid())
 		_ = old.Close()
-		done, err = ended(c.timing.stopGrace())
+		done, err = ended(c.svc.timing.stopGrace())
 	}
 	switch {
 	case err != nil:

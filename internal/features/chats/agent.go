@@ -314,6 +314,6 @@ func (c *chat) disconnect() {
 	c.orphanLocked(true)
 	c.mu.Unlock()
 	if agent != nil {
-		_ = agent.Stop(c.timing.stopGrace()) // its process is gone either way
+		_ = agent.Stop(c.svc.timing.stopGrace()) // its process is gone either way
 	}
 }

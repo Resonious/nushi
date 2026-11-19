@@ -17,8 +17,8 @@ func (f *fakeClock) move(d time.Duration) { f.at = f.at.Add(d) }
 
 // timedChat is a chat of Claude's whose times come from clock.
 func timedChat(clock *fakeClock) *chat {
-	return &chat{remembered: &memModes{}, id: "s1", sid: "s1", kind: testKind(testHarness{}), publish: func(model.Event) {},
-		record: model.ChatRecord{Folder: "/w"}, sessions: &memSessions{}, timing: Timing{Now: clock.now}}
+	return &chat{svc: &Service{remembered: &memModes{}, sessions: &memSessions{}, timing: Timing{Now: clock.now}}, id: "s1", sid: "s1",
+		kind: testKind(testHarness{}), publish: func(model.Event) {}, record: model.ChatRecord{Folder: "/w"}}
 }
 
 func callUpdate(id, status string) acp.SessionUpdate {

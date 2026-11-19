@@ -740,7 +740,7 @@ func TestAWorkflowWithoutFiles(t *testing.T) {
 // An agent without workflow files (a plain ACP agent, or Claude's harness
 // alone, as tests run it) follows nothing: the call stays plain.
 func TestNoWorkflowWithoutItsFiles(t *testing.T) {
-	c := &chat{kind: testKind(testHarness{}), ctx: t.Context(), publish: func(model.Event) {}}
+	c := &chat{svc: &Service{ctx: t.Context()}, kind: testKind(testHarness{}), publish: func(model.Event) {}}
 	it := model.Item{ID: wfCall, Kind: model.ToolCall, Tool: "Workflow", Status: "completed", Text: "Workflow launched in background. Task ID: t1\nRun ID: wf_1\n"}
 	c.mu.Lock()
 	c.workflowLocked(&it)

@@ -100,7 +100,7 @@ func (c *chat) branchTakenLocked(ctx context.Context, wt model.Worktree) (string
 	case use.Elsewhere:
 		return "another worktree has it checked out", nil
 	}
-	sessions, err := c.sessions.Sessions()
+	sessions, err := c.svc.sessions.Sessions()
 	if err != nil {
 		return "", err
 	}

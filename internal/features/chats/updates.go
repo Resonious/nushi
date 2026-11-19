@@ -105,8 +105,8 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 		c.commands = c.kind.withTerminalCommands(listed)
 		c.emitLocked(model.Event{ChatID: c.id, Commands: slices.Clone(c.commands)})
 		c.statusChangedLocked() // CanAskContext
-		if len(listed) > 0 && !slices.Equal(listed, c.remembered.Commands(c.kind.Name)) {
-			if err := c.remembered.SetCommands(c.kind.Name, listed); err != nil {
+		if len(listed) > 0 && !slices.Equal(listed, c.svc.remembered.Commands(c.kind.Name)) {
+			if err := c.svc.remembered.SetCommands(c.kind.Name, listed); err != nil {
 				c.logLocked().Warn("commands not remembered", "err", err)
 			}
 		}

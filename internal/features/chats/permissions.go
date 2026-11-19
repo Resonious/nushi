@@ -87,7 +87,7 @@ func (c *chat) requestPermission(ctx context.Context, req *acp.RequestPermission
 			input = json.RawMessage(item.Input)
 		}
 		c.mu.Unlock()
-		item.ServerCommand, askID = c.serverCommand(chatID, entryName(string(input)))
+		item.ServerCommand, askID = c.svc.serverCommand(chatID, entryName(string(input)))
 		c.mu.Lock()
 	}
 	id := c.addLocked(item)
@@ -103,7 +103,7 @@ func (c *chat) requestPermission(ctx context.Context, req *acp.RequestPermission
 	case <-ctx.Done():
 	}
 	if askID != "" { // before the agent hears it, and runs the start that follows
-		c.serverAnswered(askID, allows(item.Options, picked))
+		c.svc.serverAnswered(askID, allows(item.Options, picked))
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
