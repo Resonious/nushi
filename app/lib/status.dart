@@ -4,6 +4,7 @@ import 'package:nushi/clock.dart';
 import 'package:nushi/controls.dart';
 import 'package:nushi/drawn.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/koi.dart';
 import 'package:nushi/motion.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/tool_calls.dart';
@@ -120,6 +121,8 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     widget.chat.addListener(_changed);
+    // The sidebar's dot: where a koi lands.
+    if (widget.sparks) KoiLeap.dots[widget.chat.id] = context;
   }
 
   @override
@@ -138,6 +141,9 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    if (identical(KoiLeap.dots[widget.chat.id], context)) {
+      KoiLeap.dots.remove(widget.chat.id);
+    }
     widget.chat.removeListener(_changed);
     _hop?.dispose();
     _check?.dispose();
@@ -170,7 +176,18 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
     if (end == TurnEnd.TURN_END_DONE && !c.waiting) {
       final lasted = clock().difference(_since ?? clock());
       _sparks = widget.sparks && sparksFor(lasted);
-      (_check ??= _once(_checkFor)).forward(from: 0).ignore();
+      final check = _check ??= _once(_checkFor);
+      if (widget.sparks) {
+        // A koi or a firefly may be on its way here: the check draws as it
+        // lands (at once if none is).
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => KoiLeap.onLand(widget.chat.id, () {
+            if (mounted) check.forward(from: 0).ignore();
+          }),
+        );
+      } else {
+        check.forward(from: 0).ignore();
+      }
     }
     if (!c.busy) _since = null;
     // Every streamed chunk notifies: only a change of state rebuilds.

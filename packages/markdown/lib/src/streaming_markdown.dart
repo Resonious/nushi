@@ -103,6 +103,8 @@ class StreamingMarkdown extends StatefulWidget {
     this.files,
     this.onTapFile,
     this.fresh = const [],
+    this.surfaceTint,
+    this.surfaceGlow = false,
     this.caret,
     this.headingMark,
     this.linkBuilder,
@@ -144,6 +146,10 @@ class StreamingMarkdown extends StatefulWidget {
   /// While streaming, text just revealed, drawn faded in its paragraph
   /// where that's safe ([markFresh]); elsewhere it just shows.
   final List<FreshRun> fresh;
+
+  /// What fresh text surfaces from: its tint, and whether it starts lit.
+  final Color? surfaceTint;
+  final bool surfaceGlow;
 
   /// While streaming, drawn where the text ends, in its line and taking no
   /// room, when the text ends in a line of prose ([caretFits]).
@@ -268,7 +274,11 @@ class _StreamingMarkdownState extends State<StreamingMarkdown> {
       ],
       builders: {
         'pre': _CodeBlockBuilder(s, w.codeBlock),
-        if (streaming) ...streamBuilders(w.caret),
+        if (streaming) ...streamBuilders(
+          w.caret,
+          surfaceTint: w.surfaceTint,
+          surfaceGlow: w.surfaceGlow,
+        ),
         if (linking) ...{
           'code': _FileLinkBuilder(files, w.onTapFile!),
           _FilePathSyntax.tag: _FileLinkBuilder(files, w.onTapFile!),
