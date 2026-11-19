@@ -599,65 +599,63 @@ void main() {
         viewport(tester, const Size(260, 44), ratio: 2);
         final t = tokens;
         await tester.pumpWidget(
-          MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: NushiTheme(tokens).toThemeData(),
-            home: Scaffold(
-              body: Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: NushiTheme.iconGap,
-                  children: [
-                    IconTap.line(
-                      LineIcon.terminal,
-                      tooltip: 'Show terminal',
-                      onTap: () {},
-                    ),
-                    IconTap.line(
-                      LineIcon.folder,
-                      tooltip: 'Show files',
-                      onTap: () {},
-                    ),
-                    IconTap.line(
-                      LineIcon.details,
-                      tooltip: 'Show details',
-                      onTap: () {},
-                    ),
-                    IconTap.line(
-                      LineIcon.details,
-                      tooltip: 'Hide details',
-                      color: t.text,
-                      onTap: () {},
-                    ),
-                    IconTap.line(
-                      LineIcon.more,
-                      tooltip: 'Chat menu',
-                      onTap: () {},
-                    ),
-                    const SizedBox(width: NushiTheme.groupGap),
-                    IconTap.line(
-                      LineIcon.folderOpen,
-                      tooltip: 'Show in Finder',
-                      size: 14,
-                      onTap: () {},
-                    ),
-                    IconTap.line(
-                      LineIcon.close,
-                      tooltip: 'Close',
-                      size: 15,
-                      onTap: () {},
-                    ),
-                    IconTap.line(
-                      LineIcon.close,
-                      tooltip: 'Close tab',
-                      size: 12,
-                      padding: 3,
-                      onTap: () {},
-                    ),
-                  ],
-                ),
+          themed(
+            Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: NushiTheme.iconGap,
+                children: [
+                  IconTap.line(
+                    LineIcon.terminal,
+                    tooltip: 'Show terminal',
+                    onTap: () {},
+                  ),
+                  IconTap.line(
+                    LineIcon.folder,
+                    tooltip: 'Show files',
+                    onTap: () {},
+                  ),
+                  IconTap.line(
+                    LineIcon.details,
+                    tooltip: 'Show details',
+                    onTap: () {},
+                  ),
+                  IconTap.line(
+                    LineIcon.details,
+                    tooltip: 'Hide details',
+                    color: t.text,
+                    onTap: () {},
+                  ),
+                  IconTap.line(
+                    LineIcon.more,
+                    tooltip: 'Chat menu',
+                    onTap: () {},
+                  ),
+                  const SizedBox(width: NushiTheme.groupGap),
+                  IconTap.line(
+                    LineIcon.folderOpen,
+                    tooltip: 'Show in Finder',
+                    size: 14,
+                    onTap: () {},
+                  ),
+                  IconTap.line(
+                    LineIcon.close,
+                    tooltip: 'Close',
+                    size: 15,
+                    onTap: () {},
+                  ),
+                  IconTap.line(
+                    LineIcon.close,
+                    tooltip: 'Close tab',
+                    size: 12,
+                    padding: 3,
+                    onTap: () {},
+                  ),
+                ],
               ),
             ),
+            tokens: tokens,
+            banner: false,
           ),
         );
         await expectLater(
@@ -714,25 +712,23 @@ void main() {
           ..title = 'Fix the login redirect after the session expires'
           ..pull = GitHubLink(number: 12, pull: true);
         await tester.pumpWidget(
-          MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: NushiTheme(tokens).toThemeData(),
-            home: Scaffold(
-              body: Align(
-                alignment: Alignment.topLeft,
-                child: SizedBox(
-                  width: 250,
-                  child: ChatHeader(
-                    c,
-                    d,
-                    tab: ChatTab.chat,
-                    onTab: (_) {},
-                    panel: false,
-                    onPanel: () {},
-                  ),
+          themed(
+            Align(
+              alignment: Alignment.topLeft,
+              child: SizedBox(
+                width: 250,
+                child: ChatHeader(
+                  c,
+                  d,
+                  tab: ChatTab.chat,
+                  onTab: (_) {},
+                  panel: false,
+                  onPanel: () {},
                 ),
               ),
             ),
+            tokens: tokens,
+            banner: false,
           ),
         );
         await tester.tap(find.byTooltip('Chat menu'));

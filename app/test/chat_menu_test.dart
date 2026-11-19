@@ -34,22 +34,20 @@ void main() {
           ),
         ]).connect(tester);
         await tester.pumpWidget(
-          MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: NushiTheme(tokens).toThemeData(),
-            home: Scaffold(
-              body: Align(
-                alignment: Alignment.topLeft,
-                child: SizedBox(
-                  width: 260,
-                  height: 500,
-                  child: ListenableBuilder(
-                    listenable: d,
-                    builder: (context, _) => Sidebar(daemon: d),
-                  ),
+          themed(
+            Align(
+              alignment: Alignment.topLeft,
+              child: SizedBox(
+                width: 260,
+                height: 500,
+                child: ListenableBuilder(
+                  listenable: d,
+                  builder: (context, _) => Sidebar(daemon: d),
                 ),
               ),
             ),
+            tokens: tokens,
+            banner: false,
           ),
         );
         await tester.pump();

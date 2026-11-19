@@ -162,25 +162,23 @@ void main() {
         final d = await FakeDaemon(_chats()).connect(tester);
         d.select('amber-chat');
         await tester.pumpWidget(
-          MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: NushiTheme(tokens).toThemeData(),
-            home: Scaffold(
-              body: Align(
-                alignment: Alignment.topLeft,
-                child: RepaintBoundary(
-                  key: const Key('shot'),
-                  child: SizedBox(
-                    width: 300,
-                    height: 560,
-                    child: ListenableBuilder(
-                      listenable: d,
-                      builder: (context, _) => Sidebar(daemon: d),
-                    ),
+          themed(
+            Align(
+              alignment: Alignment.topLeft,
+              child: RepaintBoundary(
+                key: const Key('shot'),
+                child: SizedBox(
+                  width: 300,
+                  height: 560,
+                  child: ListenableBuilder(
+                    listenable: d,
+                    builder: (context, _) => Sidebar(daemon: d),
                   ),
                 ),
               ),
             ),
+            tokens: tokens,
+            banner: false,
           ),
         );
         await tester.pumpAndSettle();

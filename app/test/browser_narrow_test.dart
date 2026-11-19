@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/browser_pane.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/pane_tabs.dart';
-import 'package:nushi/theme/theme.dart';
 
 import 'browser_fixture.dart' show browserFakes, macOnly;
 import 'harness.dart';
@@ -17,25 +16,22 @@ import 'panes_app.dart';
 Future<void> _pane(WidgetTester tester, Daemon d, double width) async {
   final c = d.chats['c']!;
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: const NushiTheme(Tokens.dark).toThemeData(),
-      home: Scaffold(
-        body: Align(
-          alignment: Alignment.topLeft,
-          child: SizedBox(
-            width: width,
-            height: 400,
-            child: BrowserPane(
-              chat: c,
-              tab: c.browser.shown.value!,
-              daemon: d,
-              onClose: () {},
-              onExpand: () {},
-            ),
+    themed(
+      Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: width,
+          height: 400,
+          child: BrowserPane(
+            chat: c,
+            tab: c.browser.shown.value!,
+            daemon: d,
+            onClose: () {},
+            onExpand: () {},
           ),
         ),
       ),
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();

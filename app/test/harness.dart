@@ -49,10 +49,17 @@ void viewport(
 /// [child] as a test shows a widget on its own: in a plain app in the
 /// theme of [tokens], on a Scaffold, with the window's toasts. With
 /// [still], Reduce Motion is that for it (the MediaQuery's
-/// disableAnimations), the window's MediaQuery otherwise kept.
-Widget themed(Widget child, {Tokens tokens = Tokens.dark, bool? still}) {
+/// disableAnimations), the window's MediaQuery otherwise kept. Without
+/// [banner], no debug banner in its corner.
+Widget themed(
+  Widget child, {
+  Tokens tokens = Tokens.dark,
+  bool? still,
+  bool banner = true,
+}) {
   final page = Scaffold(body: child);
   return MaterialApp(
+    debugShowCheckedModeBanner: banner,
     theme: NushiTheme(tokens).toThemeData(),
     builder: (context, child) => ToastHost(child: child!),
     home: still == null

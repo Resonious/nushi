@@ -13,7 +13,6 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/panel_widgets.dart';
 import 'package:nushi/theme/theme.dart';
-import 'package:nushi/toast.dart';
 import 'package:nushi/worktree.dart';
 
 import 'fake_daemon.dart';
@@ -86,24 +85,21 @@ Future<Daemon> _panel(
   viewport(tester, const Size(560, 460), ratio: 2);
   final d = await fake.connect(tester);
   await tester.pumpWidget(
-    MaterialApp(
-      builder: (context, child) => ToastHost(child: child!),
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: Align(
-          alignment: Alignment.topLeft,
-          child: SizedBox(
-            width: DetailsPanel.width,
-            height: 460,
-            child: DetailsPanel(
-              chat: chat,
-              daemon: d,
-              onChanges: onChanges ?? () {},
-            ),
+    themed(
+      Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: DetailsPanel.width,
+          height: 460,
+          child: DetailsPanel(
+            chat: chat,
+            daemon: d,
+            onChanges: onChanges ?? () {},
           ),
         ),
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();
