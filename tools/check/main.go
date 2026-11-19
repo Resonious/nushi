@@ -32,8 +32,8 @@ import (
 	"time"
 )
 
-// logs is where each step's output goes, under bin/ so git ignores it;
-// make test-timings reads the app's test times from it.
+// logs is where each step's output goes, under bin/ so git ignores it,
+// with the app's suite's JSON results, read for the tests that failed.
 const logs = "bin/check-logs"
 
 const (
