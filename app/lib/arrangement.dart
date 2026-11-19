@@ -271,11 +271,9 @@ List<ChatGroup> groupChats(
       <String, ({String label, String agent, List<ChatState> chats})>{};
   for (final c in sorted) {
     final (key, label, agent) = switch (group) {
-      GroupBy.date => (
-        dateGroup(chatTime(c, sort), now).$1,
-        dateGroup(chatTime(c, sort), now).$2,
-        '',
-      ),
+      GroupBy.date => switch (dateGroup(chatTime(c, sort), now)) {
+        (final key, final label) => (key, label, ''),
+      },
       GroupBy.status => (
         'status:${c.phase.index.toString().padLeft(2, '0')}',
         capital(phaseName(c.phase)),
