@@ -415,7 +415,7 @@ func TestUnreadCopyIsLeftAsItIs(t *testing.T) {
 	agent.quit()
 	eventually(t, c, func() bool { return c.agent == nil })
 	c.mu.Lock()
-	c.kept = false // a reopen replays the session into the copy
+	c.outlived = false // a reopen replays the session into the copy
 	c.mu.Unlock()
 	agent.updates = []acp.SessionUpdate{chunk("m3", "ok")}
 	turn(t, svc, c, "three")

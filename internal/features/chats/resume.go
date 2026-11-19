@@ -272,7 +272,7 @@ func (s *Service) load(ctx context.Context, c *chat) error {
 	old := c.retiring
 	// A transcript that outlived its agent stays; else the replay is merged
 	// with the copy, which has everything shown till now.
-	replay := !c.kept
+	replay := !c.outlived
 	if replay {
 		c.copyLocked(true)
 		c.replaying, c.replay = gone == nil, nil // no agent will replay into a gone folder

@@ -105,7 +105,7 @@ func (s *Service) doze(c *chat, after time.Duration) {
 	}
 	agent := c.agent
 	c.asleep, c.retiring = true, agent
-	c.agent, c.kept = nil, len(c.items) > 0
+	c.agent, c.outlived = nil, len(c.items) > 0
 	c.statusChangedLocked()
 	c.logLocked().Info("chat asleep", "why", "idle", "after", after)
 	c.mu.Unlock()

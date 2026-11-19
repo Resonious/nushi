@@ -247,7 +247,7 @@ func openedPull(it model.Item, known func(host string) bool) (model.ChatGitHub, 
 // openedPullLocked links the pull request a tool call of the chat opened
 // as it completes (not as a reopen replays it).
 func (c *chat) openedPullLocked(it model.Item) {
-	if c.replaying || c.quiet || c.parent != nil || c.gitHubHost == nil {
+	if c.replaying || c.muted || c.parent != nil || c.gitHubHost == nil {
 		return
 	}
 	p, ok := openedPull(it, c.gitHubHost)

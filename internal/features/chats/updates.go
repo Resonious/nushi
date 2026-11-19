@@ -25,7 +25,7 @@ func (c *chat) update(n *acp.SessionNotification, from *child) {
 
 func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:gocognit,gocyclo,maintidx // one case per ACP update kind
 	replayed := slices.Contains(replayKinds, n.Update.SessionUpdate)
-	if c.kept && replayed {
+	if c.outlived && replayed {
 		return // session/load's replay of a transcript the chat still has
 	}
 	parent, ok := c.stepOfLocked(n, from)
@@ -33,8 +33,8 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 		return
 	}
 	if c.replaying && replayed { // it goes aside, to be merged with the copy
-		c.items, c.replay, c.quiet = c.replay, c.items, true
-		defer func() { c.items, c.replay, c.quiet = c.replay, c.items, false }()
+		c.items, c.replay, c.muted = c.replay, c.items, true
+		defer func() { c.items, c.replay, c.muted = c.replay, c.items, false }()
 	}
 	if c.commandTaskLocked(n.Update) {
 		return // a background command's task, told on its call: no step of the agent's work
@@ -303,7 +303,7 @@ func (c *chat) chunkLocked(kind model.ItemKind, m *acp.ContentChunk, parent stri
 		return
 	}
 	item := model.Item{ID: id, Kind: kind, Text: text, Images: images, Parent: parent}
-	if s, ok := m.Meta[model.SentMeta].(string); ok && c.quiet && kind != model.Thought {
+	if s, ok := m.Meta[model.SentMeta].(string); ok && c.muted && kind != model.Thought {
 		item.Sent, _ = time.Parse(time.RFC3339Nano, s) // a zero time if it isn't one: not known
 	}
 	c.unnotedLocked(&item)

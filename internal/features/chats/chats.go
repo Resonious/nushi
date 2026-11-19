@@ -174,7 +174,7 @@ type chat struct {
 	steered      int                             // messages steered into the running turn since the agent's last result
 	turnFrom     int                             // the running turn's first item, about (items may go)
 	stopped      bool                            // the running turn was told to stop: it ends with the agent's answer
-	kept         bool                            // the transcript outlived its agent: reopening doesn't replay into it
+	outlived     bool                            // the transcript outlived its agent: reopening doesn't replay into it
 	reopenFailed bool                            // the last reopen failed: see failedLocked
 	sessionGone  bool                            // and its agent no longer has its session: see goneLocked
 	failure      string                          // the notice saying why it failed (item id)
@@ -224,7 +224,7 @@ type chat struct {
 	titleSlots chan struct{}    // and how many it makes at once
 	replaying  bool             // a session/load's replay goes to replay, not the transcript (restore.go)
 	replay     []model.Item
-	quiet      bool // a replayed update is being taken: its events aren't the app's
+	muted      bool // a replayed update is being taken: its events aren't the app's
 
 	// mirrored says the items, but for those unsaved and those that only
 	// show, are the copy's as it stands; inCopy that they were let go, the
@@ -254,7 +254,7 @@ type chat struct {
 // emitLocked numbers and publishes one of the chat's events. Holding the
 // lock keeps events in order and in step with snapshots.
 func (c *chat) emitLocked(e model.Event) {
-	if c.quiet {
+	if c.muted {
 		return
 	}
 	c.seq++
@@ -499,7 +499,7 @@ func (c *chat) addLocked(it model.Item) string {
 		it.ForkAt = c.forkPointLocked()
 		it.Rewindable = it.ForkAt != "" || !slices.ContainsFunc(c.items, func(it model.Item) bool { return it.Kind == model.UserMessage })
 	}
-	if it.Kind == model.AgentMessage && !c.quiet {
+	if it.Kind == model.AgentMessage && !c.muted {
 		it.Sent = time.Now() // a replay's say nothing of when; the copy's keep theirs
 	}
 	c.items = append(c.items, it)

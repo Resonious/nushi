@@ -37,7 +37,7 @@ func (s *Service) Move(ctx context.Context, chatID, folder string, worktree bool
 	from, sid, fresh, oldWT, mode, picks := c.record.Folder, c.sid, !c.record.HasMessages, c.record.Worktree, c.record.Mode, c.record.Picks
 	// A chat whose reopen failed (its folder gone) has an empty transcript:
 	// the moved session is reopened, which replays it.
-	replay := !fresh && c.agent == nil && !c.kept
+	replay := !fresh && c.agent == nil && !c.outlived
 	switch {
 	case c.closedLocked() != nil:
 		err = c.closedLocked()

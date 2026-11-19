@@ -575,7 +575,7 @@ func TestWroteIsWhatTheChatsToolCallsWorkedOn(t *testing.T) {
 // A replay says nothing of when a message came: it isn't given the time
 // of the replay, and merging keeps the copy's.
 func TestReplayedAgentMessageHasNoTime(t *testing.T) {
-	c := &chat{svc: &Service{remembered: &memModes{}}, kind: &kind{}, quiet: true}
+	c := &chat{svc: &Service{remembered: &memModes{}}, kind: &kind{}, muted: true}
 	c.addLocked(model.Item{ID: "m1", Kind: model.AgentMessage, Text: "Hello"})
 	if !c.items[0].Sent.IsZero() {
 		t.Errorf("replayed message sent at %v", c.items[0].Sent)

@@ -124,7 +124,7 @@ func (s *Service) ownedWorktrees(id string) ([]string, error) {
 //
 //nolint:contextcheck // a look runs on the chat's own life, not a caller's: a subagent's end comes with no request
 func (c *chat) lookRelatedLocked() {
-	if c.worktrees == nil || c.parent != nil || c.quiet || c.replaying {
+	if c.worktrees == nil || c.parent != nil || c.muted || c.replaying {
 		return
 	}
 	c.relatedAt = time.Now()

@@ -37,7 +37,7 @@ type follow struct {
 // it from the call, or now from its output (a replay has no more).
 func (c *chat) workflowLocked(it *model.Item) {
 	r := c.kind.workflows
-	if r == nil || it.Kind != model.ToolCall || it.Tool != "Workflow" || it.Status != "completed" || it.Parent != "" || c.quiet {
+	if r == nil || it.Kind != model.ToolCall || it.Tool != "Workflow" || it.Status != "completed" || it.Parent != "" || c.muted {
 		return
 	}
 	if it.Workflow == nil {

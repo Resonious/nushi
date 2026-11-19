@@ -58,7 +58,7 @@ func TestMoveAChatThatNeverReopened(t *testing.T) {
 	agent.updates = []acp.SessionUpdate{chunk("m1", "first")}
 	turn(t, svc, c, "one")
 	c.mu.Lock() // as after a daemon restart, when its folder was gone
-	c.agent, c.items, c.kept = nil, nil, false
+	c.agent, c.items, c.outlived = nil, nil, false
 	c.mu.Unlock()
 	if err := svc.Move(context.Background(), c.id, t.TempDir(), false); err != nil {
 		t.Fatal(err)
