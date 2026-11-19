@@ -85,6 +85,9 @@ class _SidebarRowState extends State<SidebarRow> {
     final movable =
         widget.movable ?? (Widget child, {required bool enabled}) => child;
     final shows = sidebarShows.value;
+    // Asleep, it recedes as an archived one does: no dot, its mark and
+    // title muted; open, it reads as the open chat.
+    final quiet = recedes(chat) && !shown;
     // Not the chat itself, which notifies at every streamed chunk.
     return ListenableBuilder(
       listenable: chat.look,
@@ -159,7 +162,9 @@ class _SidebarRowState extends State<SidebarRow> {
                             chat.agentName,
                             AgentMark(
                               chat.agent,
-                              color: chat.archived ? t.textMuted : null,
+                              color: chat.archived || quiet
+                                  ? t.textMuted
+                                  : null,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -181,9 +186,10 @@ class _SidebarRowState extends State<SidebarRow> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   // The open chat's stands out from
-                                  // the rest, which are a step quieter.
+                                  // the rest, which are a step quieter;
+                                  // a sleeping one's, two steps.
                                   style: theme.ui(
-                                    chat.archived
+                                    chat.archived || quiet
                                         ? t.textMuted
                                         : shown
                                         ? t.text

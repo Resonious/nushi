@@ -85,9 +85,11 @@ class _Ring extends CustomPainter {
 /// while the agent works, a ring when idle (a check draws itself there for
 /// a moment when a turn is done), solid green while a turn's end is unseen
 /// (the check settles into it); a ring that pulses slowly while subagents
-/// or commands run in the background after the turn; a moon asleep, a
-/// quiet clock when its agent deleted its session, an error mark when it
-/// couldn't start.
+/// or commands run in the background after the turn; nothing asleep (an
+/// empty slot of the same size, so titles stay in line: a sleeping chat
+/// recedes, its title muted where it's listed, rather than wear a mark
+/// that reads like the idle ring), a quiet clock when its agent deleted
+/// its session, an error mark when it couldn't start.
 /// With [sparks], a turn you watched end (after [Sparks.after] or more,
 /// Nushi in front) sends sparks out of its check.
 class ChatDot extends StatefulWidget {
@@ -194,7 +196,7 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
     final still = reduceMotion(context);
     switch (phase) {
       case .asleep:
-        return Icon(Icons.bedtime_outlined, size: size * 1.6, color: t.idle);
+        return const SizedBox.square(dimension: size * 1.6);
       case .expired:
         return Icon(Icons.history_toggle_off, size: size * 1.6, color: t.idle);
       case .failed:
@@ -282,6 +284,23 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
       child: dot,
     );
   }
+}
+
+/// Whether [chat]'s title recedes where it's listed: asleep, with no
+/// unseen end to show ([ChatDot] draws nothing for it).
+bool recedes(ChatState chat) => chat.phase == .asleep;
+
+/// The moon beside "Asleep" in words (the chat's header), [ChatDot]'s
+/// size: a list's sleeping row has no mark, only a muted title.
+class SleepMark extends StatelessWidget {
+  const new({super.key});
+
+  @override
+  Widget build(BuildContext context) => Icon(
+    Icons.bedtime_outlined,
+    size: ChatDot.size * 1.6,
+    color: NushiTheme.of(context).t.idle,
+  );
 }
 
 /// "Working in the background: 2 background tasks" (subagents, commands

@@ -135,8 +135,9 @@ class _StatusBarState extends State<StatusBar> {
               color: t.raised,
               borderRadius: BorderRadius.circular(NushiTheme.control),
             ),
-            // The first count says what the three are; a sidebar dragged
-            // narrow keeps the numbers alone, which the tooltip names.
+            // The first count says what it is and the last, asleep, always
+            // does; a sidebar dragged narrow keeps the first's number
+            // alone, which the tooltip names.
             child: LayoutBuilder(
               builder: (context, box) => Row(
                 children: [
@@ -167,12 +168,13 @@ class _StatusBarState extends State<StatusBar> {
                               _Dot(t.idle),
                               Text('$awake', style: small),
                               const SizedBox(width: 6),
-                              Icon(
-                                Icons.bedtime_outlined,
-                                size: 12,
-                                color: t.idle,
+                              // Asleep has no mark, as in the list: its
+                              // count in words, muted, narrow or not (a
+                              // number alone would read as the awake's).
+                              Text(
+                                '$asleep asleep',
+                                style: small.copyWith(color: t.textMuted),
                               ),
-                              Text('$asleep', style: small),
                             ],
                           ),
                         ),

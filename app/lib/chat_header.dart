@@ -367,10 +367,10 @@ class ChatHeader extends StatelessWidget {
                                 ? '${chat.agentName}: '
                                       '${phaseWord(chat.phase, t).$1}'
                                 : phaseWord(chat.phase, t).$1,
-                            ChatDot(chat: chat),
+                            _stateMark(chat),
                           )
                         else
-                          PhasePill(chat.phase, lead: ChatDot(chat: chat)),
+                          PhasePill(chat.phase, lead: _stateMark(chat)),
                       ],
                     ),
                   ),
@@ -801,3 +801,8 @@ HeaderFolds headerFolds(
     gaps: roomy ? gaps : 0,
   );
 }
+
+/// The chat's state's mark beside its word: its dot, or asleep, the moon
+/// (the list's dot draws nothing for a sleeping chat).
+Widget _stateMark(ChatState chat) =>
+    chat.phase == ChatPhase.asleep ? const SleepMark() : ChatDot(chat: chat);
