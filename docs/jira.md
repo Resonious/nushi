@@ -27,7 +27,7 @@ Start work shows on the row under the pointer and the selected one (⌘⏎), and
 
 **Details.** ⏎ or a click shows an issue's details in the list's place: description and comments, subtasks, parent, links, attachments, remote links, and a box to comment in (Markdown). Esc goes back, as do a swipe back and the mouse's back button ([GitHub](github.md#the-inbox)).
 
-**Keys:** ↑↓ or j k pick, ⌘⏎ starts work, ⌘R refreshes, ⌥⌘1–9 switch lists, / goes to the JQL, Esc closes.
+**Keys:** ↑↓ or j k pick, ⌘⏎ starts work, ⌘R refreshes, ⌥⌘1–9 (Alt+1–9 on Linux) switch lists, / goes to the JQL, Esc closes.
 
 **Freshness.** What a list or an issue showed last shows at once while Jira is asked again ("Updated 5m ago · refreshing"); the daemon keeps it per site in its data folder. Lists and the issue are asked for again each minute while the view shows. Nothing reaches Jira otherwise, and Nushi never writes to it unless you (or an agent, through its tools) do.
 
