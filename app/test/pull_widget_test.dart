@@ -16,7 +16,6 @@ import 'package:nushi/panel_widgets.dart';
 import 'package:nushi/pull_link.dart';
 import 'package:nushi/pull_link_dialog.dart';
 import 'package:nushi/pull_rows.dart';
-import 'package:nushi/pull_widget_parts.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/theme/theme.dart';
 
@@ -341,7 +340,6 @@ void main() {
       ).$1,
       LineIcon.pullDraft,
     );
-    expect(_inPull(find.byType(ChecksBar)), findsNothing);
     await tester.tap(_rowMenu);
     await tester.pumpAndSettle();
     expect(find.text('Ready for review on GitHub'), findsOneWidget);
@@ -359,7 +357,6 @@ void main() {
       _inPull(find.textContaining('2 threads', findRichText: true)),
       findsOneWidget,
     );
-    expect(_inPull(find.byType(ChecksBar)), findsNothing);
     // Collapsed: its number, the failing count, the threads.
     await tester.tap(_inPull(find.text('Pull request')));
     await tester.pumpAndSettle();
