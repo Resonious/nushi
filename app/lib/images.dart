@@ -31,13 +31,14 @@ const int imageCacheBytes = 64 << 20;
 void limitImageCache() =>
     PaintingBinding.instance.imageCache.maximumSizeBytes = imageCacheBytes;
 
-/// The image types sent as they are; others are turned into PNG.
-String? _mimeType(Uint8List b) => switch (b) {
-  [0x89, 0x50, 0x4E, 0x47, ...] => 'image/png',
-  [0xFF, 0xD8, 0xFF, ...] => 'image/jpeg',
-  [0x47, 0x49, 0x46, 0x38, ...] => 'image/gif',
-  [0x52, 0x49, 0x46, 0x46, _, _, _, _, 0x57, 0x45, 0x42, 0x50, ...] =>
-    'image/webp',
+/// The kind of image [bytes] start as, by its file name's ending: PNG
+/// (its whole signature), JPEG, GIF (87a or 89a) or WebP, from the bytes
+/// and never a file's name; null for anything else.
+String? imageKind(List<int> bytes) => switch (bytes) {
+  [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, ...] => 'png',
+  [0xFF, 0xD8, 0xFF, ...] => 'jpg',
+  [0x47, 0x49, 0x46, 0x38, 0x37 || 0x39, 0x61, ...] => 'gif',
+  [0x52, 0x49, 0x46, 0x46, _, _, _, _, 0x57, 0x45, 0x42, 0x50, ...] => 'webp',
   _ => null,
 };
 
@@ -48,7 +49,12 @@ Future<ImageData> prepareImage(Uint8List bytes) async {
   final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
   final descriptor = await ui.ImageDescriptor.encoded(buffer);
   final (w, h) = (descriptor.width, descriptor.height);
-  final mime = _mimeType(bytes);
+  // The image types sent as they are; others are turned into PNG.
+  final mime = switch (imageKind(bytes)) {
+    'jpg' => 'image/jpeg',
+    final kind? => 'image/$kind',
+    null => null,
+  };
   if (mime != null &&
       w <= maxImageSide &&
       h <= maxImageSide &&
