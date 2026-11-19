@@ -158,7 +158,8 @@ class Toasts extends State<ToastHost> with SingleTickerProviderStateMixin {
     }
   }
 
-  /// Takes away the showing toast and those waiting, at once.
+  /// Takes away the showing toast and those waiting, at once: for tests.
+  @visibleForTesting
   void clear() {
     _queue.clear();
     _timer?.cancel();
