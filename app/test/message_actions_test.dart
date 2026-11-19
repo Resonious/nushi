@@ -1,7 +1,6 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/daemon.dart';
@@ -37,16 +36,7 @@ Future<(Daemon, List<String>)> _hovered(
   VoidCallback? onFork,
   bool hover = true,
 }) async {
-  final copied = <String>[];
-  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-    SystemChannels.platform,
-    (call) async {
-      if (call.method == 'Clipboard.setData') {
-        copied.add((call.arguments as Map)['text'] as String);
-      }
-      return null;
-    },
-  );
+  final copied = clipboardCopies(tester);
   final d = await FakeDaemon([]).connect(tester);
   final chat = ChatState('c', '/x')
     ..agent = 'claude'

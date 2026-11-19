@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/controls.dart';
 import 'package:nushi/daemon.dart';
@@ -102,16 +101,7 @@ void main() {
   });
 
   testWidgets('a click on the path copies it and says so', (tester) async {
-    final copied = <String>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied.add((call.arguments as Map)['text'] as String);
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     final d = await _app(tester);
     expect(_inPane(find.text('docs / roadmap.md')), findsOneWidget);
     await tester.tap(_inPane(find.text('docs / roadmap.md')));

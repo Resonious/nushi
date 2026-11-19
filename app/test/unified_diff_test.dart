@@ -339,16 +339,7 @@ void main() {
     tester,
   ) async {
     diffUnified.value = true;
-    final copied = <String>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied.add((call.arguments as Map)['text'] as String);
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     await tester.pumpWidget(themed(DiffBox(_addedFile, fit: false)));
     await tester.pumpAndSettle();
     await _dragRows(tester, 2, 4);

@@ -65,21 +65,6 @@ CodeLineRenderParagraph _editorLine(WidgetTester tester, int index) => tester
     .paragraphs
     .firstWhere((p) => p.index == index);
 
-/// What the app puts on the clipboard, in order.
-List<String> _clipboard(WidgetTester tester) {
-  final copied = <String>[];
-  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-    SystemChannels.platform,
-    (call) async {
-      if (call.method == 'Clipboard.setData') {
-        copied.add((call.arguments as Map)['text'] as String);
-      }
-      return null;
-    },
-  );
-  return copied;
-}
-
 Future<void> _copy(WidgetTester tester) async {
   await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
 }
@@ -332,7 +317,7 @@ void main() {
       themed(const SourceView(tabbed, path: 'main.go', wrap: false)),
     );
     await tester.pump();
-    final copied = _clipboard(tester);
+    final copied = clipboardCopies(tester);
     final from = find.textContaining('fmt.Println', findRichText: true).first;
     final to = find.textContaining('\t}', findRichText: true).first;
     final drag = await tester.startGesture(
@@ -442,7 +427,7 @@ void main() {
       );
     }
     // Lines 13 and 14 copied as they are.
-    final copied = _clipboard(tester);
+    final copied = clipboardCopies(tester);
     e.controller.selection = const CodeLineSelection(
       baseIndex: 13,
       baseOffset: 0,

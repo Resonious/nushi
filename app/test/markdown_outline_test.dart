@@ -121,18 +121,9 @@ void main() {
     await drag.moveTo(Offset(28, words.dy));
     await drag.up();
     await tester.pump();
-    String? copied;
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied = (call.arguments as Map)['text'] as String;
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
-    expect(copied, contains('No other heading'));
+    expect(copied.lastOrNull, contains('No other heading'));
   }, variant: mac);
 
   testWidgets('hovering the rail lists the headings; a click scrolls there '

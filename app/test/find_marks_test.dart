@@ -222,16 +222,7 @@ void main() {
   testWidgets('marks leave the text as it was: a drag and ⌘C take the same', (
     tester,
   ) async {
-    String? copied;
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied = (call.arguments as Map)['text'] as String?;
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     final d = await _app(tester, [
       _agent('a', 'One relay here.\n\nAnd **relay** there.\n\nLast words.'),
     ]);
@@ -244,7 +235,10 @@ void main() {
     await tester.pump();
     expect(_marks(tester), hasLength(2), reason: 'still marked');
     await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
-    expect(copied, 'One relay here.\n\nAnd relay there.\n\nLast words');
+    expect(
+      copied.lastOrNull,
+      'One relay here.\n\nAnd relay there.\n\nLast words',
+    );
     await tester.tap(find.text('Reply').last);
     await tester.pump();
     expect(

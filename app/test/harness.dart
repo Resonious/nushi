@@ -82,6 +82,22 @@ Future<void> cmdKey(
   }
 }
 
+/// What the app puts on the clipboard, each text in the order copied; the
+/// platform channel answers nothing else.
+List<String> clipboardCopies(WidgetTester tester) {
+  final copied = <String>[];
+  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+    SystemChannels.platform,
+    (call) async {
+      if (call.method == 'Clipboard.setData') {
+        copied.add((call.arguments as Map)['text'] as String);
+      }
+      return null;
+    },
+  );
+  return copied;
+}
+
 /// [fixtureNow] less [d], as the daemon sends a time.
 Int64 msAgo(Duration d) => Int64(fixtureNow.subtract(d).millisecondsSinceEpoch);
 

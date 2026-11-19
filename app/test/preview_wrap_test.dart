@@ -377,16 +377,7 @@ void main() {
   testWidgets('wrap off, a selection still copies the whole line', (
     tester,
   ) async {
-    final copied = <String>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied.add((call.arguments as Map)['text'] as String);
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     wrapLines.value = false;
     final d = await _app(tester);
     _across(tester)!.jumpTo(2000);

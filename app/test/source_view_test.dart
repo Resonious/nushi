@@ -21,21 +21,6 @@ int _spans(WidgetTester tester) {
 
 Widget _host(String text) => themed(SourceView(text, path: 'a.dart'));
 
-/// What the app puts on the clipboard, in order.
-List<String> _clipboard(WidgetTester tester) {
-  final copied = <String>[];
-  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-    SystemChannels.platform,
-    (call) async {
-      if (call.method == 'Clipboard.setData') {
-        copied.add((call.arguments as Map)['text'] as String);
-      }
-      return null;
-    },
-  );
-  return copied;
-}
-
 Future<void> _selectAllCopy(WidgetTester tester) async {
   await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
   await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
@@ -87,7 +72,7 @@ void main() {
         themed(SourceView(text, path: 'a.txt', wrap: wrap)),
       );
       await tester.pump();
-      final copied = _clipboard(tester);
+      final copied = clipboardCopies(tester);
       await tester.tap(find.textContaining('line 3', findRichText: true).first);
       await tester.pump();
       await _selectAllCopy(tester);
@@ -110,7 +95,7 @@ void main() {
     );
     await tester.pump();
     expect(find.textContaining('(103 more)', findRichText: true), findsOne);
-    final copied = _clipboard(tester);
+    final copied = clipboardCopies(tester);
     // From the long line's start to the next one's: all of it selected.
     final from = find.textContaining('aaaa', findRichText: true).first;
     final to = find.text('b', findRichText: true).first;

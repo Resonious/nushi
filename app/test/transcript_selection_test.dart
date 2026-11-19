@@ -148,16 +148,7 @@ void main() {
   }, variant: mac);
 
   testWidgets('a selection keeps its lines', (tester) async {
-    String? copied;
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied = (call.arguments as Map)['text'] as String?;
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     final d = await _app(tester, {
       'a': [
         _agent(
@@ -185,7 +176,7 @@ void main() {
       _ends(tester, 'Para two').$2,
     );
     await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
-    expect(copied, 'Para one.\n\nPara two');
+    expect(copied.lastOrNull, 'Para one.\n\nPara two');
     await closeView(tester, d);
   }, variant: mac);
 
@@ -225,16 +216,7 @@ void main() {
   testWidgets('a file named in a line is quoted and copied in its place', (
     tester,
   ) async {
-    String? copied;
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied = (call.arguments as Map)['text'] as String?;
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     // Long enough to wrap: a link is cut after its slashes.
     final long = '${'folder/' * 40}deep.toml';
     // Each line, and the words a drag starts and ends on.
@@ -285,7 +267,7 @@ void main() {
       _ends(tester, 'golangci').$2,
     );
     await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
-    expect(copied, 'pin it in mise.toml like golangci');
+    expect(copied.lastOrNull, 'pin it in mise.toml like golangci');
     await closeView(tester, d);
   }, variant: mac);
 
