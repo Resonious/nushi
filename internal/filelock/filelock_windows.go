@@ -11,7 +11,7 @@ import (
 // held is false: Windows tells whether a range is locked only to an
 // attempt to lock it, and taking the lock to let it go races an agent
 // starting at that moment (held_linux.go), so a session open elsewhere
-// isn't seen by its lock here (docs/roadmap.md).
+// isn't seen by its lock here (issue #56).
 func held(*os.File) bool { return false }
 
 // tryLock takes the whole of f with LockFileEx, exclusive, without

@@ -1,6 +1,6 @@
 # Development
 
-How to build, run and test Nushi from source. The rules for working in this repository (commits, size limits, words, docs) are in [AGENTS.md](../AGENTS.md); the decisions are in [`docs/adr/`](adr/README.md), the security notes in [`security.md`](security.md), the plans in [`roadmap.md`](roadmap.md).
+How to build, run and test Nushi from source. The rules for working in this repository (commits, size limits, words, docs) are in [AGENTS.md](../AGENTS.md); the decisions are in [`docs/adr/`](adr/README.md), the security notes in [`security.md`](security.md), the plans in [GitHub issues](https://github.com/afrase/nushi/issues), the decisions still open in [`roadmap.md`](roadmap.md).
 
 ## What you need
 
