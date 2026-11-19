@@ -108,15 +108,10 @@ func readOnly(ctx context.Context, agent Agent, fork string, config []model.Conf
 		return slices.ContainsFunc(o.Values, func(v model.ConfigValue) bool { return v.Value == mode })
 	}
 	i := slices.IndexFunc(config, func(o model.ConfigOption) bool { return o.Category == "mode" && offers(o) })
-	switch {
-	case i < 0:
+	if i < 0 {
 		return fmt.Errorf("no mode %q", mode)
-	case config[i].ID == legacyMode:
-		_, err := agent.SetSessionMode(ctx, &acp.SetSessionModeRequest{SessionID: acp.SessionID(fork), ModeID: acp.SessionModeID(mode)})
-		return err
 	}
-	_, err := agent.SetSessionConfigOption(ctx, &acp.SetSessionConfigOptionRequest{SessionID: acp.SessionID(fork), ConfigID: acp.SessionConfigID(config[i].ID),
-		ValueID: &acp.SetSessionConfigOptionRequestValueID{Value: acp.SessionConfigValueID(mode)}})
+	_, err := setOption(ctx, agent, fork, config[i], mode)
 	return err
 }
 

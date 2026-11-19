@@ -169,26 +169,9 @@ func (c *chat) setConfig(ctx context.Context, agent Agent, sid, id, value string
 	ctx, cancel := context.WithTimeout(ctx, time.Minute) // an agent alive but silent
 	defer cancel()
 
-	var updated []acp.SessionConfigOption
-	switch {
-	case id == legacyMode:
-		if _, err := agent.SetSessionMode(ctx, &acp.SetSessionModeRequest{SessionID: acp.SessionID(sid), ModeID: acp.SessionModeID(value)}); err != nil {
-			return err
-		}
-	case opt.Type == "boolean":
-		resp, err := agent.SetSessionConfigOption(ctx, &acp.SetSessionConfigOptionRequest{SessionID: acp.SessionID(sid),
-			ConfigID: acp.SessionConfigID(id), Boolean: &acp.SetSessionConfigOptionRequestBoolean{Value: value == "true"}})
-		if err != nil {
-			return err
-		}
-		updated = resp.ConfigOptions
-	default:
-		resp, err := agent.SetSessionConfigOption(ctx, &acp.SetSessionConfigOptionRequest{SessionID: acp.SessionID(sid),
-			ConfigID: acp.SessionConfigID(id), ValueID: &acp.SetSessionConfigOptionRequestValueID{Value: acp.SessionConfigValueID(value)}})
-		if err != nil {
-			return err
-		}
-		updated = resp.ConfigOptions
+	updated, err := setOption(ctx, agent, sid, opt, value)
+	if err != nil {
+		return err
 	}
 
 	c.mu.Lock()
@@ -203,6 +186,27 @@ func (c *chat) setConfig(ctx context.Context, agent Agent, sid, id, value string
 	}
 	c.configChangedLocked()
 	return nil
+}
+
+// setOption asks agent to set option opt of session sid to value, and
+// returns the options it then has: none for the legacy mode, set through
+// session/set_mode.
+func setOption(ctx context.Context, agent Agent, sid string, opt model.ConfigOption, value string) ([]acp.SessionConfigOption, error) {
+	req := &acp.SetSessionConfigOptionRequest{SessionID: acp.SessionID(sid), ConfigID: acp.SessionConfigID(opt.ID)}
+	switch {
+	case opt.ID == legacyMode:
+		_, err := agent.SetSessionMode(ctx, &acp.SetSessionModeRequest{SessionID: acp.SessionID(sid), ModeID: acp.SessionModeID(value)})
+		return nil, err
+	case opt.Type == "boolean":
+		req.Boolean = &acp.SetSessionConfigOptionRequestBoolean{Value: value == "true"}
+	default:
+		req.ValueID = &acp.SetSessionConfigOptionRequestValueID{Value: acp.SessionConfigValueID(value)}
+	}
+	resp, err := agent.SetSessionConfigOption(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.ConfigOptions, nil
 }
 
 // configChangedLocked publishes the chat's options, and stores its mode once
