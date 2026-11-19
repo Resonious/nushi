@@ -16,6 +16,7 @@ import 'package:nushi/items.dart';
 import 'package:nushi/jump_chip.dart';
 import 'package:nushi/message_pins.dart';
 import 'package:nushi/motion.dart';
+import 'package:nushi/pond.dart';
 import 'package:nushi/plan_view.dart';
 import 'package:nushi/pull_link.dart';
 import 'package:nushi/pull_live_card.dart';
@@ -1014,7 +1015,10 @@ class _TranscriptState extends State<Transcript> {
       },
     );
     final under = widget.bottom;
-    final list = TextMarksScope(marks: _marks, child: view);
+    final list = Pond(
+      working: live && !chat.waiting,
+      child: TextMarksScope(marks: _marks, child: view),
+    );
     return under == null
         ? list
         : OverBottom(scroll: _follower.scroll, list: list, bottom: under);
