@@ -97,7 +97,7 @@ func TestNothingPrivateLogged(t *testing.T) {
 	followed := make(chan struct{})
 	go func() {
 		defer close(followed)
-		_ = hub.Subscribe(follow, func(e model.Event) bool { terms.Follow(e); return true }, events.Unbounded())
+		hub.Follow(follow, terms.Follow)
 	}()
 
 	ctx := context.Background()

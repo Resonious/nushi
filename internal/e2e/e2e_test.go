@@ -233,7 +233,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 	serverTools.Use(srvs)
 	follow, unfollow := context.WithCancel(context.Background())
 	go func() {
-		_ = hub.Subscribe(follow, func(e model.Event) bool { terms.Follow(e); srvs.Follow(e); return true }, events.Unbounded())
+		hub.Follow(follow, func(e model.Event) { terms.Follow(e); srvs.Follow(e) })
 	}()
 	restarts := restart.New(svc, restart.Together{terms, srvs})
 	restarts.Every = 20 * time.Millisecond
