@@ -6,7 +6,7 @@ import 'package:nushi/theme/theme.dart';
 /// fence's line to its closing one. `open` and `close` are how long its
 /// markers are at each end: a backtick for inline code, a fence's line for
 /// a block.
-typedef CodeRun = ({int start, int end, int open, int close});
+typedef CodeSpan = ({int start, int end, int open, int close});
 
 /// A fenced block, as Markdown writes one: ``` at a line's start (three
 /// spaces in at most), and the next line that is only a fence.
@@ -22,8 +22,8 @@ final _inline = RegExp(r'(?<!`)`[^`\n]+`(?!`)');
 /// The code in [text], in order: fenced blocks, then the inline code outside
 /// them. An open backtick or fence isn't code yet, so typing one doesn't
 /// turn the rest of the box into code.
-List<CodeRun> codeRuns(String text) {
-  final runs = <CodeRun>[];
+List<CodeSpan> codeRuns(String text) {
+  final runs = <CodeSpan>[];
   for (final m in _fence.allMatches(text)) {
     final open = text.indexOf('\n', m.start) + 1 - m.start;
     final close = m.end - text.lastIndexOf('\n', m.end - 1) - 1;
@@ -48,7 +48,7 @@ typedef SpanPaint = (int start, int end, TextStyle style);
 /// caret, or either end of a selection, strictly between them. Elsewhere
 /// they're hidden, as Obsidian's live preview hides them, so closing the
 /// code hides both and arrowing back in shows them.
-bool showsTicks(CodeRun c, TextSelection selection) {
+bool showsTicks(CodeSpan c, TextSelection selection) {
   bool inside(int at) => c.start < at && at < c.end;
   return selection.isValid &&
       (inside(selection.baseOffset) || inside(selection.extentOffset));
@@ -66,7 +66,7 @@ bool showsTicks(CodeRun c, TextSelection selection) {
 /// width and paints nothing, while what's sent, copied, undone and spell
 /// checked is the text as typed, and the caret still steps over it.
 List<SpanPaint> codePaints(
-  List<CodeRun> code,
+  List<CodeSpan> code,
   TextStyle base,
   NushiTheme theme, {
   TextSelection selection = const TextSelection.collapsed(offset: -1),
