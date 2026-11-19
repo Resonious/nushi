@@ -124,10 +124,6 @@ static gboolean my_application_local_command_line(GApplication* application,
 
 // Implements GApplication::startup.
 static void my_application_startup(GApplication* application) {
-  // MyApplication* self = MY_APPLICATION(object);
-
-  // Perform any actions required at application startup.
-
   G_APPLICATION_CLASS(my_application_parent_class)->startup(application);
   // X11's WM_CLASS class as the program's name, which gtk_init (in the
   // startup above) capitalizes ("Com.nushihq.Nushi"), so both halves of it
@@ -136,15 +132,6 @@ static void my_application_startup(GApplication* application) {
   // The icon install.sh puts in the icon theme, for window managers that
   // show a window's own icon rather than its .desktop file's.
   gtk_window_set_default_icon_name(APPLICATION_ID);
-}
-
-// Implements GApplication::shutdown.
-static void my_application_shutdown(GApplication* application) {
-  // MyApplication* self = MY_APPLICATION(object);
-
-  // Perform any actions required at application shutdown.
-
-  G_APPLICATION_CLASS(my_application_parent_class)->shutdown(application);
 }
 
 // Implements GObject::dispose.
@@ -159,7 +146,6 @@ static void my_application_class_init(MyApplicationClass* klass) {
   G_APPLICATION_CLASS(klass)->local_command_line =
       my_application_local_command_line;
   G_APPLICATION_CLASS(klass)->startup = my_application_startup;
-  G_APPLICATION_CLASS(klass)->shutdown = my_application_shutdown;
   G_OBJECT_CLASS(klass)->dispose = my_application_dispose;
 }
 
