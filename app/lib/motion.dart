@@ -61,6 +61,11 @@ abstract final class Waits {
   /// A call that shows nothing of its own says it's running past this.
   static const slow = Duration(milliseconds: 300);
 
+  /// What shows stays at most this long while what replaces it loads
+  /// unseen (another chat's details): past it, the new shows with what it
+  /// has.
+  static const handover = Duration(milliseconds: 600);
+
   /// A draft's change is written this long after the last.
   static const save = Duration(milliseconds: 500);
 

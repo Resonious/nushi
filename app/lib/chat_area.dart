@@ -55,6 +55,11 @@ class _ChatAreaState extends State<ChatArea> {
   /// again as it shows, and its row moves to the new one with its place
   /// kept.
   final GlobalKey<State> _fileTabs = GlobalKey();
+
+  /// The details panel's, the same for every chat's area: another chat
+  /// picked (a new area), the panel moves to it, the last chat's rows
+  /// showing until the new one's are known ([DetailsPanel]).
+  static final GlobalKey<State> _details = GlobalKey();
   final GlobalKey<State> _browserTabs = GlobalKey();
 
   /// The pane that takes the whole area, over the transcript (its Expand,
@@ -341,8 +346,7 @@ class _ChatAreaState extends State<ChatArea> {
                       'details',
                       width: DetailsPanel.width,
                       child: DetailsPanel(
-                        // It follows the chat it was made for.
-                        key: ObjectKey(chat),
+                        key: _details,
                         chat: chat,
                         daemon: widget.daemon,
                         onChanges: () => _tab.value = ChatTab.changes,
