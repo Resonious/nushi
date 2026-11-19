@@ -110,6 +110,14 @@ No need to wait for the agent to finish. Type your message, then:
 
 Press **Esc**, or click the round red **Stop** button at the end of the box's row. Queued messages wait until you send again.
 
+## See how long a step took
+
+Each tool call's row ends with how long it ran, such as **12s**; while it runs, the time ticks. A folded group of calls, such as **Ran 3 commands**, ends with the time from its first call's start to its last call's end.
+
+- Nothing shows for a call that took under a second.
+- Calls from before Nushi saw the chat (resumed from a terminal, or replayed by the agent) have no time.
+- A call still running when the turn ends stops counting there.
+
 ## Follow the agent's plan
 
 When the agent keeps a to-do list, its plan stays over the box until every step is done, so you always see where it is, even after the turn ends: "Plan · 2 of 5 done", a bar, and the steps with a dot on the one being worked on.

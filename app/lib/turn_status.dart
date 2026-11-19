@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import 'package:nushi/chat.dart';
@@ -38,7 +36,6 @@ class TurnStatus extends StatefulWidget {
 }
 
 class _TurnStatusState extends State<TurnStatus> with ClockRun {
-  late final Timer _tick;
   late bool _busy = widget.chat.busy;
   DateTime? _since; // when the running turn started, as last known
   late bool _ran = widget.chat.started != null; // a turn ran, not a reopen
@@ -54,9 +51,7 @@ class _TurnStatusState extends State<TurnStatus> with ClockRun {
     super.initState();
     widget.chat.addListener(_changed);
     _changed();
-    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (widget.chat.busy && widget.chat.started != null) setState(() {});
-    });
+    secondClock.addListener(_tick); // its time, while a turn runs
   }
 
   @override
@@ -74,8 +69,12 @@ class _TurnStatusState extends State<TurnStatus> with ClockRun {
   @override
   void dispose() {
     widget.chat.removeListener(_changed);
-    _tick.cancel();
+    secondClock.removeListener(_tick);
     super.dispose();
+  }
+
+  void _tick() {
+    if (widget.chat.busy && widget.chat.started != null) setState(() {});
   }
 
   void _changed() {

@@ -9,6 +9,7 @@ import 'package:nushi/clock.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/drawn.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/live_text.dart';
 import 'package:nushi/motion.dart';
 import 'package:nushi/pickers.dart' show ConfigNames;
 import 'package:nushi/status.dart';
@@ -16,6 +17,8 @@ import 'package:nushi/theme/theme.dart';
 import 'package:nushi/tool_calls.dart';
 import 'package:nushi/transcript_find.dart';
 import 'package:nushi/widgets.dart';
+
+export 'package:nushi/live_text.dart';
 
 /// A tool call that started a subagent, and what the subagent did.
 typedef SubagentRun = ({Item call, List<Item> items});
@@ -144,73 +147,6 @@ class SubagentState extends StatelessWidget {
     style: s.call.subagent.state == 'failed'
         ? style.copyWith(color: NushiTheme.of(context).t.crashed)
         : style,
-  );
-}
-
-/// [text] on one line in [style], again every second while [live].
-class LiveText extends StatefulWidget {
-  const new(this.text, {required this.live, required this.style, super.key});
-
-  final String Function() text;
-  final bool live;
-  final TextStyle style;
-
-  @override
-  State<LiveText> createState() => _LiveTextState();
-}
-
-class _LiveTextState extends State<LiveText> {
-  // Only while live: every subagent's line stays built (ADR 0026). Not
-  // while its tickers are off either: built but not drawn (the details
-  // rail tucked away, ADR 0123), it has no one to show the time to.
-  Timer? _tick;
-  bool _ticks = true;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final ticks = TickerMode.valuesOf(context).enabled;
-    if (ticks == _ticks) return;
-    _ticks = ticks;
-    _sync();
-  }
-
-  void _sync() {
-    if (!widget.live || !_ticks) {
-      _tick?.cancel();
-      _tick = null;
-    } else {
-      _tick ??= Timer.periodic(
-        const Duration(seconds: 1),
-        (_) => setState(() {}),
-      );
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _sync();
-  }
-
-  @override
-  void didUpdateWidget(LiveText old) {
-    super.didUpdateWidget(old);
-    _sync();
-  }
-
-  @override
-  void dispose() {
-    _tick?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Text(
-    widget.text(),
-    maxLines: 1,
-    overflow: TextOverflow.ellipsis,
-    style: widget.style,
   );
 }
 

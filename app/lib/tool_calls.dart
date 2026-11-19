@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:diff_view/diff_view.dart';
 import 'package:flutter/material.dart';
 
+import 'package:nushi/call_times.dart';
 import 'package:nushi/chat_images.dart';
 import 'package:nushi/collapsible.dart';
 import 'package:nushi/diff_box.dart';
@@ -433,6 +434,9 @@ class ToolCallView extends StatelessWidget {
             header: LayoutBuilder(
               builder: (context, row) {
                 final room = _AfterTitle.roomIn(row.maxWidth);
+                // Its time keeps its place before the spinner does: it
+                // says the call runs too, ticking.
+                final timed = room >= callTimeRoom;
                 return Row(
                   children: [
                     Icon(
@@ -497,13 +501,18 @@ class ToolCallView extends StatelessWidget {
                           const SizedBox(width: 8),
                           const Flexible(child: _Failed('failed')),
                         ],
-                        if (working && room >= _spinnerRoom) ...[
+                        if (working &&
+                            room >=
+                                _spinnerRoom + (timed ? callTimeRoom : 0)) ...[
                           const SizedBox(width: _spinnerRoom - 14),
                           SizedBox.square(
                             dimension: 14,
                             child: Spinner(color: t.textSecondary),
                           ),
                         ],
+                        // Its time ends the row, where it stays as the
+                        // spinner goes.
+                        if (timed) CallTime([it]),
                       ],
                     ),
                   ],
@@ -617,6 +626,10 @@ class RunView extends StatelessWidget {
                       const SizedBox(width: 8),
                       Flexible(child: _Failed('$failed failed')),
                     ],
+                    // From its first call's start to its last's end, at
+                    // the end of the row as each call's is.
+                    if (_AfterTitle.roomIn(row.maxWidth) >= callTimeRoom)
+                      CallTime(calls),
                   ],
                 ),
               ],
