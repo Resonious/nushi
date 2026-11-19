@@ -39,9 +39,9 @@ List<MenuEntry> chatMenu(
     for (final a in chatActions(context, daemon, chat, onRename: onRename))
       if (a.enabled) a,
   ]..sort((a, b) => _group(a.act).compareTo(_group(b.act)));
-  final color = daemon.daemonApi >= chatColorApi
-      ? shown.lastIndexWhere((a) => _group(a.act) <= 1)
-      : -1;
+  // The last of the conversation's and the chat's own groups.
+  final chatEnd = shown.lastIndexWhere((a) => _group(a.act) <= 1);
+  final color = daemon.daemonApi >= chatColorApi ? chatEnd : -1;
   return [
     for (final (i, a) in shown.indexed) ...[
       if (i > 0 && _group(a.act) != _group(shown[i - 1].act)) MenuEntry.divider,
@@ -68,14 +68,10 @@ List<MenuEntry> chatMenu(
         ),
       // [more] (the sidebar row's Move to section) closes the chat's own
       // group, before what it's linked to and keeping it.
-      if (i == _lastOfGroup(shown, 1)) ...more,
+      if (i == chatEnd) ...more,
     ],
   ];
 }
-
-/// The index of the last of [shown] in [group] or before it.
-int _lastOfGroup(List<AppAction> shown, int group) =>
-    shown.lastIndexWhere((a) => _group(a.act) <= group);
 
 /// Where an action goes in the chat's menu: the conversation, the chat
 /// itself, what it's linked to and uses, keeping it, deleting it. One the
