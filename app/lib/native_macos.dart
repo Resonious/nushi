@@ -13,6 +13,8 @@ import 'package:nushi/speller_macos.dart';
 import 'package:nushi/web_views_macos.dart';
 import 'package:nushi/window_drag_macos.dart';
 
+export 'package:nushi/window_drag_macos.dart' show logMouseRepairs;
+
 /// The Mac's implementation of each native capability (ADR 0097), each
 /// over its Swift side in `macos/Runner`.
 Native macosNative() => Native(

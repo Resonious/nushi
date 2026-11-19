@@ -316,9 +316,10 @@ test-timings:
 # The Mac window's placement maths (app/macos/Runner/Placement.swift, ADR
 # 0093), what ⌘V attaches (Clipboard.swift, on a pasteboard of its own)
 # and what AppKit takes for its title bar and where the window's buttons
-# sit (TitleBar.swift, a window never shown) with their tests, built by swiftc and run with no window on
-# screen: RunnerTests is hosted by the app, so xcodebuild test would launch
-# Nushi (macOS only).
+# sit (TitleBar.swift, a window never shown), and what Flutter's engine was
+# told of the mouse (EngineMouse.swift), with their tests, built by swiftc
+# and run with no window on screen: RunnerTests is hosted by the app, so
+# xcodebuild test would launch Nushi (macOS only).
 test-window:
 	@mkdir -p bin
 	xcrun swiftc -o bin/placement-test app/macos/Runner/Placement.swift app/macos/PlacementTests/main.swift
@@ -327,6 +328,8 @@ test-window:
 	bin/clipboard-test
 	xcrun swiftc -o bin/titlebar-test app/macos/Runner/TitleBar.swift app/macos/TitleBarTests/main.swift
 	bin/titlebar-test
+	xcrun swiftc -o bin/enginemouse-test app/macos/Runner/EngineMouse.swift app/macos/EngineMouseTests/main.swift
+	bin/enginemouse-test
 
 # The web app in Chrome with the real nushid and nushi-relay (macOS, or
 # Linux with a Chrome, as CI runs it).

@@ -56,6 +56,8 @@ void main() => runZonedGuarded(() {
       : Platform.isWindows
       ? windowsNative()
       : macosNative();
+  // The Mac window's mouse repairs, logged (ADR 0080).
+  if (Platform.isMacOS) logMouseRepairs();
   limitImageCache();
   catchErrors();
   themeFiles

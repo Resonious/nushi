@@ -1,8 +1,26 @@
 import 'package:flutter/services.dart';
 
+import 'package:nushi/app_log.dart';
 import 'package:nushi/window_drag.dart';
 
 const _channel = MethodChannel('nushi/window');
+
+/// Logs each mouse release, or trackpad gesture's end, the window told
+/// Flutter's engine of because the engine never had it
+/// (`macos/Runner/NushiViewController.swift`, ADR 0080): what it was for
+/// and which check found it, nothing more (ADR 0038). A pane's edge that
+/// follows the pointer with no button held was one such.
+void logMouseRepairs() => _channel.setMethodCallHandler((call) async {
+  if ((call.method, call.arguments) case (
+    'repaired',
+    final Map<Object?, Object?> a,
+  )) {
+    appLog.warn('the window told the engine of a mouse release it never had', {
+      'what': '${a['what']}',
+      'check': '${a['check']}',
+    });
+  }
+});
 
 /// The Mac's window, moved and zoomed by AppKit
 /// (`macos/Runner/TitleBar.swift`'s HeaderDrag) from the headers, which
