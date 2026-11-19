@@ -33,7 +33,7 @@ func TestEveryAgentIsWhole(t *testing.T) {
 		if a.Skills == nil || a.Trust == nil || info.Resume == "" {
 			t.Errorf("%s isn't whole: %+v", n, a)
 		}
-		if takes := n == "claude" || n == "codex"; info.ClientMCP != takes {
+		if takes := n == "claude" || n == "codex" || n == "agy"; info.ClientMCP != takes {
 			t.Errorf("%s: ClientMCP %v, want %v (ADR 0043)", n, info.ClientMCP, takes)
 		}
 		if moves := n == "claude" || n == "codex"; info.Moves != moves {
@@ -46,7 +46,7 @@ func TestEveryAgentIsWhole(t *testing.T) {
 			t.Errorf("%s: _meta %v, %v, %v, only Claude's and opencode's initialize has any", n, info.InitMeta, info.SessionMeta, info.UltracodeMeta)
 		}
 	}
-	if !slices.Equal(names, []string{"claude", "codex", "ante", "omp", "opencode", "pi", "pig"}) {
+	if !slices.Equal(names, []string{"claude", "codex", "ante", "omp", "opencode", "pi", "pig", "agy"}) {
 		t.Errorf("agents %v", names)
 	}
 }
@@ -106,6 +106,7 @@ func TestEachHarnessHasWhatItHasAndNoMore(t *testing.T) {
 		"opencode": {[]string{"CommandHider", "GoneReader", "OtherReader"}, nil},
 		"pi":       {[]string{"ContextAsker", "Forker", "GoneReader"}, nil},
 		"pig":      {[]string{"ContextAsker", "Forker", "GoneReader"}, nil},
+		"agy":      {[]string{"OtherReader", "ToolReader"}, nil},
 	}
 	for _, a := range All("", nil) {
 		w := want[a.Agent.Name]

@@ -1,6 +1,7 @@
 package knownagents
 
 import (
+	"github.com/afrase/nushi/internal/agy"
 	"github.com/afrase/nushi/internal/ante"
 	"github.com/afrase/nushi/internal/claude"
 	"github.com/afrase/nushi/internal/claudehistory"
@@ -74,6 +75,9 @@ var (
 	_ chats.Forker       = pi.Harness{}
 	_ chats.ContextAsker = pi.Harness{}
 	_ chats.GoneReader   = pi.Harness{}
+
+	_ chats.OtherReader = agy.Harness{}
+	_ chats.ToolReader  = agy.Harness{}
 
 	// The app shows these by what the daemon says, not by the agent's name.
 	_ skills.BuiltIn = claudeskills.Claude{}

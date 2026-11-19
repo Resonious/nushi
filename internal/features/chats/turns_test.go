@@ -121,6 +121,9 @@ func TestAShowPromptSaysWhichFile(t *testing.T) {
 	if it := asked(acp.ToolCallUpdate{ToolCallID: "codex"}); it.Title != "mcp.nushi.show" || !strings.Contains(it.Input, "b.md") {
 		t.Errorf("Codex's card: %+v", it)
 	}
+	if it := asked(acp.ToolCallUpdate{ToolCallID: "agy", Title: "Run mcp_nushi_show", RawInput: json.RawMessage(`{"path":"c.md"}`)}); !strings.Contains(it.Input, "c.md") {
+		t.Errorf("Antigravity's card: %+v", it)
+	}
 	if it := asked(acp.ToolCallUpdate{ToolCallID: "other", Title: "Bash", RawInput: json.RawMessage(`{"command":"ls"}`)}); it.Input != "" {
 		t.Errorf("another card: %+v", it)
 	}

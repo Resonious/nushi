@@ -7,6 +7,8 @@ import (
 	"io/fs"
 	"log/slog"
 	"os"
+	"path/filepath"
+	"runtime"
 	"slices"
 	"time"
 
@@ -89,6 +91,7 @@ func (s *Service) Find(ctx context.Context, agent, folder, cursor string) (Found
 		}
 		for _, info := range resp.Sessions {
 			id := string(info.SessionID)
+			info.Cwd = normalizeCwd(info.Cwd)
 			if _, ok := paths[info.Cwd]; !ok {
 				paths[info.Cwd] = git.RealPath(info.Cwd)
 			}
@@ -119,6 +122,17 @@ func (s *Service) Find(ctx context.Context, agent, folder, cursor string) (Found
 	}
 	slices.SortStableFunc(page.Sessions, func(a, b Found) int { return b.Updated.Compare(a.Updated) })
 	return page, nil
+}
+
+// normalizeCwd turns a Windows file-URI path ("/C:/Users/...") that an
+// agent such as agy may report in session/list into a native path so
+// git.RealPath and os.Stat match the folder on Windows.
+func normalizeCwd(p string) string {
+	if runtime.GOOS == "windows" && len(p) >= 3 && p[0] == '/' &&
+		((p[1] >= 'A' && p[1] <= 'Z') || (p[1] >= 'a' && p[1] <= 'z')) && p[2] == ':' {
+		return filepath.FromSlash(p[1:])
+	}
+	return p
 }
 
 // found reads what the agent tells of a session.

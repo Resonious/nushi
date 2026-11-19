@@ -13,14 +13,18 @@ import (
 	"github.com/afrase/nushi/internal/model"
 )
 
-// isShow says a call is Nushi's show tool, by the title Claude's agents
-// and Codex's adapter give it (docs/facts).
-func isShow(title string) bool { return title == "mcp__nushi__show" || title == "mcp.nushi.show" }
+// isShow says a call is Nushi's show tool, by the title Claude's agents,
+// Codex's adapter and Antigravity give it (docs/facts).
+func isShow(title string) bool {
+	title = strings.TrimPrefix(title, "Run ")
+	return title == "mcp__nushi__show" || title == "mcp.nushi.show" || title == "mcp_nushi_show"
+}
 
 // isPreviewStart says a call is Nushi's preview_start tool (ADR 0100), by
 // the same titles.
 func isPreviewStart(title string) bool {
-	return title == "mcp__nushi__preview_start" || title == "mcp.nushi.preview_start"
+	title = strings.TrimPrefix(title, "Run ")
+	return title == "mcp__nushi__preview_start" || title == "mcp.nushi.preview_start" || title == "mcp_nushi_preview_start"
 }
 
 // entryName is the name a preview_start call's input gives: `name`,

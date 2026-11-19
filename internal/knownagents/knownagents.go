@@ -5,8 +5,8 @@
 // features from it, and the e2e tests run its harnesses on fake agents. What
 // each agent does is in its own packages: internal/claude*, internal/codex*,
 // internal/ante* (Ante's bridge too, ADR 0030), internal/omp*,
-// internal/opencode* and internal/pi (Pi's and PiG's bridge, ADR 0039,
-// 0078).
+// internal/opencode*, internal/pi (Pi's and PiG's bridge, ADR 0039, 0078)
+// and internal/agy*.
 package knownagents
 
 import (
@@ -15,6 +15,9 @@ import (
 	acp "github.com/afrase/acp-go/unstable"
 
 	"github.com/afrase/nushi/internal/agentproc"
+	"github.com/afrase/nushi/internal/agy"
+	"github.com/afrase/nushi/internal/agyskills"
+	"github.com/afrase/nushi/internal/agytrust"
 	"github.com/afrase/nushi/internal/ante"
 	"github.com/afrase/nushi/internal/antemcp"
 	"github.com/afrase/nushi/internal/anteskills"
@@ -121,6 +124,11 @@ func All(projects string, codexGo func() bool) []Agent {
 		},
 		piFlavor(pi.Pi),
 		piFlavor(pi.PiG),
+		{
+			Harness: agy.Harness{}, Local: agy.Local{},
+			Agent:  agents.Agent{CLI: agy.CLI, Tested: agy.Tested},
+			Skills: agyskills.Agy{}, Trust: agytrust.Trust{},
+		},
 	}
 	for i := range all {
 		info := all[i].Harness.Info()
