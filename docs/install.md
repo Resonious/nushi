@@ -104,7 +104,7 @@ It doesn't touch the agents' own history (`~/.claude`, `~/.codex`, `~/.ante`, `~
 Nushi, an agentic development environment (ADE), is two programs: a Go daemon, `nushid`, that runs the agents, and a Flutter app that is the window.
 
 - The packaged app carries `nushid` in `Contents/Helpers/Nushi Daemon.app`, a background-only app (on Linux in `lib/nushid`). It starts it when no daemon is running, and leaves it running when it quits ([ADR 0013](adr/0013-app-starts-its-daemon.md), [ADR 0036](adr/0036-the-daemon-is-a-background-helper-app.md)).
-- Settings › Start at login also starts it at login.
+- Settings › General › Startup and updates › Start at login also starts it at login.
 - A daemon whose app is deleted stops within about a minute. One whose app is replaced (an upgrade, `make install`) keeps running until it restarts.
 - Settings › Logs & advanced shows the app's version and the running daemon's. `nushid -version` in the helper app says the same.
 

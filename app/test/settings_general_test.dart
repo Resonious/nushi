@@ -4,6 +4,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/controls.dart';
 import 'package:nushi/daemon.dart';
@@ -12,6 +13,7 @@ import 'package:nushi/native.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/settings_rows.dart';
 
+import 'fake_app_install.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 import 'settings_harness.dart';
@@ -153,4 +155,41 @@ void main() {
     expect(asked, 1);
     await closeView(tester, d);
   }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
+  testWidgets(
+    'Start at login heads Startup and updates, not the chats’ group',
+    (tester) async {
+      (native.install as FakeAppInstall).daemon = '/Applications/nushid';
+      const channel = MethodChannel('nushi/login');
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            ..setMockMethodCallHandler(channel, (_) async => 'enabled');
+      addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+      final fake = FakeDaemon([])
+        ..settings = Settings(sleepAfterMinutes: 30, checkUpdates: true);
+      final d = await fake.connect(tester);
+      await pumpSettings(tester, d, SettingsSection.general);
+      Finder inGroup(String title) => find.ancestor(
+        of: find.text(title),
+        matching: find.byType(SettingsGroup),
+      );
+      final login = find.ancestor(
+        of: find.text('Start at login'),
+        matching: find.byType(SettingsGroup),
+      );
+      expect(login, findsOne);
+      expect(tester.widget<SettingsGroup>(login).title, 'Startup and updates');
+      expect(inGroup('Sleep idle chats'), isNot(login.evaluate().single));
+      // First in it, over Check for updates.
+      expect(
+        tester.getRect(find.text('Start at login')).top,
+        lessThan(tester.getRect(find.text('Check for updates')).top),
+      );
+      await closeView(tester, d);
+    },
+    // A dev run's own data folder shows no Start at login (it starts the
+    // usual folder's daemon).
+    skip: Platform.environment.containsKey('NUSHI_DATA'),
+    variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+  );
 }

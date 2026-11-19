@@ -19,20 +19,23 @@ String lastChecked(Int64 ms, DateTime now) {
   return 'Last checked ${ago(now.difference(at), at)}';
 }
 
-/// Settings › General's Updates: whether the daemon checks GitHub for a
-/// newer release (on by default; at start and every 2 hours), then the
-/// version running, when GitHub was last asked, and Check now.
+/// Settings › General's Updates: [login] first (Start at login's rows,
+/// which make it "Startup and updates"), whether the daemon checks GitHub
+/// for a newer release (on by default; at start and every 2 hours), then
+/// the version running, when GitHub was last asked, and Check now.
 class UpdatesGroup extends StatefulWidget {
   const new({
     required this.daemon,
     required this.settings,
     required this.onChange,
     super.key,
+    this.login = const [],
   });
 
   final Daemon daemon;
   final Settings settings;
   final SettingsChange onChange;
+  final List<Widget> login;
 
   @override
   State<UpdatesGroup> createState() => _UpdatesGroupState();
@@ -77,8 +80,9 @@ class _UpdatesGroupState extends State<UpdatesGroup> {
     builder: (context, _) {
       final version = widget.daemon.daemonVersion;
       return SettingsGroup(
-        title: 'Updates',
+        title: widget.login.isEmpty ? 'Updates' : 'Startup and updates',
         children: [
+          ...widget.login,
           SettingsRow(
             'Check for updates',
             description: 'At start and every 2 hours.',

@@ -26,9 +26,9 @@ enum LoginItemState { on, needsApproval, off }
 
 /// "Start at login" in Settings › General: the [LoginItem], which starts
 /// the packaged daemon at login (ADR 0036, 0104), its rows given to
-/// [group] (General's Chats group, so it isn't a group of one row). The
-/// system keeps whether it's on; the rows show only once the [LoginItem]
-/// answers.
+/// [group] (General's Startup and updates, so it isn't a group of one
+/// row). The system keeps whether it's on; the rows show only once the
+/// [LoginItem] answers.
 class StartAtLogin extends StatefulWidget {
   const new({super.key, this.group = _alone});
 
