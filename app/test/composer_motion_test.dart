@@ -55,25 +55,38 @@ List<double> _lines(WidgetTester tester) => [
 ];
 
 void main() {
-  testWidgets('the turn line grows in as a turn starts', (tester) async {
+  testWidgets('the turn line fades in as a turn starts, in its room kept '
+      'between turns: the box doesn’t move', (tester) async {
     final (d, chat) = await _box(tester);
-    expect(_height(tester, find.byType(TurnStatus)), 0);
+    final room = _height(tester, find.byType(TurnStatus));
+    expect(room, greaterThan(15));
+    final box = tester.getTopLeft(find.byType(Composer)).dy;
     chat
       ..busy = true
       ..started = clock()
       ..notifyListeners();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    final mid = _height(tester, find.byType(TurnStatus));
+    final mid = tester
+        .widgetList<Opacity>(
+          find.descendant(
+            of: find.byType(TurnStatus),
+            matching: find.byType(Opacity),
+          ),
+        )
+        .first
+        .opacity;
+    expect(mid, inExclusiveRange(0, 1));
+    expect(_height(tester, find.byType(TurnStatus)), room);
     await tester.pump(TurnStatus.foldFor);
-    final full = _height(tester, find.byType(TurnStatus));
-    expect(mid, inExclusiveRange(0, full));
-    expect(full, greaterThan(15));
+    expect(_height(tester, find.byType(TurnStatus)), room);
+    expect(tester.getTopLeft(find.byType(Composer)).dy, box);
     chat
       ..busy = false
       ..started = null
       ..notifyListeners();
     await tester.pumpAndSettle();
+    expect(tester.getTopLeft(find.byType(Composer)).dy, box);
     await closeView(tester, d);
   });
 
