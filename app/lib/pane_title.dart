@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
 
+import 'package:nushi/text_width.dart';
+
 /// A pane's name and what it says after it, in its top row (a `PaneHeader`),
 /// taking the room the row leaves it and never more: [caption] takes what
 /// [title] leaves, cut short with an ellipsis; with less room than [title]
@@ -24,15 +26,11 @@ class PaneTitle extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, box) {
       final room = box.maxWidth;
-      final style = DefaultTextStyle.of(context).style.merge(title.style);
-      final painter = TextPainter(
-        text: TextSpan(text: title.data, style: style),
-        textDirection: Directionality.of(context),
-        textScaler: MediaQuery.textScalerOf(context),
-        maxLines: 1,
-      )..layout();
-      final width = painter.width;
-      painter.dispose();
+      final width = textWidth(
+        context,
+        title.data!,
+        title.style ?? const TextStyle(),
+      );
       Text cut(Text t) => Text(
         t.data!,
         style: t.style,

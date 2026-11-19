@@ -30,6 +30,7 @@ import 'package:nushi/sidebar_button.dart';
 import 'package:nushi/slides.dart';
 import 'package:nushi/status.dart';
 import 'package:nushi/terminal_panel.dart';
+import 'package:nushi/text_width.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 import 'package:nushi/window_drag.dart';
@@ -531,17 +532,11 @@ class ChatHeader extends StatelessWidget {
   }
 
   /// How wide [text] sets in [style].
-  static double _textWidth(BuildContext context, String text, TextStyle style) {
-    final painter = TextPainter(
-      text: TextSpan(text: text, style: style),
-      textDirection: TextDirection.ltr,
-      textScaler: MediaQuery.textScalerOf(context),
-      maxLines: 1,
-    )..layout();
-    final width = painter.width;
-    painter.dispose();
-    return width;
-  }
+  static double _textWidth(
+    BuildContext context,
+    String text,
+    TextStyle style,
+  ) => textWidth(context, text, style, merge: false);
 
   /// How much wider the app's font sets the row's own words than the
   /// bundled one does, which [headerRow] was measured in: 1 for the

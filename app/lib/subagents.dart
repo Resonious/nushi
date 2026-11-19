@@ -13,6 +13,7 @@ import 'package:nushi/live_text.dart';
 import 'package:nushi/motion.dart';
 import 'package:nushi/pickers.dart' show ConfigNames;
 import 'package:nushi/status.dart';
+import 'package:nushi/text_width.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/tool_calls.dart';
 import 'package:nushi/transcript_find.dart';
@@ -213,7 +214,7 @@ class SubagentState extends StatelessWidget {
         () {
           final states = subagentStatesNarrow(s);
           return states.firstWhere(
-            (t) => textWidth(context, t, style) <= box.maxWidth,
+            (t) => _liveWidth(context, t, style) <= box.maxWidth,
             orElse: () => states.last,
           );
         },
@@ -224,24 +225,12 @@ class SubagentState extends StatelessWidget {
   }
 }
 
-/// How wide [text] sets on one line in [style] where [context] is, as
-/// [LiveText] sets it there (the text's default style, its scale).
-double textWidth(BuildContext context, String text, TextStyle style) {
-  final painter = TextPainter(
-    text: TextSpan(
-      text: text,
-      style: DefaultTextStyle.of(context).style
-          .merge(style)
-          .copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
-    ),
-    textDirection: TextDirection.ltr,
-    textScaler: MediaQuery.textScalerOf(context),
-    maxLines: 1,
-  )..layout();
-  final width = painter.width;
-  painter.dispose();
-  return width;
-}
+/// How wide [text] sets on one line in [style] as [LiveText] sets it: in
+/// tabular figures.
+double _liveWidth(BuildContext context, String text, TextStyle style) =>
+    textWidth(context, text, style.copyWith(fontFeatures: _tabular));
+
+const _tabular = [FontFeature.tabularFigures()];
 
 /// A related worktree's branch, as a tag on its subagent.
 class WorktreeTag extends StatelessWidget {
@@ -375,7 +364,7 @@ class SubagentLine extends StatelessWidget {
                               box.maxWidth < _timeApart
                                   ? math.min(
                                       box.maxWidth / 2,
-                                      textWidth(
+                                      _liveWidth(
                                             context,
                                             subagentTime(s),
                                             state,
