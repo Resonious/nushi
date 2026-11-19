@@ -1,7 +1,6 @@
 package chats
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -20,10 +19,6 @@ func (f *fakeClock) move(d time.Duration) { f.at = f.at.Add(d) }
 func timedChat(clock *fakeClock) *chat {
 	return &chat{remembered: &memModes{}, id: "s1", sid: "s1", kind: testKind(testHarness{}), publish: func(model.Event) {},
 		record: model.ChatRecord{Folder: "/w"}, sessions: &memSessions{}, timing: Timing{Now: clock.now}}
-}
-
-func send(c *chat, u acp.SessionUpdate) {
-	_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: u})
 }
 
 func callUpdate(id, status string) acp.SessionUpdate {

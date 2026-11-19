@@ -29,10 +29,6 @@ func result() acp.SessionUpdate {
 		Cost: &acp.Cost{Amount: 0.1, Currency: "USD"}, Meta: map[string]any{"_claude/origin": map[string]any{"kind": "human"}}}}
 }
 
-func update(c *chat, u acp.SessionUpdate) {
-	_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: u})
-}
-
 // Claude holds a turn's prompt open while subagents it started in the
 // background run; the chat is idle once the turn's own work has ended: a
 // message goes at once, as a prompt, and the held prompt's answer changes
@@ -53,7 +49,7 @@ func TestABackgroundSubagentLeavesTheChatIdle(t *testing.T) {
 	}
 
 	// Its steps are its own, not the agent's working on its own.
-	update(c, acp.SessionUpdate{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "s1", Title: "make test", Status: "in_progress",
+	send(c, acp.SessionUpdate{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "s1", Title: "make test", Status: "in_progress",
 		Meta: map[string]any{"claudeCode": map[string]any{"toolName": "Bash", "parentToolUseId": "a1"}}}})
 	c.mu.Lock()
 	own := c.ownTurn
@@ -95,14 +91,14 @@ func TestASteeredTurnEndsAtItsLastResult(t *testing.T) {
 	c.mu.Lock()
 	c.steered = 1
 	c.mu.Unlock()
-	update(c, result())
+	send(c, result())
 	c.mu.Lock()
 	busy := c.busy
 	c.mu.Unlock()
 	if !busy {
 		t.Fatal("the cut-short work's result ended the turn")
 	}
-	update(c, result())
+	send(c, result())
 	eventually(t, c, func() bool { return !c.busy })
 	agent.release()
 }
@@ -140,9 +136,7 @@ func TestStoppingTheAgentStopsItsSubagents(t *testing.T) {
 		t.Errorf("session/fork's _meta: %v (%v)", agent.forkMeta, err)
 	}
 
-	for _, u := range backgroundSubagent() {
-		update(c, u)
-	}
+	send(c, backgroundSubagent()...)
 	if err := svc.Sleep(c.id); err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +158,7 @@ func TestAStoppedTurnWaitsForItsAnswer(t *testing.T) {
 	eventually(t, c, func() bool { return c.itemLocked("a1") != nil && c.itemLocked("a1").Status == "completed" })
 	go func() { _, _ = svc.Stop(context.Background(), c.id, false) }()
 	eventually(t, c, func() bool { return c.stopped })
-	update(c, result())
+	send(c, result())
 	c.mu.Lock()
 	busy := c.busy
 	c.mu.Unlock()

@@ -618,6 +618,13 @@ func (m *memModes) SetMode(agent, mode string) error {
 	return nil
 }
 
+// send has the agent send updates in the chat's session, s1, in order.
+func send(c *chat, updates ...acp.SessionUpdate) {
+	for _, u := range updates {
+		_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: u})
+	}
+}
+
 func chunk(id, text string) acp.SessionUpdate {
 	return acp.SessionUpdate{SessionUpdate: "agent_message_chunk", AgentMessageChunk: &acp.ContentChunk{
 		MessageID: acp.MessageID(id),

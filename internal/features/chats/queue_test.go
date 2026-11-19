@@ -124,10 +124,10 @@ func TestQueueSteersBetweenToolCalls(t *testing.T) {
 	if _, steered := agent.texts(); len(steered) != 0 {
 		t.Fatalf("steered %q before the agent's chance", steered)
 	}
-	_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: acp.SessionUpdate{SessionUpdate: "tool_call",
-		ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "ls", Status: "in_progress"}}})
-	_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: acp.SessionUpdate{SessionUpdate: "tool_call_update",
-		ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}}})
+	send(c, acp.SessionUpdate{SessionUpdate: "tool_call",
+		ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "ls", Status: "in_progress"}})
+	send(c, acp.SessionUpdate{SessionUpdate: "tool_call_update",
+		ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}})
 	eventually(t, c, func() bool { return len(c.items) == 3 && c.items[2].Text == "two" })
 	eventually(t, c, func() bool { _, steered := agent.texts(); return reflect.DeepEqual(steered, []string{"two"}) })
 	agent.release()
@@ -162,10 +162,10 @@ func TestQueueWaitsOutASubagentsSteps(t *testing.T) {
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "one"}, SendIdle))
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "two"}, SendQueue))
 	call := func(id string, meta map[string]any) {
-		_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: acp.SessionUpdate{SessionUpdate: "tool_call",
-			ToolCall: &acp.ToolCall{ToolCallID: acp.ToolCallID(id), Title: "ls", Status: "in_progress", Meta: meta}}})
-		_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: acp.SessionUpdate{SessionUpdate: "tool_call_update",
-			ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: acp.ToolCallID(id), Status: "completed"}}})
+		send(c, acp.SessionUpdate{SessionUpdate: "tool_call",
+			ToolCall: &acp.ToolCall{ToolCallID: acp.ToolCallID(id), Title: "ls", Status: "in_progress", Meta: meta}})
+		send(c, acp.SessionUpdate{SessionUpdate: "tool_call_update",
+			ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: acp.ToolCallID(id), Status: "completed"}})
 	}
 	call("sub1", map[string]any{"claudeCode": map[string]any{"parentToolUseId": "agent1"}})
 	// The update is taken under the chat's lock, and a steer it began is
@@ -191,11 +191,11 @@ func TestAToolEndAfterStopSteersNothing(t *testing.T) {
 	agent.gate = make(chan struct{})
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "one"}, SendIdle))
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "two"}, SendQueue))
-	update(c, acp.SessionUpdate{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "ls", Status: "in_progress"}})
+	send(c, acp.SessionUpdate{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "ls", Status: "in_progress"}})
 	if _, err := svc.Stop(context.Background(), c.id, false); err != nil {
 		t.Fatal(err)
 	}
-	update(c, acp.SessionUpdate{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "failed"}})
+	send(c, acp.SessionUpdate{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "failed"}})
 	eventually(t, c, func() bool { return !c.steering })
 	if _, steered := agent.texts(); len(steered) > 0 {
 		t.Errorf("steered %q into the stopped turn", steered)
@@ -219,8 +219,8 @@ func TestStopEndsTheSteering(t *testing.T) {
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "one"}, SendIdle))
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "two"}, SendQueue))
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "three"}, SendQueue))
-	update(c, acp.SessionUpdate{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "ls", Status: "in_progress"}})
-	update(c, acp.SessionUpdate{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}})
+	send(c, acp.SessionUpdate{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "ls", Status: "in_progress"}})
+	send(c, acp.SessionUpdate{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}})
 	eventually(t, c, func() bool { return len(c.queue) == 1 }) // "two" is out
 	if _, err := svc.Stop(context.Background(), c.id, false); err != nil {
 		t.Fatal(err)
@@ -262,8 +262,8 @@ func TestQueuedImagesGoOnlyToAnAgentThatTakesThem(t *testing.T) {
 		c.queue = append(c.queue, pic)
 		c.mu.Unlock()
 		if steer {
-			update(c, acp.SessionUpdate{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "ls", Status: "in_progress"}})
-			update(c, acp.SessionUpdate{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}})
+			send(c, acp.SessionUpdate{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "ls", Status: "in_progress"}})
+			send(c, acp.SessionUpdate{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}})
 			eventually(t, c, func() bool { _, steered := agent.texts(); return len(steered) == 1 })
 		} else {
 			agent.release()
