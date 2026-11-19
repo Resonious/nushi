@@ -177,6 +177,13 @@ func TestPluginsThroughTheCLI(t *testing.T) {
 	}
 }
 
+// trashOwn moves one of Claude's own skills to the Trash, as the Skills
+// view's service does: only from its own places.
+func trashOwn(ctx context.Context, folder, path string) error {
+	project, yours := Claude{}.Own(folder)
+	return skillfile.Trash(ctx, project, yours, path)
+}
+
 // Only a skill's folder right in a skills folder goes to the Trash.
 func TestTrashOnlyASkillsFolder(t *testing.T) {
 	cfg := t.TempDir()
@@ -202,7 +209,7 @@ func TestTrashOnlyASkillsFolder(t *testing.T) {
 		filepath.Join(cfg, "skills", "missing"),
 		"relative/proj",
 	} {
-		if err := (Claude{}).Trash(ctx, deeper, bad); err == nil {
+		if err := trashOwn(ctx, deeper, bad); err == nil {
 			t.Errorf("trashed %s", bad)
 		}
 	}
@@ -213,7 +220,7 @@ func TestTrashOnlyASkillsFolder(t *testing.T) {
 	if err := os.Symlink(elsewhere, filepath.Join(top, "sub", ".claude")); err != nil {
 		t.Fatal(err)
 	}
-	if err := (Claude{}).Trash(ctx, deeper, filepath.Join(top, "sub", ".claude", "victim")); err == nil {
+	if err := trashOwn(ctx, deeper, filepath.Join(top, "sub", ".claude", "victim")); err == nil {
 		t.Error("trashed through a linked .claude")
 	}
 	if err := os.MkdirAll(filepath.Join(top, "sub", "deeper", ".claude"), 0o700); err != nil {
@@ -222,7 +229,7 @@ func TestTrashOnlyASkillsFolder(t *testing.T) {
 	if err := os.Symlink(elsewhere, filepath.Join(top, "sub", "deeper", ".claude", "skills")); err != nil {
 		t.Fatal(err)
 	}
-	if err := (Claude{}).Trash(ctx, deeper, filepath.Join(top, "sub", "deeper", ".claude", "skills", "victim")); err == nil {
+	if err := trashOwn(ctx, deeper, filepath.Join(top, "sub", "deeper", ".claude", "skills", "victim")); err == nil {
 		t.Error("trashed through a linked .claude/skills")
 	}
 	if l, _ := (Claude{}).List(ctx, deeper); slices.ContainsFunc(l.Skills, func(s model.Skill) bool { return s.Name == "victim" }) {
@@ -232,7 +239,7 @@ func TestTrashOnlyASkillsFolder(t *testing.T) {
 		t.Errorf("the link's target was touched: %v", err)
 	}
 	path := filepath.Join(top, ".claude", "skills", "proj")
-	if err := (Claude{}).Trash(ctx, deeper, path); err != nil {
+	if err := trashOwn(ctx, deeper, path); err != nil {
 		t.Fatal(err)
 	}
 	// Through a folder of Nushi's in the repository (skillfile.Trash).

@@ -5,15 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
 	"slices"
-	"strings"
 
 	"github.com/afrase/nushi/internal/claudemcp"
 	"github.com/afrase/nushi/internal/model"
-	"github.com/afrase/nushi/internal/skillfile"
 )
 
 // Nushi turns skills on and off with Claude's documented skillOverrides
@@ -197,35 +194,10 @@ func (Claude) Uninstall(ctx context.Context, folder, id string) error {
 	return err
 }
 
-// CanTrash says why Trash wouldn't move path: nil only for a folder right
-// in your skills folder or one of folder's project's, holding a SKILL.md.
-func (Claude) CanTrash(_ context.Context, folder, path string) error {
-	name := filepath.Base(path)
-	roots := append([]string{userRoot()}, projectRoots(folder)...)
-	if filepath.Clean(path) != path || strings.HasPrefix(name, ".") || !slices.Contains(roots, filepath.Dir(path)) {
-		return fmt.Errorf("%s isn't a skill's folder", path)
-	}
-	if _, err := os.Stat(filepath.Join(path, "SKILL.md")); err != nil {
-		return fmt.Errorf("%s isn't a skill's folder", path)
-	}
-	// A project's .claude and .claude/skills are the repository's: a link
-	// there could take the Trash elsewhere. Only the skill's own folder
-	// may be a link (the link itself goes).
-	if root := filepath.Dir(path); root != userRoot() {
-		for _, p := range []string{filepath.Dir(root), root} {
-			if fi, err := os.Lstat(p); err != nil || fi.Mode()&os.ModeSymlink != 0 {
-				return fmt.Errorf("%s is a symlink; not moving what's in it", p)
-			}
-		}
-	}
-	return skillfile.CanTrash(projectRoots(folder), []string{userRoot()}, path)
-}
-
-// Trash moves a skill's folder (or the link in its place) to the Trash
-// (macOS's trash): only one CanTrash passes.
-func (c Claude) Trash(ctx context.Context, folder, path string) error {
-	if err := c.CanTrash(ctx, folder, path); err != nil {
-		return err
-	}
-	return skillfile.Trash(ctx, projectRoots(folder), []string{userRoot()}, path)
+// Own are the places Claude's own skill folders are in: folder's
+// project's .claude/skills and your skills folder. A project's .claude
+// and .claude/skills are the repository's, and one that is a link is no
+// place (projectRoots): it could take the Trash elsewhere.
+func (Claude) Own(folder string) (project, yours []string) {
+	return projectRoots(folder), []string{userRoot()}
 }

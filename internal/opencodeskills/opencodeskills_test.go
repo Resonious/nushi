@@ -151,6 +151,17 @@ func TestPolicies(t *testing.T) {
 	}
 }
 
+// trashOwn moves one of opencode's own skills to the Trash, as the Skills
+// view's service does: its own refusals first, then only from its own
+// places.
+func trashOwn(ctx context.Context, folder, path string) error {
+	if err := (OpenCode{}).Refuse(folder, path); err != nil {
+		return err
+	}
+	project, yours := OpenCode{}.Own(folder)
+	return skillfile.Trash(ctx, project, yours, path)
+}
+
 // trashByRemoving has the Trash remove what it is given.
 func trashByRemoving(t *testing.T) {
 	t.Helper()
@@ -185,7 +196,7 @@ func TestTrash(t *testing.T) {
 		{filepath.Join(top, ".agents", "skills", "release"), "isn't a skill's folder"},
 		{filepath.Join(top, ".claude", "skills", "claudeproj"), "isn't a skill's folder"},
 	} {
-		err := OpenCode{}.Trash(ctx, deeper, c.path)
+		err := trashOwn(ctx, deeper, c.path)
 		if err == nil || !strings.Contains(err.Error(), c.want) {
 			t.Errorf("%s: %v, want %q", c.path, err, c.want)
 		}
@@ -194,7 +205,7 @@ func TestTrash(t *testing.T) {
 		}
 	}
 	for _, p := range []string{filepath.Join(config, "skills", "mine"), filepath.Join(top, ".opencode", "skills", "proj")} {
-		if err := (OpenCode{}).Trash(ctx, deeper, p); err != nil {
+		if err := trashOwn(ctx, deeper, p); err != nil {
 			t.Errorf("%s: %v", p, err)
 		}
 	}
@@ -299,7 +310,7 @@ func TestTrashOfAPlaceThatIsASkill(t *testing.T) {
 				t.Errorf("%s went to the Trash", place)
 			}
 			for _, p := range []string{file, place} {
-				if err := (OpenCode{}).Trash(ctx, deeper, p); err == nil {
+				if err := trashOwn(ctx, deeper, p); err == nil {
 					t.Errorf("opencode's own Trash took %s", p)
 				}
 			}

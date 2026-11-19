@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/afrase/nushi/internal/model"
+	"github.com/afrase/nushi/internal/skillfile"
 	"github.com/afrase/nushi/internal/testcheck"
 )
 
@@ -125,6 +126,13 @@ func TestListReadsEachRoot(t *testing.T) {
 	}
 }
 
+// trashOwn moves one of Codex's own skills to the Trash, as the Skills
+// view's service does: only from its own places.
+func trashOwn(ctx context.Context, folder, path string) error {
+	project, yours := Codex{}.Own(folder)
+	return skillfile.Trash(ctx, project, yours, path)
+}
+
 // Only your skills and the project's .codex/skills go to the Trash here.
 func TestTrash(t *testing.T) {
 	codexHome, _, top, deeper := setup(t)
@@ -136,7 +144,7 @@ func TestTrash(t *testing.T) {
 		filepath.Join(top, ".agents", "skills", "shared"),
 		filepath.Join(top, ".codex", "skills", "missing"),
 	} {
-		if err := (Codex{}).Trash(ctx, deeper, bad); err == nil {
+		if err := trashOwn(ctx, deeper, bad); err == nil {
 			t.Errorf("trashed %s", bad)
 		}
 	}
