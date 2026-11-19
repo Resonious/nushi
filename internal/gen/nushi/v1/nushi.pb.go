@@ -12857,9 +12857,11 @@ type Item struct {
 	// 0127): its run, as the daemon follows it; unset while it isn't (the
 	// call then shows as a plain one).
 	Workflow *Workflow `protobuf:"bytes,40,opt,name=workflow,proto3" json:"workflow,omitempty"`
-	// For a tool call: when the daemon saw it start and end, in Unix
-	// milliseconds; 0 when it didn't (a call replayed from the agent's
-	// history, one whose end the daemon can't know). A call still running as
+	// For a tool call: when the daemon saw it start to run (once allowed,
+	// when the agent asked permission: the wait for the user isn't in it)
+	// and end, in Unix milliseconds; 0 when it didn't (a call replayed from
+	// the agent's history, one denied or waiting for permission, one whose
+	// end the daemon can't know). A call still running as
 	// its turn ends has that end until one of its own comes. API 124.
 	Started       int64 `protobuf:"varint,41,opt,name=started,proto3" json:"started,omitempty"`
 	Ended         int64 `protobuf:"varint,42,opt,name=ended,proto3" json:"ended,omitempty"`

@@ -16956,9 +16956,11 @@ class Item extends $pb.GeneratedMessage {
   @$pb.TagNumber(40)
   Workflow ensureWorkflow() => $_ensure(37);
 
-  /// For a tool call: when the daemon saw it start and end, in Unix
-  /// milliseconds; 0 when it didn't (a call replayed from the agent's
-  /// history, one whose end the daemon can't know). A call still running as
+  /// For a tool call: when the daemon saw it start to run (once allowed,
+  /// when the agent asked permission: the wait for the user isn't in it)
+  /// and end, in Unix milliseconds; 0 when it didn't (a call replayed from
+  /// the agent's history, one denied or waiting for permission, one whose
+  /// end the daemon can't know). A call still running as
   /// its turn ends has that end until one of its own comes. API 124.
   @$pb.TagNumber(41)
   $fixnum.Int64 get started => $_getI64(38);

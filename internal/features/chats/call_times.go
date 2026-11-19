@@ -18,19 +18,50 @@ func callRunning(status string) bool { return status == "pending" || status == "
 
 // timeCallLocked stamps a tool call as an update comes (was is its status
 // before it, "" for a new call): its start when the daemon first sees it,
-// live, and its end when its status first becomes one. A replayed call
-// gets no times: when it ran isn't known.
+// live, unless a permission prompt for it is pending (askedLocked), and
+// its end when its status first becomes one. A replayed call gets no
+// times: when it ran isn't known.
 func (c *chat) timeCallLocked(it *model.Item, was string) {
 	if c.quiet || c.reopeningLocked() {
 		return
 	}
 	now := c.timing.now()
-	if it.Started.IsZero() && was == "" {
+	if it.Started.IsZero() && was == "" && c.asking[it.ID] == 0 {
 		it.Started = now
 	}
 	if !it.Started.IsZero() && callEnded(it.Status) && !callEnded(was) {
 		it.Ended = now // also past the end its turn gave it
 	}
+}
+
+// askedLocked says a permission prompt for tool call callID is pending:
+// the call doesn't count as running until it's allowed (permittedLocked),
+// so the wait for the user isn't in its time. Agents order the two either
+// way (docs/facts: Claude and OpenCode send the call first, Codex the
+// prompt), so a call already stamped loses its start.
+func (c *chat) askedLocked(callID string) {
+	if c.asking == nil {
+		c.asking = map[string]int{}
+	}
+	c.asking[callID]++
+	if it := c.itemLocked(callID); it != nil && it.Kind == model.ToolCall && !it.Started.IsZero() {
+		it.Started, it.Ended = time.Time{}, time.Time{}
+		c.publishLocked(*it)
+	}
+}
+
+// permittedLocked says the prompt for tool call callID was answered:
+// allowed, the call starts to run now; denied or cancelled, it has no time.
+func (c *chat) permittedLocked(callID string, allowed bool) {
+	if c.asking[callID]--; c.asking[callID] <= 0 {
+		delete(c.asking, callID)
+	}
+	it := c.itemLocked(callID)
+	if !allowed || it == nil || it.Kind != model.ToolCall || callEnded(it.Status) {
+		return
+	}
+	it.Started, it.Ended = c.timing.now(), time.Time{}
+	c.publishLocked(*it)
 }
 
 // endCallsLocked ends the times of the tool calls still running as a turn

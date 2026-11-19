@@ -194,3 +194,77 @@ func TestASubagentsTotals(t *testing.T) {
 		t.Errorf("after a second run: %+v", sa)
 	}
 }
+
+// permit has the chat's agent ask to run tool call id, waits for the
+// prompt, moves the clock by waited, then picks pick.
+func permit(t *testing.T, c *chat, clock *fakeClock, id string, waited time.Duration, pick string) {
+	t.Helper()
+	req := &acp.RequestPermissionRequest{SessionID: "s1", ToolCall: acp.ToolCallUpdate{ToolCallID: acp.ToolCallID(id)},
+		Options: []acp.PermissionOption{{OptionID: "yes", Name: "Yes", Kind: "allow_once"}, {OptionID: "no", Name: "No", Kind: "reject_once"}}}
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		_, _ = c.requestPermission(t.Context(), req)
+	}()
+	var answer chan<- string
+	eventually(t, c, func() bool {
+		for _, a := range c.waiting {
+			answer = a
+		}
+		return answer != nil
+	})
+	c.mu.Lock()
+	if it := c.itemLocked(id); it != nil && !it.Started.IsZero() {
+		t.Errorf("%s has a start while it waits for its answer", id)
+	}
+	c.mu.Unlock()
+	clock.move(waited)
+	answer <- pick
+	<-done
+}
+
+// A call's time starts when it starts to run: once its permission prompt
+// is allowed, whichever came first, the call or the prompt; one denied has
+// none; one never asked counts from when it came.
+func TestTheWaitForPermissionIsntTimed(t *testing.T) {
+	clock := &fakeClock{at: time.Date(2026, 11, 19, 9, 0, 0, 0, time.UTC)}
+	from := clock.at
+	c := timedChat(clock)
+	c.waiting = map[string]chan<- string{}
+	at := func(id string) [2]time.Duration {
+		c.mu.Lock()
+		defer c.mu.Unlock()
+		return times(*c.itemLocked(id), from)
+	}
+	// Asked after the call came (Claude, OpenCode), allowed three minutes
+	// later.
+	send(c, toolCall("allowed", "pending"))
+	permit(t, c, clock, "allowed", 3*time.Minute, "yes")
+	clock.move(2 * time.Second)
+	send(c, callUpdate("allowed", "completed"))
+	if got, want := at("allowed"), [2]time.Duration{3 * time.Minute, 3*time.Minute + 2*time.Second}; got != want {
+		t.Errorf("allowed = %v, want %v", got, want)
+	}
+	// Denied: no time, even once it fails.
+	send(c, toolCall("denied", "pending"))
+	permit(t, c, clock, "denied", time.Minute, "no")
+	send(c, callUpdate("denied", "failed"))
+	if got, want := at("denied"), [2]time.Duration{-1, -1}; got != want {
+		t.Errorf("denied = %v, want none", got)
+	}
+	// Asked before the call came (Codex): it counts from its coming.
+	permit(t, c, clock, "first", time.Minute, "yes")
+	send(c, toolCall("first", "in_progress"))
+	clock.move(5 * time.Second)
+	send(c, callUpdate("first", "completed"))
+	if got, want := at("first"), [2]time.Duration{5*time.Minute + 2*time.Second, 5*time.Minute + 7*time.Second}; got != want {
+		t.Errorf("asked first = %v, want %v", got, want)
+	}
+	// Never asked: from when it came.
+	send(c, toolCall("plain", "pending"))
+	clock.move(time.Second)
+	send(c, callUpdate("plain", "completed"))
+	if got, want := at("plain"), [2]time.Duration{5*time.Minute + 7*time.Second, 5*time.Minute + 8*time.Second}; got != want {
+		t.Errorf("never asked = %v, want %v", got, want)
+	}
+}

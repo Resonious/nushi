@@ -114,6 +114,7 @@ Press **Esc**, or click the round red **Stop** button at the end of the box's ro
 
 Each tool call's row ends with how long it ran, such as **12s**; while it runs, the time ticks. A folded group of calls, such as **Ran 3 commands**, ends with the time from its first call's start to its last call's end.
 
+- A call that asked your permission counts from when you allowed it, not from when it asked. One you denied shows no time.
 - Nothing shows for a call that took under a second.
 - Calls from before Nushi saw the chat (resumed from a terminal, or replayed by the agent) have no time.
 - A call still running when the turn ends stops counting there.

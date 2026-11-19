@@ -132,10 +132,11 @@ type Item struct {
 	// agent's as it began to arrive, else what the replay (SentMeta) or
 	// the agent's own files (chats' MessageDater) say. Zero when not known.
 	Sent time.Time `json:",omitzero"`
-	// Started and Ended are when the daemon saw a tool call start and end
-	// (Nushi's copy keeps them); zero when it didn't: a call replayed from
-	// the agent's history, or one whose end isn't known (its agent was gone
-	// when the daemon came back). A call still running at its turn's end
+	// Started and Ended are when the daemon saw a tool call start to run
+	// (once allowed, when the agent asked permission) and end (Nushi's copy
+	// keeps them); zero when it didn't: a call replayed from the agent's
+	// history, one denied or still waiting for permission, or one whose end
+	// isn't known (its agent was gone when the daemon came back). A call still running at its turn's end
 	// takes that end, until one of its own comes.
 	Started time.Time `json:",omitzero"`
 	Ended   time.Time `json:",omitzero"`

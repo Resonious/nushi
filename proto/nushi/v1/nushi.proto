@@ -2378,9 +2378,11 @@ message Item {
   // 0127): its run, as the daemon follows it; unset while it isn't (the
   // call then shows as a plain one).
   Workflow workflow = 40;
-  // For a tool call: when the daemon saw it start and end, in Unix
-  // milliseconds; 0 when it didn't (a call replayed from the agent's
-  // history, one whose end the daemon can't know). A call still running as
+  // For a tool call: when the daemon saw it start to run (once allowed,
+  // when the agent asked permission: the wait for the user isn't in it)
+  // and end, in Unix milliseconds; 0 when it didn't (a call replayed from
+  // the agent's history, one denied or waiting for permission, one whose
+  // end the daemon can't know). A call still running as
   // its turn ends has that end until one of its own comes. API 124.
   int64 started = 41;
   int64 ended = 42;

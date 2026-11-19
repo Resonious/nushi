@@ -93,6 +93,8 @@ func (c *chat) requestPermission(ctx context.Context, req *acp.RequestPermission
 	}
 	id := c.addLocked(item)
 	c.waiting[id] = answer
+	callID := string(req.ToolCall.ToolCallID)
+	c.askedLocked(callID)
 	c.statusChangedLocked()
 	c.mu.Unlock()
 
@@ -108,6 +110,7 @@ func (c *chat) requestPermission(ctx context.Context, req *acp.RequestPermission
 	defer c.mu.Unlock()
 	delete(c.waiting, id)
 	c.statusChangedLocked()
+	c.permittedLocked(callID, allows(item.Options, picked))
 	it := c.itemLocked(id) // nil once rewound or reloaded past
 	if picked == "" {
 		if it != nil {

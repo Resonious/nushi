@@ -190,6 +190,7 @@ type chat struct {
 	sessionGone  bool                            // and its agent no longer has its session: see goneLocked
 	failure      string                          // the notice saying why it failed (item id)
 	waiting      map[string]chan<- string        // permission prompts by item id, for the picked option
+	asking       map[string]int                  // the tool calls a permission prompt is pending for, by id: untimed meanwhile (call_times.go)
 	questions    map[string]chan<- []model.Field // questions by item id, for the answer (nil: declined)
 	config       []model.ConfigOption
 	commands     []model.Command
