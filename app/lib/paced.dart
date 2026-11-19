@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:markdown_view/markdown_view.dart';
 
 import 'package:nushi/motion.dart';
+import 'package:nushi/pond.dart';
 import 'package:nushi/theme/theme.dart';
 
 /// What a [Paced] shows of its text now: the text so far, what was
@@ -51,6 +52,9 @@ class Paced extends StatefulWidget {
   static const _behind = 0.22; // seconds of backlog at most, steady
   static const _end = 0.25; // seconds to show the rest once it ended
   static const Duration fade = Motion.quick;
+  // How long a word takes to surface: from blurred and tinted like the
+  // water to plain text.
+  static const surface = Duration(milliseconds: 650);
   // design: the reply's caret lingering, its pacing
   static const caretOut = Duration(milliseconds: 300);
 
@@ -166,10 +170,13 @@ class _PacedState extends State<Paced> {
     }
     end = _cut(text, end, live: widget.live);
     if (end > _end) {
+      if (_steps.isEmpty || now - _steps.last.$3 > Paced.fade) {
+        Pond.stir(context);
+      }
       _steps.add((_end, end, now));
       _end = end;
     }
-    _steps.removeWhere((s) => now - s.$3 > Paced.fade);
+    _steps.removeWhere((s) => now - s.$3 > Paced.surface);
     final all = _end >= received;
     if (all && !widget.live) _ended ??= now;
     final caretGone = _ended != null && now - _ended! >= Paced.caretOut || _off;
@@ -203,11 +210,11 @@ class _PacedState extends State<Paced> {
           (
             start: _cut(text, from, live: false),
             end: _cut(text, to, live: false),
-            opacity:
-                0.2 +
-                0.8 *
-                    ((now - at).inMicroseconds / Paced.fade.inMicroseconds)
-                        .clamp(0.0, 1.0),
+            // How far it has surfaced, 0 to 1.
+            opacity: Curves.easeOutCubic.transform(
+              ((now - at).inMicroseconds / Paced.surface.inMicroseconds)
+                  .clamp(0.0, 1.0),
+            ),
           ),
     ];
     final caret = ended == null
