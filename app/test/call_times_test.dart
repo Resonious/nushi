@@ -140,14 +140,14 @@ void main() {
     expect(tokenCount(9400), '9.4k tokens');
     expect(tokenCount(1240000), '1.2M tokens');
     // Under a second, replayed (no times), or never ended: nothing.
-    expect(callTime(_call('a', 'ls', 1, 0.4)), isNull);
-    expect(callTime(Item(status: 'completed')), isNull);
-    expect(callTime(Item(status: 'failed', started: _ago(5))), isNull);
-    expect(callTime(_call('a', 'ls', 72, 8)), const Duration(seconds: 64));
+    expect(runTime([_call('a', 'ls', 1, 0.4)]), isNull);
+    expect(runTime([Item(status: 'completed')]), isNull);
+    expect(runTime([Item(status: 'failed', started: _ago(5))]), isNull);
+    expect(runTime([_call('a', 'ls', 72, 8)]), const Duration(seconds: 64));
     // Running, to now; its turn's end stops it.
-    expect(callTime(_call('a', 'ls', 12, null)), const Duration(seconds: 12));
+    expect(runTime([_call('a', 'ls', 12, null)]), const Duration(seconds: 12));
     expect(
-      callTime(_call('a', 'ls', 12, null)..ended = _ago(2)),
+      runTime([_call('a', 'ls', 12, null)..ended = _ago(2)]),
       const Duration(seconds: 10),
     );
   });

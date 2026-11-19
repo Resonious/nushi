@@ -58,10 +58,6 @@ final Map<String, (DateTime, GetContextUsageResponse)> _known = () {
 /// switching chats doesn't ask again.
 final Map<String, (DateTime, GetContextUsageResponse)> _asked = runMap();
 
-/// What [chatId]'s context held when last asked, and when; null if never.
-(DateTime, GetContextUsageResponse)? recalledContext(String chatId) =>
-    _known[chatId];
-
 /// What was last asked of [chatId]'s context: in this run, else as
 /// remembered from an earlier one.
 (DateTime, GetContextUsageResponse)? lastContext(String chatId) =>
