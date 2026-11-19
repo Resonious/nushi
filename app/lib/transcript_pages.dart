@@ -152,7 +152,7 @@ class _OverBottomLayout extends MultiChildLayoutDelegate {
   bool shouldRelayout(_OverBottomLayout old) => old.below != below;
 }
 
-/// [list] without its own scrollbar (FullHeightScrollbar draws it); what's
+/// [list] without its own scrollbar ([OverBottom] draws it); what's
 /// in it has the app's back with [ownScrollbars].
 Widget withoutOwnScrollbar(BuildContext context, Widget list) {
   final behavior = ScrollConfiguration.of(context);
