@@ -112,9 +112,7 @@ class MenuField extends StatelessWidget {
               decoration: BoxDecoration(
                 color: compact
                     ? (look.hover ? _tint(t, look) : null)
-                    : (look.hover
-                          ? Color.alphaBlend(_tint(t, look), t.lifted)
-                          : t.lifted),
+                    : _over(t, look, t.lifted),
                 borderRadius: corners,
               ),
               foregroundDecoration: focusRing(t, look, radius: corners),

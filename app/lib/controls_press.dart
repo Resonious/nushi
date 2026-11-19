@@ -84,6 +84,10 @@ class _PressWatchState extends State<PressWatch> {
   );
 }
 
+/// [fill] with the pointer's tint over it while [look] is under it.
+Color _over(Tokens t, ControlLook look, Color fill) =>
+    look.hover ? Color.alphaBlend(_tint(t, look), fill) : fill;
+
 /// Hover, keyboard focus and press for a control that [builder] draws:
 /// the pointing hand, a click or Enter or Space press it. Pressed from the
 /// pointer's going down, not the tap's win, which can wait on a drag
