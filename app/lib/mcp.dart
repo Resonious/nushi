@@ -178,7 +178,7 @@ class _Row extends StatelessWidget {
     final shadowed = shadowedBy != null;
     final off = server.off || server.state == 'disabled';
     final failed = server.state == 'failed' && server.detail.isNotEmpty;
-    final (word, color) = stateOf(server, t);
+    final (word, _) = stateOf(server, t);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: Column(
@@ -220,7 +220,7 @@ class _Row extends StatelessWidget {
                       ),
                       if (!shadowed) ...[
                         const SizedBox(width: 12),
-                        Text(word, style: theme.ui(color, size: 12)),
+                        NotePill(word, tone: toneOf(server)),
                       ],
                     ],
                   ),

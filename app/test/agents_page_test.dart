@@ -2,6 +2,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/agents_page.dart';
+import 'package:nushi/controls.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/settings_view.dart';
@@ -222,7 +223,11 @@ void main() {
       testWidgets('the page, $sizeName ($name)', (tester) async {
         final (_, d) = await _settings(tester, tokens: tokens, size: size);
         final claude = tester.getRect(find.byType(AgentRow).first);
-        final ready = tester.getRect(find.text('Ready').first);
+        // Ready is a pill now, as every state in Settings: its edge at
+        // the row's, where the actions end.
+        final ready = tester.getRect(
+          find.widgetWithText(NotePill, 'Ready').first,
+        );
         expect(ready.right, closeTo(claude.right - 14, 1));
         expect(ready.top, lessThan(claude.center.dy)); // Claude's own row
         expect(find.text('Set up'), findsNothing);
