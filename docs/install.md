@@ -59,7 +59,7 @@ The daemon asks GitHub for the latest release when it starts and every 2 hours, 
 - **Download** opens the release's page, when Homebrew didn't install it (and on Linux).
 - **×** hides the card until a newer release.
 
-Settings › General › Updates turns the check off, and has Check now. The palette's Check for updates does the same.
+Settings › General › Updates turns the check off, and its Nushi row has Check now. The palette's Check for updates does the same.
 
 ### Beta versions
 

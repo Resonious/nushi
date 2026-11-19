@@ -125,7 +125,7 @@ void main() {
     testWidgets('paired devices, kinds and notifications ($name)', (
       tester,
     ) async {
-      viewport(tester, Size(width, 320));
+      viewport(tester, Size(width, 440));
       final daemon = _daemon();
       remoteState.value = Remote(
         on: true,
@@ -181,7 +181,10 @@ void main() {
       for (final revoke in tester.widgetList(find.text('Revoke'))) {
         expect(
           tester.getRect(find.byWidget(revoke)).right,
-          closeTo(width - 16 - 9, 6),
+          closeTo(
+            width - 16 - 14 - 12,
+            1,
+          ), // the group's edge, a row's and the button's padding
         );
       }
       await expectLater(

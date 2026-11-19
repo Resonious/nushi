@@ -318,7 +318,7 @@ class _Actions extends StatelessWidget {
     );
     const about = 'A JSON file each in the themes folder.';
     return LayoutBuilder(
-      builder: (context, box) => box.maxWidth >= 560
+      builder: (context, box) => box.maxWidth >= 520
           ? SettingsRow('Your themes', description: about, control: buttons)
           : Padding(
               padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),

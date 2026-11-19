@@ -51,13 +51,11 @@ class SharedGroup extends StatelessWidget {
     final title = agentTitle(list.agent);
     final link = list.list.readsShared
         ? ''
-        : ' $title doesn’t read .agents/skills yet: link a skill to give it '
-              'to $title.';
+        : ' $title doesn’t read .agents/skills yet: link a skill.';
     return SettingsGroup(
       title: 'Shared',
-      about:
-          'In .agents/skills, which several agents read: the project’s, and '
-          'yours in ~/.agents/skills.$link',
+      // The project's .agents/skills and ~/.agents/skills.
+      about: 'In .agents/skills, which several agents read.$link',
       empty: 'None',
       children: [for (final s in skills) skillRow(_SharedRow(list, s))],
     );

@@ -78,13 +78,14 @@ FakeDaemon settingsFake({List<TranscriptCopy>? copies}) {
           lastWrittenMs: Int64(now - 26 * 3600 * 1000),
         ),
       ];
-  remoteState.value = Remote(
+  final remote = Remote(
     relay: 'wss://relay.example.com',
     state: 'off',
     devices: [
-      Device(id: 'p1', name: 'Aaron’s iPhone', lastSeen: Int64(now - 3600000)),
+      Device(id: 'p1', name: 'Test phone', lastSeen: Int64(now - 3600000)),
     ],
   );
+  remoteState.value = remote;
   final checked = now - 12 * 60000; // "Last checked 12m ago"
   final fake = FakeDaemon(settingsChats)
     ..settings = Settings(
@@ -95,6 +96,7 @@ FakeDaemon settingsFake({List<TranscriptCopy>? copies}) {
       checkUpdates: true,
     )
     ..answer = (input) => switch (input) {
+      GetRemoteRequest() => GetRemoteResponse(remote: remote),
       // A packaged daemon's, as Logs & advanced shows it.
       PingRequest() => PingResponse(
         apiVersion: apiVersion,

@@ -55,13 +55,9 @@ class _TerminalSectionState extends State<TerminalSection> {
                 ),
               ),
               const SettingsRow('Size', control: TerminalSizeField()),
-            ],
-          ),
-          SettingsGroup(
-            title: 'Preview',
-            children: [
+              // On code's sunk surface, the group's last row.
               Container(
-                color: t.base,
+                color: t.codeBlock,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
                   vertical: 12,
