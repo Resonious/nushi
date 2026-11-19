@@ -2,10 +2,13 @@
 // Caustics: the light a rippling surface throws on a pond's floor, drifting
 // under the transcript's live end while the agent works. Two layers of
 // moving cells; light gathers along their edges, brightest where the two
-// layers' edges cross. Strongest at the bottom, gone toward the top.
+// layers' edges cross. Strongest at the bottom, gone toward the top; across the
+// whole pane, the turn line and the composer's surroundings too.
 #include <flutter/runtime_effect.glsl>
 
 uniform vec2 uSize;
+uniform vec2 uOrigin;      // where this piece is in the whole pond
+uniform vec2 uFull;        // the whole pond: the transcript and under it
 uniform float uTime;
 uniform float uStrength;   // 0 off, 1 calm working, more while words come
 uniform vec4 uColor;       // the light's rgb, and its most alpha
@@ -49,7 +52,9 @@ float light(float e) {
 }
 
 void main() {
-  vec2 frag = FlutterFragCoord().xy;
+  // In the whole pond's space: the water's piece and the floor's under
+  // it draw one pattern.
+  vec2 frag = FlutterFragCoord().xy + uOrigin;
   float t = uTime;
   vec2 p = frag / 190.0;
   // The surface's sway bends the cells' edges into curves: two scales of
@@ -64,9 +69,9 @@ void main() {
 
   // Under the live end: strongest at the bottom, fading out up the pane,
   // and soft at the sides.
-  float y = frag.y / uSize.y;
-  float x = frag.x / uSize.x;
-  float mask = smoothstep(0.2, 0.95, y) * smoothstep(0.0, 0.12, x)
+  float y = frag.y / uFull.y;
+  float x = frag.x / uFull.x;
+  float mask = smoothstep(0.15, 0.85, y) * smoothstep(0.0, 0.12, x)
       * smoothstep(1.0, 0.88, x);
 
   float alpha = clamp(c * mask * uStrength, 0.0, 1.0) * uColor.a;

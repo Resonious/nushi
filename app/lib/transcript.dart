@@ -1128,13 +1128,19 @@ class _TranscriptState extends State<Transcript> {
       },
     );
     final under = widget.bottom;
-    final list = Pond(
-      working: live && !chat.waiting,
+    final list = PondSurface(
       child: TextMarksScope(marks: _marks, child: view),
     );
-    return under == null
-        ? list
-        : OverBottom(scroll: _follower.scroll, list: list, bottom: under);
+    return Pond(
+      working: live && !chat.waiting,
+      child: under == null
+          ? list
+          : OverBottom(
+              scroll: _follower.scroll,
+              list: list,
+              bottom: PondFloor(child: under),
+            ),
+    );
   }
 
   /// The list, without its own scrollbar under a [Transcript.bottom]:
