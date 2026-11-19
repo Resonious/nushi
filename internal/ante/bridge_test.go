@@ -16,6 +16,7 @@ import (
 	"github.com/afrase/acp-go/steering"
 	acp "github.com/afrase/acp-go/unstable"
 
+	"github.com/afrase/nushi/internal/agentproc"
 	"github.com/afrase/nushi/internal/ante/antetest"
 	"github.com/afrase/nushi/internal/testcheck"
 	"github.com/afrase/nushi/internal/toolcall"
@@ -126,7 +127,7 @@ func startDying(t *testing.T, store *antetest.Store) (c *peer, die func()) {
 	fromBridgeR, fromBridgeW := io.Pipe()
 	var hostsMu sync.Mutex
 	var hosts []func()
-	spawn := func(string) (io.WriteCloser, io.Reader, func(), error) { //nolint:unparam // a Spawn, which can fail
+	spawn := func(string) (agentproc.Program, error) { //nolint:unparam // a Spawn, which can fail
 		inR, inW := io.Pipe()
 		outR, outW := io.Pipe()
 		go func() { store.Serve(inR, outW); _ = outW.Close() }()
@@ -134,7 +135,7 @@ func startDying(t *testing.T, store *antetest.Store) (c *peer, die func()) {
 		hostsMu.Lock()
 		hosts = append(hosts, kill)
 		hostsMu.Unlock()
-		return inW, outR, kill, nil
+		return agentproc.Program{In: inW, Out: outR, Kill: kill}, nil
 	}
 	die = func() {
 		hostsMu.Lock()

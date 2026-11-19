@@ -156,11 +156,11 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		})
 	}
 	anteStore := anteStores(dataDir)
-	anteHosts := func(string) (io.WriteCloser, io.Reader, func(), error) { //nolint:unparam // an ante.Spawn, which can fail
+	anteHosts := func(string) (agentproc.Program, error) { //nolint:unparam // an ante.Spawn, which can fail
 		inR, inW := io.Pipe()
 		outR, outW := io.Pipe()
 		go func() { anteStore.Serve(inR, outW); _ = outW.Close() }()
-		return inW, outR, func() { _, _ = inR.Close(), outW.Close() }, nil
+		return agentproc.Program{In: inW, Out: outR, Kill: func() { _, _ = inR.Close(), outW.Close() }}, nil
 	}
 	hub := &events.Hub{}
 	st := store.New(dataDir)
@@ -179,11 +179,11 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 	piStore := piStores(t, dataDir)
 	pis := func(f pi.Flavor) chats.Launch {
 		return launch(func(r io.Reader, w io.Writer) {
-			spawn := func(cwd string, args ...string) (pi.Program, error) {
+			spawn := func(cwd string, args ...string) (agentproc.Program, error) {
 				inR, inW := io.Pipe()
 				outR, outW := io.Pipe()
 				go func() { piStore.Serve(inR, outW, cwd, args); _ = outW.Close() }()
-				return pi.Program{In: inW, Out: outR, Kill: func() { _, _ = inR.Close(), outW.Close() }}, nil
+				return agentproc.Program{In: inW, Out: outR, Kill: func() { _, _ = inR.Close(), outW.Close() }}, nil
 			}
 			pi.Serve(r, w, pi.Config{Flavor: f, Spawn: spawn, Dirs: pi.Dirs{Sessions: piStore.Sessions}, Version: f.Version})
 		})

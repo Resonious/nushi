@@ -22,8 +22,8 @@ func TestReadLimit(t *testing.T) {
 	defer func() { agentproc.MaxRead = 256 << 20 }()
 	killed := make(chan struct{})
 	out := `{"type":"agent_start"}` + "\n" + strings.Repeat("x", 200) + "\n" + `{"type":"agent_end"}` + "\n"
-	p, err := startProc(func(string, ...string) (Program, error) {
-		return Program{In: discard{io.Discard}, Out: strings.NewReader(out), Kill: func() { close(killed) }}, nil
+	p, err := startProc(func(string, ...string) (agentproc.Program, error) {
+		return agentproc.Program{In: discard{io.Discard}, Out: strings.NewReader(out), Kill: func() { close(killed) }}, nil
 	}, t.TempDir())
 	if err != nil {
 		t.Fatal(err)
@@ -58,8 +58,8 @@ func (e endOf) Read(b []byte) (int, error) {
 // comes to their end.
 func TestFailedOpenReadsPiOut(t *testing.T) {
 	out := endOf{strings.NewReader(strings.Repeat(`{"type":"agent_start"}`+"\n", 300)), make(chan struct{})}
-	b := &bridge{spawn: func(string, ...string) (Program, error) {
-		return Program{In: discard{io.Discard}, Out: out, Kill: func() {}}, nil
+	b := &bridge{spawn: func(string, ...string) (agentproc.Program, error) {
+		return agentproc.Program{In: discard{io.Discard}, Out: out, Kill: func() {}}, nil
 	}, sessions: map[string]*session{}}
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel() // get_state goes unanswered

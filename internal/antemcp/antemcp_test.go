@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/afrase/nushi/internal/agentproc"
 	"github.com/afrase/nushi/internal/ante"
 	"github.com/afrase/nushi/internal/filelock"
 	"github.com/afrase/nushi/internal/model"
@@ -212,7 +213,7 @@ func TestCheck(t *testing.T) {
 		`{"event":{"InfoBlockAppend":{"id":"mcp-warmup-ses_1","detail":"MCP ready: 1/2 servers connected, 1 tools registered."}}}`,
 	}
 	in, out, kill, ops := hostOps(events...)
-	var spawn ante.Spawn = func(string) (io.WriteCloser, io.Reader, func(), error) { return in, out, kill, nil }
+	var spawn ante.Spawn = func(string) (agentproc.Program, error) { return agentproc.Program{In: in, Out: out, Kill: kill}, nil }
 	got, err := Ante{Spawn: func() (ante.Spawn, error) { return spawn, nil }}.Check(context.Background(), "/f")
 	if err != nil {
 		t.Fatal(err)

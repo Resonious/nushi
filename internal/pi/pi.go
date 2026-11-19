@@ -114,7 +114,7 @@ func (f Flavor) Main() {
 		cfg.Version, err = f.version(bin)
 	}
 	cfg.Problem = err
-	cfg.Spawn = func(cwd string, args ...string) (Program, error) { return spawn(bin, cwd, args) }
+	cfg.Spawn = func(cwd string, args ...string) (agentproc.Program, error) { return spawn(bin, cwd, args) }
 	Serve(os.Stdin, os.Stdout, cfg)
 }
 
@@ -180,10 +180,10 @@ func numbers(v string) []int {
 // spawn starts the program with args in cwd, in a process group of its own, its
 // stderr to the bridge's (its last line kept); its start and exit go to
 // the log.
-func spawn(bin, cwd string, args []string) (Program, error) {
+func spawn(bin, cwd string, args []string) (agentproc.Program, error) {
 	p, err := agentproc.Pipe(bin, args, cwd, nil, os.Stderr) // the user's pi (ADR 0039)
 	if err != nil {
-		return Program{}, err
+		return agentproc.Program{}, err
 	}
 	started := time.Now()
 	warnf("started pid=%d args=%q", p.Pid, args)
@@ -194,7 +194,7 @@ func spawn(bin, cwd string, args []string) (Program, error) {
 		}
 		warnf("exited pid=%d ran=%s %s", p.Pid, time.Since(started).Round(100*time.Millisecond), status)
 	}()
-	return Program{In: p.In, Out: p.Out, Kill: p.Kill, Said: p.Said}, nil
+	return p.Program(), nil
 }
 
 // DirsFromEnv finds f's sessions folder as the program does (and as

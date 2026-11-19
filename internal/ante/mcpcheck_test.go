@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/afrase/nushi/internal/agentproc"
 )
 
 // A host's stderr goes where Server was told (the bridge's, which the
@@ -18,17 +20,17 @@ func TestServerStderr(t *testing.T) {
 		t.Fatal(err)
 	}
 	var stderr strings.Builder
-	in, out, kill, err := Server(bin, nil, &stderr)(t.TempDir())
+	p, err := Server(bin, nil, &stderr)(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := in.Write([]byte("{}\n")); err != nil {
+	if _, err := p.In.Write([]byte("{}\n")); err != nil {
 		t.Fatal(err)
 	}
-	if line, err := bufio.NewReader(out).ReadString('\n'); line != "{}\n" {
+	if line, err := bufio.NewReader(p.Out).ReadString('\n'); line != "{}\n" {
 		t.Fatalf("%q, %v", line, err)
 	}
-	kill()
+	p.Kill()
 	if got := stderr.String(); got != "serve --stdio: no provider\n" {
 		t.Errorf("stderr %q", got)
 	}
@@ -43,8 +45,8 @@ func TestCheckMCPLeavesEventsUnread(t *testing.T) {
 		strings.Repeat(`{"event":"Goodbye"}`+"\n", 300)
 	done := make(chan error, 1)
 	go func() {
-		_, err := CheckMCP(t.Context(), func(string) (io.WriteCloser, io.Reader, func(), error) {
-			return discard{io.Discard}, strings.NewReader(out), func() {}, nil
+		_, err := CheckMCP(t.Context(), func(string) (agentproc.Program, error) {
+			return agentproc.Program{In: discard{io.Discard}, Out: strings.NewReader(out), Kill: func() {}}, nil
 		})
 		done <- err
 	}()

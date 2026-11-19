@@ -16,17 +16,7 @@ import (
 )
 
 // Spawn starts `pi --mode rpc` with args in cwd.
-type Spawn func(cwd string, args ...string) (Program, error)
-
-// Program is a pi started: its stdin and stdout, a way to kill it, and the
-// last of what it wrote to stderr (nil: nothing kept), which says why it
-// stopped when it did.
-type Program struct {
-	In   io.WriteCloser
-	Out  io.Reader
-	Kill func()
-	Said func() string
-}
+type Spawn func(cwd string, args ...string) (agentproc.Program, error)
 
 // proc is one `pi --mode rpc`: commands go in as JSON lines, responses
 // (matched by id) and events (everything else) come out.

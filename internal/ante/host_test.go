@@ -20,8 +20,8 @@ func TestReadLimit(t *testing.T) {
 	defer func() { agentproc.MaxRead = 256 << 20 }()
 	killed := make(chan struct{})
 	out := `{"event":"Goodbye"}` + "\n" + strings.Repeat("x", 200) + "\n" + `{"event":"Goodbye"}` + "\n"
-	h, err := startHost(func(string) (io.WriteCloser, io.Reader, func(), error) {
-		return discard{io.Discard}, strings.NewReader(out), func() { close(killed) }, nil
+	h, err := startHost(func(string) (agentproc.Program, error) {
+		return agentproc.Program{In: discard{io.Discard}, Out: strings.NewReader(out), Kill: func() { close(killed) }}, nil
 	}, t.TempDir())
 	if err != nil {
 		t.Fatal(err)
@@ -54,8 +54,8 @@ func (e endOf) Read(b []byte) (int, error) {
 // still comes to their end.
 func TestFailedOpenReadsTheHostOut(t *testing.T) {
 	out := endOf{strings.NewReader(`{"event":{"Error":"no such session"}}` + "\n" + strings.Repeat(`{"event":"Goodbye"}`+"\n", 300)), make(chan struct{})}
-	b := &bridge{spawn: func(string) (io.WriteCloser, io.Reader, func(), error) {
-		return discard{io.Discard}, out, func() {}, nil
+	b := &bridge{spawn: func(string) (agentproc.Program, error) {
+		return agentproc.Program{In: discard{io.Discard}, Out: out, Kill: func() {}}, nil
 	}, sessions: map[string]*session{}}
 	if _, err := b.open(t.Context(), t.TempDir(), resume("s1"), false); err == nil || err.Error() != "no such session" {
 		t.Fatalf("open: %v", err)

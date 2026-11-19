@@ -13,9 +13,8 @@ import (
 	"github.com/afrase/nushi/internal/agentproc"
 )
 
-// Spawn starts an Ante host (`ante serve --stdio`) in cwd: its stdin, its
-// stdout, and a way to kill it.
-type Spawn func(cwd string) (in io.WriteCloser, out io.Reader, kill func(), err error)
+// Spawn starts an Ante host (`ante serve --stdio`) in cwd.
+type Spawn func(cwd string) (agentproc.Program, error)
 
 // host is one `ante serve --stdio`: ops go in as JSON lines, events come
 // out (Ante 0.2.14's protocol, crates/protocol-shape/src/msg.rs).
@@ -39,15 +38,12 @@ type event struct {
 }
 
 func startHost(spawn Spawn, cwd string) (*host, error) {
-	in, out, kill, err := spawn(cwd)
+	p, err := spawn(cwd)
 	if err != nil {
 		return nil, err
 	}
-	h := &host{in: in, kill: kill, events: make(chan event, 256), exited: make(chan struct{})}
-	if in, ok := in.(hostIn); ok {
-		h.said = in.said
-	}
-	go h.read(out)
+	h := &host{in: p.In, kill: p.Kill, said: p.Said, events: make(chan event, 256), exited: make(chan struct{})}
+	go h.read(p.Out)
 	return h, nil
 }
 
