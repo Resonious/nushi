@@ -22,3 +22,6 @@ The window kept its frame under the autosave name "Nushi". On macOS 27 setting t
 ## Alternatives considered
 - Keeping the autosave name and resetting AppKit's zoom frame after the restore: the zoom frame is private state, and AppKit would still place the window on the main screen first.
 - Replacing the header's double click with nothing: a title bar zooms on double click, and the zoom itself was what went to the wrong screen.
+
+## Amendment, 2026-11-20: the old autosave frame is no longer read
+The migration from `NSWindow Frame Nushi` had done its work: every launch since 0.10.1 (2026-11-05) saves `NushiWindowPlacement`. Nushi no longer reads the old key; a window with only that frame saved opens centred once, as on a first launch. A saved place with no display is still placed on the screen most of it lies on.

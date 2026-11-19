@@ -9,8 +9,6 @@ import Cocoa
 /// The maths is Placement's.
 final class WindowPlacement {
   private static let key = "NushiWindowPlacement"
-  /// What AppKit saved under the old autosave name, read once to migrate.
-  private static let legacyKey = "NSWindow Frame Nushi"
 
   private weak var window: NSWindow?
   /// The window's place as last saved: its home while its display is gone.
@@ -53,11 +51,7 @@ final class WindowPlacement {
   func restore() {
     guard let window else { return }
     window.isRestorable = false
-    let defaults = UserDefaults.standard
-    saved = defaults.dictionary(forKey: Self.key).flatMap(Placement.Saved.init)
-      ?? Placement.legacy(defaults.string(forKey: Self.legacyKey)).map {
-        Placement.Saved(frame: $0, display: "", screen: .zero, user: nil)
-      }
+    saved = UserDefaults.standard.dictionary(forKey: Self.key).flatMap(Placement.Saved.init)
     user = saved?.user
     let screens = Self.screens()
     if let home = saved, !home.display.isEmpty, !screens.contains(where: { $0.id == home.display }) { lost = true }

@@ -28,12 +28,6 @@ expect(Placement.Saved(["display": "B"]), nil, "no frame")
 expect(Placement.Saved(["frame": "0 0 0 10"]), nil, "no width")
 expect(Placement.Saved(["frame": "1 2 30 40"])?.display, "", "no display")
 
-// The old autosave value: its frame only, the tile state ignored.
-let old = #"0 0 1800 1130 0 0 1800 1130 {"tilingState":{"tilingPosition":9,"normalizedSize":1,"untiledFrame":"{{0, 39}, {1800, 1130}}"}}"#
-expect(Placement.legacy(old), r(0, 0, 1800, 1130), "legacy")
-expect(Placement.legacy(nil), nil, "legacy missing")
-expect(Placement.legacy("garbage"), nil, "legacy garbage")
-
 // fit: shrunk to the room, then moved in as little as it takes.
 expect(Placement.fit(r(0, 0, 3000, 2000), in: b.visible), b.visible, "too big")
 expect(Placement.fit(r(4000, -50, 800, 600), in: b.visible), r(3560, 0, 800, 600), "past the edge")
@@ -51,10 +45,10 @@ expect(Placement.place(saved, on: [main, bLeft])?.user, r(-2410, 150, 900, 700),
 expect(Placement.place(straddling, on: [main])?.screen.id, "MAIN", "display missing")
 expect(Placement.place(straddling, on: [main])?.frame, r(600, 100, 1200, 800), "fitted to the main screen")
 expect(Placement.place(saved, on: [main]) == nil, true, "on no connected screen")
-// The old value has no display: the screen it lies on.
-let migrated = Placement.Saved(frame: Placement.legacy(old)!, display: "", screen: .zero, user: nil)
-expect(Placement.place(migrated, on: both)?.screen.id, "MAIN", "legacy place")
-expect(Placement.place(migrated, on: both)?.frame, r(0, 39, 1800, 1100), "legacy fitted")
+// A saved place with no display: the screen it lies on.
+let noDisplay = Placement.Saved(frame: r(0, 0, 1800, 1130), display: "", screen: .zero, user: nil)
+expect(Placement.place(noDisplay, on: both)?.screen.id, "MAIN", "no display place")
+expect(Placement.place(noDisplay, on: both)?.frame, r(0, 39, 1800, 1100), "no display fitted")
 
 // same
 expect(Placement.same(r(0, 0, 100, 100), r(10, -10, 90, 120)), true, "within 10")
@@ -87,7 +81,7 @@ let home = Placement.Saved(frame: small, display: "B", screen: b.frame, user: ni
 expect(Placement.returnFrame(home: home, screens: both, current: "MAIN")?.frame, small, "back to B")
 expect(Placement.returnFrame(home: home, screens: both, current: "B")?.frame, nil, "already on B")
 expect(Placement.returnFrame(home: home, screens: [main], current: "MAIN")?.frame, nil, "B still missing")
-expect(Placement.returnFrame(home: migrated, screens: both, current: "B")?.frame, nil, "no home display")
+expect(Placement.returnFrame(home: noDisplay, screens: both, current: "B")?.frame, nil, "no home display")
 // B moved 500 to the right in the arrangement while it was gone: the frame
 // a zoom goes back to moves with the window.
 let filled = Placement.Saved(frame: b.visible, display: "B", screen: b.frame, user: r(1900, 100, 1200, 800))
