@@ -278,9 +278,7 @@ func TestAPlanSentAgainUnchangedAddsNoCard(t *testing.T) {
 	}
 	agent := &fakeAgent{}
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: agent.launch}}, Options{})
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	cards := func(c *chat) []string {
 		c.mu.Lock()
 		defer c.mu.Unlock()
@@ -333,10 +331,7 @@ func TestUsageIsWhatTheAgentReported(t *testing.T) {
 		usage:   &acp.Usage{InputTokens: 3, OutputTokens: 4, CachedReadTokens: new(uint64(5)), TotalTokens: 12},
 	}
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) { agent.h = h; return agent, nil }}}, Options{Publish: publish})
-	id, err := svc.Start(context.Background(), "", t.TempDir(), false)
-	if err != nil {
-		t.Fatal(err)
-	}
+	id := startChat(t, svc, t.TempDir()).id
 	if err := svc.Prompt(t.Context(), id, model.Message{Text: "hi"}, SendIdle); err != nil {
 		t.Fatal(err)
 	}
@@ -519,9 +514,7 @@ func TestToolsForAChatOnAnIssue(t *testing.T) {
 		return []acp.MCPServer{{Stdio: &acp.MCPServerStdio{Name: "nushi", Command: "/bin/true"}}}
 	}
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake", ClientMCP: true}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) { agent.h = h; return agent, nil }}}, Options{Tools: tools})
-	if _, err := svc.Start(t.Context(), "", t.TempDir(), false); err != nil {
-		t.Fatal(err)
-	}
+	startChat(t, svc, t.TempDir())
 	if len(agent.mcp) != 0 {
 		t.Errorf("a chat without an issue got %v", agent.mcp)
 	}
@@ -545,9 +538,7 @@ func TestNoToolsForAnAgentThatTakesNone(t *testing.T) {
 		return []acp.MCPServer{{Stdio: &acp.MCPServerStdio{Name: "nushi", Command: "/bin/true"}}}
 	}
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) { agent.h = h; return agent, nil }}}, Options{Tools: tools})
-	if _, err := svc.Start(t.Context(), "", t.TempDir(), false); err != nil {
-		t.Fatal(err)
-	}
+	startChat(t, svc, t.TempDir())
 	if len(agent.mcp) != 0 {
 		t.Errorf("session/new got %v", agent.mcp)
 	}

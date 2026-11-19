@@ -32,9 +32,7 @@ func refChat(t *testing.T) (*Service, *fakeAgent, *chat, string) {
 	testcheck.NoErr(t, err)
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude", Title: "Claude"}, Launch: agent.launch}}, Options{Scratch: t.TempDir(), Copies: store})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	return svc, agent, svc.chats[id], dir
+	return svc, agent, startChat(t, svc, t.TempDir()), dir
 }
 
 // imageOf is the chat's image whose bytes are data, as it holds it.

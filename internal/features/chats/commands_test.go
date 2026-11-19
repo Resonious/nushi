@@ -93,9 +93,7 @@ func TestAnotherAgentsPlanGoesAsItIs(t *testing.T) {
 		AvailableCommandsUpdate: &acp.AvailableCommandsUpdate{AvailableCommands: []acp.AvailableCommand{{Name: "review"}}}}}
 	svc := newService(t, []Kind{{Harness: model.HarnessInfo{Name: "other"}, Launch: agent.launch}}, Options{})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	turn(t, svc, c, "/plan something")
 	if sent, _ := agent.texts(); !slices.Equal(sent, []string{"/plan something"}) || current(c, "mode") != "auto" || len(agent.set) != 0 {
 		t.Errorf("sent %q, mode %q, set %v; want the prompt as it is, the mode left", sent, current(c, "mode"), agent.set)
@@ -165,8 +163,7 @@ func TestCommandsAnAgentHidesArentOffered(t *testing.T) {
 				}
 			}})
 			t.Cleanup(svc.Close)
-			id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-			testcheck.NoErr(t, err)
+			id := startChat(t, svc, t.TempDir()).id
 			before, err := svc.Get(id)
 			testcheck.NoErr(t, err)
 			if got := names(before.Commands); !slices.Equal(got, tc.before) {

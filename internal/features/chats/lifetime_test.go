@@ -153,9 +153,7 @@ func TestTheServicesOwnWorkEndsWithIt(t *testing.T) {
 	agent := &fakeAgent{}
 	life, end := context.WithCancel(t.Context())
 	svc := New(life, []Kind{{Harness: testHarness{Name: "fake", read: read}, Launch: agent.launch}}, Options{Remembered: &memModes{}, Sessions: &memSessions{}, Timing: Timing{CommandPoll: time.Millisecond}})
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	c.mu.Lock()
 	c.items = append(c.items, model.Item{ID: "t1", BackgroundCommand: &model.BackgroundCommand{State: "running"}})
 	running := c.agent

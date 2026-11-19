@@ -96,15 +96,13 @@ func TestAnImageIsHashedOnceAsItComesIn(t *testing.T) {
 
 	// Another chat's image isn't this one's (started last: the fake agent
 	// sends its updates to the chat it launched last).
-	id2, err := svc.Start(context.Background(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c2 := svc.chats[id2]
+	c2 := startChat(t, svc, t.TempDir())
 	c2.mu.Lock()
 	c2.items = append(c2.items, model.Item{ID: "x", Kind: model.ToolCall, Images: []model.Image{{MimeType: "image/png", Data: other, Hash: otherHash}}})
 	c2.mu.Unlock()
 	hasNot(c.id, otherHash)
-	if img, err := svc.Image(id2, otherHash); err != nil || !bytes.Equal(img.Data, other) {
+	if img, err := svc.Image(c2.id, otherHash); err != nil || !bytes.Equal(img.Data, other) {
 		t.Errorf("the other chat's own image = %q, %v", img.Data, err)
 	}
-	hasNot(id2, firstHash)
+	hasNot(c2.id, firstHash)
 }

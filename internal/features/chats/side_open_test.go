@@ -37,8 +37,7 @@ func TestASideChatIsUnheardOfUntilForkAnswers(t *testing.T) {
 	}})
 	t.Cleanup(svc.Close)
 	ctx := context.Background()
-	id, err := svc.Start(ctx, "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
+	id := startChat(t, svc, t.TempDir()).id
 	testcheck.NoErr(t, svc.SetConfig(ctx, id, "mode", "plan"))
 	testcheck.NoErr(t, svc.SetConfig(ctx, id, "model", "sonnet"))
 	side, err := svc.Fork(ctx, id)

@@ -23,13 +23,9 @@ func commitChat(t *testing.T, agent *fakeAgent, h Harness, events *int) (*Servic
 	t.Helper()
 	agent.session.Modes = &acp.SessionModeState{CurrentModeID: "bypass", AvailableModes: []acp.SessionMode{{ID: "bypass"}, {ID: "plan"}}}
 	svc := newService(t, []Kind{{Harness: h, Launch: func(c acp.Client, _ *slog.Logger) (Agent, error) { agent.h = c; return agent, nil }}}, Options{Publish: func(model.Event) { *events++ }})
-	id, err := svc.Start(context.Background(), "", t.TempDir(), false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	c.record.HasMessages = true
-	return svc, id, c
+	return svc, c.id, c
 }
 
 func TestCommitMessageLeavesNoTraceAndRunsReadOnly(t *testing.T) {

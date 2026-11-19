@@ -66,11 +66,7 @@ func TestForkWakes(t *testing.T) {
 func TestNoSleepWithoutLoad(t *testing.T) {
 	agent := &fakeAgent{noLoad: true}
 	svc := newService(t, []Kind{{Harness: model.HarnessInfo{Name: "fake"}, Launch: agent.launch}}, Options{})
-	id, err := svc.Start(context.Background(), "", t.TempDir(), false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	if err := svc.Sleep(c.id); err == nil || svc.Status(c.record).CanSleep {
 		t.Errorf("Sleep = %v, status %+v", err, svc.Status(c.record))
 	}
@@ -95,9 +91,7 @@ func TestAutoSleep(t *testing.T) {
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude"}, Launch: agent.launch}},
 		Options{Sleep: prefs, Timing: Timing{SleepCheck: 5 * time.Millisecond}})
 	defer svc.Close()
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	turn(t, svc, c, "one")
 	blockers := map[string]func(c *chat) (undo func()){
 		"a turn":               func(c *chat) func() { c.started = time.Now(); return func() { c.started = time.Time{} } },

@@ -130,9 +130,7 @@ func commandChat(t *testing.T, follow bool, below ...model.Process) commandFixtu
 	procs := &fakeProcesses{below: map[int][]model.Process{agentPid: below}}
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude"}, Launch: agent.launch}}, Options{Processes: procs, Timing: Timing{CommandPoll: 5 * time.Millisecond}})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	file := filepath.Join(taskDir(t), waitTask+".output")
 	testcheck.NoErr(t, os.WriteFile(file, []byte("waiting\n"), 0o600))
 	in, err := json.Marshal(map[string]any{"command": waitLoop, "run_in_background": true})

@@ -70,9 +70,7 @@ func watchedChat(t *testing.T) (*Service, *fakeAgent, *chat, *watcher) {
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude", Title: "Claude"}, Launch: agent.launch}},
 		Options{Scratch: t.TempDir(), Copies: store, Publish: w.event})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	for _, turn := range []struct {
 		text    string
 		updates []acp.SessionUpdate

@@ -19,6 +19,7 @@ import (
 
 	"github.com/afrase/nushi/internal/claude"
 	"github.com/afrase/nushi/internal/model"
+	"github.com/afrase/nushi/internal/testcheck"
 )
 
 var claudeHarness claude.Harness
@@ -637,6 +638,15 @@ func chunk(id, text string) acp.SessionUpdate {
 		MessageID: acp.MessageID(id),
 		Content:   acp.ContentBlock{Text: &acp.TextContent{Text: text}},
 	}}
+}
+
+// startChat starts a chat of svc's default agent in folder (in a scratch
+// folder of its own for "") and returns it.
+func startChat(t *testing.T, svc *Service, folder string) *chat {
+	t.Helper()
+	id, err := svc.Start(t.Context(), "", folder, false)
+	testcheck.NoErr(t, err)
+	return svc.chats[id]
 }
 
 // Start opens a chat with agent ("" for the default) in folder, or in a new

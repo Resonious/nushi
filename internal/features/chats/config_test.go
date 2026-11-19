@@ -35,11 +35,7 @@ func newTimedChat(t *testing.T, session string, modes *memModes, timing Timing) 
 	}
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude"}, Launch: agent.launch}}, Options{Remembered: modes, Timing: timing})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(context.Background(), "", t.TempDir(), false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return svc, agent, svc.chats[id]
+	return svc, agent, startChat(t, svc, t.TempDir())
 }
 
 func current(c *chat, id string) string {

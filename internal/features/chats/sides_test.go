@@ -19,10 +19,7 @@ func TestSideChatKeepsToItself(t *testing.T) {
 	sessions := &memSessions{}
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) { agent.h = h; return agent, nil }}}, Options{Sessions: sessions})
 	ctx := context.Background()
-	id, err := svc.Start(ctx, "", t.TempDir(), false)
-	if err != nil {
-		t.Fatal(err)
-	}
+	id := startChat(t, svc, t.TempDir()).id
 	side, err := svc.Fork(ctx, id)
 	if err != nil || side != "fork1" {
 		t.Fatalf("Fork = %q, %v", side, err)
@@ -141,9 +138,7 @@ func TestCommandsAheadOfANewSessionsAnswerAreKept(t *testing.T) {
 	agent := &fakeAgent{early: []acp.SessionUpdate{list("review")}}
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude", Title: "Claude"}, Launch: agent.launch}}, Options{Scratch: t.TempDir()})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	eventually(t, c, func() bool { return len(c.commands) == 2 && c.commands[0].Name == "review" }) // and /plan, Nushi's
 	if err := c.SessionUpdate(t.Context(), &acp.SessionNotification{SessionID: "other", Update: list("other")}); err != nil {
 		t.Fatal(err)
@@ -168,9 +163,7 @@ func TestAReopeningChatOffersTheCommandsListedLast(t *testing.T) {
 	kinds := []Kind{{Harness: testHarness{Name: "claude", Title: "Claude"}, Launch: agent.launch}}
 	svc := newService(t, kinds, Options{Scratch: t.TempDir(), Remembered: remembered})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	testcheck.NoErr(t, c.SessionUpdate(t.Context(), &acp.SessionNotification{SessionID: "s1", Update: list("review")}))
 	c.mu.Lock()
 	sess := c.record
@@ -181,13 +174,13 @@ func TestAReopeningChatOffersTheCommandsListedLast(t *testing.T) {
 	agent.history = []acp.SessionUpdate{list("fresh")}
 	again := newService(t, kinds, Options{Scratch: t.TempDir(), Remembered: remembered, Sessions: &memSessions{stored: []model.ChatRecord{sess}}})
 	t.Cleanup(again.Close)
-	shown, err := again.Get(id)
+	shown, err := again.Get(c.id)
 	testcheck.NoErr(t, err)
 	if len(shown.Commands) != 2 || shown.Commands[0].Name != "review" || shown.Commands[1].Name != "plan" {
 		t.Errorf("while it reopens, commands %v", shown.Commands)
 	}
 	close(agent.loadGate)
-	back := reopened(t, again, id)
+	back := reopened(t, again, c.id)
 	eventually(t, back, func() bool { return len(back.commands) == 2 && back.commands[0].Name == "fresh" })
 }
 
@@ -235,8 +228,7 @@ func TestASideChatsTurnStopsWithItsChatsAgent(t *testing.T) {
 			}
 		}})
 	ctx := context.Background()
-	id, err := svc.Start(ctx, "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
+	id := startChat(t, svc, t.TempDir()).id
 	side, err := svc.Fork(ctx, id)
 	testcheck.NoErr(t, err)
 	sideChat := svc.chats[side]

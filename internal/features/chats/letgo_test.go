@@ -96,9 +96,7 @@ func lettingGo(t *testing.T, v Viewers, timing Timing) (*Service, *fakeAgent, *c
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude", Title: "Claude"}, Launch: agent.launch}},
 		Options{Scratch: t.TempDir(), Copies: copies, Publish: f.event, Viewers: v, Timing: timing})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	return svc, agent, svc.chats[id], copies, f
+	return svc, agent, startChat(t, svc, t.TempDir()), copies, f
 }
 
 // seen is all a client sees of a chat: its recent part of n, every page
@@ -235,9 +233,7 @@ func TestUnseenLetsGo(t *testing.T) {
 		t.Errorf("let go, it shows %s", got)
 	}
 
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c2 := svc.chats[id]
+	c2 := startChat(t, svc, t.TempDir())
 	turn(t, svc, c2, "two")
 	v.show(c2.id, true)
 	testcheck.NoErr(t, svc.Sleep(c2.id))

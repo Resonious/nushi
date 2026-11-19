@@ -141,9 +141,7 @@ func TestPinsFollowAReopenWithoutTheCopy(t *testing.T) {
 	kinds := []Kind{{Harness: testHarness{Name: "claude", Title: "Claude"}, Launch: agent.launch}}
 	svc := newService(t, kinds, Options{Scratch: t.TempDir()})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	reply := func(text string, updates ...acp.SessionUpdate) {
 		t.Helper()
 		agent.updates = updates

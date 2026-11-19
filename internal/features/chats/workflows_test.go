@@ -140,9 +140,7 @@ func workflowService(t *testing.T, timing Timing, read func(model.Workflow) (mod
 			}
 		}})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	return workflowFixture{svc, agent, svc.chats[id], files, events}
+	return workflowFixture{svc, agent, startChat(t, svc, t.TempDir()), files, events}
 }
 
 func cmpDuration(a, b time.Duration) time.Duration {
