@@ -134,26 +134,19 @@ func (c *chat) switchedLocked(from, to string) {
 	c.copyLocked(false)
 }
 
-// placed is what a prompt told the agent of where it works: that the
-// chat moved, or its folder's branch switched; and the lines it told of.
-type placed struct {
-	notices []string
-}
-
 // place returns the note for the prompt, if the chat moved or its
 // folder's branch was switched since the agent's last prompt (nil
-// otherwise), and what to clear once the prompt went (nil when nothing's
-// pending).
+// otherwise), the move's and switches' lines it told of, and whether
+// there's a move or switch to clear once the prompt went.
 //
 //nolint:contextcheck // a turn starts on its own, after the request that queued its message
-func (n *notes) place() (*acp.ContentBlock, *placed) {
+func (n *notes) place() (*acp.ContentBlock, []string, bool) {
 	sess := n.sess
 	if !sess.Moved && sess.BranchFrom == "" {
-		return nil, nil
+		return nil, nil, false
 	}
-	p := &placed{}
 	if n.git == nil {
-		return nil, p
+		return nil, nil, true
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -161,32 +154,32 @@ func (n *notes) place() (*acp.ContentBlock, *placed) {
 	for _, name := range []string{branch, sess.BranchFrom} {
 		if err := n.git.CheckBranch(ctx, sess.Folder, name); name != "" && err != nil {
 			n.log.Warn("the agent isn't told of its folder's branch", "err", err)
-			return nil, p // dropped: the next prompt doesn't try again
+			return nil, nil, true // dropped: the next prompt doesn't try again
 		}
 	}
 	var text string
 	switch {
 	case sess.Moved && strings.ContainsAny(sess.Folder, "`\r\n"):
 		n.log.Warn("the agent isn't told where the chat moved: a folder name it can't be told")
-		return nil, p
+		return nil, nil, true
 	case sess.Moved:
 		text = moveNote(sess.Folder, branch)
 	case branch == "" || branch == sess.BranchFrom:
-		return nil, p // detached since, or back on the branch it had
+		return nil, nil, true // detached since, or back on the branch it had
 	default:
 		text = switchNote(sess.BranchFrom, branch)
 	}
-	p.notices = n.switched
-	return &acp.ContentBlock{Type: "text", Text: &acp.TextContent{Text: text}}, p
+	return &acp.ContentBlock{Type: "text", Text: &acp.TextContent{Text: text}}, n.switched, true
 }
 
-// placedLocked records that a prompt went with p: nothing's pending, and
-// its note's lines are marked as told. No switch or move comes between
-// the note and this: both wait for the turn's end.
-func (c *chat) placedLocked(p *placed) {
+// placedLocked records that a prompt went with place's note, if any:
+// nothing's pending, and its lines, notices, are marked as told. No
+// switch or move comes between the note and this: both wait for the
+// turn's end.
+func (c *chat) placedLocked(notices []string) {
 	c.saveLocked(func(s *model.ChatRecord) { s.Moved, s.BranchFrom = false, "" })
-	c.markToldLocked(p.notices)
-	if len(p.notices) > 0 {
+	c.markToldLocked(notices)
+	if len(notices) > 0 {
 		c.copyLocked(false)
 	}
 }
