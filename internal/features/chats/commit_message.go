@@ -73,9 +73,7 @@ func (s *Service) CommitMessage(ctx context.Context, chatID string, diff func(co
 	defer c.mu.Unlock()
 	switch {
 	case run.toolCalled:
-		stop, done := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
-		defer done()
-		_ = agent.Cancel(stop, &acp.CancelNotification{SessionID: acp.SessionID(fork)})
+		_ = cancelTurn(agent, &acp.CancelNotification{SessionID: acp.SessionID(fork)}, c.timing.stopGrace())
 		return "", errors.New("the agent reached for a tool instead of answering; try again")
 	case err != nil:
 		return "", err
