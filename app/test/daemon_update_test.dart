@@ -99,7 +99,7 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
     expect(_asks(fake), after);
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   for (final (name, brightness) in [
     ('dark', Brightness.dark),
@@ -125,7 +125,7 @@ void main() {
           'daemon_update_${width.toInt()}_$name',
         );
         d.dispose();
-      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      }, variant: onMac);
     }
   }
 
@@ -140,7 +140,7 @@ void main() {
     expect(find.text(_bar), findsNothing);
     expect(_asks(fake), 0);
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('where the app can’t stop its daemon (Windows), neither the '
       'bar nor the screen offers a restart: the screen says how instead', (
@@ -165,7 +165,7 @@ void main() {
       findsOneWidget,
     );
     old.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a daemon newer than the bundled one (an older copy of the app '
       'open) is left alone', (tester) async {
@@ -176,7 +176,7 @@ void main() {
     expect(find.text(_bar), findsNothing);
     expect(_asks(fake), 0);
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   // The daemon's reason says so; an older daemon's message does.
   for (final (message, reason) in [
@@ -267,5 +267,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(d.selectedId, 'r');
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

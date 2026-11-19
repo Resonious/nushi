@@ -148,8 +148,6 @@ Future<void> _more(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -202,7 +200,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_names(tester), ['plan.md', 'notes.md', 'chart.png', 'report.md']);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a file written, then shown by its absolute path, is one '
       'row, marked when the show opens it, its old pin kept', (tester) async {
@@ -246,14 +244,14 @@ void main() {
     togglePin(c, 'mock/page.md');
     expect(pinnedFiles.value, isEmpty);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('no files, no widget', (tester) async {
     final (d, _) = await _app(tester, [_user]);
     expect(find.byType(DetailsPanel), findsOneWidget);
     expect(_rows, findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("five, the last turn's first, then Show more for the rest, "
       'newest first; Show less folds them again', (tester) async {
@@ -280,7 +278,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_names(tester), hasLength(5));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("pinned first, in the order pinned, the pin in the icon's "
       'place on hover; kept in app.json', (tester) async {
@@ -315,7 +313,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_names(tester).first, 'brief.md');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('pins survive a restart', (tester) async {
     var (d, _) = await _app(tester, _turns);
@@ -331,7 +329,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_names(tester).take(3), ['flows.md', 'chart.png', 'report.md']);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a file opened stays among the first for an hour', (
     tester,
@@ -355,7 +353,7 @@ void main() {
     await tester.pump(const Duration(minutes: 1));
     expect(_names(tester), isNot(contains('flows.md')));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, mode) in [
     ('dark', Brightness.dark),
@@ -378,6 +376,6 @@ void main() {
       );
       await render(tester, find.byType(NushiApp), 'artifacts_widget_$name');
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

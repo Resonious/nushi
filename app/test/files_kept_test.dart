@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/file_tabs.dart';
@@ -14,8 +13,6 @@ import 'panes_app.dart';
 
 // A chat's Files pane and file tabs kept across launches (ADR 0070's and
 // 0123's amendments of 2026-11-19): Nushi restarts for each update.
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 const _all = {'PLAN.md', 'auth/redirect.go', 'NOTES.md'};
 
@@ -84,7 +81,7 @@ void main() {
         'files_kept_${width.round()}',
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('a file gone since doesn’t come back; the next tab shows in '
@@ -101,7 +98,7 @@ void main() {
     // What's kept now has the gone file left out.
     expect(fileTabsKept.value['c']!.tabs, ['PLAN.md', 'NOTES.md']);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('with every file gone the pane comes back with no tabs', (
     tester,
@@ -116,7 +113,7 @@ void main() {
     expect(_shown(d), isNull);
     expect(fileTabsKept.value, isNot(contains('c')));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a pane a file’s opening opened comes back, its tab too', (
     tester,
@@ -132,7 +129,7 @@ void main() {
     expect(_shown(d), 'PLAN.md');
     expect(find.byType(FilesPane), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a tab closed, or the pane, stays so', (tester) async {
     var (d, _) = await panesApp(tester, width: 1700);
@@ -148,7 +145,7 @@ void main() {
     expect(_tabs(d), ['NOTES.md']);
     expect(_shown(d), 'NOTES.md');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a provisional tab comes back provisional', (tester) async {
     var (d, _) = await panesApp(tester, width: 1700);
@@ -163,7 +160,7 @@ void main() {
       const PreviewFile('NOTES.md'),
     );
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a tab is kept by its name in the chat’s folder, however it '
       'was opened', (tester) async {
@@ -175,7 +172,7 @@ void main() {
       'shown': 'auth/redirect.go',
     });
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a gone chat’s tabs are dropped', (tester) async {
     fileTabsKept.value = {
@@ -187,7 +184,7 @@ void main() {
     expect(fileTabsKept.value, isEmpty);
     expect(readSaved()['fileTabs'], isEmpty);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   test('what’s saved is read without throwing; a wrong part is left out', () {
     final kept = savedFileTabs({

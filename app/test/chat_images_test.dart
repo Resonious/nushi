@@ -635,7 +635,7 @@ void main() {
     expect(find.byType(ClickableImage), findsOneWidget);
     expect(fake.calls.whereType<GetChatImageRequest>(), isEmpty);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('on the Mac a row far off the screen lets its image go, in '
       'its place, and takes it back from what is kept', (tester) async {
@@ -700,7 +700,7 @@ void main() {
     expect(shown, findsOneWidget);
     expect(fetched(), before); // kept, not fetched again
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('an image that failed while the daemon was away is asked '
       'again once it is back', (tester) async {
@@ -747,7 +747,7 @@ void main() {
     expect(find.byType(ClickableImage), findsOneWidget);
     await tester.pump(const Duration(seconds: 5)); // "Reconnected" goes
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a row keeps its place until its image decodes, fetched or '
       'taken back, and lets go at that size', (tester) async {
@@ -828,7 +828,7 @@ void main() {
       expect(find.byType(ClickableImage), findsOneWidget);
       await render(tester, find.byType(NushiApp), 'mac_images_${width ~/ 1}');
       await closeView(tester, d);
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   testWidgets('Try again on a failed turn sends the message’s images whole', (

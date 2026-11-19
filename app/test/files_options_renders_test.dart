@@ -22,12 +22,6 @@ import 'panes_app.dart';
 // the tree button's tooltip, in both themes. Written only with
 // NUSHI_RENDERS set; never compared.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-const _both = TargetPlatformVariant({
-  TargetPlatform.macOS,
-  TargetPlatform.linux,
-});
-
 /// The renders' names' start: Linux's say so.
 String get _at =>
     defaultTargetPlatform == TargetPlatform.linux ? 'fo_linux' : 'fo';
@@ -126,7 +120,7 @@ void main() {
           await render(tester, app, '${_at}_${w}_menu_tab_size_$theme');
           await closeView(tester, d);
         },
-        variant: _both,
+        variant: macAndLinux,
         skip: rendersDir == null,
       );
 
@@ -176,7 +170,7 @@ void main() {
           await render(tester, app, 'fo_${w}_past_end_$theme');
           await endEditor(tester, d);
         },
-        variant: _mac,
+        variant: onMac,
         skip: rendersDir == null,
       );
     }

@@ -45,8 +45,6 @@ final _items = [
   ),
 ];
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Future<Daemon> _app(WidgetTester tester, double width) async {
   viewport(tester, Size(width, 800));
   showDetails.value = false;
@@ -192,7 +190,7 @@ void main() {
       });
       await closeView(tester, d);
       expect(spills, isEmpty);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('$w wide: the composer stays off the sidebar, uncut, as '
         'the sidebar, the Files pane and a side chat come and go', (
@@ -220,7 +218,7 @@ void main() {
       });
       await closeView(tester, d);
       expect(spills, isEmpty);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('$w wide with the details: the composer stays off the '
         'sidebar, uncut, as panes tuck them away and give them back', (
@@ -246,6 +244,6 @@ void main() {
       expect(find.byType(DetailsPanel), findsOneWidget);
       await closeView(tester, d);
       expect(spills, isEmpty);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

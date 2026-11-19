@@ -22,8 +22,6 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 import 'theme_sets.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const _names = [
   'blue',
   'teal',
@@ -250,7 +248,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(d.chats['c']!.color, isNull);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the menu', () {
@@ -298,7 +296,7 @@ void main() {
       expect(d.chats['rust-chat']!.color, isNull);
       expect(fake.calls.whereType<SetChatColorRequest>().last.color, '');
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a swatch works from the keyboard, its focus drawn', (
       tester,
@@ -329,7 +327,7 @@ void main() {
       expect(find.byType(Swatch), findsNothing);
       expect(d.chats['plain']!.color, ChatColor.magenta);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a color the daemon refuses goes back', (tester) async {
       final refused = Completer<Object>();
@@ -351,7 +349,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(d.chats['plain']!.color, isNull);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('an older daemon: no Color', (tester) async {
       final d = await FakeDaemon(_chats()).connect(tester);
@@ -405,7 +403,7 @@ void main() {
         'chat_colors_window_${width.toInt()}_${b.name}',
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   for (final b in Brightness.values) {

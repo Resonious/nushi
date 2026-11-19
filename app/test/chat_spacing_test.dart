@@ -31,8 +31,6 @@ import 'package:nushi/window_drag_linux.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const _long =
     'The redirect read the session after it expired, so the login page sent '
     'people back to a page that sent them to the login page again. It now '
@@ -243,7 +241,7 @@ void main() {
           box.right - 18,
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('at full width everything takes the pane, to the gutters', (
@@ -259,7 +257,7 @@ void main() {
       expect(_text(tester, 'I’ll start from').left, left);
       expect(_text(tester, 'Good. Run the whole suite.').right, box.right - 18);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a failed row’s box and the permission card are on the text '
         'column; its chevron and icon don’t move', (tester) async {
@@ -298,7 +296,7 @@ void main() {
         tester.getRect(failed).right - Collapsible.side,
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the header', () {
@@ -327,7 +325,7 @@ void main() {
       expect(details.left - browser.right, NushiTheme.iconGap);
       expect(menu.left - details.right, NushiTheme.iconGap);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     test('the bar’s gaps never fold anything', () {
       // Where each case first folds without them: 524 for the row, 80 for
@@ -465,7 +463,7 @@ void main() {
         expect(box.bottom - plus.bottom, 11);
         expect(tester.getRect(find.byType(Composer)).bottom - box.bottom, 16);
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   });
 
@@ -480,7 +478,7 @@ void main() {
       final view = tester.getRect(find.byType(ChatView));
       expect(text.left, view.left + _pad(view.width));
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('14 on 22 for a message that names a file', (tester) async {
       // A finished message whose paths are links is built apart from one
@@ -498,7 +496,7 @@ void main() {
       );
       expect(_text(tester, 'The fix is in').height, 22);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('items 16 apart, 28 after a message for its actions, 32 '
         'before a user message', (tester) async {
@@ -522,7 +520,7 @@ void main() {
       );
       expect(tester.getRect(band).top - tester.getRect(row).bottom, 32);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('tool rows', () {
@@ -561,7 +559,7 @@ void main() {
         t.toolAccent,
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('on the phone it’s still a card, a touch target high', (
       tester,
@@ -590,7 +588,7 @@ void main() {
         tester.getSize(find.byType(Collapsible)).height,
         TouchTargets.size,
       );
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the header’s drawn icons', () {
@@ -667,7 +665,7 @@ void main() {
           find.byType(MaterialApp),
           matchesGoldenFile('goldens/header_icons_$name.png'),
         );
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('the same room as a Material icon, and the look of its state', (
@@ -699,7 +697,7 @@ void main() {
       expect(open.line, LineIcon.details);
       expect(open.lit, isTrue); // on: the accent on its soft fill
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the menus’ drawn icons', () {
@@ -748,7 +746,7 @@ void main() {
           matchesGoldenFile('goldens/header_menu_$name.png'),
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('the preview’s folded ⋯, at the narrowest pane, $name', (
         tester,
@@ -770,7 +768,7 @@ void main() {
           'preview_menu_squeezed_$name',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     // Linux's words (ADR 0104), in its window, on its platform.
@@ -825,7 +823,7 @@ void main() {
             ),
           );
           d.dispose();
-        }, variant: _mac);
+        }, variant: onMac);
       }
       testWidgets('a turn beside the preview, $name', (tester) async {
         final d = await _app(
@@ -843,7 +841,7 @@ void main() {
           'spacing_preview_1700_$name',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   });
 }

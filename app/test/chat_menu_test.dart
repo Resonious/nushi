@@ -20,7 +20,7 @@ void main() {
     testWidgets(
       "a chat row's right-click menu: rows a pointer hits without aiming, "
       'in groups, with icons, the key on the right, Delete in red ($name)',
-      variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+      variant: onMac,
       (tester) async {
         viewport(tester, const Size(520, 520));
         final d = await FakeDaemon([
@@ -107,7 +107,7 @@ void main() {
   testWidgets(
     'a row’s menu offers the review comments added since it '
     'was built',
-    variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+    variant: onMac,
     (tester) async {
       viewport(tester, const Size(1200, 700));
       final d = await FakeDaemon([

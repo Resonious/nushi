@@ -25,8 +25,6 @@ import 'right_panes_fixture.dart';
 // the transcript's first lines and a background command's pane for as
 // long as a chat ran.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const _notice = 'Didn’t start Claude in site';
 
 /// The bars on [d]: the update's, waiting for chat c, and with [notice]
@@ -114,14 +112,14 @@ void main() {
         final bar = tester.getRect(find.byType(DaemonUpdateBar));
         expect(tester.getRect(find.byType(ChatView)).top, greaterThan(bar.top));
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('the details open', (tester) async {
         final (d, fake) = await panesApp(tester, width: width);
         await _bars(tester, d, fake);
         await _clear(tester, 'details_$w', width: width);
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       for (final sidebar in [false, true]) {
         final side = sidebar ? 'sidebar' : 'nosidebar';
@@ -142,7 +140,7 @@ void main() {
           await _bars(tester, d, fake);
           await _clear(tester, 'command_${side}_$w', width: width);
           await closeView(tester, d);
-        }, variant: _mac);
+        }, variant: onMac);
       }
 
       testWidgets('two bars, a pane open', (tester) async {
@@ -161,7 +159,7 @@ void main() {
         await _bars(tester, d, fake, notice: true);
         await _clear(tester, 'two_$w', width: width, bars: 2);
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('a pane expanded', (tester) async {
         browserFakes();
@@ -182,7 +180,7 @@ void main() {
         await _bars(tester, d, fake);
         await _clear(tester, 'expanded_$w', width: width);
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('GitHub', (tester) async {
         final (d, fake) = await panesApp(tester, width: width);
@@ -206,7 +204,7 @@ void main() {
         );
         expect(body.top, greaterThanOrEqualTo(bar.bottom));
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('a toast while a bar shows', (tester) async {
         final (d, fake) = await panesApp(
@@ -234,7 +232,7 @@ void main() {
         Toasts.maybeOf(tester.element(find.byType(ChatView)))!.hide();
         await tester.pumpAndSettle();
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     });
   }
 }

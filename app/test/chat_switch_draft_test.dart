@@ -43,5 +43,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.widgetWithText(TextField, 'Half a thought for A'), findsOne);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

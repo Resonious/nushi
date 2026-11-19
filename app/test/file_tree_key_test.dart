@@ -21,11 +21,6 @@ import 'right_panes_fixture.dart';
 // wherever the keys are (ADR 0123): no field, list or editor keeps it,
 // and it does nothing while the palette or a dialog is open.
 
-const _both = TargetPlatformVariant({
-  TargetPlatform.macOS,
-  TargetPlatform.linux,
-});
-
 bool get _linux => defaultTargetPlatform == TargetPlatform.linux;
 
 LogicalKeyboardKey get _mod =>
@@ -94,7 +89,7 @@ void main() {
       await tester.pumpAndSettle();
       await _flips(tester, where);
       await closeView(tester, d);
-    }, variant: _both);
+    }, variant: macAndLinux);
   }
 
   testWidgets('⇧⌘Y does nothing while the palette is open', (tester) async {
@@ -108,7 +103,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(Palette), findsNothing);
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   // The editor and its find bar, and a dialog: the Mac's app (the editor's
   // harness builds the Mac's menu bar).

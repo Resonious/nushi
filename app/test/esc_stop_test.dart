@@ -14,8 +14,6 @@ import 'harness.dart';
 // box's choices is that and nothing more, since stopping a long turn by
 // mistake costs real work.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The app on chat c, its turn running, the box focused; claude's
 /// /compact among its commands.
 Future<(Daemon, FakeDaemon)> _app(WidgetTester tester) async {
@@ -54,7 +52,7 @@ void main() {
     final stop = fake.calls.whereType<CancelTurnRequest>().single;
     expect((stop.chatId, stop.takeBack), ('c', true));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('an Esc that closes the box’s choices doesn’t stop the turn; '
       'the next does', (tester) async {
@@ -70,5 +68,5 @@ void main() {
     await tester.pump();
     expect(_stops(fake), 1);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

@@ -363,7 +363,7 @@ void main() {
           brightness,
           'call_times_${label}_${brightness.name}',
         );
-      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      }, variant: onMac);
     }
   }
 }

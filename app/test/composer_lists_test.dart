@@ -131,7 +131,7 @@ void main() {
       await _shiftEnter(tester);
       expect(_marked(c.value), '1. one\n|');
       await close();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
 
     testWidgets('one undo takes the line and its marker back', (tester) async {
       final (c, close) = await composer(tester);
@@ -143,7 +143,7 @@ void main() {
       await cmdKey(tester, LogicalKeyboardKey.keyZ, settle: false);
       expect(_marked(c.value), '- one|');
       await close();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
 
     testWidgets('pasted or typed text with list lines is left as it is', (
       tester,
@@ -159,7 +159,7 @@ void main() {
       await tester.pump();
       expect(c.text, '1. one\n');
       await close();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   });
 
   testWidgets('a reply box continues lists too', (tester) async {
@@ -180,5 +180,5 @@ void main() {
     await tester.pump();
     await _shiftEnter(tester);
     expect(_marked(text.value), '- one\n- |');
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

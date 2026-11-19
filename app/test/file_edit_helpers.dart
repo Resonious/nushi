@@ -137,6 +137,3 @@ Future<void> cmd(WidgetTester tester, LogicalKeyboardKey key) async {
 
 /// A tab's unsaved dot.
 Finder get unsavedDot => find.byType(UnsavedDot);
-
-/// The Mac's keys.
-final onMac = TargetPlatformVariant.only(TargetPlatform.macOS);

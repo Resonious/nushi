@@ -12,6 +12,7 @@ import 'package:re_editor/re_editor.dart';
 
 import 'fake_desktop.dart';
 import 'file_edit_helpers.dart';
+import 'harness.dart';
 
 // The right-click menu in a file's source in the Files pane (issue 75):
 // in the editor and in a read-only source, each row doing its job.

@@ -17,8 +17,6 @@ import 'harness.dart';
 // Stop and send as buttons too (they were ⏎ and ⌘⏎ only), and a queued message
 // can be sent now.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// A box for a chat whose turn runs, with one message queued.
 /// With [sendFails], the daemon refuses every send.
 Future<(FakeDaemon, Daemon, ChatState)> _box(
@@ -103,7 +101,7 @@ void main() {
       );
       d.dispose();
     },
-    variant: _mac,
+    variant: onMac,
   );
 
   testWidgets('a queued message sent now: out of the queue, then in place '
@@ -119,7 +117,7 @@ void main() {
     await tester.pump();
     expect(find.byTooltip('Send now: stop the turn and send it'), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a queued message sent now that fails to send is back in the '
       'box, after what was written', (tester) async {
@@ -131,5 +129,5 @@ void main() {
     expect(chat.draft.text.text, 'Also the README\n\nThen docs');
     expect(find.textContaining('the agent is gone'), findsOne);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

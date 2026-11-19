@@ -11,8 +11,6 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Item _agent(String id, String text, {String parent = ''}) => Item(
   id: id,
   kind: ItemKind.ITEM_KIND_AGENT_MESSAGE,
@@ -96,7 +94,7 @@ void main() {
     await _send(tester, '/copy 2');
     expect(copied.first, 'First, **bold**');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('it’s offered with the agent’s commands, in place of its own', (
     tester,
@@ -113,7 +111,7 @@ void main() {
       findsOneWidget,
     );
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('commands that come after `/` was typed are offered', (
     tester,
@@ -133,7 +131,7 @@ void main() {
     await tester.pump();
     expect(find.textContaining('/compact', findRichText: true), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('with no message it says so; a turn running makes no '
       'difference', (tester) async {
@@ -150,5 +148,5 @@ void main() {
     expect(find.text('No agent message to copy'), findsOneWidget);
     expect(fake.calls.whereType<SendPromptRequest>(), isEmpty);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

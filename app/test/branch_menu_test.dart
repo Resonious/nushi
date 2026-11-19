@@ -221,7 +221,7 @@ void main() {
       expect(menu.top, greaterThan(chevron.bottom));
       expect(tester.takeException(), isNull);
       await closeView(tester, d);
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   for (final (name, tokens) in [

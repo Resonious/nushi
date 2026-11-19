@@ -21,8 +21,6 @@ import 'harness.dart';
 // Back and Forward through the places visited (ADR 0119): the chevrons
 // after the sidebar's button, ⌘[ and ⌘], View's items and the palette's.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const _back = 'Back\u2002⌘[';
 const _forward = 'Forward\u2002⌘]';
 
@@ -153,7 +151,7 @@ void main() {
     await _visit(tester, d, ['a']);
     expect(_on(tester, _forward), isFalse);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⌘[ and ⌘], from the composer too; ⌥⌘↑ and ⌥⌘↓ go through '
       'the sidebar instead', (tester) async {
@@ -178,7 +176,7 @@ void main() {
     expect(keyLabel(previousChatKey), '⌥⌘↑');
     expect(keyLabel(backKey), '⌘[');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('an archived or deleted chat is passed over', (tester) async {
     final d = await _app(tester);
@@ -194,7 +192,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_on(tester, _forward), isFalse, reason: 'b archived, c gone');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Jira and GitHub are places too; Settings isn’t', (tester) async {
     final d = await _app(tester);
@@ -215,7 +213,7 @@ void main() {
     expect(d.place, const GitHubPlace());
     expect(_viewItem(tester, 'Forward').shortcut, forwardKey);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the palette has them', (tester) async {
     final d = await _app(tester);
@@ -229,7 +227,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(d.selectedId, 'a');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('on Linux Alt+Left and Alt+Right, which a text field keeps', (
     tester,
@@ -291,7 +289,7 @@ void main() {
         matchesGoldenFile('goldens/title_buttons_$name.png'),
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   group('renders', () {
@@ -315,7 +313,7 @@ void main() {
               'title_buttons_${width.toInt()}_${b.name}_$state',
             );
             d.dispose();
-          }, variant: _mac);
+          }, variant: onMac);
         }
       }
     }

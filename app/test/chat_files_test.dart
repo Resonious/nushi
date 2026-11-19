@@ -137,8 +137,6 @@ Future<Daemon> _app(WidgetTester tester) async {
   return d;
 }
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Finder get _pane => find.byType(FilesPane);
 
 Finder _inPane(Finder f) => find.descendant(of: _pane, matching: f);
@@ -299,7 +297,7 @@ void main() {
     expect(d.chats['c']!.shownFile, 'notes/sub.md');
     expect(FocusManager.instance.primaryFocus, same(keys));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('with no room for the panel, Artifacts… lists them in the '
       'palette', (tester) async {
@@ -321,7 +319,7 @@ void main() {
     expect(d.chats['c']!.shownFile, 'notes/sub.md');
     expect(showDetails.value, isFalse);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⌘P: Open file matches what’s typed and opens it', (
     tester,
@@ -388,7 +386,7 @@ void main() {
     expect(_inPane(find.text('deploy')), findsOneWidget);
     expect(d.chats['c']!.shownFile, 'scripts/deploy');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the phone: Artifacts in the bar, then a file full screen', (
     tester,

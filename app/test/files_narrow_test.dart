@@ -12,11 +12,6 @@ import 'panes_app.dart';
 // the transcript and narrow alike, well under their least, so the pane's
 // rows fold what they can't hold, and nothing overflows down to 100.
 
-const _both = TargetPlatformVariant({
-  TargetPlatform.macOS,
-  TargetPlatform.linux,
-});
-
 /// The errors reported while [body] runs, as text.
 Future<List<String>> _errors(Future<void> Function() body) async {
   final errors = <String>[];
@@ -109,17 +104,17 @@ Future<List<String>> _sweep(WidgetTester tester, {String? file}) async {
 void main() {
   testWidgets('the top row folds, and never overflows', (tester) async {
     expect(await _sweep(tester, file: 'files_top_row.dart'), isEmpty);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets('the second row folds, and never overflows', (tester) async {
     expect(await _sweep(tester, file: 'files_bar.dart'), isEmpty);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets('nothing in the pane overflows, the tree’s rows too', (
     tester,
   ) async {
     expect(await _sweep(tester), isEmpty);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets('squeezed, the source button is in the ⋯', (tester) async {
     final (d, _) = await panesApp(tester, width: 1700);
@@ -134,5 +129,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(d.chats['c']!.files.sources, contains('PLAN.md'));
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 }

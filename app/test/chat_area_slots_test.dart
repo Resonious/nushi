@@ -21,8 +21,6 @@ import 'right_panes_fixture.dart';
 // transcript builds it no more, and the header and the terminal outlive
 // a change of tab.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The chat's own transcript, not a side chat's or a subagent's.
 bool _chatTranscript(Widget w) =>
     w is Transcript && w.items == null && w.chat.id == 'c';
@@ -70,7 +68,7 @@ void main() {
     expect(views, 0);
     expect(tester.widget(transcript), same(first));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the rail tucking and coming back, by a pane opening and by '
       'its edge dragged, rebuilds neither the chat view nor its '
@@ -129,7 +127,7 @@ void main() {
     expect(views, 0);
     expect(tester.widget(transcript), same(first));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the terminal and the header stay the same widgets from tab '
       'to tab, with a pane open, and nothing slides', (tester) async {
@@ -176,5 +174,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getRect(find.byType(FileView)), preview);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

@@ -79,8 +79,6 @@ bool _lit(WidgetTester tester) => tester
     )
     .lit;
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// ⇧⌘E, as pressed.
 Future<void> _shiftCmdE(WidgetTester tester) async {
   await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
@@ -117,7 +115,7 @@ void main() {
     expect(find.byType(FilesPane), findsNothing);
     expect(filesChats.value, isEmpty);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('on the Changes tab it is unlit, and brings the chat back '
       'with the pane', (tester) async {
@@ -132,7 +130,7 @@ void main() {
     expect(filesChats.value, {'c'});
     expect(find.byType(FilesPane), findsOne);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⇧⌘E and View › Files light and unlight it as the button '
       'would', (tester) async {
@@ -152,7 +150,7 @@ void main() {
     expect(find.byType(FilesPane), findsNothing);
     expect(_lit(tester), isFalse);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⇧⌘E and View › Files on the Changes tab bring the chat back '
       'with the pane, not close it', (tester) async {
@@ -170,7 +168,7 @@ void main() {
       expect(_lit(tester), isTrue);
     }
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the button sits between the terminal’s and the details’; '
       '⋯ has no Show files', (tester) async {
@@ -189,7 +187,7 @@ void main() {
     expect(find.textContaining('files', findRichText: true), findsNothing);
     expect(find.text('Rename', findRichText: true), findsOne);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('narrow, it folds into ⋯ with the terminal’s and the '
       'details’', (tester) async {
@@ -272,7 +270,7 @@ void main() {
             'files_button_${size}_${state}_$name',
           );
           await closeView(tester, d);
-        }, variant: _mac);
+        }, variant: onMac);
       }
     }
   }

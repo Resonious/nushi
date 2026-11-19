@@ -147,7 +147,7 @@ void main() {
             );
           }
           await end();
-        }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+        }, variant: onMac);
       }
     }
   }

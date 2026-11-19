@@ -16,8 +16,6 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 import 'theme_sets.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The WCAG contrast of [a] and [b].
 double _contrast(Color a, Color b) {
   double lum(Color c) => c.computeLuminance();
@@ -163,7 +161,7 @@ void main() {
           'code_ink_${width.toInt()}_${b.name}_$where',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 

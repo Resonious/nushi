@@ -20,6 +20,15 @@ import 'package:nushi/toast.dart';
 /// `flutter_test_config.dart`): fixed, so an age a golden shows never moves.
 final fixtureNow = DateTime(2026, 10, 29, 12);
 
+/// A test run on the Mac only.
+final onMac = TargetPlatformVariant.only(TargetPlatform.macOS);
+
+/// A test run on the Mac and again on Linux.
+const macAndLinux = TargetPlatformVariant({
+  TargetPlatform.macOS,
+  TargetPlatform.linux,
+});
+
 /// The test's window: [size] in logical pixels, [ratio] device pixels to
 /// one, the system in [brightness] when given; as it was after the test.
 void viewport(

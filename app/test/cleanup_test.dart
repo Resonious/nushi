@@ -14,8 +14,6 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 import 'pull_fixture.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 final _wt = Worktree(
   repo: '/Users/me/shop',
   path: '/Users/me/shop/.worktrees/filters-malformed-q',
@@ -116,7 +114,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Clean up…'), findsNWidgets(2)); // the menu's too
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('nothing in the way: all ticked; it runs, then offers the undo', (
     tester,
@@ -169,7 +167,7 @@ void main() {
     expect(fake.calls.whereType<RestoreGitHubBranchRequest>(), hasLength(1));
     expect(_inPull(find.text('Branch restored on GitHub')), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a dirty worktree starts unticked; ticking it names the loss '
       'and forces; the branch waits for its worktree', (tester) async {
@@ -197,7 +195,7 @@ void main() {
       isTrue,
     );
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Cancel has the focus, ticking a loss or not: Enter cleans '
       'nothing up', (tester) async {
@@ -213,7 +211,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(fake.calls.whereType<RemoveChatWorktreeRequest>(), isEmpty);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('ignored files start it unticked; ticking it names them and '
       'forces', (tester) async {
@@ -232,7 +230,7 @@ void main() {
       isTrue,
     );
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   // The dialog whole, to look at (`make renders`): a dirty worktree's
   // warning and the mid-turn choice over its rows.
@@ -254,7 +252,7 @@ void main() {
         'cleanup_dialog_1160_${b.name}',
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('mid-turn: it waits for the turn to end, then cleans up', (
@@ -288,7 +286,7 @@ void main() {
     expect(_inPull(find.text('Chat archived')), findsOneWidget);
     expect(job.finished, isTrue);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("mid-turn, a stop the daemon refuses: it says so and isn't "
       'left waiting', (tester) async {
@@ -316,7 +314,7 @@ void main() {
     expect((job.running, job.finished), (false, true));
     expect(fake.calls.whereType<ArchiveChatRequest>(), isEmpty);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("mid-turn, a stop that doesn't end the turn in 20 s: it says "
       'so', (tester) async {
@@ -340,7 +338,7 @@ void main() {
     expect((job.running, job.finished), (false, true));
     expect(fake.calls.whereType<ArchiveChatRequest>(), isEmpty);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("the chat's ⋯ has Clean up… for a worktree chat", (tester) async {
     final (d, _) = await _open(tester);
@@ -350,7 +348,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Clean up…'), findsNWidgets(2)); // the menu's too
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, brightness) in [
     ('dark', Brightness.dark),
@@ -381,6 +379,6 @@ void main() {
         matchesGoldenFile('goldens/cleanup_done_$name.png'),
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

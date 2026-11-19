@@ -46,8 +46,6 @@ GitHubItem _item(int n, String state, String head) => GitHubItem(
   head: head,
 );
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The app on a chat in the worktree of cursor-ties, with #215 merged
 /// (feed-cursor), #221 on cursor-ties ([state221]) and #224 open on
 /// another branch; the details panel shown.
@@ -148,7 +146,7 @@ void main() {
     expect(fake.calls.whereType<DeleteChatBranchRequest>(), isEmpty);
     expect(fake.calls.whereType<ArchiveChatRequest>(), isEmpty);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('every one on the branch merged or closed: the worktree, the '
       'local branch and archiving come back', (tester) async {
@@ -160,5 +158,5 @@ void main() {
     expect(find.text('Delete the branch on GitHub'), findsOneWidget);
     expect(find.text('Archive this chat'), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

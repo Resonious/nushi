@@ -151,5 +151,5 @@ void main() {
     for (final c in panes) {
       expect(c.offset, greaterThan(1000));
     }
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }
