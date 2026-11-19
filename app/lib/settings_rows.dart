@@ -35,7 +35,7 @@ class SettingsPage extends StatelessWidget {
   /// The room the modal's Close takes from the page's right edge: its
   /// inset, its 26-point box and a 12-point gap before the title's
   /// actions, so they never crowd it.
-  static const closeRoom = closeInset + 26 + 12;
+  static const double closeRoom = closeInset + 26 + 12;
 
   /// The space between the nav and the content, and at least this on the
   /// right.
