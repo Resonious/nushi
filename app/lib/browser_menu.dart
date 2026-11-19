@@ -11,6 +11,7 @@ import 'package:nushi/browser_page.dart';
 import 'package:nushi/clock.dart';
 import 'package:nushi/conventions.dart';
 import 'package:nushi/menu.dart';
+import 'package:nushi/native.dart';
 import 'package:nushi/preview_entry.dart';
 import 'package:nushi/settings.dart' show linksInBrowserTab, localNetworkSites;
 import 'package:nushi/theme/theme.dart';
@@ -164,7 +165,7 @@ Future<void> saveScreenshot(BuildContext context, BrowserHost host) async {
 }
 
 /// Clear browsing data: once the user says so, every site's cookies,
-/// storage and caches go from WebKit's store ([clearBrowsingData]), and the
+/// storage and caches go from WebKit's store ([Native.web]), and the
 /// page showing ([host]'s) loads again without them; another tab's page
 /// loads afresh as it shows.
 Future<void> clearBrowsing(BuildContext context, BrowserHost? host) async {
@@ -181,7 +182,7 @@ Future<void> clearBrowsing(BuildContext context, BrowserHost? host) async {
   await runAndSay(
     context,
     () async {
-      await clearBrowsingData();
+      await native.web.clearData();
       await host?.reload();
     },
     running: 'Clearing browsing data…',

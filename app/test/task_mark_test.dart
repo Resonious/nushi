@@ -84,7 +84,7 @@ void main() {
       builder: (context) => Row(
         children: [
           Expanded(child: commandStateText(context, it, const TextStyle())),
-          commandMark(it),
+          TaskMark(it.backgroundCommand.state),
         ],
       ),
     );

@@ -2,14 +2,6 @@ part of 'beside.dart';
 
 /// A pane beside a view, as its [PaneSpec] says, and what it shows.
 class SidePane extends PaneSpec {
-  new(
-    super.name, {
-    required super.initial,
-    required super.min,
-    required super.cap,
-    required this.child,
-  }) : fixed = false;
-
   /// One of [spec]'s sizes, showing [child].
   new of(PaneSpec spec, {required this.child})
     : fixed = false,
