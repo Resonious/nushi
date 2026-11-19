@@ -245,54 +245,56 @@ class _NewChatState extends State<_NewChat> {
                   focusNode: _focus,
                   autofocus: true,
                   onKeyEvent: agents.isEmpty ? null : _key,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-                        child: Text(
-                          [
-                            if (issue case final i?)
-                              'Chat on ${i.key}'
-                            else
-                              'New chat',
-                            if (folder.isNotEmpty)
-                              'in ${folderParts(folder).$1}',
-                          ].join(' '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.ui(t.text, weight: FontWeight.w600),
-                        ),
-                      ),
-                      for (final (i, name) in agents.indexed)
-                        _row(theme, t, i, name),
-                      if (agents.isEmpty)
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
-                          child: SetUpLine(
-                            'No agents found. ',
-                            onTap: () =>
-                                Navigator.pop(context, ('', null, null)),
+                          padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+                          child: Text(
+                            [
+                              if (issue case final i?)
+                                'Chat on ${i.key}'
+                              else
+                                'New chat',
+                              if (folder.isNotEmpty)
+                                'in ${folderParts(folder).$1}',
+                            ].join(' '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.ui(t.text, weight: FontWeight.w600),
                           ),
                         ),
-                      if (_offersIssue) ...[
-                        const Divider(height: 9),
-                        IssueLines(
-                          issue: issue,
-                          inFolder: folder.isNotEmpty,
-                          editingBranch: _editingBranch,
-                          onPick: _pickIssue,
-                          onClear: () => setState(() => _issue = null),
-                          onWorktree: () => setState(() {
-                            issue!.worktree = !issue.worktree;
-                          }),
-                          onEditBranch: () =>
-                              setState(() => _editingBranch = true),
-                          onBranch: _branch,
-                        ),
+                        for (final (i, name) in agents.indexed)
+                          _row(theme, t, i, name),
+                        if (agents.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+                            child: SetUpLine(
+                              'No agents found. ',
+                              onTap: () =>
+                                  Navigator.pop(context, ('', null, null)),
+                            ),
+                          ),
+                        if (_offersIssue) ...[
+                          const Divider(height: 9),
+                          IssueLines(
+                            issue: issue,
+                            inFolder: folder.isNotEmpty,
+                            editingBranch: _editingBranch,
+                            onPick: _pickIssue,
+                            onClear: () => setState(() => _issue = null),
+                            onWorktree: () => setState(() {
+                              issue!.worktree = !issue.worktree;
+                            }),
+                            onEditBranch: () =>
+                                setState(() => _editingBranch = true),
+                            onBranch: _branch,
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
         ),

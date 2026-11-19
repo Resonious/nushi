@@ -146,6 +146,14 @@ void main() {
       // Another server's tool of the same name isn't Nushi's.
       expect(serverTool(Item(title: 'mcp__other__preview_start')), isNull);
       expect(serverTool(Item(title: 'mcp__nushi__preview_open')), isNull);
+      expect(
+        serverTool(Item(title: 'mcp_nushi_preview_start')),
+        'preview_start',
+      );
+      expect(
+        serverTool(Item(title: 'Run mcp_nushi_preview_start')),
+        'preview_start',
+      );
     });
 
     test('a name that could read as another is marked', () {

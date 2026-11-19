@@ -27,9 +27,14 @@ import 'package:nushi/widgets.dart';
   return (rest.substring(0, sep), rest.substring(sep + 2));
 }
 
-/// Nushi's show tool (ADR 0068) as Claude's agents and Codex's adapter
-/// title its calls; the daemon's `isShow` knows them too.
-const showTitles = {'mcp__nushi__show', 'mcp.nushi.show'};
+/// Nushi's show tool (ADR 0068) as Claude's agents, Codex's adapter and
+/// Antigravity title its calls; the daemon's `isShow` knows them too.
+const showTitles = {
+  'mcp__nushi__show',
+  'mcp.nushi.show',
+  'mcp_nushi_show',
+  'Run mcp_nushi_show',
+};
 
 /// Whether [it] is a show call, or the ask to run one.
 bool isShow(Item it) => showTitles.contains(it.title);
@@ -73,13 +78,15 @@ const serverVerbs = {
 };
 
 /// Which of Nushi's dev server tools [it] calls, or asks to ('preview_start'),
-/// titled as Claude's agents (`mcp__nushi__preview_start`) and Codex's
-/// adapter (`mcp.nushi.preview_start`) title them; null for any other.
+/// titled as Claude's agents (`mcp__nushi__preview_start`), Codex's adapter
+/// (`mcp.nushi.preview_start`) and Antigravity (`mcp_nushi_preview_start`)
+/// title them; null for any other.
 String? serverTool(Item it) {
-  final title = it.title;
+  final raw = it.title;
+  final title = raw.startsWith('Run ') ? raw.substring(4) : raw;
   final tool = title.startsWith('mcp__nushi__')
       ? title.substring(12)
-      : title.startsWith('mcp.nushi.')
+      : title.startsWith('mcp.nushi.') || title.startsWith('mcp_nushi_')
       ? title.substring(10)
       : null;
   return serverVerbs.containsKey(tool) ? tool : null;

@@ -97,7 +97,7 @@ Chats' data stays in `~/Library/Application Support/Nushi`. **`--zap` deletes it
 - the adapters and the logs;
 - the app's preferences.
 
-It doesn't touch the agents' own history (`~/.claude`, `~/.codex`, `~/.ante`, `~/.omp`, `~/.local/share/opencode`, `~/.pi`, `~/.pig`), so those chats still resume in a terminal. The keychain's "Nushi Jira" and "Nushi GitHub" items stay too. To remove them, remove the sites in Settings first, or delete the items in Keychain Access.
+It doesn't touch the agents' own history (`~/.claude`, `~/.codex`, `~/.ante`, `~/.omp`, `~/.local/share/opencode`, `~/.pi`, `~/.pig`, `~/.gemini`), so those chats still resume in a terminal. The keychain's "Nushi Jira" and "Nushi GitHub" items stay too. To remove them, remove the sites in Settings first, or delete the items in Keychain Access.
 
 ## The daemon
 

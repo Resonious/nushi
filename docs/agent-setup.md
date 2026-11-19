@@ -95,6 +95,16 @@ Nushi runs your `opencode acp`. Nothing to set up once `opencode` is on your log
 - A folder's `.pig` settings, extensions and MCP servers load only once you've trusted the folder in PiG (`/trust` in a terminal `pig`).
 - A PiG chat resumes in a terminal with `pig --session <session id>`. Delete moves its session file to the Trash, as PiG does.
 
+### Antigravity (`agy`)
+
+Nushi runs your `agy acp`. Nothing to set up once `agy` is on your login shell's `PATH`. Nushi follows Antigravity CLI 1.5.12; Settings › Agents then says Ready.
+
+- It uses `agy`'s own config and sign-in (`~/.gemini`): sign in with `agy` in a terminal.
+- Model, thinking level and mode (`default`, `accept-edits`, `auto`, `plan`) are `agy`'s; its `plan` mode still allows edits.
+- `agy` runs project hooks and loads project plugins and MCP configs (`.agents/`, `.agent/`, `_agents/`, `_agent/`) without asking. Nushi's trust card lists them before a chat starts there ([ADR 0031](adr/0031-warn-before-a-folder-runs-code-for-ante-and-omp.md)).
+- Antigravity chats get Nushi's own tools (`show`, the previews, Jira's): [MCP servers and skills](mcp-and-skills.md).
+- An Antigravity chat resumes in a terminal with `agy --conversation <session id>`. Nushi can't fork or delete an `agy` session's history (`agy acp` doesn't expose `session/fork` or `session/delete`).
+
 ## Setting up adapters
 
 Codex needs an adapter; Settings › Agents' **Set up** installs it.

@@ -226,6 +226,19 @@ void main() {
       expect(find.textContaining('A page runs'), findsNothing);
       d.dispose();
     }, variant: onMac);
+
+    testWidgets('Antigravity’s card too', (tester) async {
+      final (_, d) = await _app(
+        tester,
+        items: [_ask('Run mcp_nushi_show', '{"path": "docs/r.html"}')],
+      );
+      expect(find.text('Show docs/r.html'), findsOneWidget);
+      expect(
+        find.text('A page runs as it opens in the preview.'),
+        findsOneWidget,
+      );
+      d.dispose();
+    }, variant: onMac);
   });
 
   group('the event', () {

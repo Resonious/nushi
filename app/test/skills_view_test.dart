@@ -304,6 +304,57 @@ void main() {
     await closeView(tester, d);
   });
 
+  testWidgets('Antigravity: where it reads skills and no per-skill switch', (
+    tester,
+  ) async {
+    final fake = FakeDaemon([])
+      ..answer = (input) => input is ListSkillsRequest
+          ? ListSkillsResponse(
+              readsShared: true,
+              noSwitch:
+                  'Antigravity has no per-skill switch; delete a skill’s '
+                  'folder to remove it.',
+              skills: [
+                Skill(
+                  name: 'mine',
+                  description: 'Global skill',
+                  source: 'user',
+                  path: '$_home/.gemini/config/skills/mine',
+                  state: 'on',
+                  tokens: 10,
+                ),
+                Skill(
+                  name: 'proj',
+                  description: 'Project skill',
+                  source: 'project',
+                  path: '$_home/app/.agent/skills/proj',
+                  state: 'on',
+                  tokens: 10,
+                ),
+              ],
+            )
+          : null;
+    final d = await fake.connect(tester);
+    d.skillsAgent = 'agy';
+    viewport(tester, const Size(1000, 860), ratio: 3);
+    await tester.pumpWidget(
+      themed(SkillsView(daemon: d, folder: '$_home/app')),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.text('In every folder: skills in ~/.gemini/config/skills.'),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        'In this folder: .agent/skills, _agents/skills and _agent/skills, '
+        'here and above it, up to the repository’s root.',
+      ),
+      findsOneWidget,
+    );
+    await closeView(tester, d);
+  });
+
   testWidgets('a skill folder named <name>.md, the name from its front '
       'matter, is a folder: its SKILL.md opens and Delete… is there', (
     tester,

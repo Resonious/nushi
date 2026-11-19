@@ -14,7 +14,7 @@ import 'package:nushi/drafts.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/pull_link.dart' show rowItem;
 
-/// The seven agents, as the daemon lists them: installed, ready.
+/// The eight agents, as the daemon lists them: installed, ready.
 List<Agent> readyAgents() => [
   for (final (name, title) in [
     ('claude', 'Claude'),
@@ -24,6 +24,7 @@ List<Agent> readyAgents() => [
     ('opencode', 'OpenCode'),
     ('pi', 'Pi'),
     ('pig', 'PiG'),
+    ('agy', 'Antigravity'),
   ])
     Agent(
       name: name,

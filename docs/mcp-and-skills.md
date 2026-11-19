@@ -22,7 +22,7 @@ A server that's off stays listed, dimmed. A running chat keeps its servers until
 
 **The other agents' servers** aren't listed: change them with the agent itself.
 
-**Nushi's own tools** (`show`, the previews, a Jira issue's) come through an MCP server Nushi hands the agent with each session. Claude and Codex chats get them. Ante, oh-my-pi, Pi and PiG take no servers from a client. OpenCode takes them, but calls their tools from a script in one tool call, asking nothing and showing each call only at the end, so Nushi hands it none ([ADR 0068](adr/0068-an-agent-opens-a-preview.md)).
+**Nushi's own tools** (`show`, the previews, a Jira issue's) come through an MCP server Nushi hands the agent with each session. Claude, Codex and Antigravity chats get them. Ante, oh-my-pi, Pi and PiG take no servers from a client. OpenCode takes them, but calls their tools from a script in one tool call, asking nothing and showing each call only at the end, so Nushi hands it none ([ADR 0068](adr/0068-an-agent-opens-a-preview.md)).
 
 ## Skills
 
@@ -40,10 +40,11 @@ Settings › Skills (or ⋯ › Skills…, which opens that chat's agent) lists 
 | PiG | "in your settings" or "in .pig/settings.json" |
 | Ante, oh-my-pi | "by name, everywhere" |
 | OpenCode | "in your OpenCode config" (a `skill.use` deny in your `opencode.json`, by name, everywhere) |
+| Antigravity | No per-skill switch; delete a skill's folder to remove it |
 
 OpenCode reads some policies before your config's, and the earliest decides: those in the system's config folder, in an MDM profile, or in a config your sign-in delivers (your organization's). An allow there keeps a skill loading though Nushi shows it as off.
 
-**Shared** is `.agents/skills` (the project's, as the agents walk it) and `~/.agents/skills`, which Codex, Pi, PiG, oh-my-pi, Ante and OpenCode read.
+**Shared** is `.agents/skills` (the project's, as the agents walk it) and `~/.agents/skills`, which Codex, Pi, PiG, oh-my-pi, Ante, OpenCode and Antigravity read.
 
 - Each shared skill says which agents load it ("Off for Codex", "PiG loads it once the folder is trusted"); its switch is the picked agent's.
 - Claude doesn't read `.agents/skills` yet. A shared skill's ⋯ › Link for Claude… makes `.claude/skills/<name>`, a relative link to it, so Claude loads it too. It isn't offered where the link can't be made: `.claude/skills` has that name already, or the skill isn't a folder right in the shared folder (OpenCode's one-file skills and groups).

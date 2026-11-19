@@ -52,7 +52,7 @@ Then open Nushi and set up an agent in **Settings › Agents**. To install from 
 ## Requirements
 
 - A Mac with Apple silicon and macOS 13 or later, or Linux on x86_64 or arm64 with glibc 2.34 or later ([On Linux](docs/install.md#on-linux)).
-- An agent's CLI: `claude`, `codex`, `ante`, `omp`, `opencode`, `pi` or `pig`. Pi needs Node. Codex needs Node and npm. Claude needs neither, because Nushi runs it through its own built-in agent.
+- An agent's CLI: `claude`, `codex`, `ante`, `omp`, `opencode`, `pi`, `pig` or `agy`. Pi needs Node. Codex needs Node and npm. Claude needs neither, because Nushi runs it through its own built-in agent.
 
 ## Docs
 

@@ -51,7 +51,7 @@ You see **Update** only if you installed Nushi with Homebrew. Otherwise the card
 
 ## What you need
 
-You need a coding agent that you already use in the terminal, installed and signed in. Nushi works with Claude, Codex, Ante, oh-my-pi, OpenCode, Pi and PiG.
+You need a coding agent that you already use in the terminal, installed and signed in. Nushi works with Claude, Codex, Ante, oh-my-pi, OpenCode, Pi, PiG and Antigravity (`agy`).
 
 Nushi runs your own copy of the agent, with your login, settings and history.
 

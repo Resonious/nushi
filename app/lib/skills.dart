@@ -252,6 +252,10 @@ String _about(String agent, String from) => switch ((agent, from)) {
   ('opencode', 'project') =>
     'In this folder: .opencode/skills, .opencode/skill and Claude’s '
         '.claude/skills, here and in every folder above it.',
+  ('agy', 'user') => 'In every folder: skills in ~/.gemini/config/skills.',
+  ('agy', 'project') =>
+    'In this folder: .agent/skills, _agents/skills and _agent/skills, '
+        'here and above it, up to the repository’s root.',
   (_, 'user') => 'In every folder.',
   (_, 'project') => 'In this folder.',
   (_, 'system') => 'The agent’s own.',
