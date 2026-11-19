@@ -21,7 +21,7 @@ func TestWorkflowProto(t *testing.T) {
 		Running: []string{"a"}, RunningCount: 1, Summary: "s", Stalled: true}
 	it := itemProto(&model.Item{ID: "c", Kind: model.ToolCall, Workflow: &w}, false)
 	p := it.Workflow
-	if p.RunId != "wf_1" || p.TaskId != "t1" || p.Name != "n" || p.Description != "d" || p.State != "done" || p.End != "completed" ||
+	if p.RunId != "wf_1" || p.Name != "n" || p.Description != "d" || p.State != "done" || p.End != "completed" ||
 		p.Started != 1794798436066 || p.Ended != 0 || p.Active != 0 || len(p.Phases) != 1 || p.Phases[0].Failed != 1 || p.Agents != 2 ||
 		p.Done != 1 || p.Failed != 1 || len(p.Running) != 1 || p.RunningCount != 1 || p.Summary != "s" || !p.Stalled {
 		t.Errorf("got %+v", p)

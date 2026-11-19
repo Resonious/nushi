@@ -30,7 +30,6 @@ Item workflowCall(String state, {bool stalled = false, String id = 'wf'}) {
     text: 'Workflow launched in background. Task ID: w1',
     workflow: Workflow(
       runId: 'wf_769a004c-2aa',
-      taskId: 'w9u1xb6ik',
       name: 'review-changes',
       description: 'Review the diff from five angles, then verify',
       state: state,

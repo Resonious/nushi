@@ -174,11 +174,8 @@ func (s *server) TransitionJiraIssue(ctx context.Context, req *connect.Request[n
 }
 
 func (s *server) AddJiraComment(ctx context.Context, req *connect.Request[nushiv1.AddJiraCommentRequest]) (*connect.Response[nushiv1.AddJiraCommentResponse], error) {
-	cm, err := s.Jira.AddComment(ctx, req.Msg.Site, req.Msg.Key, req.Msg.Markdown, "you")
-	if err != nil {
-		return nil, refused(err)
-	}
-	return connect.NewResponse(&nushiv1.AddJiraCommentResponse{Comment: jiraCommentProto(cm)}), nil
+	_, err := s.Jira.AddComment(ctx, req.Msg.Site, req.Msg.Key, req.Msg.Markdown, "you")
+	return done[nushiv1.AddJiraCommentResponse](err, refused)
 }
 
 func (s *server) FindJiraIssues(ctx context.Context, req *connect.Request[nushiv1.FindJiraIssuesRequest]) (*connect.Response[nushiv1.FindJiraIssuesResponse], error) {
@@ -194,7 +191,7 @@ func (s *server) FindJiraIssues(ctx context.Context, req *connect.Request[nushiv
 }
 
 func (s *server) GetJiraAttachment(ctx context.Context, req *connect.Request[nushiv1.GetJiraAttachmentRequest]) (*connect.Response[nushiv1.GetJiraAttachmentResponse], error) {
-	b, mime, err := s.Jira.Attachment(ctx, req.Msg.Site, req.Msg.Id, req.Msg.Thumbnail)
+	b, mime, err := s.Jira.Attachment(ctx, req.Msg.Site, req.Msg.Id)
 	if err != nil {
 		return nil, refused(err)
 	}

@@ -398,7 +398,7 @@ void main() {
     final (phone, _, _, asked) = await _phone(
       tester,
       images: [_ref(), small],
-      image: (_) => GetChatImageResponse(mimeType: 'image/png', data: _png),
+      image: (_) => GetChatImageResponse(data: _png),
     );
     await _decode(tester); // the spinner until it has
     expect(_loading, findsNothing);
@@ -455,7 +455,7 @@ void main() {
             images: [_ref(sha(i))],
           ),
       ],
-      image: (_) => GetChatImageResponse(mimeType: 'image/png', data: _png),
+      image: (_) => GetChatImageResponse(data: _png),
     );
     // It opens at its end: those on the screen and a screen above it.
     final first = [for (final r in asked) r.sha256];
@@ -488,7 +488,7 @@ void main() {
       tester,
       image: (_) => fail
           ? throw connect.ConnectException(connect.Code.unavailable, 'gone')
-          : GetChatImageResponse(mimeType: 'image/png', data: _png),
+          : GetChatImageResponse(data: _png),
     );
     expect(_failed, findsOneWidget);
     expect(_again, findsOneWidget);
@@ -728,7 +728,7 @@ void main() {
             'daemon unavailable: dial failed',
           );
         }
-        return GetChatImageResponse(mimeType: 'image/png', data: _png);
+        return GetChatImageResponse(data: _png);
       });
     final d = await fake.connect(tester)
       ..select('c');
@@ -817,10 +817,7 @@ void main() {
             waits.future,
           GetChatImageRequest(sha256: final s) when s == 'b' * 64 =>
             throw connect.ConnectException(connect.Code.notFound, 'gone'),
-          GetChatImageRequest() => GetChatImageResponse(
-            mimeType: 'image/png',
-            data: shot,
-          ),
+          GetChatImageRequest() => GetChatImageResponse(data: shot),
           _ => null,
         });
       final d = await fake.connect(tester)

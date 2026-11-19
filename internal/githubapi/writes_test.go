@@ -24,14 +24,13 @@ func (f *fake) vars(op, answer string) *[]map[string]any {
 
 func TestReplyResolveComment(t *testing.T) {
 	f := newFake(t)
-	reply := f.vars("Reply", `{"data":{"addPullRequestReviewThreadReply":{"comment":{"id":"C1","author":{"login":"octo"},"authorAssociation":"OWNER","body":"Done <!-- x -->"}}}}`)
+	reply := f.vars("Reply", `{"data":{"addPullRequestReviewThreadReply":{"clientMutationId":null}}}`)
 	resolve := f.vars("Resolve", `{"data":{"resolveReviewThread":{"thread":{"isResolved":true}}}}`)
 	unresolve := f.vars("Unresolve", `{"data":{"unresolveReviewThread":{"thread":{"isResolved":false}}}}`)
-	comment := f.vars("Comment", `{"data":{"addComment":{"commentEdge":{"node":{"id":"C2","author":{"login":"octo"},"body":"Thanks"}}}}}`)
+	comment := f.vars("Comment", `{"data":{"addComment":{"clientMutationId":null}}}`)
 	c := f.client()
-	cm, err := c.Reply(t.Context(), "T1", "Done")
-	if err != nil || cm.ID != "C1" || cm.Body != "Done" || (*reply)[0]["thread"] != "T1" {
-		t.Fatalf("%+v %v %v", cm, err, *reply)
+	if err := c.Reply(t.Context(), "T1", "Done"); err != nil || (*reply)[0]["thread"] != "T1" || (*reply)[0]["body"] != "Done" {
+		t.Fatal(err, *reply)
 	}
 	if err := c.Resolve(t.Context(), "T1", true); err != nil || len(*resolve) != 1 {
 		t.Fatal(err)
@@ -39,13 +38,13 @@ func TestReplyResolveComment(t *testing.T) {
 	if err := c.Resolve(t.Context(), "T1", false); err != nil || len(*unresolve) != 1 {
 		t.Fatal(err)
 	}
-	if cm, err := c.Comment(t.Context(), "PR_1", "Thanks"); err != nil || cm.ID != "C2" || (*comment)[0]["subject"] != "PR_1" {
-		t.Fatalf("%+v %v", cm, err)
+	if err := c.Comment(t.Context(), "PR_1", "Thanks"); err != nil || (*comment)[0]["subject"] != "PR_1" {
+		t.Fatal(err, *comment)
 	}
 	f.route("graphql Reply", func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte(`{"data":{"addPullRequestReviewThreadReply":null},"errors":[{"type":"UNPROCESSABLE","message":"Thread is locked"}]}`))
 	})
-	if _, err := c.Reply(t.Context(), "T1", "x"); err == nil || !strings.Contains(err.Error(), "Thread is locked") {
+	if err := c.Reply(t.Context(), "T1", "x"); err == nil || !strings.Contains(err.Error(), "Thread is locked") {
 		t.Fatal(err)
 	}
 }

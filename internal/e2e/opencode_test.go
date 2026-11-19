@@ -52,7 +52,7 @@ func TestAnOpencodeChat(t *testing.T) {
 	}
 	start := must(a.c.StartChat(ctx, connect.NewRequest(&nushiv1.StartChatRequest{Agent: "opencode", Folder: t.TempDir()})))
 	id := start.ChatId
-	if got := config(start.Config); got != "model/model=fake/fake-model effort/thought_level=default mode/mode=build" {
+	if got := config(a.get(id).Config); got != "model/model=fake/fake-model effort/thought_level=default mode/mode=build" {
 		t.Errorf("options = %s", got)
 	}
 	if got := a.commandNames(id); got != "compact" {

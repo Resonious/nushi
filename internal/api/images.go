@@ -73,5 +73,5 @@ func (s *server) GetChatImage(_ context.Context, req *connect.Request[nushiv1.Ge
 	if len(img.Data) > maxChatImage {
 		return nil, connect.NewError(connect.CodeResourceExhausted, fmt.Errorf("the image is %d bytes, more than %d", len(img.Data), maxChatImage))
 	}
-	return connect.NewResponse(&nushiv1.GetChatImageResponse{MimeType: img.MimeType, Data: img.Data}), nil
+	return connect.NewResponse(&nushiv1.GetChatImageResponse{Data: img.Data}), nil
 }

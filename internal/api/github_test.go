@@ -72,7 +72,7 @@ func TestGitHubLogsNoTokenNorText(t *testing.T) {
 		case r.URL.Path == "/api/v3/user":
 			_, _ = w.Write([]byte(`{"login":"octo"}`))
 		case bytes.Contains(body, []byte("mutation Reply")):
-			_, _ = w.Write([]byte(`{"data":{"addPullRequestReviewThreadReply":{"comment":{"id":"C1","body":"` + text + `"}}}}`))
+			_, _ = w.Write([]byte(`{"data":{"addPullRequestReviewThreadReply":{"clientMutationId":null}}}`))
 		default:
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			_, _ = w.Write([]byte(`{"message":"Validation failed: ` + text + `"}`))

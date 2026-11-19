@@ -183,7 +183,7 @@ func talks(conn *noiseconn.Conn) bool {
 // pairOne pairs a phone with key and returns the daemon's id it was told.
 func pairOne(t *testing.T, s *Service, key noise.DHKey) (offer, string) {
 	t.Helper()
-	qr, _, err := s.StartPairing()
+	qr, err := s.StartPairing()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -271,7 +271,7 @@ func TestPairThenConnect(t *testing.T) {
 func TestWrongSecretThenRightOne(t *testing.T) {
 	url := startRelay(t)
 	s := startRemote(t, t.TempDir(), url)
-	qr, _, err := s.StartPairing()
+	qr, err := s.StartPairing()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -295,7 +295,7 @@ func TestWrongSecretThenRightOne(t *testing.T) {
 func TestDeny(t *testing.T) {
 	url := startRelay(t)
 	s := startRemote(t, t.TempDir(), url)
-	qr, _, _ := s.StartPairing()
+	qr, _ := s.StartPairing()
 	o := parseQR(t, qr)
 	conn, code, err := phonePair(t, o, newKey(t), o.psk)
 	if err != nil {
@@ -319,7 +319,7 @@ func TestDeny(t *testing.T) {
 func TestPairingExpires(t *testing.T) {
 	url := startRelay(t)
 	s := startRemote(t, t.TempDir(), url, func(tm *timing) { tm.pairing = 300 * time.Millisecond })
-	qr, _, _ := s.StartPairing()
+	qr, _ := s.StartPairing()
 	waitFor(t, func() bool { return s.Get().Pairing == nil })
 	o := parseQR(t, qr)
 	if !unanswered(o.relay, o.id, o.key, newKey(t), o.psk) {
@@ -363,7 +363,7 @@ func TestRelayInTheMiddle(t *testing.T) {
 	s := startRemote(t, t.TempDir(), realURL)
 	phone := newKey(t)
 	o, id := pairOne(t, s, phone)
-	qr, _, _ := s.StartPairing()
+	qr, _ := s.StartPairing()
 	pairingOffer := parseQR(t, qr)
 
 	mitm := newKey(t)
@@ -571,7 +571,7 @@ func (l *tracked) refused() int {
 func TestOneHandshakePerPairing(t *testing.T) {
 	url := startRelay(t)
 	s := startRemote(t, t.TempDir(), url)
-	qr, _, _ := s.StartPairing()
+	qr, _ := s.StartPairing()
 	o := parseQR(t, qr)
 	var dl relay.Dialer
 	c, err := dl.Dial(context.Background(), o.relay, o.id)
@@ -646,7 +646,7 @@ func TestRevokeMovesTheID(t *testing.T) {
 	// b has moved: nothing waits at the old id any more.
 	waitFor(t, func() bool { return unanswered(url, old, o.key, b, nil) })
 	// A pairing after it gives the new key.
-	qr, _, err := s.StartPairing()
+	qr, err := s.StartPairing()
 	if err != nil || !bytes.Equal(parseQR(t, qr).key, key) {
 		t.Fatal("a new pairing doesn't give the new key", err)
 	}

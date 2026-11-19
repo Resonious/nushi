@@ -41,9 +41,9 @@ type Client interface { //nolint:interfacebloat // the GitHub calls the feature 
 	DefaultBranch(ctx context.Context, repo string) (string, error)
 	Compare(ctx context.Context, repo, base, head string) (string, []githubapi.File, error)
 	Blobs(ctx context.Context, repo string, at []githubapi.BlobAt) (map[githubapi.BlobAt]githubapi.Blob, error)
-	Reply(ctx context.Context, thread, body string) (model.GitHubComment, error)
+	Reply(ctx context.Context, thread, body string) error
 	Resolve(ctx context.Context, thread string, resolve bool) error
-	Comment(ctx context.Context, subject, body string) (model.GitHubComment, error)
+	Comment(ctx context.Context, subject, body string) error
 	SubmitReview(ctx context.Context, r githubapi.Review) error
 	MergeText(ctx context.Context, repo string, number int) (githubapi.MergeText, error)
 	Merge(ctx context.Context, m githubapi.MergeInput) error

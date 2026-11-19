@@ -227,18 +227,12 @@ class FakeDaemon implements Transport {
           ForkAsChatRequest() => ForkAsChatResponse(chatId: chats.last.id),
           KeepSideChatRequest() => KeepSideChatResponse(chatId: 'kept'),
           GetChatImageRequest(:final sha256) => switch (chatImages[sha256]) {
-            final i? => GetChatImageResponse(
-              mimeType: i.mimeType,
-              data: i.data,
-            ),
+            final i? => GetChatImageResponse(data: i.data),
             null => throw ConnectException(Code.notFound, 'no such image'),
           },
           GetProjectIconRequest(:final folder) =>
             switch (projectIcons[folder]) {
-              final data? => GetProjectIconResponse(
-                mimeType: 'image/png',
-                data: data,
-              ),
+              final data? => GetProjectIconResponse(data: data),
               null => GetProjectIconResponse(),
             },
           _ => spec.outputFactory(),

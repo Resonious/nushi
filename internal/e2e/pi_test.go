@@ -30,7 +30,7 @@ func aPiChat(t *testing.T, agent string) {
 	a := open(t, d)
 	start := must(a.c.StartChat(ctx, connect.NewRequest(&nushiv1.StartChatRequest{Agent: agent, Folder: t.TempDir()})))
 	var ids []string
-	for _, o := range start.Config {
+	for _, o := range a.get(start.ChatId).Config {
 		ids = append(ids, o.Id+"/"+o.Category+"="+o.Current)
 	}
 	if got := strings.Join(ids, " "); got != "model/model=fake/m1 thinking/thought_level=low" {

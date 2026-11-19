@@ -385,7 +385,7 @@ service NushiService {
   rpc GetRemote(GetRemoteRequest) returns (GetRemoteResponse);
   rpc SetRemote(SetRemoteRequest) returns (SetRemoteResponse);
   // Starts pairing a phone (remote access must be on): the text for the QR
-  // code, good until it expires. Once a phone holding it connects,
+  // code, good for a few minutes. Once a phone holding it connects,
   // Remote.pairing has its name and the code both screens show.
   rpc StartPairing(StartPairingRequest) returns (StartPairingResponse);
   // Allows or denies the phone that connected, named by its code.
@@ -442,7 +442,7 @@ service NushiService {
   rpc AddJiraComment(AddJiraCommentRequest) returns (AddJiraCommentResponse);
   // An issue for a new chat: from its link, its key, or words of it.
   rpc FindJiraIssues(FindJiraIssuesRequest) returns (FindJiraIssuesResponse);
-  // An attachment's file or thumbnail (20 MB at most).
+  // An attachment's file (20 MB at most).
   rpc GetJiraAttachment(GetJiraAttachmentRequest) returns (GetJiraAttachmentResponse);
   // GitHub (ADR 0045): the hosts gh is signed in to (its token read by the
   // daemon through go-gh) and those given a pasted token (the keychain).
@@ -647,8 +647,9 @@ message Chat {
   string folder = 3;
   // The title the user set, or else the agent's.
   string title = 4;
-  // The mode it was last in.
-  string mode = 5;
+  // The mode it was last in: never read (a chat's config has it).
+  reserved 5;
+  reserved "mode";
   int64 created_unix_ms = 6;
   // Whether it works or waits on the user, for a list of chats.
   ChatStatus status = 7;
@@ -781,7 +782,9 @@ message GetChatImageRequest {
 }
 
 message GetChatImageResponse {
-  string mime_type = 1;
+  // The image's type: never read (the item's ImageData has it).
+  reserved 1;
+  reserved "mime_type";
   bytes data = 2;
 }
 
@@ -868,8 +871,9 @@ message Agent {
   string path = 6;
   // The CLI's version, as it says it; empty when that couldn't be read.
   string version = 7;
-  // Where to get it, until 0.27.3; no longer sent.
-  string page = 8;
+  // Where to get it: not sent since 0.27.3.
+  reserved 8;
+  reserved "page";
   // Why it can't run, in a few words ("Not installed", "Needs Node");
   // empty when it can.
   string problem = 9;
@@ -1047,8 +1051,10 @@ message MoveChatResponse {}
 message StartChatResponse {
   // Empty when head_runs says why nothing started.
   string chat_id = 1;
-  // The chat's config options as it starts; changes arrive as events.
-  repeated ConfigOption config = 2;
+  // The chat's config options as it starts: never read (GetChat and
+  // events have them).
+  reserved 2;
+  reserved "config";
   // A chat on a pull request whose head brings code for the agent to run
   // that nobody trusted (a fork's head counts no earlier trust) didn't
   // start: what the head runs, in the worktree at head_folder (removed
@@ -1852,9 +1858,10 @@ message GetProjectIconRequest {
 }
 
 message GetProjectIconResponse {
-  // "image/png" or "image/jpeg"; "" with no data when the folder has no
-  // icon.
-  string mime_type = 1;
+  // "image/png" or "image/jpeg": never read.
+  reserved 1;
+  reserved "mime_type";
+  // Empty when the folder has no icon.
   bytes data = 2;
 }
 
@@ -2396,9 +2403,11 @@ message Item {
 // many subagents in phases, on past the call (ADR 0127). A summary small
 // enough to ride on its item; GetWorkflow has its agents.
 message Workflow {
-  // The agent's ids for the run and its task (Stop goes by the task's).
+  // The agent's id for the run.
   string run_id = 1;
-  string task_id = 2;
+  // Its task's id: never read.
+  reserved 2;
+  reserved "task_id";
   // Its name and what it does, in the agent's words.
   string name = 3;
   string description = 4;
@@ -2974,8 +2983,9 @@ message Device {
 }
 
 message Pairing {
-  // Unix milliseconds: the QR code is good until then.
-  int64 expires = 1;
+  // When the QR code stops being good: never read.
+  reserved 1;
+  reserved "expires";
   // Once a phone has connected: its name, and the code both screens show.
   string name = 2;
   string code = 3;
@@ -2999,7 +3009,9 @@ message StartPairingRequest {}
 message StartPairingResponse {
   // nushi://pair?r=<relay>&i=<one-time id>&k=<daemon's key>&s=<secret>
   string qr = 1;
-  int64 expires = 2;
+  // When it stops being good: never read.
+  reserved 2;
+  reserved "expires";
 }
 
 message ConfirmPairingRequest {
@@ -3267,7 +3279,9 @@ message GetJiraJqlRequest {
 message GetJiraJqlResponse {
   repeated JiraJqlField fields = 1;
   repeated string functions = 2;
-  repeated string words = 3;
+  // JQL's reserved words: never read.
+  reserved 3;
+  reserved "words";
 }
 
 message JiraJqlField {
@@ -3340,13 +3354,17 @@ message AddJiraCommentRequest {
 }
 
 message AddJiraCommentResponse {
-  JiraComment comment = 1;
+  // The comment added: never read (the issue is read again).
+  reserved 1;
+  reserved "comment";
 }
 
 message GetJiraAttachmentRequest {
   string site = 1;
   string id = 2;
-  bool thumbnail = 3;
+  // Its thumbnail rather than the file: never sent.
+  reserved 3;
+  reserved "thumbnail";
 }
 
 message GetJiraAttachmentResponse {
@@ -3873,7 +3891,9 @@ message ReplyGitHubThreadRequest {
 }
 
 message ReplyGitHubThreadResponse {
-  GitHubComment comment = 1;
+  // The reply: never read (the thread is read again).
+  reserved 1;
+  reserved "comment";
 }
 
 message ResolveGitHubThreadRequest {
@@ -4014,7 +4034,9 @@ message AddGitHubCommentRequest {
 }
 
 message AddGitHubCommentResponse {
-  GitHubComment comment = 1;
+  // The comment: never read (the conversation is read again).
+  reserved 1;
+  reserved "comment";
 }
 
 // A comment of a review not yet sent, on line (from start_line, if more

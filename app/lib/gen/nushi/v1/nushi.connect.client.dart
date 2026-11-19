@@ -1956,7 +1956,7 @@ extension type NushiServiceClient(connect.Transport _transport) {
   }
 
   /// Starts pairing a phone (remote access must be on): the text for the QR
-  /// code, good until it expires. Once a phone holding it connects,
+  /// code, good for a few minutes. Once a phone holding it connects,
   /// Remote.pairing has its name and the code both screens show.
   Future<nushiv1nushi.StartPairingResponse> startPairing(
     nushiv1nushi.StartPairingRequest input, {
@@ -2413,7 +2413,7 @@ extension type NushiServiceClient(connect.Transport _transport) {
     );
   }
 
-  /// An attachment's file or thumbnail (20 MB at most).
+  /// An attachment's file (20 MB at most).
   Future<nushiv1nushi.GetJiraAttachmentResponse> getJiraAttachment(
     nushiv1nushi.GetJiraAttachmentRequest input, {
     connect.Headers? headers,

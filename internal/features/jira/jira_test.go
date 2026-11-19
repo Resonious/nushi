@@ -166,7 +166,7 @@ func (f *fakeClient) AddComment(_ context.Context, _, markdown string) (model.Ji
 	return model.JiraComment{ID: "1", Body: markdown}, nil
 }
 
-func (f *fakeClient) Attachment(context.Context, string, bool) ([]byte, string, error) {
+func (f *fakeClient) Attachment(context.Context, string) ([]byte, string, error) {
 	return []byte("x"), "image/png", nil
 }
 
@@ -340,7 +340,7 @@ func TestWrites(t *testing.T) {
 			t.Errorf("%q taken as a key", key)
 		}
 	}
-	if _, _, err := s.Attachment(t.Context(), "e.atlassian.net", "../1", false); err == nil {
+	if _, _, err := s.Attachment(t.Context(), "e.atlassian.net", "../1"); err == nil {
 		t.Error("an attachment id that isn't one")
 	}
 }

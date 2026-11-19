@@ -96,8 +96,8 @@ func TestImagesAsReferences(t *testing.T) {
 	// from that chat only.
 	ref := snap.Items[0].Images[0].Sha256
 	got := must(phone.c.GetChatImage(ctx, connect.NewRequest(&nushiv1.GetChatImageRequest{ChatId: id, Sha256: ref})))
-	if !bytes.Equal(got.Data, big) || got.MimeType != "image/png" {
-		t.Errorf("GetChatImage: %d bytes, %q", len(got.Data), got.MimeType)
+	if !bytes.Equal(got.Data, big) {
+		t.Errorf("GetChatImage: %d bytes", len(got.Data))
 	}
 	refused := func(chat, hash string, code connect.Code) {
 		t.Helper()

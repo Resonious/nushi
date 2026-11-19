@@ -40,11 +40,11 @@ type pairing struct {
 // text. A pairing already under way ends.
 //
 //nolint:contextcheck // a pairing waits for its phone after the request returns, as long as the service
-func (s *Service) StartPairing() (string, time.Time, error) {
+func (s *Service) StartPairing() (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if !s.settings.On {
-		return "", time.Time{}, errors.New("remote access is off")
+		return "", errors.New("remote access is off")
 	}
 	s.endPairing()
 	psk := make([]byte, 32)
@@ -58,7 +58,7 @@ func (s *Service) StartPairing() (string, time.Time, error) {
 	relayURL := s.settings.Relay
 	s.goLocked(func() { s.pair(ctx, p, relayURL) })
 	q := url.Values{"r": {s.settings.Relay}, "i": {p.id}, "k": {b64(s.key.Public)}, "s": {b64(psk)}}
-	return "nushi://pair?" + q.Encode(), p.expires, nil
+	return "nushi://pair?" + q.Encode(), nil
 }
 
 func b64(b []byte) string { return base64.RawURLEncoding.EncodeToString(b) }

@@ -25,14 +25,14 @@ func TestAnAnteChat(t *testing.T) {
 	d := startDaemon(t, dataDir, history)
 	a := open(t, d)
 	start := must(a.c.StartChat(ctx, connect.NewRequest(&nushiv1.StartChatRequest{Agent: "ante", Folder: t.TempDir()})))
+	id := start.ChatId
 	var ids []string
-	for _, o := range start.Config {
+	for _, o := range a.get(id).Config {
 		ids = append(ids, o.Id+"/"+o.Category+"="+o.Current)
 	}
 	if got := strings.Join(ids, " "); got != "model/model=m1 effort/thought_level=low legacy:mode/mode=strict" {
 		t.Errorf("options = %s", got)
 	}
-	id := start.ChatId
 	a.say(id, "hello")
 	a.send(id, "please write")
 	perm := a.waitFor("the permission", pendingPermission).GetItem().Item

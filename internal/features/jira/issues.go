@@ -234,8 +234,8 @@ func (s *Service) AddComment(ctx context.Context, id, key, markdown, by string) 
 	return cm, err
 }
 
-// Attachment is an attachment's file or thumbnail, and its type.
-func (s *Service) Attachment(ctx context.Context, id, attachment string, thumbnail bool) ([]byte, string, error) {
+// Attachment is an attachment's file and its type.
+func (s *Service) Attachment(ctx context.Context, id, attachment string) ([]byte, string, error) {
 	if _, err := strconv.ParseUint(attachment, 10, 64); err != nil {
 		return nil, "", fmt.Errorf("%q isn't an attachment's id", attachment)
 	}
@@ -243,7 +243,7 @@ func (s *Service) Attachment(ctx context.Context, id, attachment string, thumbna
 	if err != nil {
 		return nil, "", err
 	}
-	return c.Attachment(ctx, attachment, thumbnail)
+	return c.Attachment(ctx, attachment)
 }
 
 func (s *Service) issueClient(id, key string) (Client, error) {

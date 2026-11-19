@@ -97,17 +97,6 @@ func (c *chat) ultracodeOption() model.ConfigOption {
 		Description: "Standing multi-agent workflows on every task (Claude Code's ultracode); changing it restarts the chat's agent"}
 }
 
-// Config returns a chat's config options.
-func (s *Service) Config(chatID string) []model.ConfigOption {
-	c, err := s.chat(chatID)
-	if err != nil {
-		return nil
-	}
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return slices.Clone(c.config)
-}
-
 // SetConfig sets one of a chat's options. When the user picks a mode the
 // agent accepts, new chats with this agent start in it; any other option
 // is one of the chat's picks, and new chats with this agent start on it too.

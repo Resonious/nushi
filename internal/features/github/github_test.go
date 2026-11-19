@@ -140,9 +140,9 @@ func (f *fakeClient) Blobs(_ context.Context, _ string, at []githubapi.BlobAt) (
 	return out, nil
 }
 
-func (f *fakeClient) Reply(context.Context, string, string) (model.GitHubComment, error) {
+func (f *fakeClient) Reply(context.Context, string, string) error {
 	f.written = append(f.written, "reply")
-	return model.GitHubComment{ID: "C1"}, nil
+	return nil
 }
 
 func (f *fakeClient) Resolve(context.Context, string, bool) error {
@@ -150,9 +150,9 @@ func (f *fakeClient) Resolve(context.Context, string, bool) error {
 	return nil
 }
 
-func (f *fakeClient) Comment(context.Context, string, string) (model.GitHubComment, error) {
+func (f *fakeClient) Comment(context.Context, string, string) error {
 	f.written = append(f.written, "comment")
-	return model.GitHubComment{ID: "C2"}, nil
+	return nil
 }
 
 func (f *fakeClient) RerunFailed(_ context.Context, _ string, jobs []int64) ([]int64, error) {
@@ -569,14 +569,14 @@ func TestStates(t *testing.T) {
 		t.Fatalf("asked again within 30 s: %v", c.asked)
 	}
 	// A write makes them old; GitHub failing then keeps the last known.
-	if _, err := w.s.Comment(ctx, "github.com", "PR_1", "Thanks"); err != nil {
+	if err := w.s.Comment(ctx, "github.com", "PR_1", "Thanks"); err != nil {
 		t.Fatal(err)
 	}
 	c.fail = errors.New("down")
 	if st := w.s.States(ctx, items[:1], true); st["PR_1"].State != "open" {
 		t.Fatalf("%+v", st)
 	}
-	if _, err := w.s.Comment(ctx, "github.com", "PR_1", " "); err == nil {
+	if err := w.s.Comment(ctx, "github.com", "PR_1", " "); err == nil {
 		t.Fatal("an empty comment")
 	}
 }
