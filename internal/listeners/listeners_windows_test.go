@@ -54,7 +54,7 @@ func TestListMergesAProcesssTwoWildcards(t *testing.T) {
 	}
 	defer func() { _ = v6.Close() }()
 	p := uint16(port) //nolint:gosec // a port
-	got := ofPid(OnPort(list(t), p), os.Getpid())
+	got := ofPid(onPort(list(t), p), os.Getpid())
 	want := Listener{Pid: os.Getpid(), Addr: netip.AddrPortFrom(netip.IPv6Unspecified(), p), DualStack: true}
 	if len(got) != 1 || got[0] != want {
 		t.Fatalf("listed %v, want only %v", got, want)

@@ -107,7 +107,7 @@ func TestListOncePerProcess(t *testing.T) {
 	testcheck.NoErr(t, err)
 	defer func() { _ = f.Close() }()
 	port := uint16(l.Addr().(*net.TCPAddr).Port) //nolint:gosec // a port
-	if got := ofPid(OnPort(list(t), port), os.Getpid()); len(got) != 1 {
+	if got := ofPid(onPort(list(t), port), os.Getpid()); len(got) != 1 {
 		t.Fatalf("listed %v", got)
 	}
 }

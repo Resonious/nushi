@@ -126,6 +126,11 @@ func ofPid(ls []Listener, pid int) []Listener {
 	return slices.DeleteFunc(slices.Clone(ls), func(l Listener) bool { return l.Pid != pid })
 }
 
+// onPort is those of ls on port, on any address.
+func onPort(ls []Listener, port uint16) []Listener {
+	return slices.DeleteFunc(slices.Clone(ls), func(l Listener) bool { return l.Addr.Port() != port })
+}
+
 func TestListSeesEachKind(t *testing.T) {
 	want := map[string]struct {
 		addr string
@@ -145,7 +150,7 @@ func TestListSeesEachKind(t *testing.T) {
 			defer func() { _ = l.Close() }()
 			port := uint16(l.Addr().(*net.TCPAddr).Port) //nolint:gosec // a port
 			ls := list(t)
-			got := ofPid(OnPort(ls, port), os.Getpid())
+			got := ofPid(onPort(ls, port), os.Getpid())
 			wantL := Listener{Pid: os.Getpid(), Addr: netip.AddrPortFrom(netip.MustParseAddr(w.addr), port), DualStack: w.dual}
 			if len(got) != 1 || got[0] != wantL {
 				t.Fatalf("listed %v, want only %v", got, wantL)
@@ -171,7 +176,7 @@ func TestListLeavesOutOtherInterfaces(t *testing.T) {
 	testcheck.NoErr(t, err)
 	defer func() { _ = l.Close() }()
 	ls := list(t)
-	if got := ofPid(OnPort(ls, uint16(l.Addr().(*net.TCPAddr).Port)), os.Getpid()); len(got) != 0 { //nolint:gosec // a port
+	if got := ofPid(onPort(ls, uint16(l.Addr().(*net.TCPAddr).Port)), os.Getpid()); len(got) != 0 { //nolint:gosec // a port
 		t.Fatalf("listed %v, on %v, which localhost doesn't reach", got, other)
 	}
 }
@@ -182,7 +187,7 @@ func TestListInTree(t *testing.T) {
 	pid, ports := listenElsewhere(t, "ipv4")
 	port := ports[0]
 	ls := list(t)
-	on := OnPort(ls, port) // another process may hold the port on [::1]
+	on := onPort(ls, port) // another process may hold the port on [::1]
 	helpers := ofPid(on, pid)
 	if len(helpers) != 1 || helpers[0].Addr.Addr() != netip.MustParseAddr("127.0.0.1") {
 		t.Fatalf("on port %d: %v, want the helper's %d on 127.0.0.1", port, on, pid)
@@ -209,7 +214,7 @@ func TestProcsSplit(t *testing.T) {
 		return Listener{Pid: pid, Addr: netip.MustParseAddrPort(addr)}
 	}
 	ls := []Listener{at(100, "127.0.0.1:3000"), at(102, "[::1]:3000"), at(200, "[::1]:3000"), at(102, "127.0.0.1:5173"), at(201, "0.0.0.0:3000")}
-	in, out := tree.Split(OnPort(ls, 3000))
+	in, out := tree.Split(onPort(ls, 3000))
 	if want := []Listener{ls[0], ls[1]}; !slices.Equal(in, want) {
 		t.Errorf("in: %v, want %v", in, want)
 	}
@@ -286,7 +291,7 @@ func TestReachingTwoProcesses(t *testing.T) {
 			first, ports := listenElsewhere(t, c.first)
 			second, _ := listenElsewhere(t, c.second+"@"+strconv.Itoa(int(ports[0])))
 			ls := list(t)
-			ls = slices.DeleteFunc(OnPort(ls, ports[0]), func(l Listener) bool { return l.Pid != first && l.Pid != second })
+			ls = slices.DeleteFunc(onPort(ls, ports[0]), func(l Listener) bool { return l.Pid != first && l.Pid != second })
 			for _, host := range []string{"127.0.0.1", "::1"} {
 				dst := netip.AddrPortFrom(netip.MustParseAddr(host), ports[0])
 				reach := Reaching(ls, dst)
