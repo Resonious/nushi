@@ -6,7 +6,6 @@ package jira
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -70,8 +69,8 @@ type Store interface {
 	SaveJiraSites([]model.JiraSite) error
 	JiraWrites() ([]model.JiraWrite, error)
 	SaveJiraWrites([]model.JiraWrite) error
-	Cached(area, name, key string) (time.Time, json.RawMessage, error)
-	Cache(area, name, key string, at time.Time, data json.RawMessage) error
+	Cached(area, name, key string, v any) (time.Time, error)
+	Cache(area, name, key string, v any) error
 	ForgetCache(area, name string) error
 }
 

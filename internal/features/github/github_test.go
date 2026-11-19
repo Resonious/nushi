@@ -257,15 +257,19 @@ type fakeStore struct {
 	cache map[string]json.RawMessage // by area, name and key
 }
 
-func (s *fakeStore) Cached(area, name, key string) (time.Time, json.RawMessage, error) {
+func (s *fakeStore) Cached(area, name, key string, v any) (time.Time, error) {
 	d, ok := s.cache[area+" "+name+" "+key]
 	if !ok {
-		return time.Time{}, nil, nil
+		return time.Time{}, nil
 	}
-	return time.Unix(1, 0), d, nil
+	return time.Unix(1, 0), json.Unmarshal(d, v)
 }
 
-func (s *fakeStore) Cache(area, name, key string, _ time.Time, data json.RawMessage) error {
+func (s *fakeStore) Cache(area, name, key string, v any) error {
+	data, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
 	if s.cache == nil {
 		s.cache = map[string]json.RawMessage{}
 	}

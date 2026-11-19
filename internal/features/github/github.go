@@ -8,7 +8,6 @@ package github
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -76,8 +75,8 @@ type Tokens interface {
 type Store interface {
 	GitHubTokenHosts() ([]string, error)
 	SaveGitHubTokenHosts([]string) error
-	Cached(area, name, key string) (time.Time, json.RawMessage, error)
-	Cache(area, name, key string, at time.Time, data json.RawMessage) error
+	Cached(area, name, key string, v any) (time.Time, error)
+	Cache(area, name, key string, v any) error
 	ForgetCache(area, name string) error
 }
 

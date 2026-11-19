@@ -49,27 +49,38 @@ func (s *Store) cacheFile(path string) (map[string]cached, error) {
 	return m, nil
 }
 
-// Cached is the answer kept under key in area's file for name, and when
-// it came; nil when there is none.
-func (s *Store) Cached(area, name, key string) (time.Time, json.RawMessage, error) {
+// Cached reads the answer kept under key in area's file for name into v,
+// and says when it came: zero when there is none or it doesn't fit v.
+func (s *Store) Cached(area, name, key string, v any) (time.Time, error) {
 	path, err := s.cachePath(area, name)
 	if err != nil {
-		return time.Time{}, nil, err
+		return time.Time{}, err
 	}
 	s.cacheMu.Lock()
 	defer s.cacheMu.Unlock()
 	m, err := s.cacheFile(path)
-	c := m[key]
-	return c.At, c.Data, err
+	if err != nil {
+		return time.Time{}, err
+	}
+	c, ok := m[key]
+	if !ok || json.Unmarshal(c.Data, v) != nil {
+		return time.Time{}, nil
+	}
+	return c.At, nil
 }
 
-// Cache keeps data under key in area's file for name, as it came at at,
-// the file replaced at once (atomicfile).
-func (s *Store) Cache(area, name, key string, at time.Time, data json.RawMessage) error {
+// Cache keeps v, as JSON, under key in area's file for name, as it is
+// now, the file replaced at once (atomicfile).
+func (s *Store) Cache(area, name, key string, v any) error {
 	path, err := s.cachePath(area, name)
 	if err != nil {
 		return err
 	}
+	data, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	at := time.Now()
 	s.cacheMu.Lock()
 	defer s.cacheMu.Unlock()
 	m, err := s.cacheFile(path)
