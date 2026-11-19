@@ -207,7 +207,9 @@ class MainFlutterWindow: NSWindow {
     // first has the engine let go of any button it holds that this press
     // shows was let go (NushiViewController): a press that goes to a web
     // view, the traffic lights or the window's edge never reaches the
-    // engine. It also notes when a press, its release or a key goes to a
+    // engine. A press the engine has keeps its drag and its release: they
+    // are handed to it here, not left to AppKit to route (amended
+    // 2026-11-19). It also notes when a press, its release or a key goes to a
     // web view, which is a user's own act in a page (a preview's link opens
     // in the browser only right after one).
     pressMonitor = NSEvent.addLocalMonitorForEvents(
@@ -221,6 +223,12 @@ class MainFlutterWindow: NSWindow {
       case .leftMouseDragged:
         if self.headerDrag.dragged(to: event.locationInWindow, held: NSEvent.pressedMouseButtons & 1 != 0) {
           self.moveWindow(with: event)
+        } else if flutterViewController.holdsLeft {
+          // Flutter's press: its drag is Flutter's too, whatever is under
+          // the pointer now. Over a web view (a pane's edge dragged in
+          // over its page) the drag and its release reached neither.
+          flutterViewController.mouseDragged(with: event)
+          return nil
         }
       case .rightMouseDown, .otherMouseDown:
         flutterViewController.pressing(event.buttonNumber)
@@ -235,6 +243,12 @@ class MainFlutterWindow: NSWindow {
           // window, is no click.
           let click = !flutterViewController.owes(0) && self.headerDrag.up()
           self.lastUp = click ? (event.clickCount, event.timestamp) : nil
+        }
+        if event.type == .leftMouseUp, flutterViewController.holdsLeft {
+          // The release of Flutter's press is Flutter's, as its drag is:
+          // over a web view it's no act in the page.
+          flutterViewController.mouseUp(with: event)
+          return nil
         }
         if Self.inWebView(self.contentView?.hitTest(event.locationInWindow)) {
           self.webPressedAt = event.timestamp

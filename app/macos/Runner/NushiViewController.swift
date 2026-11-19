@@ -26,6 +26,10 @@ final class NushiViewController: FlutterViewController {
   /// What the engine was told of the mouse.
   private(set) var mouse = EngineMouse()
 
+  /// Whether the engine holds the left button: a press of it went to
+  /// Flutter and its release hasn't.
+  var holdsLeft: Bool { mouse.buttons & 1 != 0 }
+
   /// Told of each release made up here (or gesture end handed on): what
   /// it was for (a button, a gesture's kind) and which check found it.
   var onRepair: ((_ what: String, _ check: String) -> Void)?
