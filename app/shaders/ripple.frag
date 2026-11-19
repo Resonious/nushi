@@ -8,7 +8,9 @@
 #include <flutter/runtime_effect.glsl>
 
 uniform vec2 uSize;
-uniform vec4 uR0;      // x, y, age (s), kind; age < 0 means off
+uniform vec4 uR0;      // x, y, age (s), kind; age < 0 means off. Kind 2
+                       // (an edge splash) carries its strength in its
+                       // fraction: 2 + 0.9 * strength.
 uniform vec4 uR1;
 uniform vec4 uR2;
 uniform vec4 uCrest;   // drop crest light, rgb + strength
@@ -20,11 +22,54 @@ out vec4 fragColor;
 
 const float PI = 3.14159265;
 
+// A splash along the bottom edge (the list landing at its end): a wave
+// running up from the edge, uneven along it, and a chop right at the edge.
+void edgeSplash(vec4 r, vec2 p, inout vec2 shift, inout float crest,
+                inout float trough) {
+  float age = r.z;
+  float strength = (r.w - 2.0) / 0.9;
+  float life = 1.1;
+  float t = age / life;
+  if (t >= 1.0) return;
+  // A gentle arc, as from a point far below the edge's middle, fading
+  // toward the sides: a landing in the middle of the water, not a band.
+  vec2 src = vec2(r.x, r.y + 520.0);
+  float d = distance(p, src) - 520.0; // height above the edge, curved
+  if (p.y > r.y || d < 0.0) return;
+  float side = (p.x - r.x) / (uSize.x * 0.42);
+  float across = exp(-side * side);
+  vec2 up = normalize(p - src);
+  float front = 340.0 * (1.0 - exp(-age * 3.2));
+  float lambda = 24.0 + 22.0 * t;
+  float sigma = 20.0 + 40.0 * t;
+  float x = d - front;
+  float env = exp(-x * x / (2.0 * sigma * sigma));
+  env *= smoothstep(sigma * 0.9, -sigma * 0.2, x) * 0.6 + 0.4;
+  float phase = x / lambda * 2.0 * PI;
+  float fade = pow(1.0 - t, 1.5);
+  float near = 1.0 / (1.0 + d / 220.0);
+  float uneven = 0.7 + 0.3 * sin(p.x / 53.0 + age * 4.0)
+      * cos(p.x / 131.0 - age * 2.0);
+  float amp = 4.0 * strength * fade * near * uneven * across;
+  float chop = exp(-d / 18.0) * exp(-age * 7.0)
+      * sin(p.x / 9.0 + age * 40.0) * 1.2 * strength * across;
+  float h = sin(phase) * env;
+  float slope = cos(phase) * env;
+  shift += up * (h * amp + chop);
+  float s = slope * fade * near * strength * across * 0.45;
+  crest += max(s, 0.0);
+  trough += max(-s, 0.0);
+}
+
 // Accumulates one ripple's displacement and light at [p].
 void ripple(vec4 r, vec2 p, inout vec2 shift, inout float crest,
             inout float trough, inout float glint) {
   float age = r.z;
   if (age < 0.0) return;
+  if (r.w >= 2.0) {
+    edgeSplash(r, p, shift, crest, trough);
+    return;
+  }
   bool isGlint = r.w > 0.5;
   float life = isGlint ? 0.9 : 1.6;
   float t = age / life;
