@@ -121,7 +121,7 @@ func freePort(t *testing.T) int {
 // the fake server could listen there.
 func free(t *testing.T, p int) bool {
 	t.Helper()
-	if taken(t.Context(), p) {
+	if dialLoopback(t.Context(), p) != "" {
 		return false
 	}
 	ln, err := net.Listen("tcp", "localhost:"+strconv.Itoa(p))
@@ -180,8 +180,8 @@ func TestAServerAnswersAndStops(t *testing.T) {
 	}
 	testcheck.NoErr(t, s.Stop("c", r.ServerID))
 	r = row(t, s, "web", Stopped)
-	if taken(t.Context(), p) || s.Busy() || r.Error != "" || r.ServerID != "" {
-		t.Errorf("stopped: %+v, port taken %v", r, taken(t.Context(), p))
+	if at := dialLoopback(t.Context(), p); at != "" || s.Busy() || r.Error != "" || r.ServerID != "" {
+		t.Errorf("stopped: %+v, port taken at %q", r, at)
 	}
 }
 

@@ -141,14 +141,7 @@ func (s *Service) set(sv *server, state State, why string) {
 // connection on 127.0.0.1 or ::1, then a HEAD within 2 s, any response
 // (or a TLS error: it speaks HTTPS) counting.
 func (s *Service) answers(port int, https bool) bool {
-	addr := ""
-	for _, host := range []string{"127.0.0.1", "::1"} {
-		at := net.JoinHostPort(host, strconv.Itoa(port))
-		if dials(context.Background(), at) {
-			addr = at
-			break
-		}
-	}
+	addr := dialLoopback(context.Background(), port)
 	if addr == "" {
 		return false
 	}
@@ -212,7 +205,7 @@ func (s *Service) foreign(sv *server) bool {
 	tree := listeners.Procs{Root: sv.leader.Pid, Below: below}
 	port := uint16(sv.port) //nolint:gosec // a port, 1 to 65535
 	mine := false
-	for _, a := range []netip.Addr{netip.AddrFrom4([4]byte{127, 0, 0, 1}), netip.IPv6Loopback()} {
+	for _, a := range loopback {
 		in, out := tree.Split(listeners.Reaching(ls, netip.AddrPortFrom(a, port)))
 		if len(out) > 0 {
 			return true
@@ -344,11 +337,7 @@ func (s *Service) end(sv *server, why string, raw []byte, code int) {
 	out := lastLines(log, keptLines, keptBytes)
 	s.mu.Lock()
 	s.alive = slices.DeleteFunc(s.alive, func(o *server) bool { return o == sv })
-	for p, id := range s.reserved {
-		if id == sv.id {
-			delete(s.reserved, p)
-		}
-	}
+	s.unreserveLocked(sv)
 	sv.state, sv.err, sv.output, sv.log, sv.exit, sv.proc = Stopped, why, out, log, code, nil
 	if why != "" {
 		sv.state = Failed
@@ -359,7 +348,7 @@ func (s *Service) end(sv *server, why string, raw []byte, code int) {
 	}
 	s.ended = slices.DeleteFunc(s.ended, func(o *server) bool { return o.key == sv.key })
 	s.ended = append(s.ended, sv)
-	if n := s.endedIn(sv.folder); n > PerFolder {
+	if n := inFolder(s.ended, sv.folder); n > PerFolder {
 		i := slices.IndexFunc(s.ended, func(o *server) bool { return o.folder == sv.folder })
 		s.ended = slices.Delete(s.ended, i, i+1)
 	}
@@ -370,10 +359,10 @@ func (s *Service) end(sv *server, why string, raw []byte, code int) {
 	s.changed(sv.folder)
 }
 
-// endedIn is how many ended servers folder keeps.
-func (s *Service) endedIn(folder string) int {
+// inFolder is how many of servers are folder's.
+func inFolder(servers []*server, folder string) int {
 	n := 0
-	for _, sv := range s.ended {
+	for _, sv := range servers {
 		if sv.folder == folder {
 			n++
 		}
