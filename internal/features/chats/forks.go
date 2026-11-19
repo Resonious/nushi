@@ -157,7 +157,8 @@ func (c *chat) forkedLocked(items []model.Item) {
 }
 
 // forkRecord is the record of a fork, id on session sid, of the chat of:
-// where it works, what it's on and its picks are the chat's; its titles are
+// where it works (a chat with no folder forks into one with none), what
+// it's on and its picks are the chat's; its titles are
 // marked " (fork)", as Claude marks a fork's (claude.ForkTitle), so the
 // agent's own title for it changes nothing. A worktree's branch is shared,
 // never renamed after either chat.
@@ -165,7 +166,8 @@ func forkRecord(id, sid string, of model.ChatRecord) model.ChatRecord {
 	r := model.ChatRecord{ID: id, SessionID: sid, Agent: of.Agent, Folder: of.Folder, Title: forkTitle(of.Title), Name: forkTitle(of.Name),
 		Mode: of.Mode, Created: time.Now(), HasMessages: true, Issue: of.Issue, GitHub: of.GitHub, Pull: of.Pull, Pulls: slices.Clone(of.Pulls), NoPulls: slices.Clone(of.NoPulls),
 		Pushed: slices.Clone(of.Pushed), Since: cmp.Or(of.Since, of.Created),
-		Color: of.Color, Pins: slices.Clone(of.Pins), Ultracode: of.Ultracode, Picks: maps.Clone(of.Picks)}
+		Color: of.Color, Pins: slices.Clone(of.Pins), Ultracode: of.Ultracode, Picks: maps.Clone(of.Picks),
+		Scratch: of.Scratch} // the chat's scratch folder is the fork's too: it has no folder either
 	if of.Worktree != nil {
 		wt := *of.Worktree
 		wt.AutoName = false

@@ -49,7 +49,9 @@ Future<ChatState?> forkChat(
     final r = await d.client.forkAsChat(
       ForkAsChatRequest(chatId: chat.id, itemId: at?.id),
     );
-    fork = d.chats[r.chatId] ??= ChatState(r.chatId, chat.folder);
+    // Until the daemon says so itself: no folder, if the chat has none.
+    fork = d.chats[r.chatId] ??= ChatState(r.chatId, chat.folder)
+      ..scratch = chat.scratch;
     if (select) d.select(r.chatId);
   });
   if (fork case final fork?) {
@@ -82,7 +84,8 @@ Future<void> keepSide(BuildContext context, Daemon d, ChatState chat) async {
     final r = await d.client.keepSideChat(KeepSideChatRequest(chatId: side.id));
     if (chat.side.value == side) chat.side.value = null;
     d.sides.remove(side.id);
-    final kept = d.chats[r.chatId] ??= ChatState(r.chatId, chat.folder);
+    final kept = d.chats[r.chatId] ??= ChatState(r.chatId, chat.folder)
+      ..scratch = chat.scratch;
     // What was half written in the side box goes on in the kept chat's,
     // followed (and kept on disk) as its draft.
     d.drafts?.attach(kept);

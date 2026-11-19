@@ -200,6 +200,42 @@ func TestAForkKeepsTheScratchFolder(t *testing.T) {
 	}
 }
 
+// A fork of a chat with no folder has none either, as soon as it's made:
+// the app lists it with the chats without a folder, not under the scratch
+// folder as a project. A kept side chat likewise.
+func TestAForkOfAChatWithNoFolderHasNone(t *testing.T) {
+	agent := &fakeAgent{}
+	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude"}, Launch: agent.launch}}, Options{Sessions: &memSessions{}, Scratch: t.TempDir()})
+	t.Cleanup(svc.Close)
+	ctx := t.Context()
+	id, err := svc.Start(ctx, "", "", false)
+	testcheck.NoErr(t, err)
+	c := svc.chats[id]
+	agent.updates = []acp.SessionUpdate{chunk("m1", "ok")}
+	testcheck.NoErr(t, svc.Prompt(ctx, id, model.Message{Text: "one"}, SendIdle))
+	eventually(t, c, func() bool { return !c.busy })
+	fork, err := svc.ForkAsChat(ctx, id, "")
+	testcheck.NoErr(t, err)
+	f := svc.chats[fork]
+	f.mu.Lock()
+	r := f.record
+	f.mu.Unlock()
+	if !r.Scratch || r.Folder != c.record.Folder {
+		t.Errorf("the fork has a folder: scratch %v, folder %q, the chat's %q", r.Scratch, r.Folder, c.record.Folder)
+	}
+	side, err := svc.Fork(ctx, id)
+	testcheck.NoErr(t, err)
+	kept, err := svc.KeepSide(ctx, side)
+	testcheck.NoErr(t, err)
+	k := svc.chats[kept]
+	k.mu.Lock()
+	r = k.record
+	k.mu.Unlock()
+	if !r.Scratch {
+		t.Error("the kept side chat has a folder")
+	}
+}
+
 // A kept side chat is the service's before it is stored: what finds the
 // new id as soon as it's saved (a GitHub poll, a sweep) gets this chat,
 // not a second one made from the record, with an agent of its own.
