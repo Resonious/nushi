@@ -107,6 +107,19 @@ const previousTabKey = SingleActivator(
   shift: true,
 );
 
+/// ⇧⌘] and ⇧⌘[: the same, as Chrome and Safari have both (the owner,
+/// 2026-11-19, whose hands know Chrome's). Bound beside ⌃Tab, not shown:
+/// a tooltip and a menu item name one key. Each also by the key ⇧ makes
+/// of it, `}` and `{`, which is what a keyboard may report.
+const nextTabKeysToo = <ShortcutActivator>[
+  Cmd(LogicalKeyboardKey.bracketRight, shift: true),
+  Cmd(LogicalKeyboardKey.braceRight, shift: true),
+];
+const previousTabKeysToo = <ShortcutActivator>[
+  Cmd(LogicalKeyboardKey.bracketLeft, shift: true),
+  Cmd(LogicalKeyboardKey.braceLeft, shift: true),
+];
+
 /// ⌃⌘1–⌃⌘3 show Chat, Changes and Pull request (⌘⇧3 is macOS's
 /// screenshot, so not ⌘⇧); on Linux Ctrl+Alt+1–3, and on Windows
 /// Ctrl+Shift+1–3: Ctrl+Alt is AltGr there, which types a Spanish

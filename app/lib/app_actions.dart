@@ -251,6 +251,8 @@ bool actKeyTaken(Act act) =>
 /// The keys of the actions that have one, as the intents that run them.
 final Map<ShortcutActivator, Intent> actKeys = {
   for (final a in Act.values) ?a.key: RunActIntent(a),
+  for (final k in nextTabKeysToo) k: const RunActIntent(Act.nextTab),
+  for (final k in previousTabKeysToo) k: const RunActIntent(Act.previousTab),
 };
 
 /// Every action, each as it is now (its title, whether it applies).

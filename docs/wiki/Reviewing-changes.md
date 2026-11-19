@@ -7,7 +7,7 @@ Every chat has a **Changes** tab that shows what the agent changed in your code.
 ## See what the agent changed
 
 1. Open a chat.
-2. Click **Changes** in the chat's header, beside **Chat** (or press ⌃⌘2). ⌃Tab goes to the next of the chat's tabs and ⌃⇧Tab back, as in a browser (**View › Next Tab**, **Previous Tab**).
+2. Click **Changes** in the chat's header, beside **Chat** (or press ⌃⌘2). ⌃Tab goes to the next of the chat's tabs and ⌃⇧Tab back, as in a browser (⇧⌘] and ⇧⌘[ work too) (**View › Next Tab**, **Previous Tab**).
 3. Pick a file in the list on the left to see its diff.
 
 The tabs in the bar at the top pick what you see:

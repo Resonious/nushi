@@ -106,7 +106,7 @@ Nushi remembers all of it. ⌘1–⌘9 and ⌥⌘↑ ⌥⌘↓ go through the ch
 | ⌘1 – ⌘9 | Open one of the first nine chats. Hold ⌘ and the sidebar numbers them, top to bottom, Pinned first, archived left out. |
 | ⌘[ and ⌘] | Back and Forward: the chat (or Jira, or GitHub) shown before, or after going back (View › Back, Forward, and the chevrons beside the sidebar button). A deleted or archived chat is passed over. On Linux Alt+Left and Alt+Right. |
 | ⌥⌘↑ and ⌥⌘↓ | The chat before or after in the sidebar (View › Previous Chat, Next Chat; ⌘[ and ⌘] until Back and Forward took them). On Linux Ctrl+Page Up and Ctrl+Page Down. |
-| ⌃Tab, ⌃⇧Tab | The next tab and the one before, round, as in a browser: Chat, Changes and Pull request (when the chat has one); wherever the focus is (View › Next Tab, Previous Tab). On Linux Ctrl+Tab and Ctrl+Shift+Tab. |
+| ⌃Tab, ⌃⇧Tab | The next tab and the one before, round, as in a browser: Chat, Changes and Pull request (when the chat has one); wherever the focus is (View › Next Tab, Previous Tab). ⇧⌘] and ⇧⌘[ do the same, as in Chrome and Safari. On Linux Ctrl+Tab and Ctrl+Shift+Tab (and Ctrl+Shift+] and Ctrl+Shift+[). |
 | ⌃⌘1, ⌃⌘2, ⌃⌘3 | Show Chat, Changes or Pull Request (View menu). On Linux Ctrl+Alt+1–3; on Windows Ctrl+Shift+1–3, since Ctrl+Alt is AltGr there, which types `@`, `#` and `|` on many keyboards. |
 | ⌘W | Close the tab showing (File › Close Tab), its changes saved first: the open file's, in the Files pane (the last leaves the pane open, blank), or the browser's (the last closes the browser), whichever pane has the focus, else the one whose tab showed last. A focused terminal keeps it, to close itself. |
 | ⌘S | Save the file being edited in the Files pane (File › Save). |

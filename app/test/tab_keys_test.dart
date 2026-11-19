@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nushi/app_actions.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/chat_header.dart';
 import 'package:nushi/chat_keys.dart';
@@ -65,6 +66,27 @@ Future<void> _tab(WidgetTester tester, {bool back = false}) async {
   await tester.pumpAndSettle();
 }
 
+/// ⇧⌘] or ⇧⌘[, reported as [key] (the bracket, or the
+/// brace ⇧ makes of it).
+Future<void> _bracket(WidgetTester tester, LogicalKeyboardKey key) async {
+  const mac = 'macos';
+  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft, platform: mac);
+  await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft, platform: mac);
+  final right =
+      key == LogicalKeyboardKey.bracketRight ||
+      key == LogicalKeyboardKey.braceRight;
+  await tester.sendKeyEvent(
+    key,
+    platform: mac,
+    physicalKey: right
+        ? PhysicalKeyboardKey.bracketRight
+        : PhysicalKeyboardKey.bracketLeft,
+  );
+  await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft, platform: mac);
+  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft, platform: mac);
+  await tester.pumpAndSettle();
+}
+
 Finder get _box => find.descendant(
   of: find.byType(Composer),
   matching: find.byType(EditableText),
@@ -78,6 +100,25 @@ Finder _segment(String label) => find.descendant(
 void main() {
   setUpAll(loadFonts);
   final macOS = TargetPlatformVariant.only(TargetPlatform.macOS);
+
+  testWidgets("⇧⌘] and ⇧⌘[ step the tabs too, as Chrome's, with the "
+      'box focused, and ⌘[ alone stays Back', (tester) async {
+    final d = await _app(tester);
+    final b = d.chats['b']!;
+    await tester.tap(_box);
+    await tester.pumpAndSettle();
+    expect(b.shownTab, ChatTab.chat);
+    await _bracket(tester, LogicalKeyboardKey.bracketRight);
+    expect(b.shownTab, ChatTab.changes);
+    await _bracket(tester, LogicalKeyboardKey.braceRight);
+    expect(b.shownTab, ChatTab.pull);
+    await _bracket(tester, LogicalKeyboardKey.bracketLeft);
+    expect(b.shownTab, ChatTab.changes);
+    await _bracket(tester, LogicalKeyboardKey.braceLeft);
+    expect(b.shownTab, ChatTab.chat);
+    expect((actKeys[backKey]! as RunActIntent).act, Act.back);
+    d.dispose();
+  }, variant: macOS);
 
   testWidgets('after a click outside the box (a header tab), ⌃⇧Tab and '
       '⌃Tab still step', (tester) async {
