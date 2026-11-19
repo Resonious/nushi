@@ -318,9 +318,8 @@ class TilePictureViewState extends State<TilePictureView> {
     _next = Timer(frameWait(frame.duration), () => unawaited(_advance(run)));
   }
 
-  /// Stops playing and shows the first frame; the watch stays while the
-  /// pointer does.
-  void _pause() {
+  /// Ends the run that plays: its next frame, its codec and its bytes.
+  void _endRun() {
     _run++;
     _next?.cancel();
     _next = null;
@@ -328,6 +327,12 @@ class TilePictureViewState extends State<TilePictureView> {
     _codec = null;
     _range = null;
     _bytes = null;
+  }
+
+  /// Stops playing and shows the first frame; the watch stays while the
+  /// pointer does.
+  void _pause() {
+    _endRun();
     final frame = _frame;
     _frame = null;
     if (frame == null && played == 0) return;
@@ -342,13 +347,7 @@ class TilePictureViewState extends State<TilePictureView> {
     _front?.dispose();
     _front = null;
     if (tell) return _pause();
-    _run++;
-    _next?.cancel();
-    _next = null;
-    _codec?.dispose();
-    _codec = null;
-    _range = null;
-    _bytes = null;
+    _endRun();
     _frame?.dispose();
     _frame = null;
   }
