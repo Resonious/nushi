@@ -55,9 +55,8 @@ class MessageActions extends StatelessWidget {
 /// [at] as a date and time: "Nov 1, 2026, 8:45 AM".
 String fullTime(DateTime at) {
   final hour = at.hour % 12 == 0 ? 12 : at.hour % 12;
-  final minute = at.minute.toString().padLeft(2, '0');
   return '${months[at.month - 1].substring(0, 3)} ${at.day}, ${at.year}, '
-      '$hour:$minute ${at.hour < 12 ? 'AM' : 'PM'}';
+      '$hour:${two(at.minute)} ${at.hour < 12 ? 'AM' : 'PM'}';
 }
 
 /// How long ago a message was sent ([ms], since the epoch), the date and

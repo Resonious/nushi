@@ -451,7 +451,7 @@ DateTime? msTime(int ms) =>
 /// "12s", "1m 04s".
 String elapsed(Duration d) => d.inMinutes == 0
     ? '${d.inSeconds}s'
-    : '${d.inMinutes}m ${(d.inSeconds % 60).toString().padLeft(2, '0')}s';
+    : '${d.inMinutes}m ${two(d.inSeconds % 60)}s';
 
 /// "950 tokens", "12.4k tokens", "48k tokens", "1.2M tokens".
 String tokenCount(int n) => n < 1000

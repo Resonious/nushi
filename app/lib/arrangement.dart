@@ -246,7 +246,7 @@ class ChatGroup {
     < 7 => ('date:7week', 'Previous 7 days'),
     < 30 => ('date:6month', 'Previous 30 days'),
     _ => (
-      'date:${t.year}-${t.month.toString().padLeft(2, '0')}',
+      'date:${t.year}-${two(t.month)}',
       t.year == now.year
           ? months[t.month - 1]
           : '${months[t.month - 1]} ${t.year}',

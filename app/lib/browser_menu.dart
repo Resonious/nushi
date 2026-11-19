@@ -141,7 +141,6 @@ Future<String?> Function(String name) screenshotPath = (name) async =>
 /// A screenshot's name, as macOS names one: "Screenshot 2026-11-06 at
 /// 14.03.22.png".
 String screenshotName(DateTime at) {
-  String two(int n) => n.toString().padLeft(2, '0');
   return 'Screenshot ${at.year}-${two(at.month)}-${two(at.day)} at '
       '${two(at.hour)}.${two(at.minute)}.${two(at.second)}.png';
 }
