@@ -101,16 +101,12 @@ void main() {
           size: Size(width, 900),
         );
         final close = tester.getRect(
-          find.descendant(
-            of: _modal,
-            matching: find.byTooltip('Close Esc'),
-          ),
+          find.descendant(of: _modal, matching: find.byTooltip('Close Esc')),
         );
         final action = tester.getRect(
-          find.ancestor(
-            of: find.text(last),
-            matching: find.byType(Pressable),
-          ).first,
+          find
+              .ancestor(of: find.text(last), matching: find.byType(Pressable))
+              .first,
         );
         expect(action.top < close.bottom, isTrue, reason: 'on its line');
         expect(close.left - action.right, greaterThanOrEqualTo(12));

@@ -231,8 +231,7 @@ class _GitHubPageState extends State<GitHubPage> {
 }
 
 /// Whether any of [hosts] is signed in and works: Settings' nav dot.
-bool githubConnected(Iterable<GitHubHost> hosts) =>
-    hosts.any(githubHostWorks);
+bool githubConnected(Iterable<GitHubHost> hosts) => hosts.any(githubHostWorks);
 
 /// A host's row: who its token is and where it's from, or what's wrong;
 /// "Signed in" once GitHub said who; under it, a muted line of what's left

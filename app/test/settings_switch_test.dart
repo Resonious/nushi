@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/controls.dart' show Toggle;
 import 'package:nushi/settings_rows.dart';
-import 'package:nushi/theme/themes.dart';
 import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart' show loadFonts;
