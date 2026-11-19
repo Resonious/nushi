@@ -77,6 +77,15 @@ Each project can sort its chats its own way. The rest keep the order set in the 
 
 The ⇅ stays, in color, while the project sorts its own way. Pick **Sidebar’s sort** to go back.
 
+## Find an archived chat
+
+Archived chats wait at the bottom of the sidebar, newest archived first, so a chat you just put away is at the top of the list.
+
+1. Click **Archived** at the bottom of the sidebar.
+2. Click the chat to read it, or right-click it and pick **Unarchive**.
+
+If you've picked a sort in the Arrange menu's **Sort by**, Archived uses it too. Chats archived before Nushi kept the time come after the rest, newest made first.
+
 ## Change the fonts
 
 Nushi comes with its own fonts. You can use any font installed on your computer instead, one for the app's text and one for code.

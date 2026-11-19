@@ -198,6 +198,11 @@ class ChatState extends ChangeNotifier {
   String title = '';
   bool archived = false; // no agent runs; read-only until unarchived
 
+  /// When it was last archived (the daemon's `Chat.archived_unix_ms`); null
+  /// while it isn't, for one archived before the daemon kept the time, and
+  /// from a daemon that doesn't say.
+  DateTime? archivedAt;
+
   /// Its title to show: "New chat" until it has one.
   String get shownTitle => title.isEmpty ? 'New chat' : title;
 

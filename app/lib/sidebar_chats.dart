@@ -53,12 +53,13 @@ class SidebarChats extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = NushiTheme.of(context).t;
     final starting = daemon.starting;
-    // Narrowed to a project, the archived are that project's too.
-    final archived =
-        daemon.chats.values
-            .where((c) => c.archived && inShownProject(c))
-            .toList()
-          ..sort((a, b) => b.created.compareTo(a.created));
+    // Narrowed to a project, the archived are that project's too; the
+    // latest archived first unless a sort was picked.
+    final archived = sortArchived(
+      daemon.chats.values.where((c) => c.archived && inShownProject(c)),
+      sidebarSort.value,
+      ascending: sidebarAscending.value,
+    );
     final group = sidebarGroupBy.value;
     final sort = effectiveSort(group, sidebarSort.value);
     final reorders = dragsOrder(group, sidebarSort.value);

@@ -191,6 +191,30 @@ List<ChatState> sortChats(
   });
 }
 
+/// The archived [chats] in the order the sidebar lists them: under the
+/// default sort ([SortBy.manual]), the latest archived first, then those
+/// archived before the daemon kept the time, the newest made first; under
+/// a sort the user picked, that sort's, as [sortChats] has it.
+List<ChatState> sortArchived(
+  Iterable<ChatState> chats,
+  SortBy sort, {
+  required bool ascending,
+}) {
+  if (sort != SortBy.manual) {
+    return sortChats(chats, sort, ascending: ascending);
+  }
+  return [...chats]..sort((a, b) {
+    final (x, y) = (a.archivedAt, b.archivedAt);
+    final c = switch ((x, y)) {
+      (null, null) => 0,
+      (null, _) => 1,
+      (_, null) => -1,
+      (final x?, final y?) => y.compareTo(x),
+    };
+    return c != 0 ? c : b.created.compareTo(a.created);
+  });
+}
+
 /// One of the sidebar's groups under a grouping other than Project: its
 /// [key] (where its collapse is kept, `<grouping>:<what>`), its [label]
 /// ('' for None's one group, which has no header), the [agent] whose mark

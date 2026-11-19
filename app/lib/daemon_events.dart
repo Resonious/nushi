@@ -203,6 +203,9 @@ extension DaemonEvents on Daemon {
           : [if (c.hasPull()) c.pull else if (c.github.pull) c.github]
       ..title = c.title
       ..archived = c.archived
+      ..archivedAt = c.archivedUnixMs == 0
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(c.archivedUnixMs.toInt())
       ..done = daemonApi >= doneApi ? c.done : null
       ..pin = c.pin
       ..color = ChatColor.named(c.color)
