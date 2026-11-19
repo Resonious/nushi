@@ -227,7 +227,7 @@ class ChangeCard extends StatelessWidget {
   /// What an added run's line under its title says: where it isn't.
   String _added() => switch ((from, isNew)) {
     (MarksFrom.branch, false) => 'Added on this branch',
-    (MarksFrom.branch, true) => 'Not in ${baseName(against)}',
+    (MarksFrom.branch, true) => 'Not in ${branchLabel(against)}',
     (MarksFrom.chat, false) => 'Added since this chat began',
     (MarksFrom.chat, true) => 'Made since this chat began',
     (MarksFrom.lastCommit, _) => 'Not in the last commit',

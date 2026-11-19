@@ -114,7 +114,7 @@ class LineBase extends ChangeNotifier implements ValueListenable<String?> {
   /// What the marks count from, as the path row and a mark's card say it:
   /// "since main", "since this chat began", "since the last commit".
   String get since => switch (_from) {
-    MarksFrom.branch => 'since ${baseName(_against)}',
+    MarksFrom.branch => 'since ${branchLabel(_against)}',
     MarksFrom.chat => 'since this chat began',
     MarksFrom.lastCommit => 'since the last commit',
   };
@@ -313,7 +313,7 @@ class LineBase extends ChangeNotifier implements ValueListenable<String?> {
 
 /// A base branch's name as the path row says it: a remote's `origin/`
 /// left off ("main"), a commit's hash shortened.
-String baseName(String base) {
+String branchLabel(String base) {
   if (RegExp(r'^[0-9a-f]{40}$').hasMatch(base)) return base.substring(0, 7);
   return base.startsWith('origin/') ? base.substring(7) : base;
 }
