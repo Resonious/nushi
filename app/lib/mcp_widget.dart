@@ -89,7 +89,8 @@ class _Servers extends StatelessWidget {
                     ),
                   ),
                   Text(stateOf(s, t).$1, style: muted),
-                  const SizedBox(width: 4),
+                  // Toggle has no side padding of its own.
+                  const SizedBox(width: 8),
                   McpSwitch(list, s, label: false),
                 ],
               ),
