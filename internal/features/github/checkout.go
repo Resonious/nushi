@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -75,11 +76,7 @@ func (s *Service) remoteFor(ctx context.Context, folder string, ref model.GitHub
 	if err != nil {
 		return "", err
 	}
-	names := make([]string, 0, len(remotes))
-	for name := range remotes {
-		names = append(names, name)
-	}
-	slices.Sort(names)
+	names := slices.Sorted(maps.Keys(remotes))
 	if i := slices.Index(names, "origin"); i > 0 { // origin first, then by name
 		names = append([]string{"origin"}, slices.Delete(names, i, i+1)...)
 	}
