@@ -62,9 +62,7 @@ Future<Daemon> _app(
 }) async {
   viewport(tester, size, brightness: brightness);
   showDetails.value = false;
-  paneWidths.value = {};
   filesChats.value = {'c'};
-  filesIgnored.value = false;
   final open = <StreamController<Object>>[];
   addTearDown(() {
     for (final s in open) {

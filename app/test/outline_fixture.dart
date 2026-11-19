@@ -98,7 +98,6 @@ Future<Daemon> outlineApp(
 }) async {
   viewport(tester, Size(width, 900), brightness: brightness);
   showDetails.value = false;
-  paneWidths.value = {};
   final d = await outlineDaemon().connect(tester);
   d.select('c');
   await tester.pumpWidget(NushiApp(daemon: d));

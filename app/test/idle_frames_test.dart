@@ -140,7 +140,6 @@ void main() {
 
   testWidgets('a project’s animated tile: nothing is drawn while it '
       'rests, frames only while the pointer is on it', (tester) async {
-    if (tileImagesDir.existsSync()) tileImagesDir.deleteSync(recursive: true);
     final image = keepTileImage((bytes: animatedGif(), kind: 'gif'));
     addTearDown(() => dropTileImage(image));
     projectTiles.value = {'/Users/me/nushi': TileLook(image: image)};

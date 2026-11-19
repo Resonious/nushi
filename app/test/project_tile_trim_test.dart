@@ -114,9 +114,6 @@ String _stored(int frames) =>
 
 void main() {
   setUpAll(loadFonts);
-  setUp(() {
-    if (tileImagesDir.existsSync()) tileImagesDir.deleteSync(recursive: true);
-  });
 
   testWidgets('the handles trim the image, the times show while they '
       'move, and they can’t meet; the playhead scrubs within the trim', (

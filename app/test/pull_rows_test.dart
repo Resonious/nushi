@@ -116,10 +116,7 @@ Future<(Daemon, FakeDaemon)> _app(
   Map<int, GitHubItem>? items,
 }) async {
   viewport(tester, size, brightness: brightness);
-  showDetails.value = true;
-  collapsedWidgets.value = {};
   widgetOrder.value = ['Pull request'];
-  pullSeen.value = {};
   final known = items ?? _stack;
   final c = chat('c', 'claude', 'Paginate the feed')
     ..pull = _link(numbers.first)

@@ -679,7 +679,6 @@ void main() {
   ]) {
     testWidgets('the window, $width wide, ${b.name}: the rail at the top, '
         'the middle and the bottom, the menu open', (tester) async {
-      paneWidths.value = {};
       if (width < 1000) sidebarHidden.value = true;
       final (d, _) = await _window(
         tester,

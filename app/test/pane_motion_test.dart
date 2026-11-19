@@ -50,7 +50,6 @@ Future<(Daemon, FakeDaemon)> _app(
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
   }
   showDetails.value = details;
-  paneWidths.value = {};
   final c = chat('c', 'claude', 'Fix the login redirect');
   final fake = FakeDaemon([c])
     ..answer = ((input) => switch (input) {

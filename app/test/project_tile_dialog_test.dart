@@ -283,7 +283,6 @@ void main() {
       'framing, another image or none put it back', (tester) async {
     final before = pickTileImage;
     addTearDown(() => pickTileImage = before);
-    if (tileImagesDir.existsSync()) tileImagesDir.deleteSync(recursive: true);
     final image = keepTileImage((bytes: await photoPng(tester), kind: 'png'));
     projectTiles.value = {garden: TileLook(image: image)};
     ProjectTile preview() =>
@@ -429,9 +428,6 @@ void main() {
         tester,
       ) async {
         viewport(tester, const Size(640, 480));
-        if (tileImagesDir.existsSync()) {
-          tileImagesDir.deleteSync(recursive: true);
-        }
         final image = keepTileImage((
           bytes: await photoPng(tester),
           kind: 'png',

@@ -36,13 +36,9 @@ void main() {
       final name = '${width.toInt()}_${brightness.name}';
       testWidgets('the window with the projects’ tiles, $name', (tester) async {
         viewport(tester, Size(width, 900), brightness: brightness);
-        paneWidths.value = {};
         sidebarProjects.value = {'/Users/me/zeta'};
         // A mark and a color, an image of the user's own, an animated
         // one (at rest: its first frame), and a repository's icon.
-        if (tileImagesDir.existsSync()) {
-          tileImagesDir.deleteSync(recursive: true);
-        }
         final photo = keepTileImage((
           bytes: await photoPng(tester, width: 1200, height: 800),
           kind: 'png',
@@ -217,12 +213,8 @@ void main() {
 
       testWidgets('the window with the project rail, $name', (tester) async {
         viewport(tester, Size(width, 900), brightness: brightness);
-        paneWidths.value = {};
         projectRail.value = true;
         sidebarProjects.value = {'/Users/me/zeta'};
-        if (tileImagesDir.existsSync()) {
-          tileImagesDir.deleteSync(recursive: true);
-        }
         final photo = keepTileImage((
           bytes: await photoPng(tester, width: 1200, height: 800),
           kind: 'png',

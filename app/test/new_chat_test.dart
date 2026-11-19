@@ -7,7 +7,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
-import 'package:nushi/open_session.dart';
 import 'package:nushi/sidebar.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/toast.dart';
@@ -453,7 +452,6 @@ void main() {
     await _key(tester, LogicalKeyboardKey.arrowLeft);
     expect(find.text('Codex'), findsOneWidget);
     expect(find.text('Sessions'), findsNothing);
-    cantListSessions.clear();
     d.dispose();
   });
 

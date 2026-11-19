@@ -65,7 +65,6 @@ Future<Daemon> _app(
 }) async {
   viewport(tester, const Size(1700, 900));
   showDetails.value = false;
-  paneWidths.value = {};
   final d = await _fake().connect(tester);
   d.select('c');
   await tester.pumpWidget(NushiApp(daemon: d));

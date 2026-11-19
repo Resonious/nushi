@@ -16,7 +16,6 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/panes.dart';
 import 'package:nushi/preview_path.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
@@ -47,8 +46,6 @@ void main() {
             const MethodChannel('nushi/fonts'),
             (_) async => <String>[],
           );
-      paneWidths.value = {};
-      showDetails.value = true;
       final link = GitHubLink(
         host: 'github.com',
         repo: 'afrase/nushi',

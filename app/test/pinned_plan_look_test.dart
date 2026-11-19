@@ -6,7 +6,6 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/clock.dart';
-import 'package:nushi/collapsible.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
@@ -31,7 +30,6 @@ Future<(Daemon, FakeDaemon)> _app(
   viewport(tester, size, brightness: brightness);
   showDetails.value = false;
   sidebarHidden.value = true;
-  Collapsible.opened.clear();
   final c = chat('c', 'claude', 'Paginate the feed');
   final fake = FakeDaemon([c])
     ..answer = ((input) => switch (input) {
@@ -199,7 +197,6 @@ void main() {
       addTearDown(
         tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
       );
-      Collapsible.opened.clear();
       final c = chat('c', 'claude', 'Paginate the feed');
       final fake = FakeDaemon([c])
         ..answer = ((input) => input is GetChatRequest

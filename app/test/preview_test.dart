@@ -148,8 +148,6 @@ Future<Daemon> _app(
 }) async {
   viewport(tester, Size(width, 900));
   showDetails.value = false;
-  paneWidths.value = {};
-  Collapsible.opened.clear();
   final d = await _fake(asked: asked).connect(tester);
   d.select('c');
   await tester.pumpWidget(NushiApp(daemon: d));
@@ -166,7 +164,6 @@ Future<(Phone, PhonePlatform)> _phone(
   tester.platformDispatcher.accessibilityFeaturesTestValue =
       const FakeAccessibilityFeatures(disableAnimations: true);
   addTearDown(tester.platformDispatcher.clearAllTestValues);
-  Collapsible.opened.clear();
   final platform = PhonePlatform()..saved = pairedRecord();
   final fake = _fake(api: api);
   final phone = await startPhone(tester, fake, platform: platform);

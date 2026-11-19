@@ -94,7 +94,6 @@ Future<Daemon> _app(
 }) async {
   viewport(tester, Size(width, 900), brightness: brightness);
   showDetails.value = false;
-  paneWidths.value = {};
   final d = await _fake().connect(tester);
   d.select('c');
   await tester.pumpWidget(NushiApp(daemon: d));
@@ -237,7 +236,6 @@ void main() {
 
   testWidgets('⌥Z typed in the tree’s search field is a character, not '
       'wrapping', (tester) async {
-    filesTree.value = true;
     final d = await _app(tester);
     await tester.tap(_inPane(find.byType(TextField)));
     await tester.pumpAndSettle();

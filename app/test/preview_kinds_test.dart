@@ -168,7 +168,6 @@ Future<(Daemon, _Host)> _app(
 }) async {
   viewport(tester, const Size(1700, 900));
   showDetails.value = false;
-  paneWidths.value = {};
   final host = _Host();
   fakeWebViews()
     ..newPage = (() => host)

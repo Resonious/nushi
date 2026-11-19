@@ -30,10 +30,6 @@ List<String> _cards(WidgetTester tester) {
 
 void main() {
   setUpAll(loadFonts);
-  tearDown(() {
-    githubCardOrder.value = [];
-    githubCollapsed.value = {};
-  });
 
   testWidgets('a card is dragged by its title into another place, '
       'remembered; the keys follow', (tester) async {

@@ -212,7 +212,6 @@ void main() {
         testWidgets('the window, a project’s Sort menu open, $width wide, '
             '${b.name}', (tester) async {
           viewport(tester, Size(width, 700), brightness: b);
-          paneWidths.value = {};
           projectSorts.value = {_nushi: const ProjectSort(SortBy.updated)};
           final d = await FakeDaemon(_chats()).connect(tester);
           d.select('a');
