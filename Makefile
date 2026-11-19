@@ -318,8 +318,8 @@ test-timings:
 # and what AppKit takes for its title bar and where the window's buttons
 # sit (TitleBar.swift, a window never shown), and what Flutter's engine was
 # told of the mouse (EngineMouse.swift), with their tests, built by swiftc
-# and run with no window on screen: RunnerTests is hosted by the app, so
-# xcodebuild test would launch Nushi (macOS only).
+# and run with no window on screen: an XCTest target is hosted by the app,
+# so xcodebuild test would launch Nushi (macOS only).
 test-window:
 	@mkdir -p bin
 	xcrun swiftc -o bin/placement-test app/macos/Runner/Placement.swift app/macos/PlacementTests/main.swift

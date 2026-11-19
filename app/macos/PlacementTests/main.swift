@@ -1,6 +1,6 @@
 // The window placement maths (Runner/Placement.swift, ADR 0093), built with
-// it by `make test-window` and run with no window: RunnerTests is hosted by
-// the app, so xcodebuild test would launch Nushi.
+// it by `make test-window` and run with no window: an XCTest target is
+// hosted by the app, so xcodebuild test would launch Nushi.
 import CoreGraphics
 import Foundation
 

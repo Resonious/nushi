@@ -12,7 +12,7 @@ The window kept its frame under the autosave name "Nushi". On macOS 27 setting t
 - **At launch** the window goes on its own display when that is connected, moved as far as the display moved in the arrangement, and fitted to it; otherwise on the screen most of it lies on; on none, centred.
 - **Zoom is Nushi's**: `zoom(_:)` and `performZoom(_:)` toggle between the window's own screen's visible area and the user's frame on that screen (a frame 10% in from each side when there is none), never another screen.
 - **A display that goes**: macOS moves the window off it, and that move isn't saved; when the display comes back the window goes home, unless the user moved it meanwhile, which makes their place the new home. A display that only sleeps stays connected and changes nothing.
-- The maths is `Placement` (`app/macos/Runner/Placement.swift`): plain functions with no AppKit, tested by `make test-window` with swiftc, since RunnerTests is hosted by the app and would launch it.
+- The maths is `Placement` (`app/macos/Runner/Placement.swift`): plain functions with no AppKit, tested by `make test-window` with swiftc, since an XCTest target is hosted by the app and would launch it.
 
 ## Consequences
 - AppKit still does the drag, live resize, full screen (ADR 0080's `keepFullScreen`; the saved frame is the one from before), tiling, Stage Manager, Spaces, minimizing and moving windows off a display that went.
