@@ -17,7 +17,6 @@ import 'package:nushi/pull_link.dart';
 import 'package:nushi/pull_tab.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/terminal_panel.dart';
-import 'package:nushi/top_notices.dart';
 import 'package:nushi/type_to_box.dart';
 
 /// A chat in the main area (ADR 0111, 0123): one pane of its transcript, its
@@ -29,8 +28,8 @@ import 'package:nushi/type_to_box.dart';
 /// need its room. All of it is laid out by one [Beside], which keeps the
 /// header and the terminal as the tabs change. Over it, [notices]: the
 /// bars, the newer release's card and the toasts' place, the toasts over
-/// the transcript and the card at its bottom right, above the composer
-/// (ADR 0128).
+/// the transcript and the card in the area's bottom right corner, above
+/// the bars at the foot of whatever is there (ADR 0128).
 class ChatArea extends StatefulWidget {
   const new(this.chat, this.daemon, {super.key, this.notices});
 
@@ -65,11 +64,6 @@ class _ChatAreaState extends State<ChatArea> {
   /// browser's place, a terminal opening, another chat (another area) or
   /// another tab put it back.
   final _cover = ValueNotifier<String?>(null);
-
-  /// The bars at the foot of the tab shown (the composer, the cards
-  /// waiting, the commit box): the update card stands above them
-  /// ([CardFloor], ADR 0128).
-  final _floor = CardFloor();
 
   /// Where ⌃` and the keys stay when what had the focus goes.
   final _keys = FocusNode(skipTraversal: true);
@@ -136,7 +130,6 @@ class _ChatAreaState extends State<ChatArea> {
     _pull.unfollow();
     if (widget.chat.covered == _cover.value) widget.chat.covered = null;
     _cover.dispose();
-    _floor.dispose();
     _inFiles.dispose();
     typesThrough.remove(_keys);
     _keys.dispose();
@@ -321,25 +314,22 @@ class _ChatAreaState extends State<ChatArea> {
                       : null,
                 ),
               );
-              final main = CardFloors(
-                floor: _floor,
-                child: switch (tab) {
-                  ChatTab.changes => ChangesView(
-                    chat: chat,
-                    daemon: widget.daemon,
-                  ),
-                  ChatTab.pull => PullTab(
-                    chat: chat,
-                    daemon: widget.daemon,
-                    onChat: () => _tab.value = ChatTab.chat,
-                  ),
-                  ChatTab.chat => ChatView(
-                    chat: chat,
-                    daemon: widget.daemon,
-                    onPull: () => _tab.value = ChatTab.pull,
-                  ),
-                },
-              );
+              final main = switch (tab) {
+                ChatTab.changes => ChangesView(
+                  chat: chat,
+                  daemon: widget.daemon,
+                ),
+                ChatTab.pull => PullTab(
+                  chat: chat,
+                  daemon: widget.daemon,
+                  onChat: () => _tab.value = ChatTab.chat,
+                ),
+                ChatTab.chat => ChatView(
+                  chat: chat,
+                  daemon: widget.daemon,
+                  onPull: () => _tab.value = ChatTab.pull,
+                ),
+              };
               final foot = TerminalFoot(
                 chat: chat,
                 daemon: widget.daemon,
@@ -437,14 +427,7 @@ class _ChatAreaState extends State<ChatArea> {
       cover: cover,
       panes: panes,
       details: details,
-      notices: switch (widget.notices) {
-        // The card over the tab stands above the bars at its foot.
-        (:final bars, :final card) => (
-          bars: bars,
-          card: CardLift(floor: cover == null ? _floor : null, child: card),
-        ),
-        null => null,
-      },
+      notices: widget.notices,
     );
   }
 }

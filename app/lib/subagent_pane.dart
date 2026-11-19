@@ -9,6 +9,7 @@ import 'package:nushi/panes.dart';
 import 'package:nushi/subagents.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/tool_parts.dart';
+import 'package:nushi/top_notices.dart';
 import 'package:nushi/transcript.dart';
 import 'package:nushi/widgets.dart';
 
@@ -88,12 +89,16 @@ class SubagentPane extends StatelessWidget {
                       footer: _result(context, s),
                     ),
             ),
+            // The update card stands above it where it's over this pane
+            // ([CardFloor], ADR 0128).
             if (s != null && s.call.agentId.isNotEmpty && !chat.archived)
-              _ToSubagentBox(
-                key: ValueKey(s.call.id),
-                chat: chat,
-                daemon: daemon,
-                s: s,
+              UnderCard(
+                child: _ToSubagentBox(
+                  key: ValueKey(s.call.id),
+                  chat: chat,
+                  daemon: daemon,
+                  s: s,
+                ),
               ),
           ],
         );

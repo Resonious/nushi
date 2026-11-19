@@ -134,10 +134,10 @@ void main() {
           await tester.pump();
           await checking;
           await shot('e_card');
-          // The transcript's bottom right, left of the details rail and
-          // above the composer, not up with the toasts (ADR 0128).
+          // The window's bottom right, over the details rail, not up with
+          // the toasts (ADR 0128, amended 2026-11-19).
           final card = tester.getRect(updateToast);
-          expect(card.right, transcript.right - TopNotices.cardInset);
+          expect(card.right, main.right - TopNotices.cardInset);
           expect(card.top, greaterThan(transcript.center.dy));
           say(
             context,

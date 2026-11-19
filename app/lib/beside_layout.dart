@@ -78,7 +78,7 @@ class _Beside extends MultiChildLayoutDelegate with NoticesPlace {
     required this.widths,
     this.block,
     this.cover,
-    this.cardShown,
+    this.floor,
     this.barsStart = 0,
   });
 
@@ -92,7 +92,7 @@ class _Beside extends MultiChildLayoutDelegate with NoticesPlace {
   final Map<String, Rect> at;
   final Map<String, double> widths; // each pane's, as last laid out beside
   final String? cover; // the pane over all, the whole of it
-  final ValueNotifier<bool>? cardShown; // the newer release's card's
+  final CardFloor? floor; // what the newer release's card stands above
   final double barsStart; // the bars' left, across the top: past the lights
 
   @override
@@ -201,17 +201,15 @@ class _Beside extends MultiChildLayoutDelegate with NoticesPlace {
     layoutChild(_Slot.main, BoxConstraints.tight(Size(main, band)));
     positionChild(_Slot.main, Offset(0, top));
     // The toasts over the transcript, under the bars, what the rail and
-    // the panes leave of it, and the card at its bottom right, above the
-    // terminal (ADR 0128).
+    // the panes leave of it, and the card in the corner (ADR 0128); a bar
+    // of the view's is hidden under the panes lying over it.
+    floor?.cut = block != null && cover == null ? x : null;
     if (hasChild(NoticeSlot.card)) {
       placeNotices(
-        width: width,
+        size: size,
         top: top + ToastHost.margin,
-        bottom: cover != null ? size.height : bottom,
         left: 0,
         right: cover != null ? width : min(main, x),
-        under: block != null && cover == null ? x : null,
-        cardShown: cardShown,
       );
     }
   }

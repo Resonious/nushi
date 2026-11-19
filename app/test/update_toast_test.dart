@@ -4,9 +4,11 @@ import 'package:connectrpc/connect.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nushi/beside.dart';
 import 'package:nushi/chat_view.dart';
 import 'package:nushi/composer.dart';
 import 'package:nushi/daemon.dart';
+import 'package:nushi/details_panel.dart';
 import 'package:nushi/files_pane.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/motion.dart';
@@ -104,11 +106,18 @@ void main() {
           );
           expect(toastButtons(tester), buttons);
           final box = tester.getRect(updateToast);
-          // At the transcript's bottom right, left of the details rail,
-          // above the composer and so clear of its buttons (ADR 0128).
+          // At the window's bottom right (ADR 0128, amended 2026-11-19):
+          // over the details rail where it shows, else above the composer
+          // and so clear of its buttons.
+          final area = tester.getRect(find.byType(Beside));
           final transcript = tester.getRect(find.byType(ChatView));
-          expect(box.right, transcript.right - TopNotices.cardInset);
-          expect(box.bottom, composerFoot(tester).top - TopNotices.cardInset);
+          expect(box.right, area.right - TopNotices.cardInset);
+          expect(
+            box.bottom,
+            width == 1700
+                ? area.bottom - TopNotices.cardInset
+                : composerFoot(tester).top - TopNotices.cardInset,
+          );
           expect(box.top, greaterThan(transcript.center.dy)); // not the top
           expect(
             tester.getRect(find.byType(StatusBar)).right,
@@ -129,9 +138,9 @@ void main() {
             expect(error.height, lessThan(40));
           }
           if (width == 1700) {
-            // The rail shows, and the card is left of it.
-            final rail = tester.getRect(find.text('Environment')).left;
-            expect(box.right, lessThan(rail));
+            // The rail shows, and the card is over it.
+            final rail = tester.getRect(find.byType(DetailsPanel));
+            expect(rail.intersect(box), box);
           }
           await render(
             tester,
@@ -199,8 +208,7 @@ void main() {
 
   for (final width in [720.0, 900.0]) {
     testWidgets('Files lying over the transcript, ${width.toInt()} wide: the '
-        "card is the transcript's, hidden under the pane, which keeps its "
-        'rows', (tester) async {
+        "card is the window's, over the pane at its corner", (tester) async {
       final d = await openWithUpdate(
         tester,
         updateDaemon(() => newerUpdate('0.1.17')),
@@ -208,27 +216,31 @@ void main() {
       );
       filesChats.value = {'c'};
       await tester.pumpAndSettle();
-      // No room left of the pane: the card is wholly under it, and what's
-      // drawn and clicked there is the pane, not the card.
+      // The pane has the window's corner: the card is over it, drawn
+      // and clicked there, not lifted (Files has no bar at its foot) nor
+      // hidden.
       final card = tester.getRect(updateToast);
       final pane = tester.getRect(find.byType(FilesPane));
       expect(pane.intersect(card), card);
+      final area = tester.getRect(find.byType(Beside));
+      expect(card.right, area.right - TopNotices.cardInset);
+      expect(card.bottom, area.bottom - TopNotices.cardInset);
       final hit = tester.hitTestOnBinding(card.center);
       bool reached(Finder f) => hit.path.any(
         (e) => f.evaluate().any((el) => el.renderObject == e.target),
       );
-      expect(reached(find.byType(FilesPane)), isTrue);
-      expect(reached(updateToast), isFalse);
-      expect(find.text('Download').hitTestable(), findsNothing);
+      expect(reached(updateToast), isTrue);
+      expect(find.text('Download').hitTestable(), findsOneWidget);
       await render(
         tester,
         find.byType(MaterialApp),
         'update_toast_files_${width.toInt()}',
       );
-      // Closed, the card shows again where it was.
+      // Closed, the card is back above the composer, at the same right.
       filesChats.value = {};
       await tester.pumpAndSettle();
       expect(find.text('Download').hitTestable(), findsOneWidget);
+      expect(tester.getRect(updateToast).right, card.right);
       d.dispose();
     }, variant: macOSOnly);
   }

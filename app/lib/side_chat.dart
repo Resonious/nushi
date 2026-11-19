@@ -15,6 +15,7 @@ import 'package:nushi/panes.dart';
 import 'package:nushi/side_toast.dart';
 import 'package:nushi/status.dart';
 import 'package:nushi/theme/theme.dart';
+import 'package:nushi/top_notices.dart';
 import 'package:nushi/transcript.dart';
 import 'package:nushi/turn_status.dart';
 import 'package:nushi/widgets.dart';
@@ -69,8 +70,21 @@ class SideChat extends StatelessWidget {
                 onReply: side.draft.addReply,
               ),
             ),
-            TurnStatus(side),
-            Composer(chat: side, daemon: daemon, hint: 'Ask in the side chat'),
+            // The update card stands above them where it's over this pane
+            // ([CardFloor], ADR 0128).
+            UnderCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TurnStatus(side),
+                  Composer(
+                    chat: side,
+                    daemon: daemon,
+                    hint: 'Ask in the side chat',
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

@@ -51,7 +51,7 @@ On Linux:
 
 ## Updates
 
-The daemon asks GitHub for the latest release when it starts and every 2 hours, with no token ([ADR 0061](adr/0061-the-daemon-checks-for-a-newer-release.md)). A newer one shows as a small card at the bottom right of the window, above the composer in a chat ("Nushi 0.1.17 is available."):
+The daemon asks GitHub for the latest release when it starts and every 2 hours, with no token ([ADR 0061](adr/0061-the-daemon-checks-for-a-newer-release.md)). A newer one shows as a small card in the bottom right corner of the window, whatever is open there, raised above a message box under it ("Nushi 0.1.17 is available."):
 
 - **Update** installs it, when Homebrew installed the app: the daemon runs `brew update && brew upgrade --cask nushi` ([ADR 0109](adr/0109-update-runs-homebrew.md)); another tap that `brew update` can't fetch doesn't stop it. The card says "Updating to Nushi 0.1.17…" until Homebrew quits the app and opens the new one. **Release notes** opens the release.
 - If it fails, the card says why, with **Retry**, **Copy** (the same command on the clipboard, for a terminal) and Release notes; the end of Homebrew's output is in `nushid.log`. "Homebrew doesn't have 0.1.17 yet" means the release is out but its cask isn't: Retry in a few minutes. If macOS refused, allow Nushi Daemon in System Settings › Privacy & Security › App Management.

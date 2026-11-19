@@ -56,9 +56,10 @@ part 'beside_layout.dart';
 /// lie over [main], which go down under them; and across the top while a
 /// pane covers it all, which goes down by their height; the
 /// toasts over [main], under the bars, what the rail and the panes leave
-/// of it, and the newer release's card at its bottom right
-/// ([NoticesPlace]); with the panes over [main], the card under them, as
-/// [main] is.
+/// of it, and the newer release's card in its bottom right corner, over
+/// whatever is there ([NoticesPlace], amended 2026-11-19), above the bars
+/// at the foot of [main] and of the panes that it would otherwise cover
+/// ([UnderCard], [CardLift]).
 class Beside extends StatefulWidget {
   const new({
     required this.main,
@@ -152,9 +153,9 @@ class _BesideState extends State<Beside> {
   /// Holds the focus while it's in the rail.
   final _railFocus = FocusNode(skipTraversal: true, canRequestFocus: false);
 
-  /// Whether the newer release's card shows: not while it's under the
-  /// panes ([NoticesPlace]).
-  final ValueNotifier<bool> _cardShown = ValueNotifier(true);
+  /// The bars at the foot of [Beside.main] and of the panes that the newer
+  /// release's card stands above ([CardLift]).
+  final _floor = CardFloor();
 
   @override
   void didUpdateWidget(Beside old) {
@@ -173,7 +174,7 @@ class _BesideState extends State<Beside> {
   @override
   void dispose() {
     _railFocus.dispose();
-    _cardShown.dispose();
+    _floor.dispose();
     super.dispose();
   }
 
@@ -312,23 +313,14 @@ class _BesideState extends State<Beside> {
             ? squeeze(fit.widths, panes, fits)
             : const <String, double>{};
         final railName = details?.name ?? _BesideState._railName;
+        // Over all, the card too: it's the window's, in its corner.
         final notices = [
           if (widget.notices case (:final bars, :final card))
             ...TopNotices.slots(
               bars: bars,
-              card: CardLift(shown: _cardShown, child: card),
+              card: CardLift(floor: _floor, child: card),
             ),
         ];
-        // Over the view, the card is its transcript's and lies under the
-        // panes, as the rest of the view does, hidden where it doesn't fit
-        // left of them, so it never covers a pane's rows; the toasts stay
-        // over all.
-        final cardUnder = over && cover == null
-            ? notices
-                  .where((w) => w.key == const ValueKey(NoticeSlot.card))
-                  .firstOrNull
-            : null;
-        notices.remove(cardUnder);
         final children = [
           // First in the tree, as they were above and below the rest: they
           // never lie over what's after them.
@@ -374,7 +366,7 @@ class _BesideState extends State<Beside> {
                     // Its foot is its full width: cut at its left as it
                     // glides, it doesn't lie over the sidebar.
                     clip: true,
-                    child: widget.main,
+                    child: CardFloors(floor: _floor, child: widget.main),
                   ),
                 ),
               ),
@@ -414,7 +406,6 @@ class _BesideState extends State<Beside> {
           // Those closing: over the main view and the rail, under the rest.
           for (final s in _seen)
             if (!now.contains(s) && s != railName) pane(s, null),
-          ?cardUnder,
           // Beside, a pane's edge stops where [main] keeps its least; over
           // it, at the pane's own least. Over it, the first one's shadow
           // falls on it.
@@ -431,7 +422,7 @@ class _BesideState extends State<Beside> {
                   left: true,
                   locked: p.name == cover,
                   onDrag: (w) => _dragged(p.name, w),
-                  child: p.child,
+                  child: CardFloors(floor: _floor, pane: true, child: p.child),
                 ),
                 shadow: over && i == 0,
               ),
@@ -463,7 +454,7 @@ class _BesideState extends State<Beside> {
               at: _at,
               widths: _widths,
               cover: cover,
-              cardShown: _cardShown,
+              floor: _floor,
               // Across the top with the sidebar hidden, past the lights
               // and the title buttons, which stay at the window's top.
               barsStart: sidebarShut
