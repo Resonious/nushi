@@ -24,11 +24,6 @@ import (
 // interfaces. Nothing here reads opencode's files.
 type Harness struct{}
 
-// Local is Harness as the daemon runs it, the place for what reads
-// opencode's files on this machine; nothing does yet. Tests use Harness
-// alone.
-type Local struct{ Harness }
-
 // Info is what Harness is. The initialize _meta asks for a subagent's
 // updates apart from its parent's: without it opencode mixes a subagent's
 // text and tool calls into the parent session's updates, told apart only
