@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -44,6 +45,12 @@ class Pond extends StatefulWidget {
   static void drop(BuildContext context, Offset global) =>
       context.findAncestorStateOfType<_PondState>()?._add(global, glint: false);
 
+  /// The list landed at its end, scrolled there by the user at [strength]
+  /// (0 to 1, by how fast): a wave runs up from the bottom edge and drops
+  /// leap from it. [context] is below the pond (the list's own).
+  static void splash(BuildContext context, double strength) =>
+      context.findAncestorStateOfType<_PondState>()?._splash(strength);
+
   /// The daemon has the message at [global]: a glint follows the ripple.
   static void glint(BuildContext context, Offset global) =>
       context.findAncestorStateOfType<_PondState>()?._add(global, glint: true);
@@ -53,14 +60,32 @@ class Pond extends StatefulWidget {
 }
 
 class _Ripple {
-  _Ripple(this.at, {required this.glint});
+  _Ripple(this.at, {required this.glint, this.edge});
 
   final Offset at;
   final bool glint;
+
+  /// An edge splash's strength (0 to 1); null for a drop or a glint.
+  final double? edge;
   Duration? born;
   double age = 0;
 
-  double get life => glint ? 0.9 : 1.6;
+  double get life => edge != null ? 1.1 : glint ? 0.9 : 1.6;
+
+  double get kind => switch (edge) {
+    final s? => 2 + 0.9 * s.clamp(0, 1),
+    null => glint ? 1 : 0,
+  };
+}
+
+/// A drop thrown up off the bottom edge by a splash.
+class _Drop {
+  _Drop(this.x, this.vx, this.vy, this.size);
+
+  final double x;
+  final double vx;
+  final double vy;
+  final double size;
 }
 
 class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
@@ -69,6 +94,7 @@ class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
   final _painter = _RipplePainter();
   final _key = GlobalKey();
   final _caustics = _CausticsPainter();
+  final _drops = _DropsPainter();
   Duration? _last;
 
   // How bright the caustics are: eases toward [_target] (1 while working),
@@ -128,7 +154,49 @@ class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
     if (!_ticker.isActive) unawaited(_ticker.start());
   }
 
+  void _splash(double strength) {
+    if (reduceMotion(context)) return;
+    final box = _key.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final size = box.size;
+    if (Pond._program != null) {
+      final ripples = _painter.ripples;
+      if (ripples.length == 3) ripples.removeAt(0);
+      ripples.add(
+        _Ripple(
+          Offset(size.width / 2, size.height),
+          glint: false,
+          edge: strength,
+        ),
+      );
+      _snapshot.allowSnapshotting = true;
+    }
+    final rng = math.Random();
+    final n = (4 + 7 * strength).round();
+    _drops
+      ..born = null
+      ..age = 0
+      ..list = [
+        for (var i = 0; i < n; i++)
+          _Drop(
+            size.width * (0.5 + (rng.nextDouble() - 0.5) * 0.45),
+            (rng.nextDouble() - 0.5) * 120,
+            -(120 + (140 + 200 * rng.nextDouble()) * strength),
+            1.8 + rng.nextDouble() * 1.2,
+          ),
+      ];
+    if (!_ticker.isActive) {
+      _last = null;
+      unawaited(_ticker.start());
+    }
+  }
+
   void _tick(Duration now) {
+    if (_drops.list.isNotEmpty) {
+      _drops.age = (now - (_drops.born ??= now)).inMicroseconds / 1e6;
+      if (_drops.age > 1.2) _drops.list = const [];
+      _drops.changed();
+    }
     final dt = _last == null ? 0.0 : (now - _last!).inMicroseconds / 1e6;
     _last = now;
     // Caustics: in over about a second, out over about two.
@@ -149,7 +217,7 @@ class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
     ripples.removeWhere((r) => r.age >= r.life);
     if (ripples.isEmpty) {
       _snapshot.allowSnapshotting = false;
-      if (_level == 0 && target == 0) _ticker.stop();
+      if (_level == 0 && target == 0 && _drops.list.isEmpty) _ticker.stop();
       return;
     }
     // What's under the surface may have changed (a reply streaming in):
@@ -163,6 +231,7 @@ class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
     _lifecycle.dispose();
     _ticker.dispose();
     _caustics.dispose();
+    _drops.dispose();
     _snapshot.dispose();
     _painter.dispose();
     super.dispose();
@@ -175,13 +244,14 @@ class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
     _caustics.color = dark
         ? t.shineBand.withValues(alpha: 0.13)
         : t.accent.withValues(alpha: 0.10);
+    _drops.color = dark ? t.shineBand : t.accent;
     _painter
       ..dark = dark
       ..crest = dark ? t.shineBand : t.accent
       ..crestStrength = dark ? 0.12 : 0.1
       ..glint = t.gold
       ..glintStrength = dark ? 0.3 : 0.28;
-    return SnapshotWidget(
+    final surface = SnapshotWidget(
       key: _key,
       controller: _snapshot,
       painter: _painter,
@@ -204,7 +274,66 @@ class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
         ),
       ),
     );
+    return Stack(
+      fit: StackFit.passthrough,
+      children: [
+        surface,
+        // Drops a splash throws up, over the text, crisp.
+        Positioned.fill(
+          child: IgnorePointer(
+            child: ClipRect(
+              child: RepaintBoundary(child: CustomPaint(painter: _drops)),
+            ),
+          ),
+        ),
+      ],
+    );
   }
+}
+
+class _DropsPainter extends ChangeNotifier implements CustomPainter {
+  List<_Drop> list = const [];
+  Duration? born;
+  double age = 0;
+  Color color = const Color(0xFFFFFFFF);
+  final _paint = Paint()..strokeCap = StrokeCap.round;
+
+  void changed() => notifyListeners();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const g = 1100.0;
+    final a = age;
+    for (final d in list) {
+      final vy = d.vy + g * a;
+      final p = Offset(
+        d.x + d.vx * a,
+        size.height + d.vy * a + g * a * a / 2,
+      );
+      if (p.dy > size.height + 4) continue; // back in the water
+      final fade = (1 - a / 1.2).clamp(0.0, 1.0);
+      // A round drop, a faint wake behind it.
+      final tail = Offset(d.vx, vy) * 0.008;
+      _paint
+        ..strokeWidth = d.size * 0.7
+        ..color = color.withValues(alpha: 0.25 * fade);
+      canvas.drawLine(p, p - tail, _paint);
+      _paint.color = color.withValues(alpha: 0.85 * fade);
+      canvas.drawCircle(p, d.size / 2, _paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter old) => true;
+
+  @override
+  bool? hitTest(Offset position) => false;
+
+  @override
+  SemanticsBuilderCallback? get semanticsBuilder => null;
+
+  @override
+  bool shouldRebuildSemantics(CustomPainter old) => false;
 }
 
 class _RipplePainter extends SnapshotPainter {
@@ -249,7 +378,7 @@ class _RipplePainter extends SnapshotPainter {
         f(r.at.dx);
         f(r.at.dy);
         f(r.age);
-        f(r.glint ? 1 : 0);
+        f(r.kind);
       } else {
         f(0);
         f(0);

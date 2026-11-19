@@ -196,7 +196,43 @@ class _TranscriptState extends State<Transcript> {
     // The list's height changed with no scroll and no build of all of it
     // (a call opened above a pin): the pins may have moved past the line.
     if (n is ScrollMetricsNotification && n.depth == 0) _findPinAt();
+    _splashAtEnd(n);
     return _follower.onNotification(n);
+  }
+
+  // When the user last moved the list (a wheel, a drag, a fling, Jump to
+  // latest): a landing at the end soon after is theirs, not the list
+  // following new text.
+  DateTime? _userMoved;
+
+  /// The list landed at its end, moved there by the user: the pond
+  /// splashes, harder the faster it came.
+  void _splashAtEnd(Notification n) {
+    if (n is UserScrollNotification &&
+        n.depth == 0 &&
+        n.direction != ScrollDirection.idle) {
+      _userMoved = DateTime.now();
+    }
+    if (n case ScrollUpdateNotification(
+      depth: 0,
+      :final metrics,
+      :final scrollDelta?,
+      :final context?,
+    ) when scrollDelta > 0) {
+      final end = metrics.maxScrollExtent;
+      final moved = _userMoved;
+      if (end > 0 &&
+          metrics.pixels >= end - 0.5 &&
+          metrics.pixels - scrollDelta < end - 0.5 &&
+          moved != null &&
+          DateTime.now().difference(moved) < const Duration(seconds: 2)) {
+        _userMoved = null;
+        Pond.splash(
+          context,
+          _follower.gliding ? 0.6 : (scrollDelta / 40).clamp(0.3, 1.0),
+        );
+      }
+    }
   }
 
   /// Keeps what shows where it is as [laidOut] comes in with entries
@@ -1004,8 +1040,10 @@ class _TranscriptState extends State<Transcript> {
                   builder: (context) => JumpChip(
                     // A prompt waits below: the chip says so.
                     needs: widget.items == null && chat.waiting,
-                    onTap: () =>
-                        _follower.follow(glide: !reduceMotion(context)),
+                    onTap: () {
+                      _userMoved = DateTime.now();
+                      _follower.follow(glide: !reduceMotion(context));
+                    },
                   ),
                 ),
               ),
