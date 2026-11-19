@@ -263,11 +263,16 @@ func (s *Service) Roots(chatID string) ([]string, error) {
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	return c.rootsLocked(), nil
+}
+
+// rootsLocked is the chat's folder and its worktree, when that's another.
+func (c *chat) rootsLocked() []string {
 	roots := []string{c.record.Folder}
 	if wt := c.record.Worktree; wt != nil && wt.Path != c.record.Folder {
 		roots = append(roots, wt.Path)
 	}
-	return roots, nil
+	return roots
 }
 
 // Wrote reports whether one of a chat's tool calls (a subagent's too)
