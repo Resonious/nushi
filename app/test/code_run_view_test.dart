@@ -276,6 +276,6 @@ void main() {
   test('outputs are kept by block', () {
     final runs = CodeRuns('c', ValueNotifier(const []));
     expect(identical(runs.of('ls'), runs.of('ls')), isTrue);
-    runs.dispose();
+    runs.close();
   });
 }

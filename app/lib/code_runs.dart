@@ -123,6 +123,9 @@ class CodeRun extends ChangeNotifier {
     this.exit = exit;
     notifyListeners();
   }
+
+  /// Tells its listeners [CodeRuns] changed it.
+  void _changed() => notifyListeners();
 }
 
 /// A terminal's output followed for runs: whether its shell runs a command
@@ -132,7 +135,7 @@ class _Follow {
 
   final String id;
   final marks = ShellMarks();
-  // Cancelled by CodeRuns.dispose, or ended with the terminal.
+  // Cancelled by CodeRuns.close, or ended with the terminal.
   // ignore: cancel_subscriptions
   StreamSubscription<pb.AttachTerminalResponse>? sub;
   final replayed = Completer<void>();
@@ -145,7 +148,7 @@ class _Follow {
 
 /// A chat's code block runs, by block, for as long as the app runs (not
 /// saved); their output goes to [outputs], the composer's cards.
-class CodeRuns extends ChangeNotifier {
+class CodeRuns {
   new(this.chatId, this.outputs);
 
   final String chatId;
@@ -200,7 +203,7 @@ class CodeRuns extends ChangeNotifier {
         Timer(const Duration(milliseconds: 1500), () {
           run
             ..justTyped = false
-            ..notifyListeners();
+            .._changed();
         });
       }
     } on Object {
@@ -214,7 +217,7 @@ class CodeRuns extends ChangeNotifier {
     if (run.state != RunState.running) return;
     run.stopAsked = true;
     if (!run.marked) run._set(RunState.stopped);
-    run.notifyListeners();
+    run._changed();
     await terms.client.writeTerminal(
       pb.WriteTerminalRequest(terminalId: run.terminalId, data: [3]),
     );
@@ -358,12 +361,10 @@ class CodeRuns extends ChangeNotifier {
   }
 
   /// Stops following every terminal (the chat is gone).
-  @override
-  void dispose() {
+  void close() {
     for (final f in _follows.values) {
       unawaited(f.sub?.cancel());
     }
     _follows.clear();
-    super.dispose();
   }
 }
