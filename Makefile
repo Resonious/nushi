@@ -42,7 +42,7 @@ BUILD := $(or $(shell git rev-list --count HEAD 2>/dev/null),1)
 MACOS_MIN := 13.0
 MACOS_CGO := -O2 -g -mmacosx-version-min=$(MACOS_MIN)
 
-.PHONY: run daemon stop app package package-linux install gen gen-tools test test-go test-packages test-app test-timings test-web lint lint-go lint-dart lint-linux lint-windows check check-app golden-diff renders lines relay relay-web icons adapters web web-fonts web-cut mermaid screenshots gallery claude-record hooks
+.PHONY: run daemon stop app package package-linux install gen gen-tools test test-go test-packages test-app test-timings test-web lint lint-go lint-dart lint-linux lint-windows check golden-diff renders lines relay relay-web icons adapters web web-fonts web-cut mermaid screenshots gallery claude-record hooks
 
 # Starts the daemon in the background (unless one is running), then the app.
 run: daemon app
@@ -361,12 +361,6 @@ gallery:
 check:
 	@go build -o bin/check ./tools/check
 	@bin/check
-
-# make check, under the name it had when it checked only the app (until
-# 2026-11-16), for the briefs that still say it.
-check-app:
-	@echo "make check-app is make check now: the lint, every test and the build"
-	@$(MAKE) --no-print-directory check
 
 # What changed in the goldens against BASE (a ref, HEAD by default), new and
 # removed ones included: each file's size, changed box and pixel count, with

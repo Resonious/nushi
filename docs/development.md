@@ -54,7 +54,7 @@ tools/linux-smoke.sh dist/nushi-1.2.0-linux-amd64.tar.gz  # install and start it
 
 `make hooks` sets this clone's `core.hooksPath` to `.githooks`, whose `pre-push` runs `make lint` and refuses the push when it fails (quiet when it passes); `git push --no-verify` skips it deliberately.
 
-`make check` runs it, the tests and the desktop app's build (`tools/check`): the app's suite (`--concurrency 3`) and then the web's tests in one lane, the lints and the other tests in another beside it, then `flutter build macos` (`linux` on Linux). A failure stops nothing, so one run shows every failure; each step's log is in `bin/check-logs`. `make check-app` is the same, under its old name.
+`make check` runs it, the tests and the desktop app's build (`tools/check`): the app's suite (`--concurrency 3`) and then the web's tests in one lane, the lints and the other tests in another beside it, then `flutter build macos` (`linux` on Linux). A failure stops nothing, so one run shows every failure; each step's log is in `bin/check-logs`.
 
 **Go.** golangci-lint and govulncheck are pinned in their own module, `tools/lint/go.mod`. `make lint` builds them into `bin/` and runs them: nothing to install, and the daemon's `go.mod` doesn't take their dependencies.
 
