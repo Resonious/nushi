@@ -8,6 +8,7 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/grow.dart';
 import 'package:nushi/motion.dart';
 import 'package:nushi/turn_status.dart';
+import 'package:nushi/worktree.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
@@ -237,4 +238,59 @@ void main() {
     );
     await closeView(tester, d);
   });
+
+  testWidgets('a new chat’s bar under the box has its room before its '
+      'snapshot is in: the box doesn’t move as it comes', (tester) async {
+    final d = await FakeDaemon([]).connect(tester);
+    final at = DateTime(2026, 11, 20, 9);
+    // Never sent to: the daemon's updated time is its created time.
+    final chat = ChatState('c', '/Users/me/nushi')
+      ..agent = 'claude'
+      ..created = at
+      ..updated = at;
+    d.chats['c'] = chat;
+    await _alone(tester, chat, d);
+    expect(find.byType(NewChatBar), findsOneWidget);
+    final box = tester.getTopLeft(find.byType(Composer)).dy;
+    chat
+      ..loaded = true
+      ..notifyListeners();
+    await tester.pumpAndSettle();
+    expect(find.byType(NewChatBar), findsOneWidget);
+    expect(tester.getTopLeft(find.byType(Composer)).dy, box);
+    await closeView(tester, d);
+  });
+
+  testWidgets('a chat sent to before keeps no bar’s room while its snapshot '
+      'comes', (tester) async {
+    final d = await FakeDaemon([]).connect(tester);
+    final chat = ChatState('c', '/Users/me/nushi')
+      ..agent = 'claude'
+      ..created = DateTime(2026, 11, 20, 9)
+      ..updated = DateTime(2026, 11, 20, 10);
+    d.chats['c'] = chat;
+    await _alone(tester, chat, d);
+    expect(find.byType(NewChatBar), findsNothing);
+    await closeView(tester, d);
+  });
+}
+
+/// [chat]'s box alone, with a new chat's folder bar, at the window's foot.
+Future<void> _alone(WidgetTester tester, ChatState chat, Daemon d) async {
+  await tester.pumpWidget(
+    themed(
+      Align(
+        alignment: Alignment.bottomCenter,
+        child: SizedBox(
+          width: 640,
+          child: ListenableBuilder(
+            listenable: chat,
+            builder: (context, _) =>
+                Composer(chat: chat, daemon: d, folder: true),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pump();
 }

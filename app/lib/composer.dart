@@ -655,11 +655,18 @@ class _ComposerState extends State<Composer> {
                     child: pickers,
                   ),
                 // A chat without messages: where it starts, under the box.
-                if (widget.folder && chat.fresh && !chat.archived)
-                  Padding(
-                    padding: EdgeInsets.only(top: touch ? 4 : 10),
-                    child: NewChatBar(chat: chat, daemon: widget.daemon),
-                  ),
+                // Its room is kept from the first frame for one likely
+                // without (its snapshot not in yet), and eases as it comes
+                // or goes: the box doesn't jump.
+                EaseSize(
+                  alignment: AlignmentDirectional.bottomStart,
+                  child: widget.folder && chat.likelyFresh && !chat.archived
+                      ? Padding(
+                          padding: EdgeInsets.only(top: touch ? 4 : 10),
+                          child: NewChatBar(chat: chat, daemon: widget.daemon),
+                        )
+                      : const SizedBox(width: double.infinity),
+                ),
               ],
             );
           },

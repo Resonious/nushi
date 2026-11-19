@@ -6,6 +6,7 @@ import 'package:nushi/chat.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/folder_button.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/motion.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
@@ -185,24 +186,27 @@ class _NewChatBarState extends State<NewChatBar> with FollowsChanges {
             worktrees: _worktrees,
           ),
         ),
+        // Known a moment after the folder: it comes in, not pops.
         if (_git)
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: on ? t.accentSoft : t.raised,
-              borderRadius: BorderRadius.circular(NushiTheme.pill),
-            ),
-            child: Tap(
-              onTap: chat.busy || chat.waiting
-                  ? null
-                  : () => _switch(context, chat, daemon, !on),
-              radius: NushiTheme.pill,
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-              child: Row(
-                spacing: 4,
-                children: [
-                  Icon(worktreeIcon, size: 12, color: color),
-                  Text('New worktree', style: theme.ui(color, size: 12)),
-                ],
+          Enter.pop(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: on ? t.accentSoft : t.raised,
+                borderRadius: BorderRadius.circular(NushiTheme.pill),
+              ),
+              child: Tap(
+                onTap: chat.busy || chat.waiting
+                    ? null
+                    : () => _switch(context, chat, daemon, !on),
+                radius: NushiTheme.pill,
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                child: Row(
+                  spacing: 4,
+                  children: [
+                    Icon(worktreeIcon, size: 12, color: color),
+                    Text('New worktree', style: theme.ui(color, size: 12)),
+                  ],
+                ),
               ),
             ),
           ),
