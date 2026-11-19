@@ -764,7 +764,9 @@ extension type NushiServiceClient(connect.Transport _transport) {
   /// again: a chat whose agent should run but doesn't is reopened, as
   /// GetChat does, and one whose last reopen failed (status.reopen_failed)
   /// tries again, once a call, unless what stopped it still holds (its
-  /// folder is gone, its agent isn't ready). A sleeping chat stays asleep.
+  /// folder is gone, its agent isn't ready). A sleeping chat stays asleep,
+  /// and so does one last used over an hour (or the sleep time, if
+  /// shorter) before the daemon started whose transcript's copy is kept.
   Future<nushiv1nushi.ReopenChatResponse> reopenChat(
     nushiv1nushi.ReopenChatRequest input, {
     connect.Headers? headers,

@@ -45,6 +45,7 @@ type Service struct {
 	copies    Copies      // Options', if chats keep copies of their transcripts
 	copiesOn  func() bool // whether they write them now
 	timing    Timing      // Options'
+	begun     time.Time   // when it was made: the daemon's start (dormant)
 
 	// ctx ends with Close, and with it what the service started on its own:
 	// its loops, the background commands it follows, its timers.
@@ -223,7 +224,7 @@ type chat struct {
 	mcpChanged bool
 	issue      *model.ChatIssue // the Jira issue it was started from; its tools are for it
 	canLoad    bool             // the agent can reopen the session, so it can sleep
-	asleep     bool             // its agent was stopped to sleep: opening the chat doesn't reopen it
+	asleep     bool             // its agent was stopped to sleep, or it was left asleep at the daemon's start (dormant): opening the chat doesn't reopen it
 	reapplying bool             // its session just opened: its picks aren't back on it yet (reapply)
 	retiring   Agent            // the agent it fell asleep from, until a reopen has seen it end
 	woke       chan struct{}    // closed when the reopen under way ends

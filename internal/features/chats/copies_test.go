@@ -166,7 +166,7 @@ func TestCopiesOff(t *testing.T) {
 func TestExpiredChatKeptForItsCopy(t *testing.T) {
 	store, err := transcripts.Open(filepath.Join(t.TempDir(), "transcripts"))
 	testcheck.NoErr(t, err)
-	svc, _, sessions, ev := goneService(t, errNotFound, always, model.ChatRecord{Title: "Old work"}, Options{Copies: store})
+	svc, _, sessions, ev := goneService(t, errNotFound, always, model.ChatRecord{Title: "Old work", Updated: time.Now()}, Options{Copies: store}) // in use: it reopens when shown
 	testcheck.NoErr(t, store.Append("c", []model.Item{{ID: "item-1", Kind: model.UserMessage, Text: "one"}, {ID: "m1", Kind: model.AgentMessage, Text: "a"}}, []string{"", "item-1"}))
 
 	_, _ = svc.Get("c")

@@ -266,7 +266,7 @@ func TestSubagentsEndOnReopenAfterTheDaemonWent(t *testing.T) {
 	feed(c, recorded(t, "stop_then_start.jsonl"))
 	feed(c, recorded(t, "stops.jsonl"))
 	c.mu.Lock()
-	c.saveLocked(func(s *model.ChatRecord) { s.HasMessages = true })
+	c.saveLocked(func(s *model.ChatRecord) { s.HasMessages, s.Updated = true, time.Now() }) // in use: it reopens when shown
 	c.copyLocked(true)
 	c.mu.Unlock()
 

@@ -89,6 +89,7 @@ func (c *chat) openSession(ctx context.Context, sid, folder string, fork bool, a
 		o.load = caps.LoadSession
 		o.images = caps.PromptCapabilities != nil && caps.PromptCapabilities.Image
 	}
+	c.kind.noLoad.Store(!o.load)
 	switch {
 	case sid == "":
 		o.sid, o.config, err = c.newSession(ctx, agent, folder)

@@ -3,6 +3,8 @@ package chats
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
+	"time"
 
 	"github.com/afrase/nushi/internal/model"
 )
@@ -31,6 +33,9 @@ type kind struct {
 	launch  Launch // Launch, refused once the service closes
 	tools   Tools  // Nushi's own tools for its chats' sessions; nil: none
 	deletes *bool  // whether the agent deletes sessions, once known (under Service.mu)
+	// noLoad says the agent was found not to reopen sessions: its chats
+	// reopen when shown after a daemon start, never left asleep (dormant).
+	noLoad atomic.Bool
 
 	forker         Forker
 	toolReader     ToolReader
@@ -122,7 +127,7 @@ type Options struct {
 func New(ctx context.Context, agents []Kind, o Options) *Service {
 	s := &Service{remembered: o.Remembered, sessions: o.Sessions, worktrees: o.Worktrees,
 		scratch: o.Scratch, uploads: o.Uploads, publish: o.Publish, viewers: o.Viewers, procs: o.Processes, prefs: o.Sleep, copies: o.Copies, copiesOn: o.CopiesOn,
-		timing: o.Timing, chats: map[string]*chat{}, live: map[Agent]bool{}, opening: map[string]bool{}}
+		timing: o.Timing, begun: time.Now(), chats: map[string]*chat{}, live: map[Agent]bool{}, opening: map[string]bool{}}
 	s.ctx, s.cancel = context.WithCancel(ctx)
 	if s.publish == nil {
 		s.publish = func(model.Event) {}

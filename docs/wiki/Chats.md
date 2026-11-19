@@ -200,5 +200,6 @@ To keep a chat's work apart from your checkout, click **New worktree** under the
 - **Quitting Nushi doesn't stop your agents.** A background helper (the daemon) keeps them and the chat's terminals running. More on terminals in [Previews and terminals](Previews-and-terminals).
 - **The card at the bottom of the sidebar** counts the agents that are working, awake and asleep, and shows the memory Nushi takes. Click the memory to see each awake chat's, with **Sleep** beside it.
 - **Idle chats sleep** after 30 minutes: the agent stops, and your next message wakes it. A sleeping chat's row in the sidebar has no dot and is faint and in italics (unless a turn it finished is still unseen); its header says **Asleep**. Change it in **Settings › General › Sleep idle chats**.
+- **Old chats stay asleep after Nushi restarts.** Looking at one doesn't start its agent; your next message does. The chat you used in the hour before the restart wakes when you open it.
 - **Rewind and side chats** show only for agents that support them.
 - **Don't use a session in Nushi and a terminal at once**: both write to it.

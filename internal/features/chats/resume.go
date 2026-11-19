@@ -47,8 +47,35 @@ func (s *Service) find(id string) (*chat, error) {
 	c.id, c.sid, c.record, c.issue = id, sess.SessionID, sess, sess.Issue
 	c.ultracode.Store(sess.Ultracode)
 	c.inCopy = c.copies != nil
+	if c.asleep = s.dormant(sess, k); c.asleep {
+		c.logLocked().Info("chat asleep", "why", "unused before the daemon started")
+	}
 	s.chats[id] = c
 	return c, nil
+}
+
+// wakeWindow is how long before the daemon started a chat may have been
+// used for showing it to reopen it: the chat the user was in the middle
+// of is ready when they come back.
+const wakeWindow = time.Hour
+
+// dormant says a stored chat found for the first time since the daemon
+// started stays asleep, as a slept one does, until something needs its
+// agent: one shown to look something up isn't woken. That is a chat not
+// archived, last used (a message or a turn's end: Updated) longer before
+// the daemon started than wakeWindow, or than the time chats idle before
+// they sleep if that is shorter (it would have been asleep), and whose
+// transcript its copy holds, so it shows without its agent's replay. One
+// with no copy reopens when shown, as one of an agent that can't reopen
+// sessions does. The start, not now, is what it's measured from: a chat
+// doesn't turn old because the user came back late.
+func (s *Service) dormant(sess model.ChatRecord, k *kind) bool {
+	window := wakeWindow
+	if after := s.SleepAfter(); after > 0 {
+		window = min(window, after)
+	}
+	return !sess.Archived && !k.noLoad.Load() && sess.Updated.Before(s.begun.Add(-window)) &&
+		s.copies != nil && s.copiesOn() && s.copies.Has(sess.ID)
 }
 
 // openChats is the chats open now, side chats among them.
@@ -195,7 +222,8 @@ func (c *chat) failedLocked(err error) {
 // but doesn't is reopened, as opening it does, and one whose last reopen
 // failed tries again, once a call, unless what stopped it still holds (its
 // folder is gone, its agent isn't ready: the notice says so then). A
-// sleeping or archived chat stays as it is.
+// sleeping or archived chat stays as it is, as does one left asleep since
+// the daemon started (dormant).
 func (s *Service) Reopen(id string) error {
 	c, err := s.find(id) // an asleep chat shown stays let go
 	if err != nil {
