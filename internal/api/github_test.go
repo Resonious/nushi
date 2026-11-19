@@ -90,10 +90,8 @@ func TestGitHubLogsNoTokenNorText(t *testing.T) {
 	svc := github.New(github.Deps{
 		Gh:     github.Gh{Token: func(context.Context, string) (string, string, error) { return "", "", nil }, Hosts: func() []string { return nil }, Reload: func() {}},
 		Tokens: memTokens{}, Store: &memHosts{Store: store.New(t.TempDir())},
-		Open:    func(h, token string) github.Client { return githubapi.New(h, token, gh.Client().Transport) },
-		NeedsOK: func(error) bool { return false },
-		Restart: func(error) bool { return false },
-		Missing: func(error) bool { return false },
+		Open: func(h, token string) github.Client { return githubapi.New(h, token, gh.Client().Transport) },
+		Keys: github.Keys{NeedsOK: func(error) bool { return false }, Restart: func(error) bool { return false }, Missing: func(error) bool { return false }},
 	})
 	c := client(t, New(Services{GitHub: svc}))
 	ctx := context.Background()

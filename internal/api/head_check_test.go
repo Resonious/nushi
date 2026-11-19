@@ -95,11 +95,11 @@ func TestStartChatChecksAPullRequestsHead(t *testing.T) {
 	svc := chats.New(t.Context(), []chats.Kind{{Harness: model.HarnessInfo{Name: "a", Title: "A"}, Launch: launch}},
 		chats.Options{Remembered: st, Sessions: st, Scratch: t.TempDir(), Worktrees: wts})
 	gh := github.New(github.Deps{
-		Gh:      github.Gh{Token: func(context.Context, string) (string, string, error) { return "tok", "gh", nil }, Hosts: func() []string { return nil }, Reload: func() {}},
-		Tokens:  memTokens{},
-		Store:   &memHosts{Store: store.New(t.TempDir())},
-		Open:    func(string, string) github.Client { return forkPull{} },
-		NeedsOK: func(error) bool { return false }, Restart: func(error) bool { return false }, Missing: func(error) bool { return false },
+		Gh:     github.Gh{Token: func(context.Context, string) (string, string, error) { return "tok", "gh", nil }, Hosts: func() []string { return nil }, Reload: func() {}},
+		Tokens: memTokens{},
+		Store:  &memHosts{Store: store.New(t.TempDir())},
+		Open:   func(string, string) github.Client { return forkPull{} },
+		Keys:   github.Keys{NeedsOK: func(error) bool { return false }, Restart: func(error) bool { return false }, Missing: func(error) bool { return false }},
 		Remotes: func(context.Context, string) (map[string]string, error) {
 			return map[string]string{"origin": "git@github.com:o/app.git"}, nil
 		},

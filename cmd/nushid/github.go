@@ -36,12 +36,10 @@ func newGitHub(st *store.Store, dev bool) *github.Service {
 			Hosts:  auth.KnownHosts,
 			Reload: func() { _ = config.Reload(nil) }, // a config gh can't read leaves the last one
 		},
-		Tokens:  keychain.Keychain{Service: service},
-		Store:   st,
-		Open:    func(host, token string) github.Client { return githubapi.New(host, token, transport) },
-		NeedsOK: is(keychain.ErrNeedsOK),
-		Restart: is(keychain.ErrRestart),
-		Missing: is(keychain.ErrNotFound),
+		Tokens: keychain.Keychain{Service: service},
+		Store:  st,
+		Open:   func(host, token string) github.Client { return githubapi.New(host, token, transport) },
+		Keys:   github.Keys{NeedsOK: is(keychain.ErrNeedsOK), Restart: is(keychain.ErrRestart), Missing: is(keychain.ErrNotFound)},
 		Remotes: func(ctx context.Context, folder string) (map[string]string, error) {
 			rs, err := git.Remotes(ctx, folder)
 			out := map[string]string{}
