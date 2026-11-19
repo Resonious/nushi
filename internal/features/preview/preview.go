@@ -63,10 +63,9 @@ func (*Set) Tools(tools.Grant) []tools.Tool {
 			"Or, given url instead of path, opens a page this Mac serves (http or https to localhost, a *.localhost name, 127.0.0.1 or [::1], any port) in a browser tab there. " +
 			"Use it to show the user a finished page, document or image, not for routine edits. " +
 			"The file must be inside this chat's folder or worktree, or one you wrote. An HTML page runs when it opens.",
-		InputSchema: json.RawMessage(`{"type":"object","properties":{"path":{"type":"string","maxLength":4096,` +
+		InputSchema: tools.Schema(`"path":{"type":"string","maxLength":4096,` +
 			`"description":"The file: absolute, or relative to the chat's folder."},` +
-			`"url":{"type":"string","maxLength":4096,"description":"Instead of path: a page on this Mac, such as http://localhost:3000/."}},` +
-			`"additionalProperties":false}`)}}
+			`"url":{"type":"string","maxLength":4096,"description":"Instead of path: a page on this Mac, such as http://localhost:3000/."}`)}}
 }
 
 // The tool's refusals, each fixed text: tools.Service logs a tool's error,
