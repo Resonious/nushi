@@ -217,6 +217,13 @@ func (p *proc) end() {
 
 func (p *proc) Done() <-chan struct{} { return p.done }
 
+// wired is what reached the agent: prompts, cancels and stops, in order.
+func (f *fakeAgent) wired() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return slices.Clone(f.wire)
+}
+
 // enter says a call has reached the gate named gate (entered).
 func (f *fakeAgent) enter(gate string) {
 	f.mu.Lock()

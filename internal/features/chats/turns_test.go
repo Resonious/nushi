@@ -79,7 +79,7 @@ func TestAPromptInTheAgentsOwnTurn(t *testing.T) {
 	if resp := <-answer; !resp.Outcome.Cancelled || svc.Status(model.ChatRecord{ID: c.id}).Waiting {
 		t.Errorf("after Stop: %+v, waiting %v", resp.Outcome, svc.Status(model.ChatRecord{ID: c.id}).Waiting)
 	}
-	if got := agent.onWire(); got[len(got)-1] != "cancel" {
+	if got := agent.wired(); got[len(got)-1] != "cancel" {
 		t.Errorf("the agent got %q", got)
 	}
 	// Item ids are never reused, cut or not.
@@ -135,13 +135,13 @@ func TestSendNowStopsOnlyTheTurnItCameFor(t *testing.T) {
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "held"}, SendQueue))
 	now := make(chan error)
 	go func() { now <- svc.Prompt(t.Context(), c.id, model.Message{Text: "now"}, SendNow) }()
-	eventually(t, c, func() bool { return slices.Contains(agent.onWire(), "cancel") })
+	eventually(t, c, func() bool { return slices.Contains(agent.wired(), "cancel") })
 	agent.release() // the turn ends on its own (end_turn), crossing the cancel
 	if err := <-now; err != nil {
 		t.Fatal(err)
 	}
-	eventually(t, c, func() bool { return len(agent.onWire()) == 3 })
-	if got := agent.onWire(); !slices.Equal(got, []string{"prompt one", "cancel", "prompt now"}) {
+	eventually(t, c, func() bool { return len(agent.wired()) == 3 })
+	if got := agent.wired(); !slices.Equal(got, []string{"prompt one", "cancel", "prompt now"}) {
 		t.Errorf("the agent got %q", got)
 	}
 	agent.release()

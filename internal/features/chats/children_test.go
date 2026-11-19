@@ -287,10 +287,3 @@ func TestSubagentsEndOnReopenAfterTheDaemonWent(t *testing.T) {
 		}
 	}
 }
-
-// wired is what reached the agent: prompts and cancels, in order.
-func (f *fakeAgent) wired() []string {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	return slices.Clone(f.wire)
-}

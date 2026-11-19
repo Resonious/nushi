@@ -58,7 +58,7 @@ func TestSideChatKeepsToItself(t *testing.T) {
 	if err := svc.Prompt(t.Context(), side, model.Message{Text: "aside?"}, SendIdle); err != nil {
 		t.Fatal(err)
 	}
-	eventually(t, sideChat, func() bool { return len(agent.onWire()) == 1 })
+	eventually(t, sideChat, func() bool { return len(agent.wired()) == 1 })
 	sessions.mu.Lock()
 	for _, s := range sessions.saved {
 		if s.ID == side {
@@ -69,7 +69,7 @@ func TestSideChatKeepsToItself(t *testing.T) {
 	if err := svc.CloseSide(side); err != nil {
 		t.Fatal(err)
 	}
-	eventually(t, sideChat, func() bool { return !sideChat.busy && slices.Contains(agent.onWire(), "cancel") })
+	eventually(t, sideChat, func() bool { return !sideChat.busy && slices.Contains(agent.wired(), "cancel") })
 	if sideChat.agent != nil {
 		t.Error("a closed side chat keeps the agent: what follows it (a background command) goes on")
 	}

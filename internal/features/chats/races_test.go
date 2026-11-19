@@ -15,12 +15,6 @@ import (
 	"github.com/afrase/nushi/internal/testcheck"
 )
 
-func (f *fakeAgent) onWire() []string {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	return slices.Clone(f.wire)
-}
-
 func TestACancelNeverOvertakesItsPrompt(t *testing.T) {
 	svc, agent, c := newChat(t, `{"sessionId":"s1"}`, &memModes{})
 	agent.gate, agent.sendGate = make(chan struct{}), make(chan struct{})
@@ -30,7 +24,7 @@ func TestACancelNeverOvertakesItsPrompt(t *testing.T) {
 	}
 	close(agent.sendGate) // the prompt is written only now
 	eventually(t, c, func() bool { return !c.busy })
-	if got := agent.onWire(); !reflect.DeepEqual(got, []string{"prompt one", "cancel"}) {
+	if got := agent.wired(); !reflect.DeepEqual(got, []string{"prompt one", "cancel"}) {
 		t.Errorf("the agent got %q", got)
 	}
 }
@@ -169,9 +163,9 @@ func TestCloseEndsTheTurnFirst(t *testing.T) {
 	svc, agent, c := newChat(t, `{"sessionId":"s1"}`, &memModes{})
 	agent.gate = make(chan struct{})
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "one"}, SendIdle))
-	eventually(t, c, func() bool { return len(agent.onWire()) == 1 })
+	eventually(t, c, func() bool { return len(agent.wired()) == 1 })
 	svc.Close()
-	if got := agent.onWire(); !reflect.DeepEqual(got, []string{"prompt one", "cancel", "stop"}) {
+	if got := agent.wired(); !reflect.DeepEqual(got, []string{"prompt one", "cancel", "stop"}) {
 		t.Errorf("the agent got %q", got)
 	}
 }
