@@ -90,8 +90,11 @@ class _RemoteSectionState extends State<RemoteSection> {
                 ),
                 SettingsRow(
                   'Relay',
-                  control: SizedBox(
-                    width: 300,
+                  // Narrow, the field goes under its label, as wide as the
+                  // row allows, rather than leave the label a few points.
+                  stackBelow: 440,
+                  control: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 300),
                     child: TextField(
                       controller: _relay,
                       style: theme.code(t.text),
@@ -169,6 +172,9 @@ class _DeviceRow extends StatelessWidget {
         : '';
     return SettingsRow(
       d.name,
+      // Narrow, the two buttons go under the words rather than wrap them
+      // to three lines.
+      stackBelow: 520,
       description:
           '${d.kind == 'web' ? 'Web' : 'iPhone app'}'
           ' · notifications ${d.push ? 'on' : 'off'}'

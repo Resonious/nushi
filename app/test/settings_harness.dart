@@ -198,22 +198,40 @@ Future<Daemon> pumpSettingsApp(
 }
 
 /// Every row's control ends at its group's right edge, less the row's
-/// padding; returns how many rows were checked.
+/// padding, or, where a narrow row stacks it under its label
+/// (`stackBelow`), starts at the label's left; returns how many rows were
+/// checked.
 int expectControlsAtEdge(WidgetTester tester) {
   var n = 0;
   for (final e in find.byType(SettingsRow).evaluate()) {
-    final control = (e.widget as SettingsRow).control;
+    final row = e.widget as SettingsRow;
+    final control = row.control;
     if (control == null) continue;
-    final group = find.ancestor(
-      of: find.byWidget(e.widget),
-      matching: find.byType(SettingsGroup),
+    final group = tester.getRect(
+      find
+          .ancestor(
+            of: find.byWidget(e.widget),
+            matching: find.byType(SettingsGroup),
+          )
+          .first,
     );
-    final right = tester.getRect(find.byWidget(control)).right;
-    expect(
-      right,
-      moreOrLessEquals(tester.getRect(group.first).right - 14, epsilon: 0.5),
-      reason: (e.widget as SettingsRow).label,
+    final at = tester.getRect(find.byWidget(control));
+    final label = tester.getRect(
+      find.descendant(of: find.byWidget(row), matching: find.text(row.label)),
     );
+    if (row.stackBelow != null && at.top >= label.bottom) {
+      expect(
+        at.left,
+        moreOrLessEquals(label.left, epsilon: 0.5),
+        reason: '${row.label}, under its label',
+      );
+    } else {
+      expect(
+        at.right,
+        moreOrLessEquals(group.right - 14, epsilon: 0.5),
+        reason: row.label,
+      );
+    }
     n++;
   }
   return n;

@@ -362,6 +362,52 @@ void main() {
     await closeView(tester, d);
   }, variant: macOS);
 
+  testWidgets('720 wide, Remote access stacks what would squeeze: the '
+      'relay field under its label, a phone’s buttons under its words', (
+    tester,
+  ) async {
+    final d = await pumpSettingsApp(
+      tester,
+      settingsFake(),
+      SettingsSection.remote,
+      size: const Size(720, 900),
+    );
+    final label = tester.getRect(find.text('Relay'));
+    final field = tester.getRect(
+      find.descendant(
+        of: find.byType(SettingsView),
+        matching: find.byType(TextField),
+      ),
+    );
+    expect(label.height, lessThan(20), reason: 'one line');
+    expect(field.top, greaterThan(label.bottom));
+    expect(field.left, closeTo(label.left, 1));
+    final words = tester.getRect(find.textContaining('notifications off'));
+    expect(words.height, lessThan(20), reason: 'one line');
+    expect(tester.getRect(find.text('Revoke')).top, greaterThan(words.bottom));
+    expectTextInside(tester, 720);
+    await closeView(tester, d);
+  }, variant: macOS);
+
+  testWidgets('900 wide, they stay beside', (tester) async {
+    final d = await pumpSettingsApp(
+      tester,
+      settingsFake(),
+      SettingsSection.remote,
+      size: const Size(900, 900),
+    );
+    final label = tester.getRect(find.text('Relay'));
+    final field = tester.getRect(
+      find.descendant(
+        of: find.byType(SettingsView),
+        matching: find.byType(TextField),
+      ),
+    );
+    expect(field.center.dy, closeTo(label.center.dy, 2));
+    expect(field.width, 300);
+    await closeView(tester, d);
+  }, variant: macOS);
+
   testWidgets('opening Settings asks GitHub and Jira nothing: their pages '
       'do, as they show', (tester) async {
     final fake = settingsFake();

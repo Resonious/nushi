@@ -228,6 +228,7 @@ class SettingsRow extends StatelessWidget {
     this.control,
     this.descriptionColor,
     this.descriptionLines,
+    this.stackBelow,
   });
 
   final String label;
@@ -236,40 +237,54 @@ class SettingsRow extends StatelessWidget {
   final Color? descriptionColor;
   final int? descriptionLines;
 
+  /// The row's width under which [control] goes under the label, at its
+  /// left, rather than squeeze the label beside a wide control (a field,
+  /// two buttons); null keeps it beside at any width.
+  final double? stackBelow;
+
   @override
   Widget build(BuildContext context) {
     final theme = NushiTheme.of(context);
     final t = theme.t;
+    final words = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: theme.ui(t.text)),
+        if (description case final d? when d.isNotEmpty)
+          Text(
+            d,
+            maxLines: descriptionLines,
+            overflow: descriptionLines == null ? null : TextOverflow.ellipsis,
+            style: theme.ui(descriptionColor ?? t.textMuted, size: 12),
+          ),
+      ],
+    );
+    Widget beside() => Row(
+      children: [
+        Expanded(child: words),
+        if (control case final c?) ...[const SizedBox(width: 16), c],
+      ],
+    );
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: settingsRowHeight),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(label, style: theme.ui(t.text)),
-                  if (description case final d? when d.isNotEmpty)
-                    Text(
-                      d,
-                      maxLines: descriptionLines,
-                      overflow: descriptionLines == null
-                          ? null
-                          : TextOverflow.ellipsis,
-                      style: theme.ui(
-                        descriptionColor ?? t.textMuted,
-                        size: 12,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            if (control case final c?) ...[const SizedBox(width: 16), c],
-          ],
-        ),
+        child: switch ((stackBelow, control)) {
+          (final below?, final c?) => LayoutBuilder(
+            builder: (context, box) => box.maxWidth >= below
+                ? beside()
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: 8,
+                    children: [
+                      words,
+                      Align(alignment: Alignment.centerLeft, child: c),
+                    ],
+                  ),
+          ),
+          _ => beside(),
+        },
       ),
     );
   }
