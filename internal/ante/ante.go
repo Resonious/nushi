@@ -16,7 +16,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -114,15 +113,11 @@ func binary() (string, error) {
 
 // version checks ante's version, refusing one older than Min.
 func version(bin string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, bin, "--version")
-	procgroup.Bound(cmd)
-	out, err := cmd.Output()
+	out, err := agentproc.Version(bin)
 	if err != nil {
-		return "", fmt.Errorf("couldn't run %s --version: %w", bin, err)
+		return "", err
 	}
-	v := strings.TrimPrefix(strings.TrimSpace(string(out)), "ante ")
+	v := strings.TrimPrefix(out, "ante ")
 	if err := check(v); err != nil {
 		return "", err
 	}
@@ -135,7 +130,7 @@ func version(bin string) (string, error) {
 // check refuses a version older than Min, or one it can't read; a newer
 // one, of any major, is tried (ADR 0030).
 func check(v string) error {
-	got, want := numbers(v), numbers(Min)
+	got, want := agentproc.Numbers(v), agentproc.Numbers(Min)
 	switch {
 	case got == nil:
 		return fmt.Errorf("couldn't read ante's version from %q", v)
@@ -143,25 +138,6 @@ func check(v string) error {
 		return fmt.Errorf("Ante %s is older than the %s Nushi needs: run `ante update`", v, Min)
 	}
 	return nil
-}
-
-// numbers reads a version's three numbers, a prerelease's tag left out;
-// nil if it hasn't three.
-func numbers(v string) []int {
-	v, _, _ = strings.Cut(v, "-")
-	parts := strings.Split(v, ".")
-	if len(parts) != 3 {
-		return nil
-	}
-	out := make([]int, 3)
-	for i, p := range parts {
-		n, err := strconv.Atoi(p)
-		if err != nil {
-			return nil
-		}
-		out[i] = n
-	}
-	return out
 }
 
 // catalog reads Ante's providers and their models (`ante catalog`).
