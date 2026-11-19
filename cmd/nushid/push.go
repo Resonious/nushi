@@ -42,16 +42,11 @@ func usePush(st *store.Store, r *remote.Service, chatSvc *chats.Service, kinds [
 			return (&webpush.Sender{Keys: keys, Subject: subject, Transport: transport}).Send(ctx, s, m)
 		},
 		Agent: func(chatID string) (string, bool) {
-			sessions, err := chatSvc.List()
+			sess, err := chatSvc.Session(chatID)
 			if err != nil {
 				return "", false
 			}
-			for _, s := range sessions {
-				if s.ID == chatID {
-					return titles[s.Agent], titles[s.Agent] != ""
-				}
-			}
-			return "", false
+			return titles[sess.Agent], titles[sess.Agent] != ""
 		},
 	}, fresh)
 	return nil
