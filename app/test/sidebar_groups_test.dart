@@ -9,13 +9,12 @@ import 'package:nushi/chat_keys.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/settings.dart';
-import 'package:nushi/sidebar.dart';
 import 'package:nushi/sidebar_groups.dart';
 import 'package:nushi/status.dart';
 import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
-import 'harness.dart';
+import 'sidebar_fixture.dart';
 
 /// Four projects, newest chat first: ledger-poc (one chat waiting on you,
 /// one idle), cappy (working), garden (a turn's end unseen), notes (idle).
@@ -46,35 +45,15 @@ Future<Daemon> _sidebar(
   List<Chat>? chats,
   Tokens tokens = Tokens.dark,
 }) async {
-  viewport(tester, const Size(400, 600));
-  final d = await FakeDaemon(chats ?? _chats()).connect(tester);
-  await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: MediaQuery(
-        // Still, so the working chat's ring doesn't move.
-        data: const MediaQueryData(disableAnimations: true),
-        child: Scaffold(
-          body: Align(
-            alignment: Alignment.topLeft,
-            child: RepaintBoundary(
-              key: const Key('shot'),
-              child: SizedBox(
-                width: 260,
-                height: 560,
-                child: ListenableBuilder(
-                  listenable: d,
-                  builder: (context, _) => Sidebar(daemon: d),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    ),
+  // Still, so the working chat's ring doesn't move.
+  final (d, _) = await arrangedSidebar(
+    tester,
+    chats: chats ?? _chats(),
+    tokens: tokens,
+    size: const Size(400, 600),
+    height: 560,
+    settle: false,
   );
-  await tester.pump();
   return d;
 }
 

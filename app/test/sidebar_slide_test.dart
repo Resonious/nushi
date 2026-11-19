@@ -6,10 +6,9 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/sidebar.dart';
-import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
-import 'harness.dart';
+import 'sidebar_fixture.dart';
 
 // The sidebar's drags slide: the other rows or projects move
 // apart to open the gap where the dragged one would land, and settle on
@@ -38,38 +37,13 @@ Future<(Daemon, FakeDaemon)> _sidebar(
   Map<String, int> pins = const {},
   bool still = false,
   double height = 560,
-}) async {
-  viewport(tester, Size(280, height));
-  final fake = FakeDaemon(_chats(pins: pins));
-  final d = await fake.connect(tester);
-  await tester.pumpWidget(
-    RepaintBoundary(
-      key: const Key('screen'), // the dragged title too, over the list
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: const NushiTheme(Tokens.dark).toThemeData(),
-        home: MediaQuery(
-          data: MediaQueryData(disableAnimations: still),
-          child: Scaffold(
-            body: Align(
-              alignment: Alignment.topLeft,
-              child: SizedBox(
-                width: 260,
-                height: height,
-                child: ListenableBuilder(
-                  listenable: d,
-                  builder: (context, _) => Sidebar(daemon: d),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
-  await tester.pump();
-  return (d, fake);
-}
+}) => arrangedSidebar(
+  tester,
+  chats: _chats(pins: pins),
+  size: Size(280, height),
+  still: still,
+  settle: false,
+);
 
 /// [text] in the sidebar (not the dragged copy under the pointer).
 Finder _in(String text) =>

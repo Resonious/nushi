@@ -9,10 +9,9 @@ import 'package:nushi/list_motion.dart';
 import 'package:nushi/motion.dart';
 import 'package:nushi/sidebar.dart';
 import 'package:nushi/sidebar_groups.dart';
-import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
-import 'harness.dart';
+import 'sidebar_fixture.dart';
 
 // The sidebar's rows arrive, leave and move (the fluidity review's idea
 // 9): a new row grows in, one that goes fades and folds, one pinned glides
@@ -34,35 +33,13 @@ List<Chat> _chats() => [
 Future<(Daemon, FakeDaemon)> _sidebar(
   WidgetTester tester, {
   bool still = false,
-}) async {
-  viewport(tester, const Size(280, 560));
-  final fake = FakeDaemon(_chats());
-  final d = await fake.connect(tester);
-  await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: const NushiTheme(Tokens.dark).toThemeData(),
-      home: MediaQuery(
-        data: MediaQueryData(disableAnimations: still),
-        child: Scaffold(
-          body: Align(
-            alignment: Alignment.topLeft,
-            child: SizedBox(
-              width: 260,
-              height: 560,
-              child: ListenableBuilder(
-                listenable: d,
-                builder: (context, _) => Sidebar(daemon: d),
-              ),
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
-  await tester.pump();
-  return (d, fake);
-}
+}) => arrangedSidebar(
+  tester,
+  chats: _chats(),
+  size: const Size(280, 560),
+  still: still,
+  settle: false,
+);
 
 Finder _in(String text) =>
     find.descendant(of: find.byType(Sidebar), matching: find.text(text));

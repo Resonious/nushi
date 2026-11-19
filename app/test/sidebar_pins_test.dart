@@ -10,10 +10,10 @@ import 'package:nushi/palette.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/sidebar.dart';
 import 'package:nushi/sidebar_view.dart';
-import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
+import 'sidebar_fixture.dart';
 
 const _ledger = '/Users/me/ledger-poc';
 
@@ -33,34 +33,13 @@ List<Chat> _chats({Map<String, int> pins = const {}}) => [
 
 /// The sidebar alone, 260 wide, on [chats].
 Future<Daemon> _sidebar(WidgetTester tester, List<Chat> chats) async {
-  viewport(tester, const Size(400, 600));
-  final d = await FakeDaemon(chats).connect(tester);
-  await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: const NushiTheme(Tokens.dark).toThemeData(),
-      home: MediaQuery(
-        data: const MediaQueryData(disableAnimations: true),
-        child: Scaffold(
-          body: Align(
-            alignment: Alignment.topLeft,
-            child: RepaintBoundary(
-              key: const Key('shot'),
-              child: SizedBox(
-                width: 260,
-                height: 560,
-                child: ListenableBuilder(
-                  listenable: d,
-                  builder: (context, _) => Sidebar(daemon: d),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    ),
+  final (d, _) = await arrangedSidebar(
+    tester,
+    chats: chats,
+    size: const Size(400, 600),
+    height: 560,
+    settle: false,
   );
-  await tester.pump();
   return d;
 }
 

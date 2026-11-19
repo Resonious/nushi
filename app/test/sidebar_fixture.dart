@@ -12,7 +12,8 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 
 // The sidebar's arrangement tests' chats and window
-// (`sidebar_arrange_test.dart`, `sidebar_sections_test.dart`).
+// (`sidebar_arrange_test.dart`, `sidebar_sections_test.dart`); the window
+// every sidebar test draws it alone in.
 
 Int64 _at(DateTime t) => Int64(t.millisecondsSinceEpoch);
 
@@ -95,39 +96,47 @@ List<Chat> arrangeChats() => [
   )..pin = 1,
 ];
 
-/// The sidebar alone, [width] wide (260 unless given) in a window of
-/// [size], over [chats] ([arrangeChats] unless given), still (no ring
-/// turns), in [tokens]; [icons], the projects' icons the daemon has, by
-/// folder.
+/// The sidebar alone, [width] wide (260 unless given) and [height] high
+/// (the window's unless given) in a window of [size], over [chats]
+/// ([arrangeChats] unless given), still (no ring turns) unless not
+/// [still], in [tokens]; [icons], the projects' icons the daemon has, by
+/// folder. Settled, or one frame when not [settle]. The window is a
+/// repaint boundary keyed `screen`, the sidebar's box one keyed `shot`.
 Future<(Daemon, FakeDaemon)> arrangedSidebar(
   WidgetTester tester, {
   List<Chat>? chats,
   Tokens tokens = Tokens.dark,
   Size size = const Size(560, 700),
   double width = 260,
+  double? height,
+  bool still = true,
+  bool settle = true,
   Map<String, List<int>> icons = const {},
 }) async {
   viewport(tester, size);
   final fake = FakeDaemon(chats ?? arrangeChats())..projectIcons.addAll(icons);
   final d = await fake.connect(tester);
   await tester.pumpWidget(
-    MaterialApp(
-      builder: (context, child) => ToastHost(child: child!),
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: MediaQuery(
-        data: const MediaQueryData(disableAnimations: true),
-        child: Scaffold(
-          body: Align(
-            alignment: Alignment.topLeft,
-            child: RepaintBoundary(
-              key: const Key('shot'),
-              child: SizedBox(
-                width: width,
-                height: size.height,
-                child: ListenableBuilder(
-                  listenable: d,
-                  builder: (context, _) => Sidebar(daemon: d),
+    RepaintBoundary(
+      key: const Key('screen'),
+      child: MaterialApp(
+        builder: (context, child) => ToastHost(child: child!),
+        debugShowCheckedModeBanner: false,
+        theme: NushiTheme(tokens).toThemeData(),
+        home: MediaQuery(
+          data: MediaQueryData(disableAnimations: still),
+          child: Scaffold(
+            body: Align(
+              alignment: Alignment.topLeft,
+              child: RepaintBoundary(
+                key: const Key('shot'),
+                child: SizedBox(
+                  width: width,
+                  height: height ?? size.height,
+                  child: ListenableBuilder(
+                    listenable: d,
+                    builder: (context, _) => Sidebar(daemon: d),
+                  ),
                 ),
               ),
             ),
@@ -136,7 +145,11 @@ Future<(Daemon, FakeDaemon)> arrangedSidebar(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+  }
   return (d, fake);
 }
 
