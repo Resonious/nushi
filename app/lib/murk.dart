@@ -188,17 +188,19 @@ class MurkFrame extends StatelessWidget {
     if (murk == null) return child;
     return AnimatedBuilder(
       animation: murk._murk,
+      // The same wrappers either way: a change in the tree's shape would
+      // build what's in it again.
       builder: (context, child) {
         final v = murk._murk.value;
-        if (murk._fresh) {
-          return FractionalTranslation(
-            translation: Offset(slide ? 0.35 * v : 0, 0),
-            child: Opacity(opacity: (1 - v).clamp(0, 1), child: child),
-          );
-        }
-        return Opacity(
-          opacity: 1 - (murk._rising ? 0.5 : 0.3) * v,
-          child: child,
+        final fresh = murk._fresh;
+        return FractionalTranslation(
+          translation: Offset(fresh && slide ? 0.35 * v : 0, 0),
+          child: Opacity(
+            opacity: fresh
+                ? (1 - v).clamp(0, 1)
+                : 1 - (murk._rising ? 0.5 : 0.3) * v,
+            child: child,
+          ),
         );
       },
       child: child,
