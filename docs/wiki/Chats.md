@@ -193,6 +193,15 @@ Point at one of your messages, click its rewind button (**Rewind to here**), the
 
 The agent forgets everything from that message on, and the message goes back in the box to edit. Files are not rewound: the agent's changes on disk stay.
 
+## Fork a chat
+
+A fork is a new chat with this one's conversation so far, going on separately; the original stays as it was.
+
+- **Fork** in the chat's **⋯** menu (or **Fork chat** in ⌘K, or **Fork** in the phone's **⋯**) forks all of it.
+- **Fork from here**, under one of the agent's messages on hover, forks up to that message.
+
+The fork opens, and a toast says **Forked into a new chat**. Forked by mistake? Click **Undo** in the toast (within ten seconds): the fork is deleted, with the agent's session for it, and you're back in the chat you forked from. The original chat and its history are never touched. Once you send a message in the fork, or it starts working, Undo goes away; delete the fork from its menu instead. If the delete fails, the toast says why and the fork stays in the sidebar.
+
 ## Ask a side question
 
 Press **⇧⌘B** to open a **side chat** beside the main one. It knows the conversation but doesn't add to it, so you can ask "why did you do that?" without sidetracking the agent. ⇧⌘B hides it again; **Keep as chat** makes it a chat of its own.
@@ -221,5 +230,5 @@ To keep a chat's work apart from your checkout, click **New worktree** under the
 - **The card at the bottom of the sidebar** counts the agents that are working, awake and asleep, and shows the memory Nushi takes. Click the memory to see each awake chat's, with **Sleep** beside it.
 - **Idle chats sleep** after 30 minutes: the agent stops, and your next message wakes it. A sleeping chat's row in the sidebar has no dot and is faint and in italics (unless a turn it finished is still unseen); its header says **Asleep**. Change it in **Settings › General › Sleep idle chats**.
 - **Old chats stay asleep after Nushi restarts.** Looking at one doesn't start its agent; your next message does. The chat you used in the hour before the restart wakes when you open it.
-- **Rewind and side chats** show only for agents that support them.
+- **Rewind, forks and side chats** show only for agents that support them.
 - **Don't use a session in Nushi and a terminal at once**: both write to it.

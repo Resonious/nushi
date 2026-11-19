@@ -497,6 +497,38 @@ void main() {
     });
   }
 
+  testWidgets('Undo in the toast after a fork deletes it and comes back to '
+      'the chat', (tester) async {
+    final status = ChatStatus(canFork: true);
+    final fake = FakeDaemon(_chats)
+      ..answer = (input) => switch (input) {
+        GetChatRequest(chatId: 'c') => GetChatResponse(
+          chat: _chats[2],
+          status: status,
+        ),
+        _ => null,
+      };
+    final (phone, _) = await _app(tester, fake);
+    await tester.tap(find.text('Web Push from the daemon'));
+    await tester.pumpAndSettle();
+    fake.emit(EventsResponse(chatId: 'c', seq: Int64(9), status: status));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Chat'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fork'));
+    await tester.pumpAndSettle();
+    expect(find.text('Web Push from the daemon (fork)'), findsOne);
+    expect(find.text('Forked into a new chat'), findsOne);
+    await render(tester, find.byType(PhoneApp), 'phone_fork_undo_toast');
+    await tester.tap(find.widgetWithText(Button, 'Undo'));
+    await tester.pumpAndSettle();
+    expect(fake.calls.whereType<DeleteChatRequest>().single.chatId, 'fork');
+    expect(find.text('Web Push from the daemon (fork)'), findsNothing);
+    expect(find.text('Web Push from the daemon'), findsOne);
+    expect(phone.daemon!.selectedId, 'c');
+    await endPhone(tester, phone);
+  });
+
   testWidgets('Back from a fork shows the chat under it, selected and '
       'viewed, and it stays live across a reconnect', (tester) async {
     final status = ChatStatus(canFork: true);

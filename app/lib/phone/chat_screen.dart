@@ -128,9 +128,21 @@ class ChatScreen extends StatelessWidget {
   }
 
   /// Forks the chat and shows the fork on a screen of its own, over this
-  /// one.
+  /// one; the toast's Undo comes back to this one, if it's still open.
   Future<void> _fork(BuildContext context, Daemon daemon) async {
-    final fork = await forkChat(context, daemon, chat, select: false);
+    final here = ModalRoute.of(context);
+    final navigator = Navigator.of(context);
+    final fork = await forkChat(
+      context,
+      daemon,
+      chat,
+      select: false,
+      back: () {
+        if (here != null && here.isActive) {
+          navigator.popUntil((r) => r == here);
+        }
+      },
+    );
     if (fork != null && context.mounted) {
       await openPhoneChat(context, phone, fork);
     }

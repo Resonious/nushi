@@ -156,7 +156,7 @@ class FakeDaemon implements Transport {
     if (input is PinChatsRequest) _pin(input.chatIds);
     if (input is SetChatColorRequest) _color(input.chatId, input.color);
     if (input is PinMessageRequest) _pinMessage(input);
-    if (input is ForkAsChatRequest) _fork(input.chatId, 'fork');
+    if (input is ForkAsChatRequest) _fork(input.chatId, _nextFork());
     if (input is KeepSideChatRequest) _fork(chats.first.id, 'kept');
     if (input is StartChatRequest) {
       started.add(input);
@@ -175,6 +175,7 @@ class FakeDaemon implements Transport {
     var other = answer?.call(input);
     if (other is Future) other = await other;
     calls.add(input);
+    if (input is DeleteChatRequest) _delete(input.chatId);
     final out =
         other ??
         switch (input) {
@@ -223,7 +224,7 @@ class FakeDaemon implements Transport {
           OpenAgentSessionRequest() => OpenAgentSessionResponse(
             chatId: chats.first.id,
           ),
-          ForkAsChatRequest() => ForkAsChatResponse(chatId: 'fork'),
+          ForkAsChatRequest() => ForkAsChatResponse(chatId: chats.last.id),
           KeepSideChatRequest() => KeepSideChatResponse(chatId: 'kept'),
           GetChatImageRequest(:final sha256) => switch (chatImages[sha256]) {
             final i? => GetChatImageResponse(
@@ -243,6 +244,21 @@ class FakeDaemon implements Transport {
           _ => spec.outputFactory(),
         };
     return UnaryResponse(spec, Headers(), out as O, Headers());
+  }
+
+  /// The next fork's id: fork, then fork2, fork3…
+  String _nextFork() {
+    final n = chats.where((c) => c.id.startsWith('fork')).length;
+    return n == 0 ? 'fork' : 'fork${n + 1}';
+  }
+
+  /// Deletes chat [id] as the daemon does once [answer] lets it: gone from
+  /// the list, announced as removed.
+  void _delete(String id) {
+    if (chats.any((c) => c.id == id)) {
+      chats.removeWhere((c) => c.id == id);
+      emit(EventsResponse(chatId: id, removed: true));
+    }
   }
 
   /// A fork of chat [of] as the daemon makes one (ForkAsChat, and a kept

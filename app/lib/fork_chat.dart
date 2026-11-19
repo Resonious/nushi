@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:nushi/chat.dart';
 import 'package:nushi/daemon.dart';
+import 'package:nushi/fork_toast.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/widgets.dart';
 
@@ -30,15 +31,19 @@ bool canForkAt(Daemon d, ChatState chat, Item item, {required bool live}) =>
 
 /// Forks [chat] into a new chat, all of it or up to [at], and shows the
 /// new chat (the phone shows it on a screen of its own: not [select]).
-/// Returns it; null when the daemon refused, which was shown.
+/// A toast says so, with Undo (fork_toast.dart), whose [back] takes the
+/// user back to [chat] (by default, selecting it). Returns the fork; null
+/// when the daemon refused, which was shown.
 Future<ChatState?> forkChat(
   BuildContext context,
   Daemon d,
   ChatState chat, {
   Item? at,
   bool select = true,
+  VoidCallback? back,
 }) async {
   ChatState? fork;
+  final toasts = Toasts.maybeOf(context);
   // The new chat shows once it's made; a fork can take a moment.
   await runAndSay(context, running: 'Forking ${chat.shownTitle}…', () async {
     final r = await d.client.forkAsChat(
@@ -47,6 +52,18 @@ Future<ChatState?> forkChat(
     fork = d.chats[r.chatId] ??= ChatState(r.chatId, chat.folder);
     if (select) d.select(r.chatId);
   });
+  if (fork case final fork?) {
+    showForked(
+      toasts,
+      d,
+      fork,
+      back:
+          back ??
+          () {
+            if (d.chats.containsKey(chat.id)) d.select(chat.id);
+          },
+    );
+  }
   return fork;
 }
 
