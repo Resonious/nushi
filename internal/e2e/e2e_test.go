@@ -452,13 +452,9 @@ func TestAppQuitsWhileAPromptWaits(t *testing.T) {
 		t.Fatalf("chats = %v", list)
 	}
 	snap := second.get(chatID)
-	var texts []string
-	for _, it := range snap.Items {
-		texts = append(texts, it.Kind.String()+":"+it.Text+it.Status)
-	}
-	want := "ITEM_KIND_USER_MESSAGE:hello ITEM_KIND_AGENT_MESSAGE:You said: hello ITEM_KIND_USER_MESSAGE:ask permission ITEM_KIND_TOOL_CALL:pending ITEM_KIND_PERMISSION:pending"
-	if got := strings.Join(texts, " "); got != want || !snap.Status.Busy {
-		t.Fatalf("transcript = %s (busy %v)\nwant %s", got, snap.Status.Busy, want)
+	want := "USER_MESSAGE:hello:\nAGENT_MESSAGE:You said: hello:\nUSER_MESSAGE:ask permission:\nTOOL_CALL::pending\nPERMISSION::pending"
+	if got := transcript(snap.Items); got != want || !snap.Status.Busy {
+		t.Fatalf("transcript (busy %v):\n%s\nwant:\n%s", snap.Status.Busy, got, want)
 	}
 
 	perm := snap.Items[len(snap.Items)-1]
@@ -553,13 +549,9 @@ func TestStopCancelsAWaitingPrompt(t *testing.T) {
 	a.waitFor("the turn to end", turnEnded(chatID))
 
 	snap := a.get(chatID)
-	var got []string
-	for _, it := range snap.Items {
-		got = append(got, it.Kind.String()+":"+it.Status)
-	}
-	want := "ITEM_KIND_USER_MESSAGE: ITEM_KIND_TOOL_CALL:pending ITEM_KIND_PERMISSION:cancelled ITEM_KIND_NOTICE:cancelled"
-	if strings.Join(got, " ") != want || snap.Status.Waiting || snap.Status.Started != 0 {
-		t.Errorf("items = %v, status = %v\nwant %s", got, snap.Status, want)
+	want := "USER_MESSAGE:ask permission:\nTOOL_CALL::pending\nPERMISSION::cancelled\nNOTICE:Stopped:cancelled"
+	if got := transcript(snap.Items); got != want || snap.Status.Waiting || snap.Status.Started != 0 {
+		t.Errorf("items (status %v):\n%s\nwant:\n%s", snap.Status, got, want)
 	}
 }
 
