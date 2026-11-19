@@ -183,7 +183,11 @@ class _FilesPaneState extends State<FilesPane> with FileTabsFocus {
                 locked: squeezed,
                 // Its own hairline, which a locked edge keeps.
                 line: false,
-                onDrag: (width) => setState(() => _treeDragged = width),
+                // Told after the frame when the tree's edge goes mid-drag
+                // (squeezed out, the pane closed): this may have gone too.
+                onDrag: (width) {
+                  if (mounted) setState(() => _treeDragged = width);
+                },
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     border: right ? Border(left: edge) : Border(right: edge),
