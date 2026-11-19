@@ -22,10 +22,6 @@ List<Item> workflowsOf(List<Item> items) => items.where(isWorkflow).toList();
 /// Whether the workflow runs, stalled or not: it can be stopped.
 bool workflowLive(Workflow w) => w.state == 'running';
 
-/// Its mark's state: running, done, failed or stopped ("unknown" has
-/// none).
-String workflowMark(Workflow w) => w.state;
-
 /// How long it ran, or runs: from its start to its end, or to now.
 String workflowTime(Workflow w) {
   final since = msTime(w.started.toInt());
@@ -87,14 +83,8 @@ String _quiet(Workflow w) {
 /// Its phases on one line, each with its progress: "Map 2/2 · Review 5/7".
 String phasesLine(Workflow w) => w.phases.map(phaseProgress).join(' · ');
 
-/// Who runs now: "review:security, review:ui +1".
-String runningLine(Workflow w) {
-  final more = runningMore(w);
-  return [w.running.join(', '), if (more > 0) '+$more'].join(' ');
-}
-
-/// How many run beyond the labels the summary holds: the "+1" of
-/// [runningLine].
+/// How many run beyond the labels the summary holds: the "+1" after
+/// "review:security, review:ui".
 int runningMore(Workflow w) => math.max(0, w.runningCount - w.running.length);
 
 /// What it says when it ended otherwise than done: Claude's own word, or

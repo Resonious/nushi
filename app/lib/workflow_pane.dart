@@ -216,7 +216,7 @@ class _WorkflowPaneState extends State<WorkflowPane> {
                 ),
               ),
             ),
-            TaskMark(workflowMark(w)),
+            TaskMark(w.state),
           ],
         ),
         if (workflowEndWords(w) case final words when words.isNotEmpty)

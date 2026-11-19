@@ -127,10 +127,10 @@ void main() {
       'Map 2/2 · Review 4/7',
     );
     expect(
-      runningLine(
+      runningMore(
         Workflow(running: ['review:ui', 'review:perf'], runningCount: 3),
       ),
-      'review:ui, review:perf +1',
+      1,
     );
     expect(workflowEndWords(workflowCall('unknown').workflow), 'paused');
     expect(
