@@ -203,40 +203,27 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
       case .failed:
         return Icon(Icons.error_outline, size: size * 1.6, color: t.crashed);
       case .working:
-        final mark = CustomPaint(
-          size: const Size.square(size * 1.6),
-          painter: StatusMark(t.running, ringing: !still),
-        );
+        final mark = _mark(StatusMark(t.running, ringing: !still));
         // A turn needs no words; work the user didn't start does.
         return chat.busy ? mark : tooltip(context, workingWords(chat), mark);
       case .background:
         return tooltip(
           context,
           backgroundWords(chat.background),
-          CustomPaint(
-            size: const Size.square(size * 1.6),
-            painter: _Ring(t.running, pulsing: !still),
-          ),
+          _mark(_Ring(t.running, pulsing: !still)),
         );
       case .archived || .waiting || .done || .fresh || .idle:
         break;
     }
-    final doneDot = Padding(
-      padding: const EdgeInsets.all(size * 0.3),
-      child: DecoratedBox(
-        decoration: BoxDecoration(color: t.done, shape: BoxShape.circle),
-        child: const SizedBox.square(dimension: size),
-      ),
-    );
+    final doneDot = _dot(fill: t.done);
     if (_check case final check? when check.isAnimating && !chat.waiting) {
       return AnimatedBuilder(
         animation: check,
         builder: (context, _) {
           final ms = check.value * _checkFor.inMilliseconds;
           final out = still ? 0.0 : ((ms - 2400) / 300).clamp(0.0, 1.0);
-          final mark = CustomPaint(
-            size: const Size.square(size * 1.6),
-            painter: CheckPainter(
+          final mark = _mark(
+            CheckPainter(
               t.done,
               still ? 1 : Curves.easeOut.transform((ms / 350).clamp(0, 1)),
               1 - out,
@@ -262,18 +249,7 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
       );
     }
     if (isDone) return doneDot;
-    final dot = chat.waiting
-        ? _waitingDot(t)
-        : Padding(
-            padding: const EdgeInsets.all(size * 0.3),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: t.idle, width: 1.5),
-              ),
-              child: const SizedBox.square(dimension: size),
-            ),
-          );
+    final dot = chat.waiting ? _waitingDot(t) : _dot(ring: t.idle);
     final hop = _hop;
     if (hop == null || !chat.waiting) return dot;
     return AnimatedBuilder(
@@ -327,6 +303,23 @@ String workingWords(ChatState chat) => chat.workflows > 0
           ? 'Running a workflow'
           : 'Running ${chat.workflows} workflows'
     : 'Working on its own, after a background task';
+
+/// [painter]'s mark in a chat's dot's room.
+Widget _mark(CustomPainter painter) =>
+    CustomPaint(size: const Size.square(ChatDot.size * 1.6), painter: painter);
+
+/// A chat's dot in its room: of [fill], or a ring of [ring].
+Widget _dot({Color? fill, Color? ring}) => Padding(
+  padding: const EdgeInsets.all(ChatDot.size * 0.3),
+  child: DecoratedBox(
+    decoration: BoxDecoration(
+      color: fill,
+      shape: BoxShape.circle,
+      border: ring == null ? null : Border.all(color: ring, width: 1.5),
+    ),
+    child: const SizedBox.square(dimension: ChatDot.size),
+  ),
+);
 
 /// The dot of a chat that needs the user: a size up from the others, in a
 /// wider soft ring, in the same room.
@@ -390,26 +383,13 @@ class PhaseDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const size = ChatDot.size;
     final t = NushiTheme.of(context).t;
     final (word, color) = phaseWord(phase, t);
     return tooltip(context, word, switch (phase) {
-      .working => CustomPaint(
-        size: const Size.square(size * 1.6),
-        painter: StatusMark(color, ringing: !reduceMotion(context)),
-      ),
-      .background => CustomPaint(
-        size: const Size.square(size * 1.6),
-        painter: _Ring(color, pulsing: !reduceMotion(context)),
-      ),
+      .working => _mark(StatusMark(color, ringing: !reduceMotion(context))),
+      .background => _mark(_Ring(color, pulsing: !reduceMotion(context))),
       .waiting => _waitingDot(t),
-      _ => Padding(
-        padding: const EdgeInsets.all(size * 0.3),
-        child: DecoratedBox(
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          child: const SizedBox.square(dimension: size),
-        ),
-      ),
+      _ => _dot(fill: color),
     });
   }
 }
