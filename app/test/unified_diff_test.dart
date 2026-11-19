@@ -236,16 +236,7 @@ void main() {
     await tester.pumpWidget(NushiApp(daemon: d));
     await tester.pumpAndSettle();
     List<String> viewMenu({String? pick}) {
-      final view = tester
-          .widget<PlatformMenuBar>(find.byType(PlatformMenuBar))
-          .menus
-          .whereType<PlatformMenu>()
-          .firstWhere((m) => m.label == 'View');
-      Iterable<PlatformMenuItem> items(PlatformMenuItem m) => switch (m) {
-        PlatformMenuItemGroup(:final members) => members.expand(items),
-        _ => [m],
-      };
-      final all = view.menus.expand(items).toList();
+      final all = viewItems(tester);
       if (pick != null) all.firstWhere((m) => m.label == pick).onSelected!();
       return [for (final m in all) m.label];
     }

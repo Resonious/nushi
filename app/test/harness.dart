@@ -98,6 +98,21 @@ List<String> clipboardCopies(WidgetTester tester) {
   return copied;
 }
 
+/// The View menu's items in the menu bar, flattened, submenus as
+/// themselves.
+List<PlatformMenuItem> viewItems(WidgetTester tester) {
+  final view = tester
+      .widget<PlatformMenuBar>(find.byType(PlatformMenuBar))
+      .menus
+      .whereType<PlatformMenu>()
+      .firstWhere((m) => m.label == 'View');
+  Iterable<PlatformMenuItem> items(PlatformMenuItem m) => switch (m) {
+    PlatformMenuItemGroup(:final members) => members.expand(items),
+    _ => [m],
+  };
+  return view.menus.expand(items).toList();
+}
+
 /// [fixtureNow] less [d], as the daemon sends a time.
 Int64 msAgo(Duration d) => Int64(fixtureNow.subtract(d).millisecondsSinceEpoch);
 

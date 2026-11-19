@@ -74,18 +74,9 @@ Future<Daemon> _window(
 }
 
 /// The View menu's labels.
-List<String> _viewMenu(WidgetTester tester) {
-  final view = tester
-      .widget<PlatformMenuBar>(find.byType(PlatformMenuBar))
-      .menus
-      .whereType<PlatformMenu>()
-      .firstWhere((m) => m.label == 'View');
-  Iterable<String> labels(PlatformMenuItem m) => switch (m) {
-    PlatformMenuItemGroup(:final members) => members.expand(labels),
-    _ => [m.label],
-  };
-  return [...view.menus.expand(labels)];
-}
+List<String> _viewMenu(WidgetTester tester) => [
+  for (final m in viewItems(tester)) m.label,
+];
 
 void main() {
   setUpAll(loadFonts);

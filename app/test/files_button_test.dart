@@ -93,16 +93,7 @@ Future<void> _shiftCmdE(WidgetTester tester) async {
 
 /// Picks View › Files in the menu bar.
 Future<void> _viewFiles(WidgetTester tester) async {
-  final view = tester
-      .widget<PlatformMenuBar>(find.byType(PlatformMenuBar))
-      .menus
-      .whereType<PlatformMenu>()
-      .firstWhere((m) => m.label == 'View');
-  Iterable<PlatformMenuItem> items(PlatformMenuItem m) => switch (m) {
-    PlatformMenuItemGroup(:final members) => members.expand(items),
-    _ => [m],
-  };
-  view.menus.expand(items).firstWhere((m) => m.label == 'Files').onSelected!();
+  viewItems(tester).firstWhere((m) => m.label == 'Files').onSelected!();
   await tester.pumpAndSettle();
 }
 

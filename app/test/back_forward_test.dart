@@ -67,18 +67,8 @@ bool _on(WidgetTester tester, String tooltip) =>
     null;
 
 /// View's item [label] in the menu bar.
-PlatformMenuItem _viewItem(WidgetTester tester, String label) {
-  final view = tester
-      .widget<PlatformMenuBar>(find.byType(PlatformMenuBar))
-      .menus
-      .whereType<PlatformMenu>()
-      .firstWhere((m) => m.label == 'View');
-  Iterable<PlatformMenuItem> items(PlatformMenuItem m) => switch (m) {
-    PlatformMenuItemGroup(:final members) => members.expand(items),
-    _ => [m],
-  };
-  return view.menus.expand(items).firstWhere((m) => m.label == label);
-}
+PlatformMenuItem _viewItem(WidgetTester tester, String label) =>
+    viewItems(tester).firstWhere((m) => m.label == label);
 
 void main() {
   setUpAll(loadFonts);
