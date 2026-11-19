@@ -453,6 +453,14 @@ String elapsed(Duration d) => d.inMinutes == 0
     ? '${d.inSeconds}s'
     : '${d.inMinutes}m ${two(d.inSeconds % 60)}s';
 
+/// How long something ran, or runs while [runs]: from [started] to
+/// [ended], or to now (ms since the epoch, 0 when not seen); '' unknown.
+String ranFor(int started, int ended, {required bool runs}) {
+  final since = msTime(started);
+  final end = runs ? clock() : msTime(ended);
+  return since == null || end == null ? '' : elapsed(end.difference(since));
+}
+
 /// "950 tokens", "12.4k tokens", "48k tokens", "1.2M tokens".
 String tokenCount(int n) => n < 1000
     ? '$n tokens'

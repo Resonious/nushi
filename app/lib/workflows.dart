@@ -22,13 +22,6 @@ List<Item> workflowsOf(List<Item> items) => items.where(isWorkflow).toList();
 /// Whether the workflow runs, stalled or not: it can be stopped.
 bool workflowLive(Workflow w) => w.state == 'running';
 
-/// How long it ran, or runs: from its start to its end, or to now.
-String workflowTime(Workflow w) {
-  final since = msTime(w.started.toInt());
-  final end = workflowLive(w) ? clock() : msTime(w.ended.toInt());
-  return since == null || end == null ? '' : elapsed(end.difference(since));
-}
-
 /// The phase it's in now: the last one reached that hasn't ended, else
 /// the last; null when it has none.
 WorkflowPhase? currentPhase(Workflow w) {
@@ -48,7 +41,11 @@ String phaseProgress(WorkflowPhase p) =>
 /// running", without its time, which no longer ticks and would be cut
 /// first where the line is short (a phone's).
 String workflowState(Workflow w) {
-  final time = workflowTime(w);
+  final time = ranFor(
+    w.started.toInt(),
+    w.ended.toInt(),
+    runs: workflowLive(w),
+  );
   final agents = '${w.agents} agent${w.agents == 1 ? '' : 's'}';
   if (workflowLive(w)) {
     final phase = currentPhase(w);

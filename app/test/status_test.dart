@@ -49,6 +49,15 @@ void main() {
     expect(elapsed(const Duration(seconds: 64)), '1m 04s');
   });
 
+  test('how long something ran: to its end, or to now while it runs', () {
+    final start = fixtureNow.millisecondsSinceEpoch - 64000;
+    expect(ranFor(start, start + 12000, runs: false), '12s');
+    expect(ranFor(start, 0, runs: true), '1m 04s');
+    // Its start or its end never seen: nothing.
+    expect(ranFor(0, start, runs: false), '');
+    expect(ranFor(start, 0, runs: false), '');
+  });
+
   test('a subagent gathers the items it made', () {
     final items = [
       Item(
