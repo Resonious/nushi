@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -7,10 +8,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/controls.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/native.dart';
 import 'package:nushi/settings.dart';
+import 'package:nushi/settings_rows.dart';
 
 import 'fake_daemon.dart';
+import 'harness.dart';
 import 'settings_harness.dart';
+import 'spell_harness.dart' show FakeSpeller;
 
 /// Settings at [section] on a fake daemon: sleep after 30 minutes.
 Future<(FakeDaemon, Daemon)> _open(
@@ -80,4 +85,72 @@ void main() {
     expect(tester.widget<Segmented<ThemeMode>>(mode).value, ThemeMode.dark);
     d.dispose();
   });
+
+  testWidgets('General: the chat rows are one group, not a group of one row '
+      'each; Check now is a button that asks, and says the version', (
+    tester,
+  ) async {
+    native.speller = FakeSpeller({});
+    final fake = settingsFake();
+    final inner = fake.answer!;
+    var asked = 0;
+    fake.answer = (input) => switch (input) {
+      CheckForUpdatesRequest() => () {
+        asked++;
+        return CheckForUpdatesResponse(
+          update: UpdateCheck(latest: '1.2.0', checkedMs: Int64(1)),
+        );
+      }(),
+      _ => inner(input),
+    };
+    final d = await pumpSettingsApp(tester, fake, SettingsSection.general);
+    final chats = find.ancestor(
+      of: find.text('Sleep idle chats'),
+      matching: find.byType(SettingsGroup),
+    );
+    for (final row in [
+      'Check spelling while typing',
+      'Open local links in built-in browser',
+    ]) {
+      expect(find.descendant(of: chats, matching: find.text(row)), findsOne);
+    }
+    expect(find.text('Composer'), findsNothing);
+    expect(find.text('Browser'), findsNothing);
+    // Each description is one line.
+    for (final e in find.byType(SettingsRow).evaluate()) {
+      final row = e.widget as SettingsRow;
+      if (row.description == null) continue;
+      final text = find.descendant(
+        of: find.byWidget(row),
+        matching: find.text(row.description!),
+      );
+      expect(tester.getSize(text).height, lessThan(20), reason: row.label);
+    }
+    // Check now: a button on the version's row, not a link.
+    final version = find.widgetWithText(SettingsRow, 'Nushi 1.2.0');
+    await tester.scrollUntilVisible(
+      version,
+      100,
+      scrollable: find
+          .descendant(
+            of: find.byType(SettingsPage),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(
+      find.descendant(of: version, matching: find.textContaining('up to date')),
+      findsOne,
+    );
+    final check = find.descendant(
+      of: version,
+      matching: find.widgetWithText(Button, 'Check now'),
+    );
+    expect(check, findsOne);
+    expect(find.widgetWithText(LinkText, 'Check now'), findsNothing);
+    await tester.tap(check);
+    await tester.pumpAndSettle();
+    expect(asked, 1);
+    await closeView(tester, d);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
 }

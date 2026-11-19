@@ -52,7 +52,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Dock badge'), findsNothing);
-      expect(find.textContaining('They stay on this computer.'), findsOne);
+      // The badge in Linux's words, and no word of a Mac anywhere.
+      expect(find.text('Only for chats you aren’t looking at.'), findsOne);
       expect(find.textContaining('Mac'), findsNothing);
       expectTextInside(tester, width);
       await render(

@@ -356,7 +356,7 @@ void main() {
     );
     await tester.pump();
     expect(
-      find.text('The turn ended with an error, or the agent quit mid-turn.'),
+      find.text('An error, or the agent quit mid-turn.'),
       findsOne,
     );
     expect(find.text('macOS has notifications off for Nushi.'), findsOne);

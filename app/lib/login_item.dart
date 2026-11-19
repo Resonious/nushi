@@ -24,12 +24,18 @@ abstract interface class LoginItem {
 /// user allows it in the system's settings.
 enum LoginItemState { on, needsApproval, off }
 
-/// "Start at login" in Settings › General, a group of its own: the
-/// [LoginItem], which starts the packaged daemon at login (ADR 0036,
-/// 0104). The system keeps whether it's on; the row shows only once the
-/// [LoginItem] answers.
+/// "Start at login" in Settings › General: the [LoginItem], which starts
+/// the packaged daemon at login (ADR 0036, 0104), its rows given to
+/// [group] (General's Chats group, so it isn't a group of one row). The
+/// system keeps whether it's on; the rows show only once the [LoginItem]
+/// answers.
 class StartAtLogin extends StatefulWidget {
-  const new({super.key});
+  const new({super.key, this.group = _alone});
+
+  final Widget Function(List<Widget> rows) group;
+
+  static Widget _alone(List<Widget> rows) =>
+      rows.isEmpty ? const SizedBox.shrink() : SettingsGroup(children: rows);
 
   @override
   State<StartAtLogin> createState() => _StartAtLoginState();
@@ -53,34 +59,30 @@ class _StartAtLoginState extends State<StartAtLogin> {
   @override
   Widget build(BuildContext context) {
     final status = _status;
-    if (status == null) return const SizedBox.shrink();
+    if (status == null) return widget.group(const []);
     final t = NushiTheme.of(context).t;
     final waiting = status == LoginItemState.needsApproval;
-    return SettingsGroup(
-      children: [
+    return widget.group([
+      SettingsRow(
+        'Start at login',
+        description: waiting
+            ? 'Allow Nushi in Login Items to start it.'
+            : 'The daemon starts when you log in, without the app.',
+        descriptionColor: waiting ? t.needs : null,
+        control: SettingsSwitch(
+          value: status != LoginItemState.off,
+          run: ({required on}) => _call(() => native.loginItem.set(on: on)),
+        ),
+      ),
+      if (waiting)
         SettingsRow(
-          'Start at login',
-          description: waiting
-              ? 'Allow Nushi in Login Items to start it.'
-              : 'The daemon starts when you log in, without the app.',
-          descriptionColor: waiting ? t.needs : null,
-          control: SettingsSwitch(
-            value: status != LoginItemState.off,
-            run: ({required on}) => _call(() => native.loginItem.set(on: on)),
+          'Login Items',
+          control: Button(
+            label: 'Open Login Items…',
+            onPressed: () =>
+                tryOrShow(context, () => _call(native.loginItem.openSettings)),
           ),
         ),
-        if (waiting)
-          SettingsRow(
-            'Login Items',
-            control: Button(
-              label: 'Open Login Items…',
-              onPressed: () => tryOrShow(
-                context,
-                () => _call(native.loginItem.openSettings),
-              ),
-            ),
-          ),
-      ],
-    );
+    ]);
   }
 }
