@@ -1,6 +1,6 @@
 # Jira
 
-Nushi shows your Jira Cloud issues next to your chats. See what's on your plate, move an issue along, and start an agent on one, on its own branch, in a couple of clicks.
+Nushi shows your Jira Cloud issues next to your chats. You can see what's on your plate, move an issue along, and start an agent on an issue, on its own branch, in a couple of clicks.
 
 ![The Jira view: a sprint's issues grouped by status](https://raw.githubusercontent.com/afrase/nushi/main/docs/images/jira.png)
 
@@ -23,15 +23,15 @@ Nushi checks the token with Jira, then the site's row says **Connected as** and 
 
 ## Open your issues
 
-Press ⌘J, or click **Jira** at the bottom of the sidebar (also **View › Jira**). Jira takes the chat's place. Press Esc or click the close button to go back to your chats.
+Press ⌘J, click **Jira** at the bottom of the sidebar, or choose **View › Jira**. Jira takes the chat's place. To go back to your chats, press Esc or click the close button.
 
 The tabs at the top pick which issues you see:
 
 - **Mine**: your open issues.
 - **Sprint**: the active sprint of a board. The first time, click **Pick the board…** and choose one.
-- **JQL**: type a Jira search. It suggests fields, operators and values as you type. Press Return to run it, then **Save…** to keep it as a tab of its own.
+- **JQL**: type a Jira search (JQL is Jira's search language). It suggests fields, operators and values as you type. Press Return to run it. To keep it as a tab of its own, click **Save…**.
 
-Issues are grouped into a card per status. Click a card's title to fold it, or drag it to reorder. Nushi remembers both.
+Issues are grouped into a card per status. Click a card's title to fold it, or drag the card to reorder. Nushi remembers both.
 
 On **Sprint**, **JQL** and saved searches, the menu at the right (**Everyone**) narrows the list to **Me**, **Unassigned**, or one person.
 
@@ -39,26 +39,30 @@ If you have more than one site, the menu next to the **Jira** title switches sit
 
 ## Start work on an issue
 
-This starts an agent on the issue in a worktree: a second checkout of your repository on its own branch, so the agent's work doesn't touch the branch you have open.
+This starts an agent on the issue in a worktree. A worktree is a second checkout of your repository on its own branch, so the agent's work doesn't touch the branch you have open.
 
-1. Hover over the issue's row and click the play button at its end (or select the row and press ⌘⏎, or right-click it and pick **Start work**).
+1. Hover over the issue's row and click the play button at its end. You can also select the row and press ⌘⏎, or right-click it and pick **Start work**.
 2. Pick a recent folder from the menu, or **Choose folder…** to pick your repository.
-3. The **New chat** dialog opens with the issue already picked. It says **In a new worktree on** and shows the branch name, made from the issue's key and summary (for example `PROJ-123-fix-the-login`).
+3. The **New chat** dialog opens with the issue already picked. It says **In a new worktree on** and shows the branch name. The name comes from the issue's key and summary (for example `PROJ-123-fix-the-login`).
 4. Pick an agent and press Return.
 
-Before step 4, press **W** to skip the worktree and work in the folder itself, **B** to rename the branch, or ⌫ to drop the issue.
+Before step 4, you can press:
 
-The chat shows the issue's key in the sidebar. Nushi tells the agent which issue it's on, but writes nothing into your message: tell the agent what you want, as usual.
+- **W** to skip the worktree and work in the folder itself.
+- **B** to rename the branch.
+- ⌫ to drop the issue.
 
-You can also attach an issue from the **New chat** dialog itself: press **I**, then paste the issue's link, type its key, or search by words.
+The chat shows the issue's key in the sidebar. Nushi tells the agent which issue it's on, but adds nothing to your message. Tell the agent what you want, as usual.
+
+You can also attach an issue from the **New chat** dialog itself. Press **I**, then paste the issue's link, type its key, or search by words.
 
 ## Look at an issue
 
-Click a row to see the issue's details: description, subtasks, links, attachments, comments, and the chats already started on it. You can comment (Markdown works), click **Start work**, or open the issue in your browser. Press Esc to return to the list.
+Click a row to see the issue's details: description, subtasks, links, attachments, comments, and the chats already started on it. From there you can comment (Markdown works), click **Start work**, or open the issue in your browser. Press Esc to return to the list.
 
 ## Move an issue
 
-Click an issue's status, on its row or in its details, and pick a move. Only the moves Jira allows are listed. If a move needs more fields, Nushi asks for them.
+Click an issue's status, on its row or in its details, and pick a move. The list shows only the moves Jira allows. If a move needs more fields, Nushi asks for them.
 
 ## Keys
 
@@ -78,7 +82,7 @@ On Linux, use Ctrl wherever the Mac uses ⌘. The one exception: ⌥⌘1–9 is 
 ## Good to know
 
 - Your token is kept in your Mac's keychain (the keyring on Linux), never in a file. **Remove** deletes it from there.
-- If Nushi says it needs your OK to read the token (after an update, say), click **Allow…** and enter your password when asked. If it offers **Restart daemon** instead, click that; it stops running turns and closes terminals.
+- If Nushi says it needs your OK to read the token (for example, after an update), click **Allow…** and enter your password when asked. If it offers **Restart daemon** instead, click that. Restarting stops running turns and closes terminals.
 - The list refreshes every minute while it's open, showing the last results while new ones load.
-- A chat started on an issue gives the agent tools for that one issue: read it, comment on it, and move it. The agent's own permission mode decides whether it asks you first. The issue's details show which comments and moves came from an agent.
+- A chat started on an issue gives the agent tools for that one issue: it can read it, comment on it, and move it. The agent's own permission mode decides whether it asks you first. The issue's details show which comments and moves came from an agent.
 - If you gave an expiry date, Nushi warns you two weeks before the token runs out. Make a new token and add the site again.

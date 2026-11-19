@@ -1,6 +1,6 @@
 # GitHub
 
-Nushi shows your pull requests next to the chats working on them. Read checks, reviews and comments, hand them to the agent, and merge, without a browser.
+Nushi shows your pull requests next to the chats working on them. You can read checks, reviews and comments, hand them to the agent, and merge, all without a browser.
 
 On Linux, use Ctrl wherever this page says ⌘.
 
@@ -23,11 +23,11 @@ Press **⌘G**, choose **View › GitHub**, or click **GitHub** at the bottom of
 - **My pull requests**
 - **Assigned issues**
 
-Click a row (or press ⏎) to see its details. Press Esc to go back.
+To see a row's details, click it (or press ⏎). Press Esc to go back.
 
 ## Start work on a pull request or issue
 
-1. In the inbox, hover a row and click **Start work** (or select it and press ⌘⏎).
+1. In the inbox, hover over a row and click **Start work** (or select it and press ⌘⏎).
 2. Pick a folder. Clones of that repository are listed first.
 3. The **New chat** dialog opens. Pick an agent and start.
 
@@ -35,20 +35,26 @@ For a pull request, the chat works on its branch, so the agent's pushes go to th
 
 ## Links in a chat
 
-A pull request or issue link in a message, yours or the agent's, shows as a chip: its state's icon, `owner/repo#123` and its title. Hold the pointer on it to see its state, author, age and size.
+A pull request or issue link in a message, yours or the agent's, shows as a chip: its state's icon, `owner/repo#123` and its title. Hold the pointer over the chip to see its state, author, age and size.
 
 - Click a chip to open it on GitHub.
 - Right-click it for **Copy link**, **Show in GitHub view** and, for a pull request, **Link to this chat**.
 
-A link with words of its own stays words, with the same card. Links in code and in tool output stay as written, and a link to a host Nushi has no token for stays a plain link.
+A link written as words stays as words, with the same card on hover. Links in code and in tool output stay as written. A link to a host Nushi has no token for stays a plain link.
 
 ## Open a pull request from a chat
 
-There's no "create pull request" button. Ask the agent ("push this and open a PR"). When its `gh pr create` finishes, the chat links the new pull request, a card for it shows in the chat (its state, title, size and checks; click it to open the tab), and a **Pull request** tab appears. A merge the agent runs gets the same card. The card is only there while you stay on the chat.
+To open a pull request, ask the agent ("push this and open a PR"). Nushi has no button for it. When the agent's `gh pr create` finishes:
 
-Once the chat pushes its branch, it also finds that branch's pull request by itself, if it was opened while the chat was around (not before it started, not after you archived it). A new chat on a branch that already has a pull request doesn't take it, and an archived chat takes nothing new. To add one you pushed from your own terminal, use **Link pull request…**: the branch's pull request is first in the list.
+- The chat links the new pull request.
+- A card for it shows in the chat, with its state, title, size and checks. Click the card to open the tab.
+- A **Pull request** tab appears.
 
-A chat can hold up to 10 pull requests, such as a stack the agent opened branch by branch. To add one by hand, use **Link another pull request…** in the **Pull requests** widget's ⋯ (or **Chat › Link Pull Request…**), and paste its link, `owner/repo#123` or number.
+A merge the agent runs gets the same card. The card is only there while you stay on the chat.
+
+Once the chat pushes its branch, it also finds that branch's pull request by itself. This works only for a pull request opened while the chat existed: not before the chat started, and not after you archived it. A new chat on a branch that already has a pull request doesn't take it, and an archived chat takes nothing new. To add a pull request you opened from your own terminal, use **Link pull request…**. The branch's pull request is first in the list.
+
+A chat can hold up to 10 pull requests, such as a stack the agent opened branch by branch. To add one by hand, use **Link another pull request…** in the **Pull requests** widget's ⋯ (or **Chat › Link Pull Request…**). Then paste its link, `owner/repo#123` or number.
 
 ## The Pull requests widget
 
@@ -58,7 +64,7 @@ The details panel lists the chat's pull requests, a row each: its state's icon, 
 - Click the checks to see them, or **Fix checks** to send the failures to the agent.
 - Use a row's **⋯** for **Merge…**, **Send open threads to agent**, **Clean up…** or **Unlink**.
 
-The chip next to the chat's title shows the first pull request and `+2` for the others; hold the pointer on it to see them all. With several, the tab has a menu at the top to pick which one it shows.
+The chip next to the chat's title shows the first pull request, and `+2` for the others. Hold the pointer over it to see them all. When the chat has several, the tab has a menu at the top to pick which one it shows.
 
 ## The Pull request tab
 
@@ -68,13 +74,16 @@ Click **Pull request** next to **Chat** and **Changes** at the top of the chat, 
 
 - **The header** says whose move it is, such as "Your move.", "Waiting on checks." or "Ready to merge."
 - **Four status lights**: **Checks**, **Review**, **Threads** and **Branch** (conflicts, or behind its base). Click one to jump to the details.
-- **To do**: everything blocking the merge. Each failing check (**Log** shows the failing part), each open review thread (**Reply**, **Resolve**), and findings that review bots list.
+- **To do**: everything that blocks the merge. That means each failing check (**Log** shows the failing part), each open review thread (**Reply**, **Resolve**), and findings that review bots list.
 - Three tabs, each with a count: **Activity** (the conversation), **Checks** (every check, with **Re-run failed**) and **Files** (the diff, with review threads at their lines).
 
 ## Send review feedback to the agent
 
-1. In **To do**, click **Send** on one item, or tick a few and click **Send N picked**, or click **Send all N to agent**.
-2. Each item lands in the chat's message box as a card, quoting the comment or the failing log.
+1. In **To do**, do one of these:
+   - Click **Send** on one item.
+   - Tick a few items and click **Send N picked**.
+   - Click **Send all N to agent**.
+2. Each item goes into the chat's message box as a card, quoting the comment or the failing log.
 3. Add anything you want to say, and send.
 
 Comments and threads elsewhere in the tab have **Send to agent**, and **Fix checks** sends every failed check at once.
@@ -84,27 +93,27 @@ By default, review cards tell the agent not to reply on GitHub, and failed-check
 ## Reply, review and resolve
 
 - In a thread, use **Reply**, **Resolve** or **Unresolve**.
-- In **Files**, hover a line and click the blue **+**, or click or drag across line numbers, to write an inline comment.
+- To write an inline comment in **Files**, hover over a line and click the blue **+**, or click or drag across line numbers.
 - Click **Review…** to send your review: **Comment**, **Approve** or **Request changes**, then **Submit review**.
 
 ## Merge
 
-When the pull request can merge, the merge box says **Ready to merge**. If it can't, it says exactly why (failing checks, a review needed, conflicts, and so on).
+When the pull request can merge, the merge box says **Ready to merge**. If it can't, it says why (failing checks, a review needed, conflicts, and so on).
 
 1. Pick a method from the merge button's ▾: **Create a merge commit**, **Squash and merge** or **Rebase and merge**. Nushi remembers your choice for each repository.
 2. Click the button. A dialog shows what will merge. For a merge commit or a squash, you can edit the commit message.
 3. Confirm with the dialog's button, named for the method. Merging can't be undone.
 
-If the repository allows it, **Enable auto-merge** lets GitHub merge it by itself once it's ready. If the base branch uses a merge queue, you'll see **Add to queue** or **Merge when ready** instead.
+If the repository allows it, **Enable auto-merge** lets GitHub merge the pull request by itself once it's ready. If the base branch uses a merge queue, you see **Add to queue** or **Merge when ready** instead.
 
-After the merge, **Clean up…** offers to delete the worktree and branches and archive the chat. If another of the chat's pull requests is still open on its branch, it only deletes the merged one's branch on GitHub, and says which pull request keeps the rest.
+After the merge, **Clean up…** offers to delete the worktree and branches and to archive the chat. If another of the chat's pull requests is still open on its branch, Clean up deletes only the merged one's branch on GitHub. It tells you which pull request keeps the rest.
 
 ## Good to know
 
-- Nushi never gets around your repository's merge rules.
+- Nushi always follows your repository's merge rules.
 - A chat's row in the sidebar gets a red dot while its checks fail, and an amber one while they run.
-- For a pull request from a fork, the chat's branch isn't linked to the fork, so a push doesn't reach the pull request.
+- For a pull request from a fork, the chat's branch isn't linked to the fork, so a push from the chat doesn't reach the pull request.
 - A fine-grained token works, but sees only one owner's repositories and can't show checks.
 - Nushi only checks GitHub while the GitHub view or a chat with a pull request is open, and only writes what you send.
-- Text you're writing in a reply or review waits for you if you switch to another chat, but is lost if you quit Nushi.
+- Text you're writing in a reply or review stays if you switch to another chat. It's lost if you quit Nushi.
 - The [Phone](Phone) shows a one-line pull request summary in the chat (`+2` for the others) and the link chips, but has no Pull request tab.
