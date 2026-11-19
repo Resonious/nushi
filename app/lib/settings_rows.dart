@@ -29,9 +29,13 @@ class SettingsPage extends StatelessWidget {
   /// The content's widest.
   static const maxWidth = 740.0;
 
-  /// The room the modal's Close takes at the page's top right corner,
-  /// kept clear of the title's actions.
-  static const closeRoom = 44.0;
+  /// How far the modal's Close sits in from the page's top right corner.
+  static const closeInset = 12.0;
+
+  /// The room the modal's Close takes from the page's right edge: its
+  /// inset, its 26-point box and a 12-point gap before the title's
+  /// actions, so they never crowd it.
+  static const closeRoom = closeInset + 26 + 12;
 
   /// The space between the nav and the content, and at least this on the
   /// right.

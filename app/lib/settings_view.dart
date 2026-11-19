@@ -219,8 +219,8 @@ class _SettingsViewState extends State<SettingsView> {
                         // One title: Close sits in the page's corner, not
                         // on a bar of its own over the page's title.
                         Positioned(
-                          top: 12,
-                          right: 12,
+                          top: SettingsPage.closeInset,
+                          right: SettingsPage.closeInset,
                           child: IconTap(
                             Icons.close,
                             tooltip: withKey('Close', 'Esc'),

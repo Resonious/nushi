@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/app_actions.dart';
 import 'package:nushi/composer.dart';
+import 'package:nushi/controls.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/palette.dart';
@@ -83,6 +84,39 @@ void main() {
       expect(d.place, const ChatPlace());
       d.dispose();
     }, variant: _mac);
+  }
+
+  // A title's actions end a clear gap before Close, at any width.
+  for (final width in [1700.0, 900.0]) {
+    for (final (section, last) in [
+      (SettingsSection.mcp, 'Add server'),
+      (SettingsSection.skills, 'New skill…'),
+    ]) {
+      testWidgets('${width.toInt()}: ${section.name}’s $last stays 12 '
+          'clear of Close', (tester) async {
+        final d = await pumpSettingsApp(
+          tester,
+          settingsFake(),
+          section,
+          size: Size(width, 900),
+        );
+        final close = tester.getRect(
+          find.descendant(
+            of: _modal,
+            matching: find.byTooltip('Close Esc'),
+          ),
+        );
+        final action = tester.getRect(
+          find.ancestor(
+            of: find.text(last),
+            matching: find.byType(Pressable),
+          ).first,
+        );
+        expect(action.top < close.bottom, isTrue, reason: 'on its line');
+        expect(close.left - action.right, greaterThanOrEqualTo(12));
+        d.dispose();
+      }, variant: _mac);
+    }
   }
 
   testWidgets('a theme picked repaints the app behind at once', (tester) async {
