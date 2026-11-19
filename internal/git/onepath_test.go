@@ -31,23 +31,23 @@ func TestChangesOfOnePath(t *testing.T) {
 		t.Error("a folder outside git answered")
 	}
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
-	write(t, filepath.Join(sub, "a.txt"), "one\n")
+	testcheck.Write(t, filepath.Join(sub, "a.txt"), "one\n")
 	if got := one(sub, "a.txt"); len(got) != 1 || got[0].Status != "added" || got[0].Skipped != "" {
 		t.Errorf("before the first commit: %+v", got)
 	}
 
-	write(t, filepath.Join(repo, ".gitignore"), "*.log\n")
-	write(t, filepath.Join(sub, "b.txt"), "b\n")
-	write(t, filepath.Join(sub, "crlf.txt"), "x\r\ny\r\n")
-	write(t, filepath.Join(sub, "old.txt"), "keep\n")
-	write(t, filepath.Join(sub, "bin"), "a\x00b")
-	write(t, filepath.Join(sub, "big.txt"), "x\n")
+	testcheck.Write(t, filepath.Join(repo, ".gitignore"), "*.log\n")
+	testcheck.Write(t, filepath.Join(sub, "b.txt"), "b\n")
+	testcheck.Write(t, filepath.Join(sub, "crlf.txt"), "x\r\ny\r\n")
+	testcheck.Write(t, filepath.Join(sub, "old.txt"), "keep\n")
+	testcheck.Write(t, filepath.Join(sub, "bin"), "a\x00b")
+	testcheck.Write(t, filepath.Join(sub, "big.txt"), "x\n")
 	testcheck.NoErr(t, os.Symlink("a.txt", filepath.Join(sub, "tracked-link")))
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "init")
 
-	write(t, filepath.Join(sub, "a.txt"), "one\ntwo\n")
-	write(t, filepath.Join(sub, "b.txt"), "b changed\n") // another change, left out
+	testcheck.Write(t, filepath.Join(sub, "a.txt"), "one\ntwo\n")
+	testcheck.Write(t, filepath.Join(sub, "b.txt"), "b changed\n") // another change, left out
 	want := []model.FileChange{{Path: "a.txt", Status: "modified", Old: "one\n", New: "one\ntwo\n", Added: 1}}
 	if got := one(sub, "a.txt"); !reflect.DeepEqual(got, want) {
 		t.Errorf("modified =\n%+v\nwant\n%+v", got, want)
@@ -59,17 +59,17 @@ func TestChangesOfOnePath(t *testing.T) {
 		t.Errorf("unchanged: %+v", got)
 	}
 
-	write(t, filepath.Join(sub, "crlf.txt"), "x\r\nz\r\n")
+	testcheck.Write(t, filepath.Join(sub, "crlf.txt"), "x\r\nz\r\n")
 	if got := one(sub, "crlf.txt"); len(got) != 1 || got[0].Old != "x\r\ny\r\n" {
 		t.Errorf("CRLF: %+v", got)
 	}
 
-	write(t, filepath.Join(sub, "new.txt"), "new\n")
+	testcheck.Write(t, filepath.Join(sub, "new.txt"), "new\n")
 	want = []model.FileChange{{Path: "new.txt", Status: "untracked", New: "new\n", Added: 1}}
 	if got := one(sub, "new.txt"); !reflect.DeepEqual(got, want) {
 		t.Errorf("untracked: %+v", got)
 	}
-	write(t, filepath.Join(sub, "x.log"), "ignored\n")
+	testcheck.Write(t, filepath.Join(sub, "x.log"), "ignored\n")
 	want = []model.FileChange{{Path: "x.log", Status: "untracked", Skipped: "not tracked"}}
 	if got := one(sub, "x.log"); !reflect.DeepEqual(got, want) {
 		t.Errorf("ignored: %+v", got)
@@ -88,11 +88,11 @@ func TestChangesOfOnePath(t *testing.T) {
 		t.Errorf("a changed link: %+v", got)
 	}
 
-	write(t, filepath.Join(sub, "bin"), "c\x00d")
+	testcheck.Write(t, filepath.Join(sub, "bin"), "c\x00d")
 	if got := one(sub, "bin"); len(got) != 1 || got[0].Skipped != "binary" {
 		t.Errorf("binary: %+v", got)
 	}
-	write(t, filepath.Join(sub, "big.txt"), strings.Repeat("x\n", maxText))
+	testcheck.Write(t, filepath.Join(sub, "big.txt"), strings.Repeat("x\n", maxText))
 	if got := one(sub, "big.txt"); len(got) != 1 || got[0].Skipped != "too large" {
 		t.Errorf("too large: %+v", got)
 	}
@@ -103,7 +103,7 @@ func TestChangesOfOnePath(t *testing.T) {
 	}
 
 	testcheck.Git(t, repo, "mv", "sub/old.txt", "sub/moved.txt")
-	write(t, filepath.Join(sub, "moved.txt"), "keep\nmore\n")
+	testcheck.Write(t, filepath.Join(sub, "moved.txt"), "keep\nmore\n")
 	want = []model.FileChange{{Path: "moved.txt", OldPath: "old.txt", Status: "renamed", Old: "keep\n", New: "keep\nmore\n", Added: 1}}
 	if got := one(sub, "moved.txt"); !reflect.DeepEqual(got, want) {
 		t.Errorf("renamed (no staged part asked) =\n%+v\nwant\n%+v", got, want)
@@ -126,10 +126,10 @@ func TestChangesOfOnePathAutocrlf(t *testing.T) {
 	repo := t.TempDir()
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
 	testcheck.Git(t, repo, "config", "core.autocrlf", "true")
-	write(t, filepath.Join(repo, "a.txt"), "x\ny\n")
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "x\ny\n")
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "init")
-	write(t, filepath.Join(repo, "a.txt"), "x\r\ny\r\n") // as a checkout writes it
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "x\r\ny\r\n") // as a checkout writes it
 	if got, err := Changes(ctx, repo, Span{Path: "a.txt"}); err != nil || len(got) != 0 {
 		t.Errorf("autocrlf: %+v, %v", got, err)
 	}
@@ -143,10 +143,10 @@ func TestChangesOfOnePathOnABranch(t *testing.T) {
 	repo := t.TempDir()
 	sub := filepath.Join(repo, "sub")
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
-	write(t, filepath.Join(sub, "a.txt"), "one\n")
-	write(t, filepath.Join(sub, "b.txt"), "b\n")
-	write(t, filepath.Join(sub, "old.txt"), "keep\n")
-	write(t, filepath.Join(sub, "same.txt"), "same\n")
+	testcheck.Write(t, filepath.Join(sub, "a.txt"), "one\n")
+	testcheck.Write(t, filepath.Join(sub, "b.txt"), "b\n")
+	testcheck.Write(t, filepath.Join(sub, "old.txt"), "keep\n")
+	testcheck.Write(t, filepath.Join(sub, "same.txt"), "same\n")
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "init")
 	one := func(base, path string) []model.FileChange {
@@ -165,7 +165,7 @@ func TestChangesOfOnePathOnABranch(t *testing.T) {
 
 	testcheck.Git(t, repo, "checkout", "-q", "-b", "chat")
 	// Changed and committed on the branch: HEAD has it, the base not.
-	write(t, filepath.Join(sub, "a.txt"), "one\ntwo\n")
+	testcheck.Write(t, filepath.Join(sub, "a.txt"), "one\ntwo\n")
 	commit("two")
 	want := []model.FileChange{{Path: "a.txt", Status: "modified", Old: "one\n", New: "one\ntwo\n", Added: 1}}
 	if got := one("main", "a.txt"); !reflect.DeepEqual(got, want) {
@@ -175,20 +175,20 @@ func TestChangesOfOnePathOnABranch(t *testing.T) {
 		t.Errorf("from the last commit, a committed change is none: %+v", got)
 	}
 	// Then changed again, uncommitted: both together.
-	write(t, filepath.Join(sub, "a.txt"), "one\ntwo\nthree\n")
+	testcheck.Write(t, filepath.Join(sub, "a.txt"), "one\ntwo\nthree\n")
 	want = []model.FileChange{{Path: "a.txt", Status: "modified", Old: "one\n", New: "one\ntwo\nthree\n", Added: 2}}
 	if got := one("main", "a.txt"); !reflect.DeepEqual(got, want) {
 		t.Errorf("committed, then changed =\n%+v\nwant\n%+v", got, want)
 	}
 
 	// Added on the branch, committed or not: new against the base.
-	write(t, filepath.Join(sub, "added.txt"), "added\n")
+	testcheck.Write(t, filepath.Join(sub, "added.txt"), "added\n")
 	testcheck.Git(t, repo, "add", "sub/added.txt")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "added")
 	if got := one("main", "added.txt"); len(got) != 1 || got[0].Status != "added" || got[0].Skipped != "" {
 		t.Errorf("added on the branch: %+v", got)
 	}
-	write(t, filepath.Join(sub, "loose.txt"), "loose\n")
+	testcheck.Write(t, filepath.Join(sub, "loose.txt"), "loose\n")
 	if got := one("main", "loose.txt"); len(got) != 1 || got[0].Status != "untracked" || got[0].Skipped != "" {
 		t.Errorf("untracked on the branch: %+v", got)
 	}
@@ -196,7 +196,7 @@ func TestChangesOfOnePathOnABranch(t *testing.T) {
 	// Renamed on the branch, then changed: against its old path's text.
 	testcheck.Git(t, repo, "mv", "sub/old.txt", "sub/moved.txt")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "moved")
-	write(t, filepath.Join(sub, "moved.txt"), "keep\nmore\n")
+	testcheck.Write(t, filepath.Join(sub, "moved.txt"), "keep\nmore\n")
 	want = []model.FileChange{{Path: "moved.txt", OldPath: "old.txt", Status: "renamed", Old: "keep\n", New: "keep\nmore\n", Added: 1}}
 	if got := one("main", "moved.txt"); !reflect.DeepEqual(got, want) {
 		t.Errorf("renamed on the branch =\n%+v\nwant\n%+v", got, want)
@@ -206,7 +206,7 @@ func TestChangesOfOnePathOnABranch(t *testing.T) {
 	// where the branch left main, it is unchanged.
 	commit("wip")
 	testcheck.Git(t, repo, "checkout", "-q", "main")
-	write(t, filepath.Join(sub, "same.txt"), "main moved\n")
+	testcheck.Write(t, filepath.Join(sub, "same.txt"), "main moved\n")
 	commit("main moves")
 	testcheck.Git(t, repo, "checkout", "-q", "chat")
 	if got := one("main", "same.txt"); len(got) != 0 {
@@ -215,7 +215,7 @@ func TestChangesOfOnePathOnABranch(t *testing.T) {
 
 	// On the base branch itself, the base is HEAD: what's uncommitted.
 	testcheck.Git(t, repo, "checkout", "-q", "main")
-	write(t, filepath.Join(sub, "b.txt"), "b changed\n")
+	testcheck.Write(t, filepath.Join(sub, "b.txt"), "b changed\n")
 	want = []model.FileChange{{Path: "b.txt", Status: "modified", Old: "b\n", New: "b changed\n", Added: 1, Removed: 1}}
 	if got := one("main", "b.txt"); !reflect.DeepEqual(got, want) {
 		t.Errorf("on main =\n%+v\nwant\n%+v", got, want)
@@ -236,14 +236,14 @@ func TestOnePathFromBeforeAChatsCommits(t *testing.T) {
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
 	commit := func(text, message string) {
 		t.Helper()
-		write(t, filepath.Join(repo, "a.txt"), text)
+		testcheck.Write(t, filepath.Join(repo, "a.txt"), text)
 		testcheck.Git(t, repo, "add", "-A")
 		testcheck.Git(t, repo, "commit", "-q", "-m", message)
 	}
 	commit("one\n", "the user's")
 	commit("one\ntwo\n", "the chat's first")
 	commit("one\ntwo\nthree\n", "the chat's second")
-	write(t, filepath.Join(repo, "a.txt"), "one\ntwo\nthree\nfour\n")
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "one\ntwo\nthree\nfour\n")
 
 	commits, err := Commits(ctx, repo, "", "", 50)
 	testcheck.NoErr(t, err)

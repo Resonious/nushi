@@ -31,30 +31,30 @@ func TestChanged(t *testing.T) {
 		t.Error("a folder outside git answered")
 	}
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
-	write(t, at("a.txt"), "a\n")
+	testcheck.Write(t, at("a.txt"), "a\n")
 	if got := names(""); !reflect.DeepEqual(got, []model.FileChange{{Path: "a.txt", Status: "added"}}) {
 		t.Errorf("before the first commit: %+v", got)
 	}
-	write(t, at(".gitignore"), "*.log\nbuild/\n")
-	write(t, at("src/old.go"), "package src\n\nfunc Old() {}\n")
-	write(t, at("src/same.go"), "package src\n")
-	write(t, at("build/kept.txt"), "kept\n")
+	testcheck.Write(t, at(".gitignore"), "*.log\nbuild/\n")
+	testcheck.Write(t, at("src/old.go"), "package src\n\nfunc Old() {}\n")
+	testcheck.Write(t, at("src/same.go"), "package src\n")
+	testcheck.Write(t, at("build/kept.txt"), "kept\n")
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "add", "-f", "build/kept.txt")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "init")
 
 	testcheck.Git(t, repo, "switch", "-q", "-c", "work")
-	write(t, at("internal/config/config.go"), "package config\n")
+	testcheck.Write(t, at("internal/config/config.go"), "package config\n")
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "committed on the branch")
 	testcheck.Git(t, repo, "mv", "src/old.go", "src/new.go")
-	write(t, at("a.txt"), "a changed\n")       // uncommitted
-	write(t, at("notes/new.md"), "new\n")      // untracked
-	write(t, at("debug.log"), "ignored\n")     // ignored
-	write(t, at("build/kept.txt"), "edited\n") // tracked, in an ignored folder
-	write(t, at("build/out.bin"), "ignored\n")
+	testcheck.Write(t, at("a.txt"), "a changed\n")       // uncommitted
+	testcheck.Write(t, at("notes/new.md"), "new\n")      // untracked
+	testcheck.Write(t, at("debug.log"), "ignored\n")     // ignored
+	testcheck.Write(t, at("build/kept.txt"), "edited\n") // tracked, in an ignored folder
+	testcheck.Write(t, at("build/out.bin"), "ignored\n")
 	nested := at("vendor/lib")
-	write(t, filepath.Join(nested, "x.go"), "package lib\n")
+	testcheck.Write(t, filepath.Join(nested, "x.go"), "package lib\n")
 	testcheck.Git(t, nested, "init", "-q", "-b", "main")
 
 	want := []model.FileChange{
@@ -77,10 +77,10 @@ func TestChanged(t *testing.T) {
 	testcheck.Git(t, repo, "switch", "-q", "-f", "main")
 	testcheck.NoErr(t, os.RemoveAll(nested))
 	testcheck.Git(t, repo, "clean", "-qfdx")
-	write(t, at("src/same.go"), "package src\n\n// one\n")
+	testcheck.Write(t, at("src/same.go"), "package src\n\n// one\n")
 	testcheck.Git(t, repo, "commit", "-qam", "the chat's first")
 	first := testcheck.Git(t, repo, "rev-parse", "HEAD")
-	write(t, at("src/two.go"), "package src\n")
+	testcheck.Write(t, at("src/two.go"), "package src\n")
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-qm", "the chat's second")
 	want = []model.FileChange{{Path: "src/same.go", Status: "modified"}, {Path: "src/two.go", Status: "added"}}
@@ -92,7 +92,7 @@ func TestChanged(t *testing.T) {
 	}
 
 	// A folder inside the repository names its changes relative to itself.
-	write(t, at("src/same.go"), "package src\n\n// two\n")
+	testcheck.Write(t, at("src/same.go"), "package src\n\n// two\n")
 	got, err := Changed(ctx, at("src"), "")
 	if err != nil || !reflect.DeepEqual(got, []model.FileChange{{Path: "same.go", Status: "modified"}}) {
 		t.Errorf("from src: %+v %v", got, err)
@@ -110,17 +110,17 @@ func TestChangedRunsNoFilter(t *testing.T) {
 	ctx := t.Context()
 	repo := t.TempDir()
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
-	write(t, filepath.Join(repo, "a.txt"), "one\n")
-	write(t, filepath.Join(repo, "b.md"), "one\n")
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "one\n")
+	testcheck.Write(t, filepath.Join(repo, "b.md"), "one\n")
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "init")
 	marks := t.TempDir()
 	clean, process := filepath.Join(marks, "clean-ran"), filepath.Join(marks, "process-ran")
-	write(t, filepath.Join(repo, ".gitattributes"), "*.txt filter=evil\n*.md filter=talker\n")
+	testcheck.Write(t, filepath.Join(repo, ".gitattributes"), "*.txt filter=evil\n*.md filter=talker\n")
 	testcheck.Git(t, repo, "config", "filter.evil.clean", "touch "+clean+"; cat")
 	testcheck.Git(t, repo, "config", "filter.talker.process", "touch "+process+"; cat")
-	write(t, filepath.Join(repo, "a.txt"), "one\ntwo\n")
-	write(t, filepath.Join(repo, "b.md"), "one\ntwo\n")
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "one\ntwo\n")
+	testcheck.Write(t, filepath.Join(repo, "b.md"), "one\ntwo\n")
 
 	got, err := Changed(ctx, repo, "")
 	if err != nil || len(got) != 3 { // .gitattributes is untracked

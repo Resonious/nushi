@@ -15,14 +15,6 @@ import (
 	"github.com/afrase/nushi/internal/testcheck"
 )
 
-func write(t *testing.T, path, text string) {
-	t.Helper()
-	testcheck.NoErr(t, os.MkdirAll(filepath.Dir(path), 0o755))
-	if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestChanges(t *testing.T) {
 	ctx := context.Background()
 	repo := t.TempDir()
@@ -30,22 +22,22 @@ func TestChanges(t *testing.T) {
 		t.Error("a folder outside git had changes")
 	}
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
-	write(t, filepath.Join(repo, "sub", "kept.txt"), "one\n")
+	testcheck.Write(t, filepath.Join(repo, "sub", "kept.txt"), "one\n")
 	if got, err := Changes(ctx, repo, Span{}); err != nil || len(got) != 1 || got[0].Status != "added" {
 		t.Errorf("before the first commit: %+v, %v", got, err) // no HEAD yet
 	}
-	write(t, filepath.Join(repo, "sub", "gone.txt"), "bye\n")
-	write(t, filepath.Join(repo, "sub", "bin"), "a\x00b")
-	write(t, filepath.Join(repo, "top.txt"), "top\n")
+	testcheck.Write(t, filepath.Join(repo, "sub", "gone.txt"), "bye\n")
+	testcheck.Write(t, filepath.Join(repo, "sub", "bin"), "a\x00b")
+	testcheck.Write(t, filepath.Join(repo, "top.txt"), "top\n")
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "init")
 
-	write(t, filepath.Join(repo, "sub", "kept.txt"), "one\ntwo\n")
+	testcheck.Write(t, filepath.Join(repo, "sub", "kept.txt"), "one\ntwo\n")
 	testcheck.NoErr(t, os.Remove(filepath.Join(repo, "sub", "gone.txt")))
-	write(t, filepath.Join(repo, "sub", "new.txt"), "new\n")
-	write(t, filepath.Join(repo, "sub", "bin"), "c\x00d")
+	testcheck.Write(t, filepath.Join(repo, "sub", "new.txt"), "new\n")
+	testcheck.Write(t, filepath.Join(repo, "sub", "bin"), "c\x00d")
 	testcheck.NoErr(t, os.Symlink("/etc/hosts", filepath.Join(repo, "sub", "link")))
-	write(t, filepath.Join(repo, "top.txt"), "changed\n") // outside the folder asked for
+	testcheck.Write(t, filepath.Join(repo, "top.txt"), "changed\n") // outside the folder asked for
 
 	got, err := Changes(ctx, filepath.Join(repo, "sub"), Span{})
 	if err != nil {
@@ -70,7 +62,7 @@ func TestChanges(t *testing.T) {
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "more")
 	testcheck.Git(t, repo, "mv", "sub/kept.txt", "sub/moved.txt")
-	write(t, filepath.Join(repo, "sub", "moved.txt"), "one\ntwo\nthree\n")
+	testcheck.Write(t, filepath.Join(repo, "sub", "moved.txt"), "one\ntwo\nthree\n")
 	got, err = Changes(ctx, filepath.Join(repo, "sub"), Span{})
 	want = []model.FileChange{{Path: "moved.txt", OldPath: "kept.txt", Status: "renamed", Old: "one\ntwo\n", New: "one\ntwo\nthree\n", Added: 1, Staged: model.StagedPart}}
 	if err != nil || !reflect.DeepEqual(got, want) {
@@ -82,20 +74,20 @@ func TestBranchChanges(t *testing.T) {
 	ctx := context.Background()
 	repo := t.TempDir()
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
-	write(t, filepath.Join(repo, "a.txt"), "a\n")
-	write(t, filepath.Join(repo, "b.txt"), "b\n")
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "a\n")
+	testcheck.Write(t, filepath.Join(repo, "b.txt"), "b\n")
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "init")
 	testcheck.Git(t, repo, "switch", "-q", "-c", "feature")
-	write(t, filepath.Join(repo, "a.txt"), "a\nmore\n")
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "a\nmore\n")
 	testcheck.Git(t, repo, "commit", "-q", "-am", "feature")
 	// main moves on: its new commit isn't the branch's change.
 	testcheck.Git(t, repo, "switch", "-q", "main")
-	write(t, filepath.Join(repo, "c.txt"), "c\n")
+	testcheck.Write(t, filepath.Join(repo, "c.txt"), "c\n")
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "main")
 	testcheck.Git(t, repo, "switch", "-q", "feature")
-	write(t, filepath.Join(repo, "b.txt"), "b2\n")
+	testcheck.Write(t, filepath.Join(repo, "b.txt"), "b2\n")
 
 	paths := func(span Span) string {
 		changes, err := Changes(ctx, repo, span)
@@ -163,15 +155,15 @@ func TestARepositorysOwnConfigRunsNothing(t *testing.T) {
 	repo, marks := t.TempDir(), t.TempDir()
 	mark := func(name string) string { return "touch " + filepath.Join(marks, name) }
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
-	write(t, filepath.Join(repo, "a.txt"), "one\n")
-	write(t, filepath.Join(repo, "b.md"), "one\n")
-	write(t, filepath.Join(repo, "c.go"), "one\n")
-	write(t, filepath.Join(repo, "lazy.txt"), "lazy\n")
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "one\n")
+	testcheck.Write(t, filepath.Join(repo, "b.md"), "one\n")
+	testcheck.Write(t, filepath.Join(repo, "c.go"), "one\n")
+	testcheck.Write(t, filepath.Join(repo, "lazy.txt"), "lazy\n")
 	// A repository inside it, as an unpacked download brings one: a gitlink
 	// in the index, and its own config with a filter.
 	sub := filepath.Join(repo, "sub")
 	testcheck.Git(t, repo, "init", "-q", "-b", "main", "sub")
-	write(t, filepath.Join(sub, "s.txt"), "one\n")
+	testcheck.Write(t, filepath.Join(sub, "s.txt"), "one\n")
 	testcheck.Git(t, sub, "add", ".")
 	testcheck.Git(t, sub, "commit", "-q", "-m", "sub")
 	head := testcheck.Git(t, sub, "rev-parse", "HEAD")
@@ -179,27 +171,27 @@ func TestARepositorysOwnConfigRunsNothing(t *testing.T) {
 	testcheck.Git(t, repo, "update-index", "--add", "--cacheinfo", "160000,"+head+",sub")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "first")
 	testcheck.Git(t, sub, "config", "filter.evil.clean", mark("subfilter")+"; cat")
-	write(t, filepath.Join(sub, ".git", "info", "attributes"), "*.txt filter=evil\n")
+	testcheck.Write(t, filepath.Join(sub, ".git", "info", "attributes"), "*.txt filter=evil\n")
 	testcheck.NoErr(t, os.Chtimes(filepath.Join(sub, "s.txt"), time.Now(), time.Now().Add(time.Hour))) // its index is stale
 
 	testcheck.Git(t, repo, "config", "filter.evil.clean", mark("filter")+"; cat")
 	// A driver whose name has a dot in it.
-	write(t, filepath.Join(repo, ".git", "info", "attributes"), "*.txt filter=evil\n*.md filter=a.b\n")
+	testcheck.Write(t, filepath.Join(repo, ".git", "info", "attributes"), "*.txt filter=evil\n*.md filter=a.b\n")
 	testcheck.Git(t, repo, "config", "filter.a.b.clean", mark("dotted")+"; cat")
 	// And one with "=" in it, which -c would split at.
-	write(t, filepath.Join(repo, ".git", "info", "attributes"), "a.txt filter=evil\n*.md filter=a.b\n*.go filter=x=y\n")
+	testcheck.Write(t, filepath.Join(repo, ".git", "info", "attributes"), "a.txt filter=evil\n*.md filter=a.b\n*.go filter=x=y\n")
 	testcheck.Git(t, repo, "config", "filter.x=y.clean", mark("equals")+"; cat")
-	write(t, filepath.Join(repo, "c.go"), "one\ntwo\n")
-	write(t, filepath.Join(repo, "b.md"), "one\ntwo\n")
-	write(t, filepath.Join(repo, ".git", "hooks", "post-checkout"), "#!/bin/sh\n"+mark("hook")+"\n")
+	testcheck.Write(t, filepath.Join(repo, "c.go"), "one\ntwo\n")
+	testcheck.Write(t, filepath.Join(repo, "b.md"), "one\ntwo\n")
+	testcheck.Write(t, filepath.Join(repo, ".git", "hooks", "post-checkout"), "#!/bin/sh\n"+mark("hook")+"\n")
 	testcheck.NoErr(t, os.Chmod(filepath.Join(repo, ".git", "hooks", "post-checkout"), 0o755))
-	write(t, filepath.Join(repo, "a.txt"), "one\ntwo\n")
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "one\ntwo\n")
 
 	// A signed commit, and a gpg that marks any check of it. It reads what
 	// git signs first: one that exits before git has written it all fails
 	// the commit at random (a broken pipe).
 	gpg := filepath.Join(marks, "gpg.sh")
-	write(t, gpg, "#!/bin/sh\ncase \"$*\" in *--verify*) "+mark("gpg")+"; exit 0;; esac\n"+
+	testcheck.Write(t, gpg, "#!/bin/sh\ncase \"$*\" in *--verify*) "+mark("gpg")+"; exit 0;; esac\n"+
 		"cat >/dev/null\necho '[GNUPG:] SIG_CREATED ' >&2\nprintf -- '-----BEGIN PGP SIGNATURE-----\\n\\nx\\n-----END PGP SIGNATURE-----\\n'\n")
 	testcheck.NoErr(t, os.Chmod(gpg, 0o755))
 	testcheck.Git(t, repo, "-c", "gpg.program="+gpg, "commit", "-q", "-S", "--allow-empty", "-m", "signed")
@@ -217,7 +209,7 @@ func TestARepositorysOwnConfigRunsNothing(t *testing.T) {
 		{"remote.origin.url", "ssh://example.invalid/x"}, {"remote.origin.promisor", "true"}, {"core.sshCommand", mark("lazy") + "; false"}} {
 		testcheck.Git(t, repo, "config", kv[0], kv[1])
 	}
-	write(t, filepath.Join(repo, "lazy.txt"), "lazy\ntwo\n")
+	testcheck.Write(t, filepath.Join(repo, "lazy.txt"), "lazy\ntwo\n")
 
 	_, _ = Status(ctx, repo, "")                                          // it may fail on the missing blob; it runs nothing
 	if ran, _ := filepath.Glob(filepath.Join(marks, "*")); len(ran) > 1 { // gpg.sh
@@ -245,15 +237,15 @@ func TestChangesLeavesOutWhatItCantShow(t *testing.T) {
 	testcheck.Git(t, sub, "commit", "-q", "--allow-empty", "-m", "one")
 	head := testcheck.Git(t, sub, "rev-parse", "HEAD")
 	testcheck.Git(t, repo, "update-index", "--add", "--cacheinfo", "160000,"+head+",sm")
-	write(t, filepath.Join(repo, "a.txt"), "a\n")
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "a\n")
 	testcheck.Git(t, repo, "add", "a.txt")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "first")
 	testcheck.Git(t, sub, "commit", "-q", "--allow-empty", "-m", "two") // the pointer moves
 	clone := filepath.Join(repo, "clone")
 	testcheck.Git(t, repo, "init", "-q", "clone") // a repository the agent made, untracked
-	write(t, filepath.Join(clone, "x"), "x\n")
-	write(t, filepath.Join(repo, "big.txt"), strings.Repeat("x", maxText+1))
-	write(t, filepath.Join(repo, "a.txt"), "a\nb\n")
+	testcheck.Write(t, filepath.Join(clone, "x"), "x\n")
+	testcheck.Write(t, filepath.Join(repo, "big.txt"), strings.Repeat("x", maxText+1))
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "a\nb\n")
 
 	got, err := Changes(ctx, repo, Span{})
 	if err != nil {
@@ -279,9 +271,9 @@ func TestBlobs(t *testing.T) {
 	ctx := context.Background()
 	repo := t.TempDir()
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
-	write(t, filepath.Join(repo, "big.txt"), strings.Repeat("x", maxText+5))
-	write(t, filepath.Join(repo, "sub", "a.txt"), "a\n")
-	write(t, filepath.Join(repo, "sub")+"/two\nlines", "b")
+	testcheck.Write(t, filepath.Join(repo, "big.txt"), strings.Repeat("x", maxText+5))
+	testcheck.Write(t, filepath.Join(repo, "sub", "a.txt"), "a\n")
+	testcheck.Write(t, filepath.Join(repo, "sub")+"/two\nlines", "b")
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "one")
 
@@ -302,9 +294,9 @@ func TestBlobs(t *testing.T) {
 
 func TestFileReadsOnlyInsideTheFolder(t *testing.T) {
 	dir, outside := t.TempDir(), t.TempDir()
-	write(t, filepath.Join(dir, "sub", "a.go"), "package a\n")
-	write(t, filepath.Join(dir, "bin"), "a\x00b")
-	write(t, filepath.Join(outside, "secret"), "no\n")
+	testcheck.Write(t, filepath.Join(dir, "sub", "a.go"), "package a\n")
+	testcheck.Write(t, filepath.Join(dir, "bin"), "a\x00b")
+	testcheck.Write(t, filepath.Join(outside, "secret"), "no\n")
 	testcheck.NoErr(t, os.Symlink(filepath.Join(outside, "secret"), filepath.Join(dir, "link")))
 	testcheck.NoErr(t, os.Symlink(outside, filepath.Join(dir, "out")))
 	testcheck.NoErr(t, os.Symlink("sub/a.go", filepath.Join(dir, "near")))
@@ -344,10 +336,10 @@ func TestStageAndCommit(t *testing.T) {
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
 	testcheck.Git(t, repo, "config", "user.name", "Test")
 	testcheck.Git(t, repo, "config", "user.email", "test@example.com")
-	write(t, filepath.Join(repo, "one.txt"), "one\n")
-	write(t, filepath.Join(repo, "gone.txt"), "bye\n")
-	write(t, filepath.Join(repo, "a*b.txt"), "star\n") // a pathspec's wildcard, if it weren't literal
-	write(t, filepath.Join(repo, "ab.txt"), "plain\n")
+	testcheck.Write(t, filepath.Join(repo, "one.txt"), "one\n")
+	testcheck.Write(t, filepath.Join(repo, "gone.txt"), "bye\n")
+	testcheck.Write(t, filepath.Join(repo, "a*b.txt"), "star\n") // a pathspec's wildcard, if it weren't literal
+	testcheck.Write(t, filepath.Join(repo, "ab.txt"), "plain\n")
 
 	// Before the first commit too: reset has no HEAD to go back to.
 	testcheck.NoErr(t, Stage(ctx, repo, []string{"one.txt", "gone.txt"}, true))
@@ -359,13 +351,13 @@ func TestStageAndCommit(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	write(t, filepath.Join(repo, "one.txt"), "one\ntwo\n")
+	testcheck.Write(t, filepath.Join(repo, "one.txt"), "one\ntwo\n")
 	testcheck.NoErr(t, os.Remove(filepath.Join(repo, "gone.txt")))
-	write(t, filepath.Join(repo, "new file.txt"), "new\n")
-	write(t, filepath.Join(repo, "a*b.txt"), "star 2\n")
-	write(t, filepath.Join(repo, "ab.txt"), "plain 2\n")
+	testcheck.Write(t, filepath.Join(repo, "new file.txt"), "new\n")
+	testcheck.Write(t, filepath.Join(repo, "a*b.txt"), "star 2\n")
+	testcheck.Write(t, filepath.Join(repo, "ab.txt"), "plain 2\n")
 	testcheck.NoErr(t, Stage(ctx, repo, []string{"one.txt", "gone.txt", "new file.txt", "a*b.txt"}, true))
-	write(t, filepath.Join(repo, "one.txt"), "one\ntwo\nthree\n")
+	testcheck.Write(t, filepath.Join(repo, "one.txt"), "one\ntwo\nthree\n")
 	want := map[string]string{"one.txt": "part", "gone.txt": "all", "new file.txt": "all", "a*b.txt": "all", "ab.txt": ""}
 	if got := stagedOf(t, repo); !reflect.DeepEqual(got, want) {
 		t.Errorf("staged = %v, want %v", got, want)
@@ -404,7 +396,7 @@ func TestCommitRunsHooksAndSaysWhyNot(t *testing.T) {
 	testcheck.NoErr(t, os.MkdirAll(filepath.Dir(hook), 0o755))
 	script := "#!/bin/sh\nprintf '\\033[31mlint: bad file\\033[0m\\n' >&2\nexit 1\n"
 	testcheck.NoErr(t, os.WriteFile(hook, []byte(script), 0o755))
-	write(t, filepath.Join(repo, "f.txt"), "x\n")
+	testcheck.Write(t, filepath.Join(repo, "f.txt"), "x\n")
 	testcheck.NoErr(t, Stage(ctx, repo, []string{"f.txt"}, true))
 	index, err := IndexState(ctx, repo)
 	testcheck.NoErr(t, err)
@@ -417,8 +409,8 @@ func TestCommitRefusesWhatTheFolderDoesntShow(t *testing.T) {
 	ctx := context.Background()
 	repo := t.TempDir()
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
-	write(t, filepath.Join(repo, "sub", "in.txt"), "in\n")
-	write(t, filepath.Join(repo, "out.txt"), "out\n")
+	testcheck.Write(t, filepath.Join(repo, "sub", "in.txt"), "in\n")
+	testcheck.Write(t, filepath.Join(repo, "out.txt"), "out\n")
 	testcheck.Git(t, repo, "add", ".")
 	sub := filepath.Join(repo, "sub")
 	index, err := IndexState(ctx, sub)
@@ -442,7 +434,7 @@ func signedRepo(t *testing.T) string {
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
 	testcheck.Git(t, repo, "config", "user.name", "Test")
 	testcheck.Git(t, repo, "config", "user.email", "test@example.com")
-	write(t, filepath.Join(repo, "f.txt"), "x\n")
+	testcheck.Write(t, filepath.Join(repo, "f.txt"), "x\n")
 	testcheck.NoErr(t, Stage(context.Background(), repo, []string{"f.txt"}, true))
 	return repo
 }

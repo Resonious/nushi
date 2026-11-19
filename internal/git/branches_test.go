@@ -18,7 +18,7 @@ func TestWorktreeListBranchesAndSwitch(t *testing.T) {
 	ctx := context.Background()
 	repo, _ := filepath.EvalSymlinks(t.TempDir())
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
-	write(t, filepath.Join(repo, "sub", "a.txt"), "a\n")
+	testcheck.Write(t, filepath.Join(repo, "sub", "a.txt"), "a\n")
 	testcheck.Git(t, repo, "add", ".")
 	t.Setenv("GIT_COMMITTER_DATE", "2001-01-01T00:00:00")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "init")
@@ -80,11 +80,11 @@ func TestWorktreeListBranchesAndSwitch(t *testing.T) {
 	}
 
 	// Switch: a change to a tracked file is counted (untracked files aren't).
-	write(t, filepath.Join(repo, "new.txt"), "untracked\n")
+	testcheck.Write(t, filepath.Join(repo, "new.txt"), "untracked\n")
 	if n, err := w.Changed(ctx, repo); n != 0 || err != nil {
 		t.Errorf("Changed with an untracked file = %d, %v", n, err)
 	}
-	write(t, filepath.Join(repo, "sub", "a.txt"), "changed\n")
+	testcheck.Write(t, filepath.Join(repo, "sub", "a.txt"), "changed\n")
 	if n, err := w.Changed(ctx, repo); n != 1 || err != nil {
 		t.Errorf("Changed = %d, %v", n, err)
 	}
@@ -120,11 +120,11 @@ func TestSwitchKeepsAnUntrackedFileTheBranchTracks(t *testing.T) {
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
 	testcheck.Git(t, repo, "commit", "-q", "--allow-empty", "-m", "init")
 	testcheck.Git(t, repo, "switch", "-q", "-c", "b")
-	write(t, filepath.Join(repo, "x"), "the branch's\n")
+	testcheck.Write(t, filepath.Join(repo, "x"), "the branch's\n")
 	testcheck.Git(t, repo, "add", "x")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "x")
 	testcheck.Git(t, repo, "switch", "-q", "main")
-	write(t, filepath.Join(repo, "x"), "mine\n")
+	testcheck.Write(t, filepath.Join(repo, "x"), "mine\n")
 	w := Worktrees{}
 	if n, err := w.Changed(ctx, repo); n != 0 || err != nil {
 		t.Fatalf("Changed = %d, %v", n, err)
