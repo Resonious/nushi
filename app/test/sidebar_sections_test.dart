@@ -316,8 +316,6 @@ void main() {
     sidebarSections.value = const [
       Section(id: 's1', name: 'Reviews', chats: ['e', 'a', 'b']),
     ];
-    sidebarGroupBy.value = GroupBy.project;
-    sidebarSort.value = SortBy.manual;
     projectRail.value = true;
     sidebarProject.value = '/Users/me/ledger-poc';
     pinnedEveryProject.value = false; // attic's pin out of the way

@@ -8,7 +8,6 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/menu.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/submenu.dart';
 
 import 'fake_daemon.dart';
@@ -223,7 +222,6 @@ void main() {
             const MethodChannel('nushi/fonts'),
             (_) async => <String>[],
           );
-      paneWidths.value = {};
       final fake = FakeDaemon([chat('c', 'claude', 'Plant the beds')])
         ..answer = ((input) => switch (input) {
           GetChatRequest() => GetChatResponse(

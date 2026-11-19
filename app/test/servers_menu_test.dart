@@ -565,7 +565,6 @@ void main() {
         browserFakes();
         viewport(tester, Size(width, 900), brightness: brightness);
         showDetails.value = false;
-        paneWidths.value = {};
         final s = _Servers()
           ..rows = [
             ...states['several']!(),

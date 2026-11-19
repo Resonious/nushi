@@ -174,7 +174,6 @@ void main() {
     tester.view.physicalSize = const Size(2601, 1600);
     tester.view.devicePixelRatio = 2;
     addTearDown(tester.view.reset);
-    paneWidths.value = {};
     await tester.pumpWidget(beside(double.infinity));
     final drag = await tester.startGesture(edge(tester));
     await drag.moveBy(const Offset(-20, 0));
@@ -228,7 +227,6 @@ void main() {
       tester.view.physicalSize = const Size(1000, 800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      paneWidths.value = {};
       open.value = true;
       cover.value = null;
       await tester.pumpWidget(app());

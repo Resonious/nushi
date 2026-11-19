@@ -637,7 +637,6 @@ void main() {
       addTearDown(
         tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
       );
-      Collapsible.opened.clear();
       final c = chat('c', 'claude', 'Paginate the feed');
       final fake = FakeDaemon([c])
         ..answer = ((input) => input is GetChatRequest

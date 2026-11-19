@@ -6,7 +6,6 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/details_panel.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/side_chat.dart';
 import 'package:nushi/usage.dart';
 
@@ -23,7 +22,6 @@ Future<(Daemon, FakeDaemon, ChatState)> _app(
   Brightness brightness = Brightness.dark,
 }) async {
   viewport(tester, size, brightness: brightness);
-  showDetails.value = true;
   final fake = FakeDaemon([chat('c', 'claude', 'Fix the login redirect')]);
   final d = await fake.connect(tester);
   d.select('c');

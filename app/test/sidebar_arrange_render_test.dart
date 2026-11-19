@@ -26,7 +26,6 @@ void main() {
     Brightness brightness,
   ) async {
     viewport(tester, Size(width, 760), brightness: brightness);
-    paneWidths.value = {};
     final d = await FakeDaemon(arrangeChats()).connect(tester);
     await tester.pumpWidget(NushiApp(daemon: d));
     await tester.pump(const Duration(seconds: 1));

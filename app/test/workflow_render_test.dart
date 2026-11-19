@@ -97,7 +97,6 @@ void main() {
         );
         sidebarHidden.value = width < 1000;
         showDetails.value = false;
-        paneWidths.value = {};
         final d = await _fake().connect(tester);
         d.select('c');
         await tester.pumpWidget(NushiApp(daemon: d));

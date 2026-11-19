@@ -27,7 +27,6 @@ import 'update_fixtures.dart';
 void main() {
   setUpAll(loadFonts);
   setUp(() {
-    dismissedUpdate.value = null;
     brewCask = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(

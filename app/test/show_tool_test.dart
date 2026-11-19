@@ -103,8 +103,6 @@ Future<(FakeDaemon, Daemon)> _app(
 }) async {
   viewport(tester, size);
   showDetails.value = false;
-  paneWidths.value = {};
-  Collapsible.opened.clear();
   final fake = _fake(items: items, asked: asked);
   final d = await fake.connect(tester);
   d.select(chat);
@@ -488,7 +486,6 @@ void main() {
       tester.platformDispatcher.accessibilityFeaturesTestValue =
           const FakeAccessibilityFeatures(disableAnimations: true);
       addTearDown(tester.platformDispatcher.clearAllTestValues);
-      Collapsible.opened.clear();
       final fake = _fake(
         items: [
           agentSays('m', 'The report is written.'),

@@ -95,7 +95,6 @@ void main() {
       tester,
     ) async {
       viewport(tester, Size(width, 600));
-      paneWidths.value = {};
       // Idle ones, so pumpAndSettle settles.
       final d = await FakeDaemon([
         for (final c in _chats)

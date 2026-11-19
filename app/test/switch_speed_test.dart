@@ -5,7 +5,6 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/items.dart';
 import 'package:nushi/main.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/sidebar.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/transcript.dart';
@@ -22,7 +21,6 @@ Future<Daemon> _twoLongChats(
   Brightness? brightness,
 }) async {
   viewport(tester, Size(width, 1000), brightness: brightness);
-  showDetails.value = true;
   final a = chat('a', 'claude', 'Alpha long chat');
   final b = chat('b', 'claude', 'Beta long chat', age: 5);
   final items = {'a': longChat('a'), 'b': longChat('b')};

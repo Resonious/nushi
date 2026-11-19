@@ -98,8 +98,6 @@ Future<Daemon> _app(
         const MethodChannel('nushi/fonts'),
         (_) async => <String>[],
       );
-  paneWidths.value = {};
-  showDetails.value = true;
   final fake = FakeDaemon([chat('c', 'claude', 'Rewrite the parser')])
     ..answer = (input) => switch (input) {
       GetChatRequest() => GetChatResponse(

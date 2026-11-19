@@ -188,7 +188,6 @@ void main() {
       testWidgets('the window narrowed to a project, another’s pin in '
           'Pinned, $name', (tester) async {
         viewport(tester, Size(width, 900), brightness: brightness);
-        paneWidths.value = {};
         sidebarProject.value = _ledger;
         final fake = FakeDaemon(_chats());
         final d = await fake.connect(tester);

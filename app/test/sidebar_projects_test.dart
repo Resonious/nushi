@@ -395,7 +395,6 @@ void main() {
       final name = '${width.toInt()}_${brightness.name}';
       testWidgets('the window with empty projects, $name', (tester) async {
         viewport(tester, Size(width, 760), brightness: brightness);
-        paneWidths.value = {};
         sidebarProjects.value = {'/Users/me/zeta', '/Users/me/work/cappy'};
         sidebarOrder.value = [_ledger, '/Users/me/zeta', _cappy];
         sidebarCollapsed.value = {'/Users/me/work/cappy'};

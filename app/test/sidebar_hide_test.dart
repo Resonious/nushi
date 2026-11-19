@@ -63,7 +63,6 @@ Future<Daemon> _window(
 }) async {
   viewport(tester, Size(width, 700), brightness: brightness);
   sidebarHidden.value = hidden;
-  paneWidths.value = {};
   final d = await (fake ?? FakeDaemon(_chats())).connect(tester);
   if (open) d.select('a');
   await tester.pumpWidget(NushiApp(daemon: d));
@@ -448,7 +447,6 @@ void main() {
       testWidgets('the update’s, removed chats’ and a notice’s bars take a row '
           'under the header, $width wide, ${b.name}', (tester) async {
         viewport(tester, Size(width, 700), brightness: b);
-        paneWidths.value = {};
         sidebarHidden.value = true;
         final fake = FakeDaemon(_chats())
           ..answer = ((input) => switch (input) {

@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/spinner.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/update_toast.dart';
@@ -21,7 +20,6 @@ import 'update_fixtures.dart';
 void main() {
   setUpAll(loadFonts);
   setUp(() {
-    dismissedUpdate.value = null;
     brewCask = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(

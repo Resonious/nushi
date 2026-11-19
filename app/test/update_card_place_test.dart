@@ -218,7 +218,6 @@ Future<void> _tab(WidgetTester tester, String tab, double width) async {
 void main() {
   setUpAll(loadFonts);
   setUp(() {
-    dismissedUpdate.value = null;
     brewCask = null;
   });
 

@@ -64,7 +64,6 @@ void main() {
       'agent passed it on', (tester) async {
     viewport(tester, const Size(1400, 700));
     showDetails.value = false;
-    paneWidths.value = {};
     final c = chat('c', 'claude', 'Fix the login redirect');
     final fake = FakeDaemon([c])
       ..answer = (input) => input is GetChatRequest
@@ -102,7 +101,6 @@ void main() {
       'and a failed one comes back before it', (tester) async {
     viewport(tester, const Size(1400, 700));
     showDetails.value = false;
-    paneWidths.value = {};
     final c = chat('c', 'claude', 'Fix the login redirect');
     var sent = Completer<SendPromptResponse>();
     final fake = FakeDaemon([c])

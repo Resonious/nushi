@@ -79,7 +79,6 @@ void main() {
 
   Future<Daemon> app(WidgetTester tester) async {
     viewport(tester, const Size(1700, 1000));
-    sidebarHidden.value = false;
     a = chat('a', 'claude', 'A long chat');
     final items = longChat('a');
     fake = FakeDaemon([a, chat('b', 'codex', 'Another', age: 1)])

@@ -31,7 +31,6 @@ Future<Daemon> _window(
 }) async {
   viewport(tester, Size(width, 700), brightness: brightness);
   sidebarHidden.value = true;
-  paneWidths.value = {};
   final d = await FakeDaemon([
     chat('a', 'claude', 'Fix the login redirect after it expires'),
     chat('b', 'codex', 'Bump the API version', age: 1),
@@ -191,8 +190,6 @@ void main() {
   testWidgets('hidden by its button, it doesn’t peek until the pointer has '
       'left the button and come back', (tester) async {
     viewport(tester, const Size(1200, 700));
-    sidebarHidden.value = false;
-    paneWidths.value = {};
     final d = await FakeDaemon([chat('a', 'claude', 'One')]).connect(tester);
     await tester.pumpWidget(NushiApp(daemon: d));
     await tester.pumpAndSettle();

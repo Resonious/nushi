@@ -7,7 +7,6 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/details_panel.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/subagent_pane.dart';
 import 'package:nushi/subagents.dart';
 
@@ -112,8 +111,6 @@ final _items = <Item>[
 /// daemon that gets its calls.
 Future<(Daemon, FakeDaemon)> _app(WidgetTester tester, double width) async {
   viewport(tester, Size(width, 640));
-  showDetails.value = true;
-  paneWidths.value = {};
   // The turn ended; the running subagent and make watch go on (API 84).
   final running = ChatStatus(background: 2);
   final c = chat('c', 'claude', 'ClickHouse time binding', status: running);

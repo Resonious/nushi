@@ -5,7 +5,6 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/phone/chats_screen.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/sidebar_row.dart';
 import 'package:nushi/status.dart';
 import 'package:nushi/theme/theme.dart';
@@ -258,7 +257,6 @@ void main() {
       final name = '${width.toInt()}_${brightness.name}';
       testWidgets('the window with sleeping rows, $name', (tester) async {
         viewport(tester, Size(width, 760), brightness: brightness);
-        paneWidths.value = {};
         final d = await _keepAsleep(FakeDaemon(_chats())).connect(tester);
         await tester.pumpWidget(NushiApp(daemon: d));
         d.select(_selected);

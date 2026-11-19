@@ -34,7 +34,6 @@ Future<Daemon> _app(WidgetTester tester, double width) async {
         const MethodChannel('nushi/fonts'),
         (_) async => <String>[],
       );
-  paneWidths.value = {};
   showDetails.value = false;
   final fake = FakeDaemon([chat('c', 'claude', 'Subtract')])
     ..answer = (input) => switch (input) {

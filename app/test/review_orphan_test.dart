@@ -44,7 +44,6 @@ void main() {
           const MethodChannel('nushi/fonts'),
           (_) async => <String>[],
         );
-    paneWidths.value = {};
     showDetails.value = false;
     files = [
       FileChange(
