@@ -29,12 +29,10 @@ class Pond extends StatefulWidget {
 
   /// Loads the shaders; an effect before they're loaded is skipped.
   static Future<void> load() => _loading ??= Future.wait([
-    ui.FragmentProgram.fromAsset(
-      'shaders/ripple.frag',
-    ).then((p) => _program = p),
-    ui.FragmentProgram.fromAsset(
-      'shaders/caustics.frag',
-    ).then((p) => _caustics = p),
+    ui.FragmentProgram.fromAsset('shaders/ripple.frag')
+        .then((p) => _program = p),
+    ui.FragmentProgram.fromAsset('shaders/caustics.frag')
+        .then((p) => _caustics = p),
   ]);
 
   /// Words came in: the light on the floor stirs, brighter for a moment.
@@ -55,6 +53,24 @@ class Pond extends StatefulWidget {
   static void glint(BuildContext context, Offset global) =>
       context.findAncestorStateOfType<_PondState>()?._add(global, glint: true);
 
+  /// A new chat surfaced in the pond somewhere under [context] (above
+  /// it): a drop falls where its composer is, its rings running up the
+  /// empty transcript. Looks down the tree once.
+  static void welcome(BuildContext context) {
+    _PondState? found;
+    void visit(Element e) {
+      if (found != null) return;
+      if (e is StatefulElement && e.state is _PondState) {
+        found = e.state as _PondState;
+        return;
+      }
+      e.visitChildren(visit);
+    }
+
+    (context as Element).visitChildren(visit);
+    found?._welcome();
+  }
+
   @override
   State<Pond> createState() => _PondState();
 }
@@ -70,7 +86,11 @@ class _Ripple {
   Duration? born;
   double age = 0;
 
-  double get life => edge != null ? 1.1 : glint ? 0.9 : 1.6;
+  double get life => edge != null
+      ? 1.1
+      : glint
+      ? 0.9
+      : 1.6;
 
   double get kind => switch (edge) {
     final s? => 2 + 0.9 * s.clamp(0, 1),
@@ -93,7 +113,12 @@ class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
   final _snapshot = SnapshotController();
   final _painter = _RipplePainter();
   final _key = GlobalKey();
-  final _caustics = _CausticsPainter();
+  // The whole pond (the transcript and what's under it), and what's
+  // under it: the caustics run across both as one floor.
+  final _area = GlobalKey();
+  final _floorKey = GlobalKey();
+  late final _caustics = _CausticsPainter(_key, _area);
+  late final _floorCaustics = _CausticsPainter(_floorKey, _area);
   final _drops = _DropsPainter();
   Duration? _last;
 
@@ -154,6 +179,18 @@ class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
     if (!_ticker.isActive) unawaited(_ticker.start());
   }
 
+  void _welcome() {
+    final floor = _floorKey.currentContext?.findRenderObject() as RenderBox?;
+    final box = floor ?? _key.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final size = box.size;
+    // The composer's middle, or the transcript's foot without one.
+    final at = floor != null
+        ? size.bottomCenter(Offset.zero) - const Offset(0, 44)
+        : size.bottomCenter(Offset.zero);
+    _add(box.localToGlobal(at), glint: false);
+  }
+
   void _splash(double strength) {
     if (reduceMotion(context)) return;
     final box = _key.currentContext?.findRenderObject() as RenderBox?;
@@ -210,6 +247,10 @@ class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
       ..time += dt * (0.8 + 0.6 * _stirred)
       ..strength = Curves.easeInOut.transform(_level) * (1 + _stirred)
       ..changed();
+    _floorCaustics
+      ..time = _caustics.time
+      ..strength = _caustics.strength
+      ..changed();
     final ripples = _painter.ripples;
     for (final r in ripples) {
       r.age = (now - (r.born ??= now)).inMicroseconds / 1e6;
@@ -231,6 +272,7 @@ class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
     _lifecycle.dispose();
     _ticker.dispose();
     _caustics.dispose();
+    _floorCaustics.dispose();
     _drops.dispose();
     _snapshot.dispose();
     _painter.dispose();
@@ -241,9 +283,11 @@ class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final t = NushiTheme.of(context).t;
     final dark = t.brightness == Brightness.dark;
-    _caustics.color = dark
+    final light = dark
         ? t.shineBand.withValues(alpha: 0.13)
         : t.accent.withValues(alpha: 0.10);
+    _caustics.color = light;
+    _floorCaustics.color = light;
     _drops.color = dark ? t.shineBand : t.accent;
     _painter
       ..dark = dark
@@ -251,6 +295,12 @@ class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
       ..crestStrength = dark ? 0.12 : 0.1
       ..glint = t.gold
       ..glintStrength = dark ? 0.3 : 0.28;
+    return KeyedSubtree(key: _area, child: widget.child);
+  }
+
+  /// The transcript's water: what ripples ([PondSurface]).
+  Widget _surface(BuildContext context, Widget child) {
+    final t = NushiTheme.of(context).t;
     final surface = SnapshotWidget(
       key: _key,
       controller: _snapshot,
@@ -265,11 +315,9 @@ class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
           children: [
             // The light on the pond's floor, under the text.
             Positioned.fill(
-              child: RepaintBoundary(
-                child: CustomPaint(painter: _caustics),
-              ),
+              child: RepaintBoundary(child: CustomPaint(painter: _caustics)),
             ),
-            widget.child,
+            child,
           ],
         ),
       ),
@@ -289,6 +337,44 @@ class _PondState extends State<Pond> with SingleTickerProviderStateMixin {
       ],
     );
   }
+
+  /// Under the transcript (the turn line, the composer): the same light
+  /// on the floor, carried on from the water above ([PondFloor]).
+  Widget _floor(Widget child) => Stack(
+    key: _floorKey,
+    fit: StackFit.passthrough,
+    children: [
+      Positioned.fill(
+        child: RepaintBoundary(child: CustomPaint(painter: _floorCaustics)),
+      ),
+      child,
+    ],
+  );
+}
+
+/// The water that ripples: the transcript's list, under a [Pond] that
+/// holds it and what's under it. Without a pond, just [child].
+class PondSurface extends StatelessWidget {
+  const PondSurface({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) =>
+      context.findAncestorStateOfType<_PondState>()?._surface(context, child) ??
+      child;
+}
+
+/// What's under the transcript in a [Pond] (the turn line, the composer):
+/// the caustics carry on under it. Without a pond, just [child].
+class PondFloor extends StatelessWidget {
+  const PondFloor({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) =>
+      context.findAncestorStateOfType<_PondState>()?._floor(child) ?? child;
 }
 
 class _DropsPainter extends ChangeNotifier implements CustomPainter {
@@ -306,10 +392,7 @@ class _DropsPainter extends ChangeNotifier implements CustomPainter {
     final a = age;
     for (final d in list) {
       final vy = d.vy + g * a;
-      final p = Offset(
-        d.x + d.vx * a,
-        size.height + d.vy * a + g * a * a / 2,
-      );
+      final p = Offset(d.x + d.vx * a, size.height + d.vy * a + g * a * a / 2);
       if (p.dy > size.height + 4) continue; // back in the water
       final fade = (1 - a / 1.2).clamp(0.0, 1.0);
       // A round drop, a faint wake behind it.
@@ -410,6 +493,12 @@ class _RipplePainter extends SnapshotPainter {
 }
 
 class _CausticsPainter extends ChangeNotifier implements CustomPainter {
+  _CausticsPainter(this._region, this._area);
+
+  // Where this painter is, in the whole pond: the floor's cells run on
+  // from the water's.
+  final GlobalKey _region;
+  final GlobalKey _area;
   double time = 0;
   double strength = 0;
   Color color = const Color(0x22FFFFFF);
@@ -422,16 +511,28 @@ class _CausticsPainter extends ChangeNotifier implements CustomPainter {
   void paint(Canvas canvas, Size size) {
     final program = Pond._caustics;
     if (program == null || strength <= 0.001) return;
+    final region = _region.currentContext?.findRenderObject() as RenderBox?;
+    final area = _area.currentContext?.findRenderObject() as RenderBox?;
+    var origin = Offset.zero;
+    var full = size;
+    if (region != null && area != null && region.attached && area.attached) {
+      origin = region.localToGlobal(Offset.zero, ancestor: area);
+      full = area.size;
+    }
     final shader = _shader ??= program.fragmentShader();
     shader
       ..setFloat(0, size.width)
       ..setFloat(1, size.height)
-      ..setFloat(2, time)
-      ..setFloat(3, strength)
-      ..setFloat(4, color.r)
-      ..setFloat(5, color.g)
-      ..setFloat(6, color.b)
-      ..setFloat(7, color.a);
+      ..setFloat(2, origin.dx)
+      ..setFloat(3, origin.dy)
+      ..setFloat(4, full.width)
+      ..setFloat(5, full.height)
+      ..setFloat(6, time)
+      ..setFloat(7, strength)
+      ..setFloat(8, color.r)
+      ..setFloat(9, color.g)
+      ..setFloat(10, color.b)
+      ..setFloat(11, color.a);
     _paint.shader = shader;
     canvas.drawRect(Offset.zero & size, _paint);
   }
