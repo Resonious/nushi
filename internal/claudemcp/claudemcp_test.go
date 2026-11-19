@@ -77,6 +77,7 @@ func TestServersReadsEachScope(t *testing.T) {
 // ignores .claude/settings.local.json would keep SetOn from writing
 // info/exclude.
 func withoutGitConfig(t *testing.T) {
+	t.Helper()
 	t.Setenv("GIT_CONFIG_GLOBAL", os.DevNull)
 	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
