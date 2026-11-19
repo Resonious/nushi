@@ -78,6 +78,10 @@ class _SidebarBesideState extends State<SidebarBeside> {
   /// The menus open in the peek.
   int _menus = 0;
 
+  /// The presses held that went down in the peek: its edge dragged wider
+  /// than it, the pointer leaves it, and it mustn't go mid-drag.
+  final _presses = <int>{};
+
   Timer? _close;
   Timer? _dwell;
 
@@ -94,6 +98,7 @@ class _SidebarBesideState extends State<SidebarBeside> {
     _close?.cancel();
     _dwell?.cancel();
     _menus = 0;
+    _presses.clear();
     if (!widget.shut && _peek) _docked++;
     _peek = false;
     if (widget.shut && _onButton) _armed = false;
@@ -144,7 +149,7 @@ class _SidebarBesideState extends State<SidebarBeside> {
     if (!mounted || !_peek || _onIt) return;
     // A menu of it, or a dialog it opened, keeps it until it's gone.
     final covered = !(ModalRoute.of(context)?.isCurrent ?? true);
-    if (_menus > 0 || covered) {
+    if (_menus > 0 || covered || _presses.isNotEmpty) {
       _close = Timer(SidebarBeside.grace, _end);
       return;
     }
@@ -273,20 +278,25 @@ class _SidebarBesideState extends State<SidebarBeside> {
     return MouseRegion(
       onEnter: (_) => _cardHover(true),
       onExit: (_) => _cardHover(false),
-      child: NotificationListener<MenuOpened>(
-        onNotification: _menu,
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: t.window,
-            borderRadius: corners,
-            boxShadow: floatShadows(t),
+      child: Listener(
+        onPointerDown: (e) => _presses.add(e.pointer),
+        onPointerUp: (e) => _presses.remove(e.pointer),
+        onPointerCancel: (e) => _presses.remove(e.pointer),
+        child: NotificationListener<MenuOpened>(
+          onNotification: _menu,
+          child: Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: t.window,
+              borderRadius: corners,
+              boxShadow: floatShadows(t),
+            ),
+            foregroundDecoration: BoxDecoration(
+              border: Border.all(color: t.floatLine),
+              borderRadius: corners,
+            ),
+            child: widget.sidebar(floating: true),
           ),
-          foregroundDecoration: BoxDecoration(
-            border: Border.all(color: t.floatLine),
-            borderRadius: corners,
-          ),
-          child: widget.sidebar(floating: true),
         ),
       ),
     );

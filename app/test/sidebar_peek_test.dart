@@ -6,9 +6,11 @@ import 'package:nushi/conventions.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/native.dart';
+import 'package:nushi/panes.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/sidebar.dart';
 import 'package:nushi/sidebar_beside.dart';
+import 'package:nushi/sidebar_button.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/window_drag_linux.dart';
 
@@ -138,6 +140,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Rename'), findsNothing);
     expect(find.byType(Sidebar), findsNothing);
+    d.dispose();
+  }, variant: _mac);
+
+  testWidgets('its edge dragged past it keeps it until let go', (tester) async {
+    // Dragged wider than its most, the pointer leaves the card: the peek
+    // stays while the press is held, so the drag isn't cut off with it.
+    final d = await _window(tester);
+    final mouse = await _mouse(tester);
+    await mouse.moveTo(_button(tester));
+    await tester.pumpAndSettle();
+    final edge = find.byWidgetPredicate(
+      (w) => w is Resizable && w.name == 'sidebar',
+    );
+    final at = tester.getRect(edge).centerRight - const Offset(2, 0);
+    await mouse.moveTo(at);
+    await tester.pump();
+    await mouse.down(at);
+    await mouse.moveTo(at + const Offset(20, 0));
+    await tester.pump();
+    await mouse.moveTo(at + const Offset(600, 0));
+    await tester.pump(SidebarBeside.grace * 3);
+    await tester.pumpAndSettle();
+    expect(find.byType(Sidebar), findsOneWidget);
+    await mouse.up();
+    await tester.pump(SidebarBeside.grace * 2);
+    await tester.pumpAndSettle();
+    expect(find.byType(Sidebar), findsNothing);
+    expect(paneWidths.value['sidebar'], sidebarMost(1200));
     d.dispose();
   }, variant: _mac);
 
