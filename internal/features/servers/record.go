@@ -25,9 +25,9 @@ type recorded struct {
 
 // recordedProc is one process, as proctree identifies it.
 type recordedProc struct {
-	Pid     int    `json:"pid"`
-	Pgid    int    `json:"pgid"`
-	Started string `json:"started"` // RFC 3339, to the nanosecond
+	Pid     int       `json:"pid"`
+	Pgid    int       `json:"pgid"`
+	Started time.Time `json:"started"` // RFC 3339, to the nanosecond, as proctree compares it
 }
 
 // keep writes the record of the live servers, or removes it when none
@@ -43,7 +43,7 @@ func (s *Service) keep() {
 	for _, sv := range s.alive {
 		var r recorded
 		for _, p := range sv.tree {
-			r.Procs = append(r.Procs, recordedProc{Pid: p.Pid, Pgid: p.Pgid, Started: p.Started.Format(timeFormat)})
+			r.Procs = append(r.Procs, recordedProc{Pid: p.Pid, Pgid: p.Pgid, Started: p.Started})
 		}
 		if len(r.Procs) > 0 {
 			all[sv.id] = r
@@ -56,8 +56,11 @@ func (s *Service) keep() {
 		}
 		return
 	}
-	b, _ := json.Marshal(all) // ints and strings: it can't fail
-	if err := atomicfile.Replace(s.Record, b, 0o600); err != nil {
+	b, err := json.Marshal(all) // fails only on a start time outside years 0 to 9999
+	if err == nil {
+		err = atomicfile.Replace(s.Record, b, 0o600)
+	}
+	if err != nil {
 		slog.Warn("dev servers' record not written", "err", err)
 	}
 }
@@ -78,9 +81,7 @@ func Sweep(path string, procs Procs) {
 	var ps []model.Process
 	for _, r := range all {
 		for _, p := range r.Procs {
-			if at, err := parseTime(p.Started); err == nil {
-				ps = append(ps, model.Process{Pid: p.Pid, Pgid: p.Pgid, Started: at})
-			}
+			ps = append(ps, model.Process{Pid: p.Pid, Pgid: p.Pgid, Started: p.Started})
 		}
 	}
 	if len(ps) > 0 {
@@ -89,8 +90,3 @@ func Sweep(path string, procs Procs) {
 	slog.Info("dev servers left by a daemon swept", "servers", len(all), "processes", len(ps), "err", err)
 	_ = os.Remove(path)
 }
-
-// timeFormat keeps a start time to the nanosecond, as proctree compares it.
-const timeFormat = time.RFC3339Nano
-
-func parseTime(s string) (time.Time, error) { return time.Parse(timeFormat, s) }

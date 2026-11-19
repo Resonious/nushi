@@ -61,7 +61,7 @@ func TestSweepStopsWhatACrashLeft(t *testing.T) {
 	other, err := proctree.Tree{}.Get(os.Getpid())
 	testcheck.NoErr(t, err)
 	at := func(p model.Process, d time.Duration) recordedProc {
-		return recordedProc{Pid: p.Pid, Pgid: p.Pgid, Started: p.Started.Add(d).Format(timeFormat)}
+		return recordedProc{Pid: p.Pid, Pgid: p.Pgid, Started: p.Started.Add(d)}
 	}
 	path := filepath.Join(t.TempDir(), "servers.json")
 	b, _ := json.Marshal(map[string]recorded{"a": {Procs: []recordedProc{at(p, 0), at(other, time.Second)}}})
