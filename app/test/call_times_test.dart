@@ -1,5 +1,6 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart' hide LiveText;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/call_times.dart';
@@ -296,6 +297,63 @@ void main() {
       await tester.pump();
     }
     Collapsible.opened.clear();
+  });
+
+  testWidgets("a narrow subagent line never cuts its state to a bare '…'", (
+    tester,
+  ) async {
+    viewport(tester, const Size(800, 400));
+    final sub = subagentsOf(_items()).single;
+    final states = subagentStatesNarrow(sub);
+    expect(states, [
+      '3m 12s · 48k tokens · done',
+      '3m 12s · 48k tokens',
+      '3m 12s',
+    ]);
+    final width = ValueNotifier(419.0);
+    addTearDown(width.dispose);
+    await tester.pumpWidget(
+      themed(
+        ValueListenableBuilder(
+          valueListenable: width,
+          builder: (context, w, _) => Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: w,
+              child: SubagentLine(sub, ChatState('c', '/x'), still: true),
+            ),
+          ),
+        ),
+      ),
+    );
+    final seen = <String>{};
+    // The word goes whole: in the room a third of the line gives, never
+    // "3m 12s · 48k tokens · d…".
+    for (var w = 419.0; w >= 200; w -= 1) {
+      width.value = w;
+      await tester.pump();
+      final state = find.descendant(
+        of: find.byType(SubagentState),
+        matching: find.byType(Text),
+      );
+      final text = tester.widget<Text>(state).data!;
+      final cut = tester
+          .renderObject<RenderParagraph>(
+            find.descendant(of: state, matching: find.byType(RichText)),
+          )
+          .didExceedMaxLines;
+      expect(states, contains(text), reason: 'at $w');
+      expect(cut, isFalse, reason: '"$text" cut at $w');
+      // Down to a chat's least (a side pane open), its time and tokens.
+      if (w >= 266) expect(text, contains('48k tokens'), reason: 'at $w');
+      seen.add(text);
+    }
+    expect(seen, contains('3m 12s')); // narrower still, the time alone
+    // Wide, the word stands apart, whole.
+    width.value = 600;
+    await tester.pump();
+    expect(find.text('done'), findsOne);
+    expect(find.text('3m 12s · 48k tokens'), findsOne);
   });
 
   for (final (size, label) in [

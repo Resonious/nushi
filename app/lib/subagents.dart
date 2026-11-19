@@ -87,24 +87,39 @@ List<Item> subagentSteps(SubagentRun s) => [
 /// done, "failed". The count shows only when its steps are known (a
 /// background subagent's aren't after the chat reopened), the time only
 /// when the daemon knows it, the tokens once the agent reported them.
-/// Without [time], its time and tokens are left to [subagentTime]; with
-/// [timeFirst], they lead, so a line cut short keeps them.
-String subagentState(
-  SubagentRun s, {
-  bool time = true,
-  bool timeFirst = false,
-}) {
-  final sa = s.call.subagent;
+/// Without [time], its time and tokens are left to [subagentTime].
+String subagentState(SubagentRun s, {bool time = true}) {
+  final spent = time ? subagentTime(s) : '';
+  return [..._stateWords(s), if (spent.isNotEmpty) spent].join(' · ');
+}
+
+/// What a subagent does or how it ended, and its tool calls' count.
+List<String> _stateWords(SubagentRun s) {
   final calls = subagentSteps(s)
       .where((it) => it.kind == ItemKind.ITEM_KIND_TOOL_CALL)
       .length;
-  final spent = time ? subagentTime(s) : '';
   return [
-    if (timeFirst && spent.isNotEmpty) spent,
-    if (subagentRunning(s)) doing(s.items) else sa.state,
+    if (subagentRunning(s)) doing(s.items) else s.call.subagent.state,
     if (calls > 0) '$calls tool call${calls == 1 ? '' : 's'}',
-    if (!timeFirst && spent.isNotEmpty) spent,
-  ].join(' · ');
+  ];
+}
+
+/// A subagent's state for a narrow line, its time and tokens first, the
+/// fullest first: "3m 12s · 48k tokens · done · 6 tool calls", without
+/// the count, without the words, then the time alone. A line takes the
+/// first that fits whole ([SubagentState.fitted]), so a word is never cut
+/// to a bare "…" (its mark says how it ended). Without a time, its words
+/// alone.
+List<String> subagentStatesNarrow(SubagentRun s) {
+  final spent = subagentTime(s);
+  final words = _stateWords(s);
+  if (spent.isEmpty) return [words.join(' · ')];
+  final time = spent.split(' · ').first;
+  return [
+    for (var n = words.length; n >= 0; n--)
+      [spent, ...words.take(n)].join(' · '),
+    if (time != spent) time,
+  ];
 }
 
 /// A subagent's time and tokens: "3m 12s · 48k tokens", "40s" while it
@@ -168,24 +183,64 @@ class SubagentState extends StatelessWidget {
     required this.style,
     super.key,
     this.time = true,
-    this.timeFirst = false,
+    this.fitted = false,
   });
 
   final SubagentRun s;
   final TextStyle style;
 
-  /// Whether its time and tokens show, and lead ([subagentState]).
+  /// Whether its time and tokens show ([subagentState]).
   final bool time;
-  final bool timeFirst;
+
+  /// Whether it's the fullest of [subagentStatesNarrow] that fits whole,
+  /// its time first.
+  final bool fitted;
 
   @override
-  Widget build(BuildContext context) => LiveText(
-    () => subagentState(s, time: time, timeFirst: timeFirst),
-    live: subagentRunning(s),
-    style: s.call.subagent.state == 'failed'
-        ? style.copyWith(color: NushiTheme.of(context).t.crashed)
-        : style,
-  );
+  Widget build(BuildContext context) {
+    final style = s.call.subagent.state == 'failed'
+        ? this.style.copyWith(color: NushiTheme.of(context).t.crashed)
+        : this.style;
+    if (!fitted) {
+      return LiveText(
+        () => subagentState(s, time: time),
+        live: subagentRunning(s),
+        style: style,
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, box) => LiveText(
+        () {
+          final states = subagentStatesNarrow(s);
+          return states.firstWhere(
+            (t) => textWidth(context, t, style) <= box.maxWidth,
+            orElse: () => states.last,
+          );
+        },
+        live: subagentRunning(s),
+        style: style,
+      ),
+    );
+  }
+}
+
+/// How wide [text] sets on one line in [style] where [context] is, as
+/// [LiveText] sets it there (the text's default style, its scale).
+double textWidth(BuildContext context, String text, TextStyle style) {
+  final painter = TextPainter(
+    text: TextSpan(
+      text: text,
+      style: DefaultTextStyle.of(context).style
+          .merge(style)
+          .copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+    ),
+    textDirection: TextDirection.ltr,
+    textScaler: MediaQuery.textScalerOf(context),
+    maxLines: 1,
+  )..layout();
+  final width = painter.width;
+  painter.dispose();
+  return width;
 }
 
 /// A related worktree's branch, as a tag on its subagent.
@@ -250,6 +305,7 @@ class SubagentLine extends StatelessWidget {
     final t = theme.t;
     final daemon = this.daemon;
     final failed = s.call.subagent.state == 'failed';
+    final state = theme.ui(t.textSecondary, size: 12);
     return Hover(
       builder: (context, {required hover}) => ValueListenableBuilder(
         valueListenable: chat.pane,
@@ -310,13 +366,31 @@ class SubagentLine extends StatelessWidget {
                       // which lead it; wide, they are apart, muted.
                       ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxWidth: math.min(240, box.maxWidth / 3),
+                          maxWidth: math.min(
+                            240,
+                            math.max(
+                              box.maxWidth / 3,
+                              // Narrow, room for its time and tokens, up
+                              // to half the line.
+                              box.maxWidth < _timeApart
+                                  ? math.min(
+                                      box.maxWidth / 2,
+                                      textWidth(
+                                            context,
+                                            subagentTime(s),
+                                            state,
+                                          ) +
+                                          1,
+                                    )
+                                  : 0,
+                            ),
+                          ),
                         ),
                         child: SubagentState(
                           s,
-                          style: theme.ui(t.textSecondary, size: 12),
+                          style: state,
                           time: box.maxWidth < _timeApart,
-                          timeFirst: true,
+                          fitted: box.maxWidth < _timeApart,
                         ),
                       ),
                       if (box.maxWidth >= _timeApart)
