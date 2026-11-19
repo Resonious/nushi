@@ -108,7 +108,7 @@ Future<void> _window(
   expect(find.text('12s'), findsWidgets); // the run's and the running call's
   expect(find.text('1m 04s'), findsOne); // the run's span
   expect(
-    find.textContaining('3m 12s · 48k tokens', findRichText: true),
+    find.textContaining('3m 12s · 48.1k tokens', findRichText: true),
     findsOne,
   );
   expectTextInside(tester, size.width);
@@ -131,7 +131,9 @@ void main() {
     expect(elapsed(const Duration(seconds: 12)), '12s');
     expect(elapsed(const Duration(seconds: 64)), '1m 04s');
     expect(tokenCount(950), '950 tokens');
-    expect(tokenCount(12400), '12k tokens');
+    expect(tokenCount(12400), '12.4k tokens');
+    expect(tokenCount(48000), '48k tokens');
+    expect(tokenCount(1000000), '1M tokens');
     expect(tokenCount(9400), '9.4k tokens');
     expect(tokenCount(1240000), '1.2M tokens');
     // Under a second, replayed (no times), or never ended: nothing.
@@ -298,8 +300,8 @@ void main() {
     final sub = subagentsOf(_items()).single;
     final states = subagentStatesNarrow(sub);
     expect(states, [
-      '3m 12s · 48k tokens · done',
-      '3m 12s · 48k tokens',
+      '3m 12s · 48.1k tokens · done',
+      '3m 12s · 48.1k tokens',
       '3m 12s',
     ]);
     final width = ValueNotifier(419.0);
@@ -320,7 +322,7 @@ void main() {
     );
     final seen = <String>{};
     // The word goes whole: in the room a third of the line gives, never
-    // "3m 12s · 48k tokens · d…".
+    // "3m 12s · 48.1k tokens · d…".
     for (var w = 419.0; w >= 200; w -= 1) {
       width.value = w;
       await tester.pump();
@@ -337,7 +339,7 @@ void main() {
       expect(states, contains(text), reason: 'at $w');
       expect(cut, isFalse, reason: '"$text" cut at $w');
       // Down to a chat's least (a side pane open), its time and tokens.
-      if (w >= 266) expect(text, contains('48k tokens'), reason: 'at $w');
+      if (w >= 276) expect(text, contains('48.1k tokens'), reason: 'at $w');
       seen.add(text);
     }
     expect(seen, contains('3m 12s')); // narrower still, the time alone
@@ -345,7 +347,7 @@ void main() {
     width.value = 600;
     await tester.pump();
     expect(find.text('done'), findsOne);
-    expect(find.text('3m 12s · 48k tokens'), findsOne);
+    expect(find.text('3m 12s · 48.1k tokens'), findsOne);
   });
 
   for (final (size, label) in [

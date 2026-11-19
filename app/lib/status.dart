@@ -7,6 +7,7 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/motion.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/tool_calls.dart';
+import 'package:nushi/usage.dart';
 
 /// A dot of [color]; [ringing], a soft ring grows out of it and fades,
 /// again every 1.6 seconds, from the shared clock. Given [halo], the dot
@@ -461,12 +462,8 @@ String ranFor(int started, int ended, {required bool runs}) {
   return since == null || end == null ? '' : elapsed(end.difference(since));
 }
 
-/// "950 tokens", "12.4k tokens", "48k tokens", "1.2M tokens".
-String tokenCount(int n) => n < 1000
-    ? '$n tokens'
-    : n < 1000000
-    ? '${(n / 1000).toStringAsFixed(n < 10000 ? 1 : 0)}k tokens'
-    : '${(n / 1000000).toStringAsFixed(1)}M tokens';
+/// "950 tokens", "12.4k tokens", "1M tokens": [tokens]' short count.
+String tokenCount(int n) => '${tokens(n)} tokens';
 
 /// Whether [c] is busy with no turn running: the daemon reopening its
 /// session (opened after a restart or a sleep, reloaded, moved, rewound),

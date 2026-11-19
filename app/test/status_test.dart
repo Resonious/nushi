@@ -102,7 +102,7 @@ void main() {
       ..workingSince = Int64.ZERO
       ..worked = Int64(192500)
       ..tokens = Int64(48120);
-    expect(subagentState(subs.single), 'done · 3m 12s · 48k tokens');
+    expect(subagentState(subs.single), 'done · 3m 12s · 48.1k tokens');
     // One the daemon didn't see work (replayed): neither.
     subs.single.call.subagent
       ..worked = Int64.ZERO
