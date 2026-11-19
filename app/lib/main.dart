@@ -14,6 +14,7 @@ import 'package:nushi/comment_drafts_mac.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/daemon_banner.dart';
 import 'package:nushi/daemon_update.dart';
+import 'package:nushi/dawn.dart';
 import 'package:nushi/drafts.dart';
 import 'package:nushi/drafts_mac.dart';
 import 'package:nushi/file_edit.dart';
@@ -493,26 +494,35 @@ class _Shell extends StatelessWidget {
     listenable: Listenable.merge([daemon, sidebarHidden]),
     builder: (context, _) => ColoredBox(
       color: NushiTheme.of(context).t.window,
-      child: _window(context),
+      // The app comes out of the daemon's start as a drop's ring sweeps
+      // the window.
+      child: Dawn(ready: !_starting, child: _window(context)),
     ),
   );
+
+  /// Never connected yet: the daemon starts, or didn't.
+  bool get _starting => !daemon.connected && daemon.daemonApi == 0;
 
   Widget _window(BuildContext context) {
     final theme = NushiTheme.of(context);
     // Never connected yet: nothing to show. Once it was, a lost
     // connection is a banner over the app, which keeps what's open.
     // Neither has a header: a band moves the window.
-    if (!daemon.connected && daemon.daemonApi == 0) {
+    if (_starting) {
+      final failed = native.install.daemon == null || daemon.launchFailed;
       return TitleBand(
         child: Center(
-          child: Text(
-            native.install.daemon == null
-                ? 'Daemon not running'
-                : daemon.launchFailed
-                ? "Couldn't start the daemon. Its log: "
-                      '${tildePath('$dataDir/nushid.log')}'
-                : 'Starting the daemon…',
-            style: theme.ui(theme.t.textSecondary),
+          child: Dawn.rings(
+            still: failed,
+            Text(
+              native.install.daemon == null
+                  ? 'Daemon not running'
+                  : daemon.launchFailed
+                  ? "Couldn't start the daemon. Its log: "
+                        '${tildePath('$dataDir/nushid.log')}'
+                  : 'Starting the daemon…',
+              style: theme.ui(theme.t.textSecondary),
+            ),
           ),
         ),
       );
