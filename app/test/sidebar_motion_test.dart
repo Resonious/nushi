@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -99,10 +98,7 @@ bool _moving(WidgetTester tester) => find
     );
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   testWidgets('as the sidebar is first built nothing moves; a new chat’s '
       'row grows in and rises, the rows under it moving down with it', (

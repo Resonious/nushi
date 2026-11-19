@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -111,10 +109,7 @@ double _opacity(WidgetTester tester, String text) => tester
 const _slide = Duration(milliseconds: 200);
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   testWidgets('a chat dragged in its project: the rows it passes slide '
       'apart to open the gap, it shows faded there, and the drop settles '

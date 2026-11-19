@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -137,10 +135,7 @@ Finder _inSidebar(String title) =>
 
 void main() {
   final macOS = TargetPlatformVariant.only(TargetPlatform.macOS);
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   testWidgets('a double click opens a chat; only its menu renames it', (
     tester,

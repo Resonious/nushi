@@ -24,7 +24,6 @@ void main() {
     // An older app's app.json, which remembered the repositories
     // whose new chats got a worktree; read before anything else is (that
     // the key goes with the next save: settings_test.dart).
-    Directory(dataDir).createSync(recursive: true); // the tests' own
     _appJson.writeAsStringSync(
       jsonEncode({
         'details': false,

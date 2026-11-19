@@ -24,7 +24,6 @@ final _newer = <String, Object?>{
 void main() {
   setUpAll(() {
     // Written before anything reads it: as the app finds it at launch.
-    Directory(dataDir).createSync(recursive: true); // the tests' own
     File('$dataDir/app.json').writeAsStringSync(jsonEncode(_newer));
   });
 

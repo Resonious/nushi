@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:connectrpc/connect.dart';
 import 'package:diff_view/diff_view.dart';
@@ -158,7 +157,6 @@ void main() {
 
   testWidgets("my folders' repositories, picked, are remembered across a "
       'relaunch', (tester) async {
-    Directory(dataDir).createSync(recursive: true);
     final (_, d) = await openView(tester);
     await tester.tap(find.text('All repositories'));
     await tester.pumpAndSettle();

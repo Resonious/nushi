@@ -113,10 +113,7 @@ String _stored(int frames) =>
     keepTileImage((bytes: animatedGif(frames: frames, side: 32), kind: 'gif'));
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
   setUp(() {
     if (tileImagesDir.existsSync()) tileImagesDir.deleteSync(recursive: true);
   });

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -203,10 +201,7 @@ void _expectColumns(WidgetTester tester) {
 }
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   test('initials, colors and plain names', () {
     expect(initials('Ann Lee'), 'AL');

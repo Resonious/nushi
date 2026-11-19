@@ -1,10 +1,7 @@
-import 'dart:io';
-
 import 'package:connectrpc/connect.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/status_bar.dart';
 import 'package:nushi/theme/theme.dart';
@@ -13,10 +10,7 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),

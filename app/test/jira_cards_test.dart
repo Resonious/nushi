@@ -1,9 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nushi/daemon.dart';
 import 'package:nushi/jira_issue.dart';
 import 'package:nushi/jira_view.dart';
 import 'package:nushi/settings.dart';
@@ -31,10 +28,7 @@ List<String> _cards(WidgetTester tester) {
 }
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   testWidgets('a card is dragged by its title into another place, '
       'remembered for the site', (tester) async {

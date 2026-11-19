@@ -105,10 +105,7 @@ ChatPhase? _dot(WidgetTester tester, String project) {
 }
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   testWidgets('a project is dragged by its header into another place, '
       'the others moving apart where it goes; remembered, a new project '

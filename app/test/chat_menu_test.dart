@@ -1,9 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nushi/daemon.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/menu.dart';
 import 'package:nushi/review.dart';
@@ -14,10 +11,7 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),

@@ -64,10 +64,7 @@ Future<void> _framed(WidgetTester tester) async {
 }
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   testWidgets('Change tile… keeps an emoji or two letters and a color; '
       'Cancel keeps nothing, Reset forgets them', (tester) async {

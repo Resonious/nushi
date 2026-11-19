@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -109,7 +107,6 @@ Future<(Daemon, FakeDaemon)> arrangedSidebar(
   double width = 260,
   Map<String, List<int>> icons = const {},
 }) async {
-  Directory(dataDir).createSync(recursive: true);
   viewport(tester, size);
   final fake = FakeDaemon(chats ?? arrangeChats())..projectIcons.addAll(icons);
   final d = await fake.connect(tester);

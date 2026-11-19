@@ -29,10 +29,7 @@ import 'sidebar_fixture.dart';
 
 void main() {
   final macOS = TargetPlatformVariant.only(TargetPlatform.macOS);
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   for (final width in [1700.0, 720.0]) {
     for (final brightness in Brightness.values) {

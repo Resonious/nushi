@@ -28,7 +28,6 @@ const PanesOpen _files = (
 void main() {
   setUpAll(() {
     // Written before anything reads it: as the app finds it at launch.
-    Directory(dataDir).createSync(recursive: true); // the tests' own
     File('$dataDir/app.json').writeAsStringSync(
       jsonEncode({
         'previewTabs': false,

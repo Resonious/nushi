@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/gestures.dart';
@@ -288,7 +287,6 @@ void main() {
 
   testWidgets("pinned first, in the order pinned, the pin in the icon's "
       'place on hover; kept in app.json', (tester) async {
-    Directory(dataDir).createSync(recursive: true); // the tests' own
     final (d, _) = await _app(tester, _turns);
     await _more(tester);
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
@@ -323,7 +321,6 @@ void main() {
   }, variant: _mac);
 
   testWidgets('pins survive a restart', (tester) async {
-    Directory(dataDir).createSync(recursive: true);
     var (d, _) = await _app(tester, _turns);
     togglePin(d.chats['c']!, 'docs/flows.md');
     await tester.pumpAndSettle();

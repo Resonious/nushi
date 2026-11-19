@@ -1,11 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/card_list.dart';
-import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_pull.dart';
 import 'package:nushi/github_view.dart';
@@ -32,10 +29,7 @@ List<String> _cards(WidgetTester tester) {
 }
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
   tearDown(() {
     githubCardOrder.value = [];
     githubCollapsed.value = {};
