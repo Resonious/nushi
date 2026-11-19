@@ -78,7 +78,7 @@ func aPiChat(t *testing.T, agent string) {
 	}
 	plan := must(a.c.PlanDeleteChat(ctx, connect.NewRequest(&nushiv1.PlanDeleteChatRequest{ChatId: id})))
 	must(a.c.DeleteChat(ctx, connect.NewRequest(&nushiv1.DeleteChatRequest{ChatId: id})))
-	left, _ := filepath.Glob(filepath.Join(piStores(dataDir).Sessions, "*.jsonl"))
+	left, _ := filepath.Glob(filepath.Join(piStores(t, dataDir).Sessions, "*.jsonl"))
 	if !plan.DeletesHistory || len(left) != 0 {
 		t.Errorf("Delete left the sessions %v (plan %v)", left, plan)
 	}

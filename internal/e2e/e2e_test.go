@@ -46,6 +46,7 @@ import (
 	"github.com/afrase/nushi/internal/pi/pitest"
 	"github.com/afrase/nushi/internal/shellenv"
 	"github.com/afrase/nushi/internal/store"
+	"github.com/afrase/nushi/internal/testcheck"
 	"github.com/afrase/nushi/internal/transcripts"
 )
 
@@ -175,7 +176,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 	// files on this Mac (Agent.Local) is left out, but for Claude's
 	// transcripts' search and workflows, read in the daemon's own Claude
 	// config folder.
-	piStore := piStores(dataDir)
+	piStore := piStores(t, dataDir)
 	pis := func(f pi.Flavor) chats.Launch {
 		return launch(func(r io.Reader, w io.Writer) {
 			spawn := func(cwd string, args ...string) (pi.Program, error) {
@@ -264,33 +265,33 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 	}}
 }
 
+// The fake Ante's and pi's sessions by data folder, under fakesMu: tests
+// run at once.
 var (
-	anteMu sync.Mutex
-	antes  = map[string]*antetest.Store{}
+	fakesMu sync.Mutex
+	antes   = map[string]*antetest.Store{}
+	piFakes = map[string]*pitest.Store{}
 )
 
 // anteStores is the fake Ante's sessions for a data folder: a daemon
 // started again on it finds them.
 func anteStores(dataDir string) *antetest.Store {
-	anteMu.Lock()
-	defer anteMu.Unlock()
+	fakesMu.Lock()
+	defer fakesMu.Unlock()
 	if antes[dataDir] == nil {
 		antes[dataDir] = &antetest.Store{Home: filepath.Join(dataDir, "ante")}
 	}
 	return antes[dataDir]
 }
 
-var piFakes = map[string]*pitest.Store{}
-
 // piStores is the fake pi's sessions for a data folder, as anteStores.
-func piStores(dataDir string) *pitest.Store {
-	anteMu.Lock()
-	defer anteMu.Unlock()
+func piStores(t *testing.T, dataDir string) *pitest.Store {
+	t.Helper()
+	fakesMu.Lock()
+	defer fakesMu.Unlock()
 	if piFakes[dataDir] == nil {
 		dir := filepath.Join(dataDir, "pi")
-		if err := os.MkdirAll(dir, 0o700); err != nil {
-			panic(err) // no t here; the panic fails the test
-		}
+		testcheck.NoErr(t, os.MkdirAll(dir, 0o700))
 		piFakes[dataDir] = &pitest.Store{Sessions: dir}
 	}
 	return piFakes[dataDir]
