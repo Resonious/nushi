@@ -103,10 +103,9 @@ class ChatHeader extends StatelessWidget {
     // opening a pane never takes one of its neighbours away. Changes
     // counts the review comments not sent yet (a small pill more); a
     // hidden side chat's chip, the Jira key and the GitHub chip take their
-    // own room. The row's own
-    // words were measured in the bundled font: a picked one that sets them
-    // wider (ADR 0114) takes that much more, so the row folds sooner
-    // rather than run past its end.
+    // own room. The row's own words were measured in the bundled font: a
+    // picked one that sets them wider (ADR 0114) takes that much more, so
+    // the row folds sooner rather than run past its end.
     return ListenableBuilder(
       listenable: Listenable.merge([
         chat.renaming,
@@ -395,17 +394,7 @@ class ChatHeader extends StatelessWidget {
                         MenuField(
                           compact: true,
                           tooltip: withKey('Next tab', keyLabel(nextTabKey)),
-                          entries: [
-                            for (final (each, label) in _tabs(chat))
-                              MenuEntry(
-                                each == ChatTab.changes && comments > 0
-                                    ? '$label $comments'
-                                    : label,
-                                detail: keyLabel(tabKey(each)),
-                                checked: each == tab,
-                                onPick: () => onTab(each),
-                              ),
-                          ],
+                          entries: _tabEntries(comments, inMore: false),
                           label: Text(
                             _tabs(chat).firstWhere((s) => s.$1 == tab).$2 +
                                 (tab == ChatTab.changes && comments > 0
@@ -467,15 +456,7 @@ class ChatHeader extends StatelessWidget {
                         entries: [
                           // The tabs, once their field folds here too.
                           if (folds.tabsInMore) ...[
-                            for (final (each, label) in _tabs(chat))
-                              MenuEntry(
-                                each == ChatTab.changes && comments > 0
-                                    ? '$label $comments'
-                                    : label,
-                                shortcut: keyLabel(tabKey(each)),
-                                checked: each == tab,
-                                onPick: () => onTab(each),
-                              ),
+                            ..._tabEntries(comments, inMore: true),
                             MenuEntry.divider,
                           ],
                           // Only a pull request's link, with the tabs here
@@ -580,6 +561,20 @@ class ChatHeader extends StatelessWidget {
     onPick: chat.showOrHideBrowser,
   );
 
+  /// The tabs as rows, Changes with its unsent comments' count, and each
+  /// one's key: as a shortcut in ⋯ ([inMore]), else in the field's detail.
+  List<MenuEntry> _tabEntries(int comments, {required bool inMore}) => [
+    for (final (each, label) in _tabs(chat))
+      MenuEntry(
+        each == ChatTab.changes && comments > 0 ? '$label $comments' : label,
+        detail: inMore ? '' : keyLabel(tabKey(each)),
+        shortcut: inMore ? keyLabel(tabKey(each)) : '',
+        checked: each == tab,
+        onPick: () => onTab(each),
+      ),
+  ];
+
+  /// The chat's tabs and their names: Pull request only with a pull.
   List<(ChatTab, String)> _tabs(ChatState chat) => [
     (ChatTab.chat, 'Chat'),
     (ChatTab.changes, 'Changes'),
