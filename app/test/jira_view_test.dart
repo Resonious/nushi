@@ -577,13 +577,7 @@ void main() {
     await tester.tap(find.text('Save…'));
     await tester.pumpAndSettle();
     // The view goes under the dialog (a chat picked from the menu bar).
-    await tester.pumpWidget(
-      MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: const NushiTheme(Tokens.dark).toThemeData(),
-        home: const Scaffold(body: Text('A chat')),
-      ),
-    );
+    await tester.pumpWidget(themed(const Text('A chat'), banner: false));
     await tester.pump();
     expect(find.byType(JiraView), findsNothing);
     await tester.enterText(find.byType(TextField).last, 'ACME');

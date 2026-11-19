@@ -301,12 +301,10 @@ void main() {
       filesTreeSide.value = TreeSide.left;
       viewport(tester, const Size(640, 400));
       await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: NushiTheme(tokens).toThemeData(),
-          home: Scaffold(
-            body: FilesPane(chat: c, daemon: d, onClose: () {}),
-          ),
+        themed(
+          FilesPane(chat: c, daemon: d, onClose: () {}),
+          tokens: tokens,
+          banner: false,
         ),
       );
       await tester.pumpAndSettle();

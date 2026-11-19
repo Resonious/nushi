@@ -59,34 +59,31 @@ Future<_View> _view(
   Widget message = LinkedMarkdown(text, chat, d, live: live);
   if (phone) message = TouchTargets(child: message);
   await tester.pumpWidget(
-    MaterialApp(
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        backgroundColor: tokens.base,
-        body: Align(
-          alignment: Alignment.topLeft,
-          child: RepaintBoundary(
-            key: const Key('view'),
-            child: Container(
-              width: 640,
-              color: tokens.base,
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  message,
-                  if (box)
-                    ListenableBuilder(
-                      listenable: chat,
-                      builder: (context, _) => Composer(chat: chat, daemon: d),
-                    ),
-                ],
-              ),
+    themed(
+      Align(
+        alignment: Alignment.topLeft,
+        child: RepaintBoundary(
+          key: const Key('view'),
+          child: Container(
+            width: 640,
+            color: tokens.base,
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                message,
+                if (box)
+                  ListenableBuilder(
+                    listenable: chat,
+                    builder: (context, _) => Composer(chat: chat, daemon: d),
+                  ),
+              ],
             ),
           ),
         ),
       ),
+      tokens: tokens,
     ),
   );
   await tester.pump();

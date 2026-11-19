@@ -158,17 +158,15 @@ Future<(FakeDaemon, Daemon, List<String>)> _open(
   viewport(tester, const Size(700, 1100), ratio: 3);
   clock = () => _now;
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: JiraIssuePane(
-          daemon: d,
-          site: 'acme.atlassian.net',
-          issueKey: 'ACME-12',
-          onOpen: opened.add,
-        ),
+    themed(
+      JiraIssuePane(
+        daemon: d,
+        site: 'acme.atlassian.net',
+        issueKey: 'ACME-12',
+        onOpen: opened.add,
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();

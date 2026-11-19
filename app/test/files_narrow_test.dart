@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/files_pane.dart';
 import 'package:nushi/settings.dart';
-import 'package:nushi/theme/theme.dart';
 
 import 'harness.dart';
 import 'panes_app.dart';
@@ -35,24 +34,21 @@ String _what(String error) => error
 /// [d]'s chat c's Files pane alone, [width] wide, with Expand.
 Future<void> _pane(WidgetTester tester, Daemon d, double width) async {
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: const NushiTheme(Tokens.dark).toThemeData(),
-      home: Scaffold(
-        body: Align(
-          alignment: Alignment.topLeft,
-          child: SizedBox(
-            width: width,
-            height: 500,
-            child: FilesPane(
-              chat: d.chats['c']!,
-              daemon: d,
-              onClose: () {},
-              onExpand: () {},
-            ),
+    themed(
+      Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: width,
+          height: 500,
+          child: FilesPane(
+            chat: d.chats['c']!,
+            daemon: d,
+            onClose: () {},
+            onExpand: () {},
           ),
         ),
       ),
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();

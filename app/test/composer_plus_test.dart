@@ -60,21 +60,18 @@ Future<(FakeDaemon, Daemon, ChatState)> _box(
   d.chats['c'] = chat;
   final tokens = dark ? Tokens.dark : Tokens.light;
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        backgroundColor: tokens.base,
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            ListenableBuilder(
-              listenable: chat,
-              builder: (context, _) => Composer(chat: chat, daemon: d),
-            ),
-          ],
-        ),
+    themed(
+      Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          ListenableBuilder(
+            listenable: chat,
+            builder: (context, _) => Composer(chat: chat, daemon: d),
+          ),
+        ],
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   _daemon = d;

@@ -505,19 +505,17 @@ void main() {
       final c = d.chats['c']!;
       filesChats.value = {'c'};
       await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: NushiTheme(tokens).toThemeData(),
-          home: Scaffold(
-            body: Align(
-              alignment: Alignment.topRight,
-              child: SizedBox(
-                width: 520,
-                height: 500,
-                child: FilesPane(chat: c, daemon: d, onClose: () {}),
-              ),
+        themed(
+          Align(
+            alignment: Alignment.topRight,
+            child: SizedBox(
+              width: 520,
+              height: 500,
+              child: FilesPane(chat: c, daemon: d, onClose: () {}),
             ),
           ),
+          tokens: tokens,
+          banner: false,
         ),
       );
       await tester.pumpAndSettle();
