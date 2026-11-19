@@ -229,6 +229,9 @@ func (h Harness) ToolCall(it *model.Item, meta map[string]any, input json.RawMes
 		if p, _ := resp["worktreePath"].(string); p != "" { // a foreground subagent's only (docs/facts/claude.md)
 			it.WorktreePath = p
 		}
+		if t := totals(resp); t != nil {
+			it.Totals = t
+		}
 	case "SendMessage": // to a subagent, by the agent's id for it
 		it.AgentID = cmp.Or(in.To, it.AgentID)
 	case "TaskStop": // a subagent's or a background command's task, by its id
@@ -246,6 +249,18 @@ func (h Harness) ToolCall(it *model.Item, meta map[string]any, input json.RawMes
 		}
 	}
 	return false
+}
+
+// totals reads what an Agent call's toolResponse says its subagent used,
+// as its last update brings it (docs/facts/claude.md): nil without them.
+// JSON's numbers come as float64.
+func totals(resp map[string]any) *model.Totals {
+	ms, okMs := resp["totalDurationMs"].(float64)
+	tokens, okTokens := resp["totalTokens"].(float64)
+	if !okMs && !okTokens {
+		return nil
+	}
+	return &model.Totals{Duration: time.Duration(ms) * time.Millisecond, Tokens: int64(tokens)}
 }
 
 // findings reads ReportFindings' input, once it holds the findings: the

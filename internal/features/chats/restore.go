@@ -38,6 +38,9 @@ func underWay(it model.Item) bool {
 // prompt or question is cancelled, a subagent fails, a background
 // command's end can't be known.
 func ended(it *model.Item) {
+	if underWay(*it) {
+		untimed(it)
+	}
 	switch {
 	case it.Kind == model.ToolCall && (it.Status == "pending" || it.Status == "in_progress"):
 		it.Status = "failed"
@@ -126,6 +129,9 @@ func (c *chat) restoreLocked(replayed []model.Item, times map[string]time.Time) 
 	for i := range items {
 		if asking(items[i]) && !c.liveLocked(items[i].ID) {
 			items[i].Status = "cancelled"
+		}
+		if underWay(items[i]) { // what the copy has running ran under an agent that's gone
+			untimed(&items[i])
 		}
 	}
 	for _, it := range c.items {

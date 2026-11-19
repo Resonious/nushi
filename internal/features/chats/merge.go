@@ -118,6 +118,9 @@ func conversation(it model.Item, t Transcript) bool {
 func pick(copied, replayed model.Item) model.Item {
 	ended := func(s string) bool { return s == "completed" || s == "failed" }
 	if copied.Kind == model.ToolCall && !ended(copied.Status) && ended(replayed.Status) {
+		if !copied.Ended.IsZero() { // its turn's end; without one, when it ended isn't known
+			replayed.Started, replayed.Ended = copied.Started, copied.Ended
+		}
 		return replayed
 	}
 	if copied.Sent.IsZero() {

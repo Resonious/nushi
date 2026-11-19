@@ -29,6 +29,18 @@ type Timing struct {
 	// minutes), and one whose agent lives stalls once they are still for
 	// WorkflowStall (an hour). ADR 0127.
 	WorkflowPoll, WorkflowStalledPoll, WorkflowFind, WorkflowGrace, WorkflowQuiet, WorkflowStall time.Duration
+	// Now is the time a tool call's or a subagent's start and end are
+	// stamped with (time.Now); a test's clock stands still until it moves
+	// it.
+	Now func() time.Time
+}
+
+// now is the time now, by Now.
+func (t Timing) now() time.Time {
+	if t.Now != nil {
+		return t.Now()
+	}
+	return time.Now()
 }
 
 func (t Timing) stopGrace() time.Duration     { return cmp.Or(t.StopGrace, 5*time.Second) }

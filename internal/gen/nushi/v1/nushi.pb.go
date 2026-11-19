@@ -12856,7 +12856,13 @@ type Item struct {
 	// For a call that launched a workflow (Claude's Workflow, API 120, ADR
 	// 0127): its run, as the daemon follows it; unset while it isn't (the
 	// call then shows as a plain one).
-	Workflow      *Workflow `protobuf:"bytes,40,opt,name=workflow,proto3" json:"workflow,omitempty"`
+	Workflow *Workflow `protobuf:"bytes,40,opt,name=workflow,proto3" json:"workflow,omitempty"`
+	// For a tool call: when the daemon saw it start and end, in Unix
+	// milliseconds; 0 when it didn't (a call replayed from the agent's
+	// history, one whose end the daemon can't know). A call still running as
+	// its turn ends has that end until one of its own comes. API 124.
+	Started       int64 `protobuf:"varint,41,opt,name=started,proto3" json:"started,omitempty"`
+	Ended         int64 `protobuf:"varint,42,opt,name=ended,proto3" json:"ended,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -13155,6 +13161,20 @@ func (x *Item) GetWorkflow() *Workflow {
 		return x.Workflow
 	}
 	return nil
+}
+
+func (x *Item) GetStarted() int64 {
+	if x != nil {
+		return x.Started
+	}
+	return 0
+}
+
+func (x *Item) GetEnded() int64 {
+	if x != nil {
+		return x.Ended
+	}
+	return 0
 }
 
 // A workflow: a run a tool call launched, a script of the agent's running
@@ -14065,7 +14085,18 @@ type Subagent struct {
 	Result string `protobuf:"bytes,4,opt,name=result,proto3" json:"result,omitempty"`
 	// The agent's session for it, when the agent shows it as one (ACP's
 	// subagents): StopTask stops it there.
-	Session       string `protobuf:"bytes,5,opt,name=session,proto3" json:"session,omitempty"`
+	Session string `protobuf:"bytes,5,opt,name=session,proto3" json:"session,omitempty"`
+	// How long it worked, in milliseconds, before working_since: when it
+	// began to work again, in Unix milliseconds (0 while it waits, for a
+	// message or between the runs a message to it starts). Its time is the
+	// two; worked is the agent's own figure once it reported one (Claude's
+	// totalDurationMs), and both are 0 when not known. API 124.
+	Worked       int64 `protobuf:"varint,6,opt,name=worked,proto3" json:"worked,omitempty"`
+	WorkingSince int64 `protobuf:"varint,7,opt,name=working_since,json=workingSince,proto3" json:"working_since,omitempty"`
+	// The tokens it used, as the agent reported them as it ended (Claude's
+	// totalTokens); 0 when not known, or once it ran again past them. API
+	// 124.
+	Tokens        int64 `protobuf:"varint,8,opt,name=tokens,proto3" json:"tokens,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -14133,6 +14164,27 @@ func (x *Subagent) GetSession() string {
 		return x.Session
 	}
 	return ""
+}
+
+func (x *Subagent) GetWorked() int64 {
+	if x != nil {
+		return x.Worked
+	}
+	return 0
+}
+
+func (x *Subagent) GetWorkingSince() int64 {
+	if x != nil {
+		return x.WorkingSince
+	}
+	return 0
+}
+
+func (x *Subagent) GetTokens() int64 {
+	if x != nil {
+		return x.Tokens
+	}
+	return 0
 }
 
 // A step of the agent's plan; status is "pending", "in_progress" or
@@ -26930,7 +26982,8 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x14\n" +
 	"\x05group\x18\x04 \x01(\tR\x05group\x12\x1d\n" +
 	"\n" +
-	"is_default\x18\x05 \x01(\bR\tisDefault\"\xf6\t\n" +
+	"is_default\x18\x05 \x01(\bR\tisDefault\"\xa6\n" +
+	"\n" +
 	"\x04Item\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
 	"\x04kind\x18\x02 \x01(\x0e2\x12.nushi.v1.ItemKindR\x04kind\x12\x12\n" +
@@ -26974,7 +27027,9 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\asteered\x18% \x01(\bR\asteered\x12\x14\n" +
 	"\x05files\x18& \x03(\tR\x05files\x12%\n" +
 	"\x0eserver_command\x18' \x01(\tR\rserverCommand\x12.\n" +
-	"\bworkflow\x18( \x01(\v2\x12.nushi.v1.WorkflowR\bworkflowJ\x04\b\x11\x10\x12J\x04\b\x1e\x10\x1fR\afork_atR\fpassed_on_by\"\xc8\x03\n" +
+	"\bworkflow\x18( \x01(\v2\x12.nushi.v1.WorkflowR\bworkflow\x12\x18\n" +
+	"\astarted\x18) \x01(\x03R\astarted\x12\x14\n" +
+	"\x05ended\x18* \x01(\x03R\x05endedJ\x04\b\x11\x10\x12J\x04\b\x1e\x10\x1fR\afork_atR\fpassed_on_by\"\xc8\x03\n" +
 	"\bWorkflow\x12\x15\n" +
 	"\x06run_id\x18\x01 \x01(\tR\x05runId\x12\x17\n" +
 	"\atask_id\x18\x02 \x01(\tR\x06taskId\x12\x12\n" +
@@ -27048,13 +27103,16 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\astarted\x18\x03 \x01(\x03R\astarted\x12\x14\n" +
 	"\x05ended\x18\x04 \x01(\x03R\x05ended\x12\x16\n" +
 	"\x06output\x18\x05 \x01(\tR\x06output\x12\x10\n" +
-	"\x03end\x18\x06 \x01(\tR\x03end\"\x82\x01\n" +
+	"\x03end\x18\x06 \x01(\tR\x03end\"\xd7\x01\n" +
 	"\bSubagent\x12\x14\n" +
 	"\x05state\x18\x01 \x01(\tR\x05state\x12\x18\n" +
 	"\astarted\x18\x02 \x01(\x03R\astarted\x12\x14\n" +
 	"\x05ended\x18\x03 \x01(\x03R\x05ended\x12\x16\n" +
 	"\x06result\x18\x04 \x01(\tR\x06result\x12\x18\n" +
-	"\asession\x18\x05 \x01(\tR\asession\"=\n" +
+	"\asession\x18\x05 \x01(\tR\asession\x12\x16\n" +
+	"\x06worked\x18\x06 \x01(\x03R\x06worked\x12#\n" +
+	"\rworking_since\x18\a \x01(\x03R\fworkingSince\x12\x16\n" +
+	"\x06tokens\x18\b \x01(\x03R\x06tokens\"=\n" +
 	"\tPlanEntry\x12\x18\n" +
 	"\acontent\x18\x01 \x01(\tR\acontent\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\"b\n" +

@@ -2378,6 +2378,12 @@ message Item {
   // 0127): its run, as the daemon follows it; unset while it isn't (the
   // call then shows as a plain one).
   Workflow workflow = 40;
+  // For a tool call: when the daemon saw it start and end, in Unix
+  // milliseconds; 0 when it didn't (a call replayed from the agent's
+  // history, one whose end the daemon can't know). A call still running as
+  // its turn ends has that end until one of its own comes. API 124.
+  int64 started = 41;
+  int64 ended = 42;
 }
 
 // A workflow: a run a tool call launched, a script of the agent's running
@@ -2531,6 +2537,17 @@ message Subagent {
   // The agent's session for it, when the agent shows it as one (ACP's
   // subagents): StopTask stops it there.
   string session = 5;
+  // How long it worked, in milliseconds, before working_since: when it
+  // began to work again, in Unix milliseconds (0 while it waits, for a
+  // message or between the runs a message to it starts). Its time is the
+  // two; worked is the agent's own figure once it reported one (Claude's
+  // totalDurationMs), and both are 0 when not known. API 124.
+  int64 worked = 6;
+  int64 working_since = 7;
+  // The tokens it used, as the agent reported them as it ended (Claude's
+  // totalTokens); 0 when not known, or once it ran again past them. API
+  // 124.
+  int64 tokens = 8;
 }
 
 // A step of the agent's plan; status is "pending", "in_progress" or

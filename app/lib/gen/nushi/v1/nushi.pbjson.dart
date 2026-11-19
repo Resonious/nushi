@@ -3912,6 +3912,8 @@ const Item$json = {
       '6': '.nushi.v1.Workflow',
       '10': 'workflow'
     },
+    {'1': 'started', '3': 41, '4': 1, '5': 3, '10': 'started'},
+    {'1': 'ended', '3': 42, '4': 1, '5': 3, '10': 'ended'},
   ],
   '9': [
     {'1': 17, '2': 18},
@@ -3944,7 +3946,8 @@ final $typed_data.Uint8List itemDescriptor = $convert.base64Decode(
     'QYIyABKAlSCXJhd091dHB1dBIaCghmb3JrYWJsZRgkIAEoCFIIZm9ya2FibGUSGAoHc3RlZXJl'
     'ZBglIAEoCFIHc3RlZXJlZBIUCgVmaWxlcxgmIAMoCVIFZmlsZXMSJQoOc2VydmVyX2NvbW1hbm'
     'QYJyABKAlSDXNlcnZlckNvbW1hbmQSLgoId29ya2Zsb3cYKCABKAsyEi5udXNoaS52MS5Xb3Jr'
-    'Zmxvd1IId29ya2Zsb3dKBAgREBJKBAgeEB9SB2ZvcmtfYXRSDHBhc3NlZF9vbl9ieQ==');
+    'Zmxvd1IId29ya2Zsb3cSGAoHc3RhcnRlZBgpIAEoA1IHc3RhcnRlZBIUCgVlbmRlZBgqIAEoA1'
+    'IFZW5kZWRKBAgREBJKBAgeEB9SB2ZvcmtfYXRSDHBhc3NlZF9vbl9ieQ==');
 
 @$core.Deprecated('Use workflowDescriptor instead')
 const Workflow$json = {
@@ -4196,6 +4199,9 @@ const Subagent$json = {
     {'1': 'ended', '3': 3, '4': 1, '5': 3, '10': 'ended'},
     {'1': 'result', '3': 4, '4': 1, '5': 9, '10': 'result'},
     {'1': 'session', '3': 5, '4': 1, '5': 9, '10': 'session'},
+    {'1': 'worked', '3': 6, '4': 1, '5': 3, '10': 'worked'},
+    {'1': 'working_since', '3': 7, '4': 1, '5': 3, '10': 'workingSince'},
+    {'1': 'tokens', '3': 8, '4': 1, '5': 3, '10': 'tokens'},
   ],
 };
 
@@ -4203,7 +4209,8 @@ const Subagent$json = {
 final $typed_data.Uint8List subagentDescriptor = $convert.base64Decode(
     'CghTdWJhZ2VudBIUCgVzdGF0ZRgBIAEoCVIFc3RhdGUSGAoHc3RhcnRlZBgCIAEoA1IHc3Rhcn'
     'RlZBIUCgVlbmRlZBgDIAEoA1IFZW5kZWQSFgoGcmVzdWx0GAQgASgJUgZyZXN1bHQSGAoHc2Vz'
-    'c2lvbhgFIAEoCVIHc2Vzc2lvbg==');
+    'c2lvbhgFIAEoCVIHc2Vzc2lvbhIWCgZ3b3JrZWQYBiABKANSBndvcmtlZBIjCg13b3JraW5nX3'
+    'NpbmNlGAcgASgDUgx3b3JraW5nU2luY2USFgoGdG9rZW5zGAggASgDUgZ0b2tlbnM=');
 
 @$core.Deprecated('Use planEntryDescriptor instead')
 const PlanEntry$json = {

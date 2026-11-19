@@ -132,8 +132,18 @@ type Item struct {
 	// agent's as it began to arrive, else what the replay (SentMeta) or
 	// the agent's own files (chats' MessageDater) say. Zero when not known.
 	Sent time.Time `json:",omitzero"`
+	// Started and Ended are when the daemon saw a tool call start and end
+	// (Nushi's copy keeps them); zero when it didn't: a call replayed from
+	// the agent's history, or one whose end isn't known (its agent was gone
+	// when the daemon came back). A call still running at its turn's end
+	// takes that end, until one of its own comes.
+	Started time.Time `json:",omitzero"`
+	Ended   time.Time `json:",omitzero"`
 	// Subagent is how the subagent a tool call starts goes.
 	Subagent *Subagent
+	// Totals is what the agent reported the subagent a tool call started
+	// used, once it ended (Claude's totalDurationMs and totalTokens).
+	Totals *Totals `json:",omitempty"`
 	// Report says the tool call is a subagent's report to its chat: the
 	// subagent's result, not one of its steps.
 	Report bool
@@ -205,11 +215,29 @@ type Finding struct {
 // as a session of its own (ACP's subagents): "running", "done",
 // "stopped", "failed"; "" when it never said. Session is that session,
 // through which it can be stopped.
+//
+// Worked is how long it worked before Working, when it began to work
+// again (zero while it waits: for a message, or between the runs a
+// message to it starts); the two make its time, which stops while it
+// waits. Tokens are those the agent reported it used (Item.Totals), 0
+// when not known; Reported says those totals were taken (once: they are
+// its first run's).
 type Subagent struct {
 	State          string
 	Started, Ended time.Time
 	Result         string
 	Said, Session  string
+	Worked         time.Duration `json:",omitzero"`
+	Working        time.Time     `json:",omitzero"`
+	Tokens         int64         `json:",omitzero"`
+	Reported       bool          `json:",omitzero"`
+}
+
+// Totals is what an agent reported a subagent used once it ended: how
+// long it worked and its tokens.
+type Totals struct {
+	Duration time.Duration
+	Tokens   int64
 }
 
 // Image is an image in a message or a tool call's output. Hash is the

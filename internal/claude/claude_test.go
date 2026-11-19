@@ -1,13 +1,16 @@
 package claude
 
 import (
+	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	acp "github.com/afrase/acp-go/unstable"
 
 	"github.com/afrase/nushi/internal/model"
+	"github.com/afrase/nushi/internal/testcheck"
 )
 
 func TestForkTitlesAreIgnored(t *testing.T) {
@@ -55,8 +58,15 @@ func TestSubagentCall(t *testing.T) {
 	}
 	harness.ToolCall(&it, map[string]any{"claudeCode": map[string]any{"toolResponse": map[string]any{"resolvedModel": "claude-haiku-5-5"}}},
 		[]byte(`{}`)) // a later update without the input keeps it
-	if it.Agent != "Explore" || it.Prompt != "List the files" || it.Model != "haiku" || it.Effort != "low" || it.RanModel != "Haiku 5.5" {
+	if it.Agent != "Explore" || it.Prompt != "List the files" || it.Model != "haiku" || it.Effort != "low" || it.RanModel != "Haiku 5.5" || it.Totals != nil {
 		t.Errorf("got %+v", it)
+	}
+	// Its totals come with its last update, as JSON's numbers.
+	var meta map[string]any
+	testcheck.NoErr(t, json.Unmarshal([]byte(`{"claudeCode":{"toolResponse":{"totalDurationMs":192500,"totalTokens":48120,"totalToolUseCount":3}}}`), &meta))
+	harness.ToolCall(&it, meta, nil)
+	if it.Totals == nil || *it.Totals != (model.Totals{Duration: 192500 * time.Millisecond, Tokens: 48120}) {
+		t.Errorf("totals: %+v", it.Totals)
 	}
 	for id, want := range map[string]string{"claude-fable-5-1[1m]": "Fable 5.1", "claude-haiku-4-5-20251001": "Haiku 4.5", "gpt": "Gpt"} {
 		if got := modelName(id); got != want {

@@ -100,7 +100,9 @@ func TestToolCallUpdatesMergeIntoOneItem(t *testing.T) {
 	text := func(s string) []acp.ToolCallContent {
 		return []acp.ToolCallContent{{Type: "content", Content: &acp.Content{Content: acp.ContentBlock{Type: "text", Text: &acp.TextContent{Text: s}}}}}
 	}
-	c := &chat{remembered: &memModes{}, id: "s1", sid: "s1", kind: &kind{}, publish: func(model.Event) {}, record: model.ChatRecord{Folder: "/w"}}
+	at := time.Date(2026, 11, 19, 9, 0, 0, 0, time.UTC)
+	c := &chat{remembered: &memModes{}, id: "s1", sid: "s1", kind: &kind{}, publish: func(model.Event) {}, record: model.ChatRecord{Folder: "/w"},
+		timing: Timing{Now: func() time.Time { return at }}}
 	for _, u := range []acp.SessionUpdate{
 		{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "Terminal", Kind: "execute", Status: "pending"}},
 		{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Title: "ls -la", Content: text("List files")}},
@@ -114,8 +116,8 @@ func TestToolCallUpdatesMergeIntoOneItem(t *testing.T) {
 		_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: u})
 	}
 	want := []model.Item{
-		{ID: "t1", Kind: model.ToolCall, Title: "ls -la", ToolKind: "execute", Status: "completed", Text: "a.txt"},
-		{ID: "t2", Kind: model.ToolCall, Title: "Edit", ToolKind: "edit", Paths: []string{"a.txt", "/elsewhere/b.txt"},
+		{ID: "t1", Kind: model.ToolCall, Title: "ls -la", ToolKind: "execute", Status: "completed", Text: "a.txt", Started: at, Ended: at},
+		{ID: "t2", Kind: model.ToolCall, Title: "Edit", ToolKind: "edit", Started: at, Paths: []string{"a.txt", "/elsewhere/b.txt"},
 			Diffs: []model.FileChange{{Path: "a.txt", Status: "modified", Old: "one\ntwo\n", New: "three"},
 				{Path: "new.txt", Status: "added", New: "made"}, {Path: "empty.txt", Status: "modified", New: "x"}}},
 	}

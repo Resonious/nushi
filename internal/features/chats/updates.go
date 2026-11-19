@@ -1,6 +1,7 @@
 package chats
 
 import (
+	"cmp"
 	"encoding/base64"
 	"encoding/json"
 	"path/filepath"
@@ -72,6 +73,8 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 		keepRaw(&item, t.RawInput, t.RawOutput)
 		if it := c.itemLocked(item.ID); it != nil { // a repeated tool_call replaces the call
 			item.Subagent, item.BackgroundCommand = it.Subagent, it.BackgroundCommand
+			item.Started, item.Ended, item.Totals = it.Started, it.Ended, cmp.Or(item.Totals, it.Totals)
+			c.timeCallLocked(&item, cmp.Or(it.Status, "pending"))
 			if it.Workflow != nil {
 				item.Workflow, item.TaskID = it.Workflow, it.TaskID
 			}
@@ -81,6 +84,7 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 			c.workflowLocked(it)
 			c.publishLocked(*it)
 		} else {
+			c.timeCallLocked(&item, "")
 			c.subagentLocked(&item)
 			c.backgroundCommandLocked(&item)
 			c.workflowLocked(&item)
@@ -127,6 +131,7 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 			}
 			c.ownTurn, c.ownNoted = false, false
 			if own {
+				c.endCallsLocked()
 				defer c.statusChangedLocked() // once its usage is in
 			}
 		}
@@ -169,6 +174,7 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 		if t.Kind != "" {
 			it.ToolKind = string(t.Kind)
 		}
+		was := it.Status
 		if t.Status != "" {
 			it.Status = string(t.Status)
 		}
@@ -179,6 +185,7 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 			c.setOutput(it, t.Content)
 		}
 		keepRaw(it, t.RawInput, t.RawOutput)
+		c.timeCallLocked(it, cmp.Or(was, "pending"))
 		c.subagentLocked(it)
 		c.backgroundCommandLocked(it)
 		c.workflowLocked(it)

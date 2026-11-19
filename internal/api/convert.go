@@ -102,7 +102,7 @@ func itemProto(it *model.Item, refs bool) *nushiv1.Item {
 		Title: it.Title, ToolKind: it.ToolKind, Status: it.Status, Answer: it.Answer, Parent: it.Parent, Agent: it.Agent, Tool: it.Tool,
 		Prompt: it.Prompt, Model: it.Model, Effort: it.Effort, RanModel: it.RanModel, AgentId: it.AgentID, ToSubagentName: it.ToSubagentName,
 		ToSubagent: it.ToSubagent, ToSubagentState: it.ToSubagentState, ToSubagentStop: it.ToSubagentStop,
-		Rewindable: it.Rewindable, Steered: it.Steered, Forkable: chats.Forkable(*it), Report: it.Report, Sent: unixMs(it.Sent),
+		Rewindable: it.Rewindable, Steered: it.Steered, Forkable: chats.Forkable(*it), Report: it.Report, Sent: unixMs(it.Sent), Started: unixMs(it.Started), Ended: unixMs(it.Ended),
 		Input: it.Input, RawOutput: it.RawOutput, Files: it.Files, ServerCommand: it.ServerCommand}
 	if sh := it.BackgroundCommand; sh != nil {
 		out.BackgroundCommand = &nushiv1.BackgroundCommand{Id: sh.ID, State: sh.State, Started: unixMs(sh.Started), Ended: unixMs(sh.Ended), Output: sh.Output, End: sh.End}
@@ -111,7 +111,8 @@ func itemProto(it *model.Item, refs bool) *nushiv1.Item {
 		out.Workflow = workflowProto(*w)
 	}
 	if sa := it.Subagent; sa != nil {
-		out.Subagent = &nushiv1.Subagent{State: sa.State, Started: unixMs(sa.Started), Ended: unixMs(sa.Ended), Result: sa.Result, Session: sa.Session}
+		out.Subagent = &nushiv1.Subagent{State: sa.State, Started: unixMs(sa.Started), Ended: unixMs(sa.Ended), Result: sa.Result, Session: sa.Session,
+			Worked: sa.Worked.Milliseconds(), WorkingSince: unixMs(sa.Working), Tokens: sa.Tokens}
 	}
 	if f := it.Findings; f != nil {
 		out.Findings = &nushiv1.Findings{Level: f.Level}

@@ -49,6 +49,9 @@ func (s *Service) Seen(chatID string) error {
 // push and the clients go by rather than guessing from the events. A side
 // chat isn't stored, nor one being deleted.
 func (c *chat) turnEndedLocked(end model.TurnEnd, failure string) {
+	if c.endCallsLocked() {
+		c.copyLocked(true) // the copy has their end, as it has the rest of the turn
+	}
 	st := c.statusLocked()
 	st.Ended = end
 	if end == model.TurnFailed {

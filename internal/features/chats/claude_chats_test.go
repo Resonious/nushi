@@ -303,11 +303,14 @@ const modelFallback = "**Model fallback:** "
 
 // timeless is an item without the times of this run.
 func timeless(it model.Item) model.Item {
-	it.Sent = time.Time{}
+	it.Sent, it.Started, it.Ended = time.Time{}, time.Time{}, time.Time{}
 	it.Title = recordedFolder.ReplaceAllString(it.Title, "")
 	if it.Subagent != nil {
 		sa := *it.Subagent
-		sa.Started, sa.Ended = time.Time{}, time.Time{}
+		sa.Started, sa.Ended, sa.Working = time.Time{}, time.Time{}, time.Time{}
+		if !sa.Reported { // the agent's own figure is the recording's
+			sa.Worked = 0
+		}
 		it.Subagent = &sa
 	}
 	if it.BackgroundCommand != nil {

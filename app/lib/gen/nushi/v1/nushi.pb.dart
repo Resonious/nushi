@@ -16456,6 +16456,8 @@ class Item extends $pb.GeneratedMessage {
     $core.Iterable<$core.String>? files,
     $core.String? serverCommand,
     Workflow? workflow,
+    $fixnum.Int64? started,
+    $fixnum.Int64? ended,
   }) {
     final result = Item._();
     if (id != null) result.id = id;
@@ -16496,6 +16498,8 @@ class Item extends $pb.GeneratedMessage {
     if (files != null) result.files.addAll(files);
     if (serverCommand != null) result.serverCommand = serverCommand;
     if (workflow != null) result.workflow = workflow;
+    if (started != null) result.started = started;
+    if (ended != null) result.ended = ended;
     return result;
   }
 
@@ -16560,6 +16564,8 @@ class Item extends $pb.GeneratedMessage {
     ..aOS(39, _omitFieldNames ? '' : 'serverCommand')
     ..aOM<Workflow>(40, _omitFieldNames ? '' : 'workflow',
         subBuilder: Workflow.$_createMessage)
+    ..aInt64(41, _omitFieldNames ? '' : 'started')
+    ..aInt64(42, _omitFieldNames ? '' : 'ended')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -16949,6 +16955,28 @@ class Item extends $pb.GeneratedMessage {
   void clearWorkflow() => $_clearField(40);
   @$pb.TagNumber(40)
   Workflow ensureWorkflow() => $_ensure(37);
+
+  /// For a tool call: when the daemon saw it start and end, in Unix
+  /// milliseconds; 0 when it didn't (a call replayed from the agent's
+  /// history, one whose end the daemon can't know). A call still running as
+  /// its turn ends has that end until one of its own comes. API 124.
+  @$pb.TagNumber(41)
+  $fixnum.Int64 get started => $_getI64(38);
+  @$pb.TagNumber(41)
+  set started($fixnum.Int64 value) => $_setInt64(38, value);
+  @$pb.TagNumber(41)
+  $core.bool hasStarted() => $_has(38);
+  @$pb.TagNumber(41)
+  void clearStarted() => $_clearField(41);
+
+  @$pb.TagNumber(42)
+  $fixnum.Int64 get ended => $_getI64(39);
+  @$pb.TagNumber(42)
+  set ended($fixnum.Int64 value) => $_setInt64(39, value);
+  @$pb.TagNumber(42)
+  $core.bool hasEnded() => $_has(39);
+  @$pb.TagNumber(42)
+  void clearEnded() => $_clearField(42);
 }
 
 /// A workflow: a run a tool call launched, a script of the agent's running
@@ -18166,6 +18194,9 @@ class Subagent extends $pb.GeneratedMessage {
     $fixnum.Int64? ended,
     $core.String? result,
     $core.String? session,
+    $fixnum.Int64? worked,
+    $fixnum.Int64? workingSince,
+    $fixnum.Int64? tokens,
   }) {
     final result$ = Subagent._();
     if (state != null) result$.state = state;
@@ -18173,6 +18204,9 @@ class Subagent extends $pb.GeneratedMessage {
     if (ended != null) result$.ended = ended;
     if (result != null) result$.result = result;
     if (session != null) result$.session = session;
+    if (worked != null) result$.worked = worked;
+    if (workingSince != null) result$.workingSince = workingSince;
+    if (tokens != null) result$.tokens = tokens;
     return result$;
   }
 
@@ -18194,6 +18228,9 @@ class Subagent extends $pb.GeneratedMessage {
     ..aInt64(3, _omitFieldNames ? '' : 'ended')
     ..aOS(4, _omitFieldNames ? '' : 'result')
     ..aOS(5, _omitFieldNames ? '' : 'session')
+    ..aInt64(6, _omitFieldNames ? '' : 'worked')
+    ..aInt64(7, _omitFieldNames ? '' : 'workingSince')
+    ..aInt64(8, _omitFieldNames ? '' : 'tokens')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -18268,6 +18305,41 @@ class Subagent extends $pb.GeneratedMessage {
   $core.bool hasSession() => $_has(4);
   @$pb.TagNumber(5)
   void clearSession() => $_clearField(5);
+
+  /// How long it worked, in milliseconds, before working_since: when it
+  /// began to work again, in Unix milliseconds (0 while it waits, for a
+  /// message or between the runs a message to it starts). Its time is the
+  /// two; worked is the agent's own figure once it reported one (Claude's
+  /// totalDurationMs), and both are 0 when not known. API 124.
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get worked => $_getI64(5);
+  @$pb.TagNumber(6)
+  set worked($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasWorked() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearWorked() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get workingSince => $_getI64(6);
+  @$pb.TagNumber(7)
+  set workingSince($fixnum.Int64 value) => $_setInt64(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasWorkingSince() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearWorkingSince() => $_clearField(7);
+
+  /// The tokens it used, as the agent reported them as it ended (Claude's
+  /// totalTokens); 0 when not known, or once it ran again past them. API
+  /// 124.
+  @$pb.TagNumber(8)
+  $fixnum.Int64 get tokens => $_getI64(7);
+  @$pb.TagNumber(8)
+  set tokens($fixnum.Int64 value) => $_setInt64(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasTokens() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearTokens() => $_clearField(8);
 }
 
 /// A step of the agent's plan; status is "pending", "in_progress" or
