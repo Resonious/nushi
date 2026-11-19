@@ -140,14 +140,7 @@ class _LivePullCardState extends State<LivePullCard> {
             ? Row(
                 spacing: 8,
                 children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: badgeColor(t, n),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
+                  CheckDot(badgeColor(t, n), size: 8),
                   Text(
                     checksSentence(n),
                     style: theme.ui(t.textSecondary, size: 12),
