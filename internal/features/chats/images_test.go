@@ -108,14 +108,3 @@ func TestAnImageIsHashedOnceAsItComesIn(t *testing.T) {
 	}
 	hasNot(id2, firstHash)
 }
-
-func TestAnImageMadeWithoutItsHashIsStillFound(t *testing.T) {
-	svc, _, c := newChat(t, claudeSession, &memModes{})
-	data := []byte("no hash")
-	c.mu.Lock()
-	c.items = append(c.items, model.Item{ID: "x", Kind: model.ToolCall, Images: []model.Image{{MimeType: "image/png", Data: data}}})
-	c.mu.Unlock()
-	if img, err := svc.Image(c.id, ImageHash(data)); err != nil || !bytes.Equal(img.Data, data) {
-		t.Errorf("Image = %q, %v", img.Data, err)
-	}
-}

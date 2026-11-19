@@ -8,7 +8,6 @@ import (
 
 	"connectrpc.com/connect"
 
-	"github.com/afrase/nushi/internal/features/chats"
 	nushiv1 "github.com/afrase/nushi/internal/gen/nushi/v1"
 	"github.com/afrase/nushi/internal/imagesize"
 	"github.com/afrase/nushi/internal/model"
@@ -42,7 +41,7 @@ func imageProto(img model.Image, refs bool) *nushiv1.ImageData {
 	}
 	// A WebP, or bytes that aren't an image, have no size, and the client
 	// shows a square until they come.
-	return &nushiv1.ImageData{MimeType: img.MimeType, Sha256: chats.HashOf(img), Size: size,
+	return &nushiv1.ImageData{MimeType: img.MimeType, Sha256: img.Hash, Size: size,
 		Width: int32(w), Height: int32(h)} // imagesize keeps a side under 1<<30
 }
 
