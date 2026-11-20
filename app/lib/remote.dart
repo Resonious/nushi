@@ -4,7 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nushi/clock.dart';
-import 'package:nushi/commits.dart' show ago;
+import 'package:nushi/commits.dart' show agoAt;
 import 'package:nushi/conventions.dart';
 import 'package:nushi/gen/nushi/v1/nushi.connect.client.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -182,7 +182,7 @@ class _DeviceRow extends StatelessWidget {
     final seen = d.connected
         ? 'connected'
         : d.lastSeen > 0
-        ? _seen(d.lastSeen.toInt())
+        ? agoAt(d.lastSeen.toInt(), clock())
         : '';
     return SettingsRow(
       d.name,
@@ -482,10 +482,4 @@ class RemoteMark extends StatelessWidget {
       },
     );
   }
-}
-
-/// When a device was last seen, [ms] after the epoch, as "5m ago".
-String _seen(int ms) {
-  final at = DateTime.fromMillisecondsSinceEpoch(ms);
-  return ago(clock().difference(at), at);
 }

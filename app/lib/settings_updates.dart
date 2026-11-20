@@ -15,8 +15,7 @@ import 'package:nushi/widgets.dart';
 /// "Last checked 12m ago", or "Not checked yet".
 String lastChecked(Int64 ms, DateTime now) {
   if (ms == 0) return 'Not checked yet';
-  final at = DateTime.fromMillisecondsSinceEpoch(ms.toInt());
-  return 'Last checked ${ago(now.difference(at), at)}';
+  return 'Last checked ${agoAt(ms.toInt(), now)}';
 }
 
 /// Settings › General's Updates: [login] first (Start at login's rows,
