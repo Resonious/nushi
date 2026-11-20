@@ -66,4 +66,26 @@ void main() {
     f.found(['agent call 0', 'agent call 1', 'agent call 2', 'l1 0']);
     expect(f.current, 'agent call 2');
   });
+
+  for (final by in [1, -1]) {
+    testWidgets('with nothing loaded to go to, the first step '
+        '(${by > 0 ? '⏎' : '⇧⏎'}) shows the nearest match above, which '
+        'typing made current', (tester) async {
+      final (f, _) = _find([
+        ChatMatch(itemId: 'a', count: 1),
+        ChatMatch(itemId: 'b', count: 1),
+        ChatMatch(itemId: 'c', count: 1),
+      ]);
+      await _type(tester, f, 'needle');
+      f.found(const []);
+      expect(f.count, '3 of 3');
+      expect(f.current, 'far c 0');
+      f.step(by);
+      expect(f.current, 'far c 0', reason: 'not moved off unseen');
+      expect(f.pending, 'far c 0', reason: 'its part loads');
+      expect(f.stepped, isTrue);
+      f.step(by);
+      expect(f.current, by > 0 ? 'far a 0' : 'far b 0');
+    });
+  }
 }

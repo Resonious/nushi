@@ -25,7 +25,8 @@ typedef AskAbove = Future<FindInChatResponse?> Function(
 /// finds in what's loaded. A step to one asks the transcript to load up to
 /// its item ([pending]); once it's in and laid out, the step lands on that
 /// item's own matches there. Typing goes to the first match loaded (the
-/// nearest above with none), loading nothing.
+/// nearest above with none), loading nothing; the first step from that
+/// nearest one, either way, shows it.
 class ChatFind extends Find {
   new(this._chat);
 
@@ -161,13 +162,16 @@ class ChatFind extends Find {
   @override
   void step(int by) {
     if (hits.isEmpty) return;
+    // With nothing loaded to go to, typing made the nearest match above
+    // current without loading it: the first step, either way, shows it.
+    final move = _typed && farItem(current) != null ? 0 : by;
     _typed = false;
     // Set before the step tells its listeners: the transcript loads a far
     // one's part as it hears of it.
     _stepAsk = asked + 1;
-    final next = hits[(at + by) % hits.length];
+    final next = hits[(at + move) % hits.length];
     _pending = farItem(next) == null ? null : next;
-    super.step(by);
+    super.step(move);
   }
 
   /// The hits: the far ones whose items aren't laid out (not loaded, or
