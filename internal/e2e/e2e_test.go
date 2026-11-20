@@ -28,6 +28,7 @@ import (
 	"github.com/afrase/nushi/internal/ante/antetest"
 	"github.com/afrase/nushi/internal/api"
 	"github.com/afrase/nushi/internal/claude"
+	"github.com/afrase/nushi/internal/database"
 	"github.com/afrase/nushi/internal/events"
 	"github.com/afrase/nushi/internal/features/agents"
 	"github.com/afrase/nushi/internal/features/chats"
@@ -37,6 +38,7 @@ import (
 	"github.com/afrase/nushi/internal/features/servers"
 	"github.com/afrase/nushi/internal/features/terminals"
 	"github.com/afrase/nushi/internal/features/tools"
+	"github.com/afrase/nushi/internal/features/usage"
 	nushiv1 "github.com/afrase/nushi/internal/gen/nushi/v1"
 	"github.com/afrase/nushi/internal/gen/nushi/v1/nushiv1connect"
 	"github.com/afrase/nushi/internal/git"
@@ -217,11 +219,17 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Usage in the data folder's database, as main keeps it.
+	db, err := database.Open(filepath.Join(dataDir, "nushi.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	meter := usage.New(db, st)
 	// Sleep and the copies as main has them: the settings are the daemon's.
 	// A workflow's files are read often, so a test sees its end at once.
 	svc := chats.New(t.Context(), kinds, chats.Options{Remembered: st, Sessions: st, Worktrees: git.Worktrees{}, Scratch: filepath.Join(dataDir, "scratch"),
 		Uploads: filepath.Join(dataDir, "uploads"), Publish: hub.Publish, Copies: copies, CopiesOn: st.KeepTranscripts, Sleep: st,
-		Timing: chats.Timing{WorkflowPoll: 20 * time.Millisecond}})
+		Timing: chats.Timing{WorkflowPoll: 20 * time.Millisecond}, Meter: meter})
 	shows := preview.New(hub.Publish)
 	shows.UseChats(svc)
 	serverTools := &servers.AgentTools{}
@@ -243,7 +251,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		lapsed.Store(!waiting)
 	}
 	sv := api.Services{Chats: svc, Agents: agents.New(nil, nil, shellenv.Off(os.Environ()), "", nil), Terms: terms, Hub: hub, Memory: memory.New(svc), Transcripts: st, Restart: restarts,
-		Servers: srvs}
+		Servers: srvs, Usage: meter}
 	socket, forDevices := api.Handlers(sv, toolSvc, "tok") // as main serves them
 	srv := httptest.NewServer(socket)
 	devices := httptest.NewServer(forDevices)
@@ -256,6 +264,8 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		terms.CloseAll() // as main does: the shells don't outlive the daemon
 		srvs.CloseAll()
 		svc.Close()
+		meter.Close()
+		_ = db.Close() // closed already when stopped twice: reopen's, then the cleanup's
 	}
 	t.Cleanup(stop)
 	return &daemon{url: srv.URL, devices: devices.URL, stop: stop, chats: svc, restart: restarts, looks: looks, lapsed: lapsed, claudes: cls, tools: toolSvc, hub: hub, dataDir: dataDir, history: history, kill: func() {

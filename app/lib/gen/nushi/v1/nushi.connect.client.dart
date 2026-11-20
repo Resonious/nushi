@@ -2990,6 +2990,27 @@ extension type NushiServiceClient(connect.Transport _transport) {
     );
   }
 
+  /// What the chats' turns used from from to to (ADR 0136): totals, by day,
+  /// agent, model and project folder, the costliest chats, and the account
+  /// limits agents reported. The Mac's only: it names project folders and
+  /// chats' titles, which the phone has no page for. API 126.
+  Future<nushiv1nushi.GetUsageResponse> getUsage(
+    nushiv1nushi.GetUsageRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.getUsage,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
   /// Streams every change to every chat from now on. The first message is
   /// empty: it says the subscription is live.
   Stream<nushiv1nushi.EventsResponse> events(

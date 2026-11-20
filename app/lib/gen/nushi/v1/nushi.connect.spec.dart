@@ -1452,6 +1452,17 @@ abstract final class NushiService {
     nushiv1nushi.LinkChatPullResponse.new,
   );
 
+  /// What the chats' turns used from from to to (ADR 0136): totals, by day,
+  /// agent, model and project folder, the costliest chats, and the account
+  /// limits agents reported. The Mac's only: it names project folders and
+  /// chats' titles, which the phone has no page for. API 126.
+  static const getUsage = connect.Spec(
+    '/$name/GetUsage',
+    connect.StreamType.unary,
+    nushiv1nushi.GetUsageRequest.new,
+    nushiv1nushi.GetUsageResponse.new,
+  );
+
   /// Streams every change to every chat from now on. The first message is
   /// empty: it says the subscription is live.
   static const events = connect.Spec(

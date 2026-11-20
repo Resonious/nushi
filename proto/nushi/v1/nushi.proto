@@ -523,6 +523,11 @@ service NushiService {
   // Links a pull request picked by hand to a chat, or unlinks its own.
   // API 81.
   rpc LinkChatPull(LinkChatPullRequest) returns (LinkChatPullResponse);
+  // What the chats' turns used from from to to (ADR 0136): totals, by day,
+  // agent, model and project folder, the costliest chats, and the account
+  // limits agents reported. The Mac's only: it names project folders and
+  // chats' titles, which the phone has no page for. API 126.
+  rpc GetUsage(GetUsageRequest) returns (GetUsageResponse);
   // Streams every change to every chat from now on. The first message is
   // empty: it says the subscription is live.
   rpc Events(EventsRequest) returns (stream EventsResponse);
@@ -4066,3 +4071,79 @@ message SubmitGitHubReviewRequest {
 }
 
 message SubmitGitHubReviewResponse {}
+
+message GetUsageRequest {
+  // The turns that ended from from (ms since the epoch, included) to to
+  // (excluded); 0 leaves that side open.
+  int64 from = 1;
+  int64 to = 2;
+  // The time zone days are counted in (a time zone database name, such as
+  // "Europe/Paris"); "" is the daemon's.
+  string time_zone = 3;
+}
+
+message GetUsageResponse {
+  UsageTotals totals = 1;
+  // By day (date "YYYY-MM-DD" in the time zone), agent (its name, as
+  // Agent.name), model (the agent's name for it; "" when it named none)
+  // and project folder (a worktree chat's repository's), each in the
+  // order of its key.
+  repeated UsageGroup days = 2;
+  repeated UsageGroup agents = 3;
+  repeated UsageGroup models = 4;
+  repeated UsageGroup folders = 5;
+  // The costliest chats, most first (then the most tokens): 20 at most.
+  repeated UsageChat chats = 6;
+  // The agents whose turns in the range reported no cost (Codex, Ante):
+  // their cost isn't zero, it isn't known.
+  repeated string no_cost = 7;
+  // When the first turn kept ended, of all (ms); 0 when none is.
+  int64 earliest = 8;
+  // The latest of each account limit an agent reported of itself.
+  repeated UsageLimit limits = 9;
+}
+
+// Turns summed: their cost in each currency the agent reported it in
+// (none when no turn reported one), their tokens, and how many there were.
+message UsageTotals {
+  repeated UsageCost cost = 1;
+  int64 input_tokens = 2;
+  int64 output_tokens = 3;
+  int64 cache_read_tokens = 4;
+  int64 cache_write_tokens = 5;
+  int64 turns = 6;
+}
+
+message UsageCost {
+  string currency = 1; // "USD"
+  double amount = 2;
+}
+
+message UsageGroup {
+  string key = 1;
+  UsageTotals totals = 2;
+}
+
+message UsageChat {
+  string chat_id = 1;
+  // The chat's name or title; "" when the chat is gone (its usage stays).
+  string title = 2;
+  string agent = 3;
+  UsageTotals totals = 4;
+}
+
+// An account limit as the agent reported it (Claude's rate limits).
+message UsageLimit {
+  string agent = 1;
+  // Its window as the agent names it ("five_hour", "seven_day"); "" when
+  // it doesn't say.
+  string kind = 2;
+  // "allowed", "allowed_warning" or "rejected", as the agent says.
+  string status = 3;
+  // How much of it is used, 0 to 1, when the agent said.
+  optional double utilization = 4;
+  // When it resets (ms); 0 when not said.
+  int64 resets_at = 5;
+  // When the agent reported it (ms).
+  int64 seen = 6;
+}

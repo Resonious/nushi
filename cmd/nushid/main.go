@@ -197,6 +197,7 @@ func run() error {
 	sv.GitHub = newGitHub(st, dev)
 	chatSvc.UseGitHub(sv.GitHub)
 	sv.Updates = updateSvc
+	sv.Usage = usageSvc
 	if err := usePush(st, sv.Remote, chatSvc, kinds); err != nil {
 		return err
 	}

@@ -7867,6 +7867,221 @@ const SubmitGitHubReviewResponse$json = {
 final $typed_data.Uint8List submitGitHubReviewResponseDescriptor =
     $convert.base64Decode('ChpTdWJtaXRHaXRIdWJSZXZpZXdSZXNwb25zZQ==');
 
+@$core.Deprecated('Use getUsageRequestDescriptor instead')
+const GetUsageRequest$json = {
+  '1': 'GetUsageRequest',
+  '2': [
+    {'1': 'from', '3': 1, '4': 1, '5': 3, '10': 'from'},
+    {'1': 'to', '3': 2, '4': 1, '5': 3, '10': 'to'},
+    {'1': 'time_zone', '3': 3, '4': 1, '5': 9, '10': 'timeZone'},
+  ],
+};
+
+/// Descriptor for `GetUsageRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getUsageRequestDescriptor = $convert.base64Decode(
+    'Cg9HZXRVc2FnZVJlcXVlc3QSEgoEZnJvbRgBIAEoA1IEZnJvbRIOCgJ0bxgCIAEoA1ICdG8SGw'
+    'oJdGltZV96b25lGAMgASgJUgh0aW1lWm9uZQ==');
+
+@$core.Deprecated('Use getUsageResponseDescriptor instead')
+const GetUsageResponse$json = {
+  '1': 'GetUsageResponse',
+  '2': [
+    {
+      '1': 'totals',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.nushi.v1.UsageTotals',
+      '10': 'totals'
+    },
+    {
+      '1': 'days',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.UsageGroup',
+      '10': 'days'
+    },
+    {
+      '1': 'agents',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.UsageGroup',
+      '10': 'agents'
+    },
+    {
+      '1': 'models',
+      '3': 4,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.UsageGroup',
+      '10': 'models'
+    },
+    {
+      '1': 'folders',
+      '3': 5,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.UsageGroup',
+      '10': 'folders'
+    },
+    {
+      '1': 'chats',
+      '3': 6,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.UsageChat',
+      '10': 'chats'
+    },
+    {'1': 'no_cost', '3': 7, '4': 3, '5': 9, '10': 'noCost'},
+    {'1': 'earliest', '3': 8, '4': 1, '5': 3, '10': 'earliest'},
+    {
+      '1': 'limits',
+      '3': 9,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.UsageLimit',
+      '10': 'limits'
+    },
+  ],
+};
+
+/// Descriptor for `GetUsageResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getUsageResponseDescriptor = $convert.base64Decode(
+    'ChBHZXRVc2FnZVJlc3BvbnNlEi0KBnRvdGFscxgBIAEoCzIVLm51c2hpLnYxLlVzYWdlVG90YW'
+    'xzUgZ0b3RhbHMSKAoEZGF5cxgCIAMoCzIULm51c2hpLnYxLlVzYWdlR3JvdXBSBGRheXMSLAoG'
+    'YWdlbnRzGAMgAygLMhQubnVzaGkudjEuVXNhZ2VHcm91cFIGYWdlbnRzEiwKBm1vZGVscxgEIA'
+    'MoCzIULm51c2hpLnYxLlVzYWdlR3JvdXBSBm1vZGVscxIuCgdmb2xkZXJzGAUgAygLMhQubnVz'
+    'aGkudjEuVXNhZ2VHcm91cFIHZm9sZGVycxIpCgVjaGF0cxgGIAMoCzITLm51c2hpLnYxLlVzYW'
+    'dlQ2hhdFIFY2hhdHMSFwoHbm9fY29zdBgHIAMoCVIGbm9Db3N0EhoKCGVhcmxpZXN0GAggASgD'
+    'UghlYXJsaWVzdBIsCgZsaW1pdHMYCSADKAsyFC5udXNoaS52MS5Vc2FnZUxpbWl0UgZsaW1pdH'
+    'M=');
+
+@$core.Deprecated('Use usageTotalsDescriptor instead')
+const UsageTotals$json = {
+  '1': 'UsageTotals',
+  '2': [
+    {
+      '1': 'cost',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.UsageCost',
+      '10': 'cost'
+    },
+    {'1': 'input_tokens', '3': 2, '4': 1, '5': 3, '10': 'inputTokens'},
+    {'1': 'output_tokens', '3': 3, '4': 1, '5': 3, '10': 'outputTokens'},
+    {'1': 'cache_read_tokens', '3': 4, '4': 1, '5': 3, '10': 'cacheReadTokens'},
+    {
+      '1': 'cache_write_tokens',
+      '3': 5,
+      '4': 1,
+      '5': 3,
+      '10': 'cacheWriteTokens'
+    },
+    {'1': 'turns', '3': 6, '4': 1, '5': 3, '10': 'turns'},
+  ],
+};
+
+/// Descriptor for `UsageTotals`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List usageTotalsDescriptor = $convert.base64Decode(
+    'CgtVc2FnZVRvdGFscxInCgRjb3N0GAEgAygLMhMubnVzaGkudjEuVXNhZ2VDb3N0UgRjb3N0Ei'
+    'EKDGlucHV0X3Rva2VucxgCIAEoA1ILaW5wdXRUb2tlbnMSIwoNb3V0cHV0X3Rva2VucxgDIAEo'
+    'A1IMb3V0cHV0VG9rZW5zEioKEWNhY2hlX3JlYWRfdG9rZW5zGAQgASgDUg9jYWNoZVJlYWRUb2'
+    'tlbnMSLAoSY2FjaGVfd3JpdGVfdG9rZW5zGAUgASgDUhBjYWNoZVdyaXRlVG9rZW5zEhQKBXR1'
+    'cm5zGAYgASgDUgV0dXJucw==');
+
+@$core.Deprecated('Use usageCostDescriptor instead')
+const UsageCost$json = {
+  '1': 'UsageCost',
+  '2': [
+    {'1': 'currency', '3': 1, '4': 1, '5': 9, '10': 'currency'},
+    {'1': 'amount', '3': 2, '4': 1, '5': 1, '10': 'amount'},
+  ],
+};
+
+/// Descriptor for `UsageCost`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List usageCostDescriptor = $convert.base64Decode(
+    'CglVc2FnZUNvc3QSGgoIY3VycmVuY3kYASABKAlSCGN1cnJlbmN5EhYKBmFtb3VudBgCIAEoAV'
+    'IGYW1vdW50');
+
+@$core.Deprecated('Use usageGroupDescriptor instead')
+const UsageGroup$json = {
+  '1': 'UsageGroup',
+  '2': [
+    {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
+    {
+      '1': 'totals',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.nushi.v1.UsageTotals',
+      '10': 'totals'
+    },
+  ],
+};
+
+/// Descriptor for `UsageGroup`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List usageGroupDescriptor = $convert.base64Decode(
+    'CgpVc2FnZUdyb3VwEhAKA2tleRgBIAEoCVIDa2V5Ei0KBnRvdGFscxgCIAEoCzIVLm51c2hpLn'
+    'YxLlVzYWdlVG90YWxzUgZ0b3RhbHM=');
+
+@$core.Deprecated('Use usageChatDescriptor instead')
+const UsageChat$json = {
+  '1': 'UsageChat',
+  '2': [
+    {'1': 'chat_id', '3': 1, '4': 1, '5': 9, '10': 'chatId'},
+    {'1': 'title', '3': 2, '4': 1, '5': 9, '10': 'title'},
+    {'1': 'agent', '3': 3, '4': 1, '5': 9, '10': 'agent'},
+    {
+      '1': 'totals',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.nushi.v1.UsageTotals',
+      '10': 'totals'
+    },
+  ],
+};
+
+/// Descriptor for `UsageChat`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List usageChatDescriptor = $convert.base64Decode(
+    'CglVc2FnZUNoYXQSFwoHY2hhdF9pZBgBIAEoCVIGY2hhdElkEhQKBXRpdGxlGAIgASgJUgV0aX'
+    'RsZRIUCgVhZ2VudBgDIAEoCVIFYWdlbnQSLQoGdG90YWxzGAQgASgLMhUubnVzaGkudjEuVXNh'
+    'Z2VUb3RhbHNSBnRvdGFscw==');
+
+@$core.Deprecated('Use usageLimitDescriptor instead')
+const UsageLimit$json = {
+  '1': 'UsageLimit',
+  '2': [
+    {'1': 'agent', '3': 1, '4': 1, '5': 9, '10': 'agent'},
+    {'1': 'kind', '3': 2, '4': 1, '5': 9, '10': 'kind'},
+    {'1': 'status', '3': 3, '4': 1, '5': 9, '10': 'status'},
+    {
+      '1': 'utilization',
+      '3': 4,
+      '4': 1,
+      '5': 1,
+      '9': 0,
+      '10': 'utilization',
+      '17': true
+    },
+    {'1': 'resets_at', '3': 5, '4': 1, '5': 3, '10': 'resetsAt'},
+    {'1': 'seen', '3': 6, '4': 1, '5': 3, '10': 'seen'},
+  ],
+  '8': [
+    {'1': '_utilization'},
+  ],
+};
+
+/// Descriptor for `UsageLimit`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List usageLimitDescriptor = $convert.base64Decode(
+    'CgpVc2FnZUxpbWl0EhQKBWFnZW50GAEgASgJUgVhZ2VudBISCgRraW5kGAIgASgJUgRraW5kEh'
+    'YKBnN0YXR1cxgDIAEoCVIGc3RhdHVzEiUKC3V0aWxpemF0aW9uGAQgASgBSABSC3V0aWxpemF0'
+    'aW9uiAEBEhsKCXJlc2V0c19hdBgFIAEoA1IIcmVzZXRzQXQSEgoEc2VlbhgGIAEoA1IEc2Vlbk'
+    'IOCgxfdXRpbGl6YXRpb24=');
+
 const $core.Map<$core.String, $core.dynamic> NushiServiceBase$json = {
   '1': 'NushiService',
   '2': [
@@ -8637,6 +8852,11 @@ const $core.Map<$core.String, $core.dynamic> NushiServiceBase$json = {
       '3': '.nushi.v1.LinkChatPullResponse'
     },
     {
+      '1': 'GetUsage',
+      '2': '.nushi.v1.GetUsageRequest',
+      '3': '.nushi.v1.GetUsageResponse'
+    },
+    {
       '1': 'Events',
       '2': '.nushi.v1.EventsRequest',
       '3': '.nushi.v1.EventsResponse',
@@ -9057,6 +9277,13 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.nushi.v1.FindChatPullResponse': FindChatPullResponse$json,
   '.nushi.v1.LinkChatPullRequest': LinkChatPullRequest$json,
   '.nushi.v1.LinkChatPullResponse': LinkChatPullResponse$json,
+  '.nushi.v1.GetUsageRequest': GetUsageRequest$json,
+  '.nushi.v1.GetUsageResponse': GetUsageResponse$json,
+  '.nushi.v1.UsageTotals': UsageTotals$json,
+  '.nushi.v1.UsageCost': UsageCost$json,
+  '.nushi.v1.UsageGroup': UsageGroup$json,
+  '.nushi.v1.UsageChat': UsageChat$json,
+  '.nushi.v1.UsageLimit': UsageLimit$json,
   '.nushi.v1.EventsRequest': EventsRequest$json,
   '.nushi.v1.EventsResponse': EventsResponse$json,
   '.nushi.v1.ItemEvent': ItemEvent$json,
@@ -9298,5 +9525,6 @@ final $typed_data.Uint8List nushiServiceDescriptor = $convert.base64Decode(
     'dG9yZUdpdEh1YkJyYW5jaFJlc3BvbnNlEk0KDEZpbmRDaGF0UHVsbBIdLm51c2hpLnYxLkZpbm'
     'RDaGF0UHVsbFJlcXVlc3QaHi5udXNoaS52MS5GaW5kQ2hhdFB1bGxSZXNwb25zZRJNCgxMaW5r'
     'Q2hhdFB1bGwSHS5udXNoaS52MS5MaW5rQ2hhdFB1bGxSZXF1ZXN0Gh4ubnVzaGkudjEuTGlua0'
-    'NoYXRQdWxsUmVzcG9uc2USPQoGRXZlbnRzEhcubnVzaGkudjEuRXZlbnRzUmVxdWVzdBoYLm51'
-    'c2hpLnYxLkV2ZW50c1Jlc3BvbnNlMAE=');
+    'NoYXRQdWxsUmVzcG9uc2USQQoIR2V0VXNhZ2USGS5udXNoaS52MS5HZXRVc2FnZVJlcXVlc3Qa'
+    'Gi5udXNoaS52MS5HZXRVc2FnZVJlc3BvbnNlEj0KBkV2ZW50cxIXLm51c2hpLnYxLkV2ZW50c1'
+    'JlcXVlc3QaGC5udXNoaS52MS5FdmVudHNSZXNwb25zZTAB');

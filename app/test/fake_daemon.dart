@@ -84,6 +84,10 @@ class FakeDaemon implements Transport {
   /// another folder has none.
   final projectIcons = <String, List<int>>{};
 
+  /// What GetUsage answers (ADR 0136), whatever the range: nothing used
+  /// until a test sets it.
+  GetUsageResponse usage = GetUsageResponse();
+
   /// While set the daemon is gone: every call fails as the transport says
   /// when none answers, pings too.
   bool down = false;
@@ -235,6 +239,7 @@ class FakeDaemon implements Transport {
               final data? => GetProjectIconResponse(data: data),
               null => GetProjectIconResponse(),
             },
+          GetUsageRequest() => usage,
           _ => spec.outputFactory(),
         };
     return UnaryResponse(spec, Headers(), out as O, Headers());

@@ -458,6 +458,8 @@ const (
 	// NushiServiceLinkChatPullProcedure is the fully-qualified name of the NushiService's LinkChatPull
 	// RPC.
 	NushiServiceLinkChatPullProcedure = "/nushi.v1.NushiService/LinkChatPull"
+	// NushiServiceGetUsageProcedure is the fully-qualified name of the NushiService's GetUsage RPC.
+	NushiServiceGetUsageProcedure = "/nushi.v1.NushiService/GetUsage"
 	// NushiServiceEventsProcedure is the fully-qualified name of the NushiService's Events RPC.
 	NushiServiceEventsProcedure = "/nushi.v1.NushiService/Events"
 )
@@ -981,6 +983,11 @@ type NushiServiceClient interface {
 	// Links a pull request picked by hand to a chat, or unlinks its own.
 	// API 81.
 	LinkChatPull(context.Context, *connect.Request[v1.LinkChatPullRequest]) (*connect.Response[v1.LinkChatPullResponse], error)
+	// What the chats' turns used from from to to (ADR 0136): totals, by day,
+	// agent, model and project folder, the costliest chats, and the account
+	// limits agents reported. The Mac's only: it names project folders and
+	// chats' titles, which the phone has no page for. API 126.
+	GetUsage(context.Context, *connect.Request[v1.GetUsageRequest]) (*connect.Response[v1.GetUsageResponse], error)
 	// Streams every change to every chat from now on. The first message is
 	// empty: it says the subscription is live.
 	Events(context.Context, *connect.Request[v1.EventsRequest]) (*connect.ServerStreamForClient[v1.EventsResponse], error)
@@ -1921,6 +1928,12 @@ func NewNushiServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(nushiServiceMethods.ByName("LinkChatPull")),
 			connect.WithClientOptions(opts...),
 		),
+		getUsage: connect.NewClient[v1.GetUsageRequest, v1.GetUsageResponse](
+			httpClient,
+			baseURL+NushiServiceGetUsageProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("GetUsage")),
+			connect.WithClientOptions(opts...),
+		),
 		events: connect.NewClient[v1.EventsRequest, v1.EventsResponse](
 			httpClient,
 			baseURL+NushiServiceEventsProcedure,
@@ -2086,6 +2099,7 @@ type nushiServiceClient struct {
 	restoreGitHubBranch     *connect.Client[v1.RestoreGitHubBranchRequest, v1.RestoreGitHubBranchResponse]
 	findChatPull            *connect.Client[v1.FindChatPullRequest, v1.FindChatPullResponse]
 	linkChatPull            *connect.Client[v1.LinkChatPullRequest, v1.LinkChatPullResponse]
+	getUsage                *connect.Client[v1.GetUsageRequest, v1.GetUsageResponse]
 	events                  *connect.Client[v1.EventsRequest, v1.EventsResponse]
 }
 
@@ -2859,6 +2873,11 @@ func (c *nushiServiceClient) LinkChatPull(ctx context.Context, req *connect.Requ
 	return c.linkChatPull.CallUnary(ctx, req)
 }
 
+// GetUsage calls nushi.v1.NushiService.GetUsage.
+func (c *nushiServiceClient) GetUsage(ctx context.Context, req *connect.Request[v1.GetUsageRequest]) (*connect.Response[v1.GetUsageResponse], error) {
+	return c.getUsage.CallUnary(ctx, req)
+}
+
 // Events calls nushi.v1.NushiService.Events.
 func (c *nushiServiceClient) Events(ctx context.Context, req *connect.Request[v1.EventsRequest]) (*connect.ServerStreamForClient[v1.EventsResponse], error) {
 	return c.events.CallServerStream(ctx, req)
@@ -3383,6 +3402,11 @@ type NushiServiceHandler interface {
 	// Links a pull request picked by hand to a chat, or unlinks its own.
 	// API 81.
 	LinkChatPull(context.Context, *connect.Request[v1.LinkChatPullRequest]) (*connect.Response[v1.LinkChatPullResponse], error)
+	// What the chats' turns used from from to to (ADR 0136): totals, by day,
+	// agent, model and project folder, the costliest chats, and the account
+	// limits agents reported. The Mac's only: it names project folders and
+	// chats' titles, which the phone has no page for. API 126.
+	GetUsage(context.Context, *connect.Request[v1.GetUsageRequest]) (*connect.Response[v1.GetUsageResponse], error)
 	// Streams every change to every chat from now on. The first message is
 	// empty: it says the subscription is live.
 	Events(context.Context, *connect.Request[v1.EventsRequest], *connect.ServerStream[v1.EventsResponse]) error
@@ -4319,6 +4343,12 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(nushiServiceMethods.ByName("LinkChatPull")),
 		connect.WithHandlerOptions(opts...),
 	)
+	nushiServiceGetUsageHandler := connect.NewUnaryHandler(
+		NushiServiceGetUsageProcedure,
+		svc.GetUsage,
+		connect.WithSchema(nushiServiceMethods.ByName("GetUsage")),
+		connect.WithHandlerOptions(opts...),
+	)
 	nushiServiceEventsHandler := connect.NewServerStreamHandler(
 		NushiServiceEventsProcedure,
 		svc.Events,
@@ -4635,6 +4665,8 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 			nushiServiceFindChatPullHandler.ServeHTTP(w, r)
 		case NushiServiceLinkChatPullProcedure:
 			nushiServiceLinkChatPullHandler.ServeHTTP(w, r)
+		case NushiServiceGetUsageProcedure:
+			nushiServiceGetUsageHandler.ServeHTTP(w, r)
 		case NushiServiceEventsProcedure:
 			nushiServiceEventsHandler.ServeHTTP(w, r)
 		default:
@@ -5260,6 +5292,10 @@ func (UnimplementedNushiServiceHandler) FindChatPull(context.Context, *connect.R
 
 func (UnimplementedNushiServiceHandler) LinkChatPull(context.Context, *connect.Request[v1.LinkChatPullRequest]) (*connect.Response[v1.LinkChatPullResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.LinkChatPull is not implemented"))
+}
+
+func (UnimplementedNushiServiceHandler) GetUsage(context.Context, *connect.Request[v1.GetUsageRequest]) (*connect.Response[v1.GetUsageResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.GetUsage is not implemented"))
 }
 
 func (UnimplementedNushiServiceHandler) Events(context.Context, *connect.Request[v1.EventsRequest], *connect.ServerStream[v1.EventsResponse]) error {

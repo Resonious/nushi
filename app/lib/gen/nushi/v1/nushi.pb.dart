@@ -33890,6 +33890,688 @@ class SubmitGitHubReviewResponse extends $pb.GeneratedMessage {
   static SubmitGitHubReviewResponse? _defaultInstance;
 }
 
+class GetUsageRequest extends $pb.GeneratedMessage {
+  factory GetUsageRequest({
+    $fixnum.Int64? from,
+    $fixnum.Int64? to,
+    $core.String? timeZone,
+  }) {
+    final result = GetUsageRequest._();
+    if (from != null) result.from = from;
+    if (to != null) result.to = to;
+    if (timeZone != null) result.timeZone = timeZone;
+    return result;
+  }
+
+  GetUsageRequest._();
+
+  factory GetUsageRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetUsageRequest()..mergeFromBuffer(data, registry);
+  factory GetUsageRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetUsageRequest()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetUsageRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: GetUsageRequest.$_createMessage)
+    ..aInt64(1, _omitFieldNames ? '' : 'from')
+    ..aInt64(2, _omitFieldNames ? '' : 'to')
+    ..aOS(3, _omitFieldNames ? '' : 'timeZone')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetUsageRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetUsageRequest copyWith(void Function(GetUsageRequest) updates) =>
+      super.copyWith((message) => updates(message as GetUsageRequest))
+          as GetUsageRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use GetUsageRequest() / GetUsageRequest.new instead')
+  static GetUsageRequest create() => GetUsageRequest._();
+  static $pb.GeneratedMessage $_createMessage() => GetUsageRequest._();
+  @$core.override
+  GetUsageRequest createEmptyInstance() => GetUsageRequest._();
+  @$core.pragma('dart2js:noInline')
+  static GetUsageRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetUsageRequest>(
+          GetUsageRequest.$_createMessage);
+  static GetUsageRequest? _defaultInstance;
+
+  /// The turns that ended from from (ms since the epoch, included) to to
+  /// (excluded); 0 leaves that side open.
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get from => $_getI64(0);
+  @$pb.TagNumber(1)
+  set from($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFrom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFrom() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get to => $_getI64(1);
+  @$pb.TagNumber(2)
+  set to($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTo() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTo() => $_clearField(2);
+
+  /// The time zone days are counted in (a time zone database name, such as
+  /// "Europe/Paris"); "" is the daemon's.
+  @$pb.TagNumber(3)
+  $core.String get timeZone => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set timeZone($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasTimeZone() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTimeZone() => $_clearField(3);
+}
+
+class GetUsageResponse extends $pb.GeneratedMessage {
+  factory GetUsageResponse({
+    UsageTotals? totals,
+    $core.Iterable<UsageGroup>? days,
+    $core.Iterable<UsageGroup>? agents,
+    $core.Iterable<UsageGroup>? models,
+    $core.Iterable<UsageGroup>? folders,
+    $core.Iterable<UsageChat>? chats,
+    $core.Iterable<$core.String>? noCost,
+    $fixnum.Int64? earliest,
+    $core.Iterable<UsageLimit>? limits,
+  }) {
+    final result = GetUsageResponse._();
+    if (totals != null) result.totals = totals;
+    if (days != null) result.days.addAll(days);
+    if (agents != null) result.agents.addAll(agents);
+    if (models != null) result.models.addAll(models);
+    if (folders != null) result.folders.addAll(folders);
+    if (chats != null) result.chats.addAll(chats);
+    if (noCost != null) result.noCost.addAll(noCost);
+    if (earliest != null) result.earliest = earliest;
+    if (limits != null) result.limits.addAll(limits);
+    return result;
+  }
+
+  GetUsageResponse._();
+
+  factory GetUsageResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetUsageResponse()..mergeFromBuffer(data, registry);
+  factory GetUsageResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetUsageResponse()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetUsageResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: GetUsageResponse.$_createMessage)
+    ..aOM<UsageTotals>(1, _omitFieldNames ? '' : 'totals',
+        subBuilder: UsageTotals.$_createMessage)
+    ..pPM<UsageGroup>(2, _omitFieldNames ? '' : 'days',
+        subBuilder: UsageGroup.$_createMessage)
+    ..pPM<UsageGroup>(3, _omitFieldNames ? '' : 'agents',
+        subBuilder: UsageGroup.$_createMessage)
+    ..pPM<UsageGroup>(4, _omitFieldNames ? '' : 'models',
+        subBuilder: UsageGroup.$_createMessage)
+    ..pPM<UsageGroup>(5, _omitFieldNames ? '' : 'folders',
+        subBuilder: UsageGroup.$_createMessage)
+    ..pPM<UsageChat>(6, _omitFieldNames ? '' : 'chats',
+        subBuilder: UsageChat.$_createMessage)
+    ..pPS(7, _omitFieldNames ? '' : 'noCost')
+    ..aInt64(8, _omitFieldNames ? '' : 'earliest')
+    ..pPM<UsageLimit>(9, _omitFieldNames ? '' : 'limits',
+        subBuilder: UsageLimit.$_createMessage)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetUsageResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetUsageResponse copyWith(void Function(GetUsageResponse) updates) =>
+      super.copyWith((message) => updates(message as GetUsageResponse))
+          as GetUsageResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use GetUsageResponse() / GetUsageResponse.new instead')
+  static GetUsageResponse create() => GetUsageResponse._();
+  static $pb.GeneratedMessage $_createMessage() => GetUsageResponse._();
+  @$core.override
+  GetUsageResponse createEmptyInstance() => GetUsageResponse._();
+  @$core.pragma('dart2js:noInline')
+  static GetUsageResponse getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetUsageResponse>(
+          GetUsageResponse.$_createMessage);
+  static GetUsageResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  UsageTotals get totals => $_getN(0);
+  @$pb.TagNumber(1)
+  set totals(UsageTotals value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTotals() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTotals() => $_clearField(1);
+  @$pb.TagNumber(1)
+  UsageTotals ensureTotals() => $_ensure(0);
+
+  /// By day (date "YYYY-MM-DD" in the time zone), agent (its name, as
+  /// Agent.name), model (the agent's name for it; "" when it named none)
+  /// and project folder (a worktree chat's repository's), each in the
+  /// order of its key.
+  @$pb.TagNumber(2)
+  $pb.PbList<UsageGroup> get days => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $pb.PbList<UsageGroup> get agents => $_getList(2);
+
+  @$pb.TagNumber(4)
+  $pb.PbList<UsageGroup> get models => $_getList(3);
+
+  @$pb.TagNumber(5)
+  $pb.PbList<UsageGroup> get folders => $_getList(4);
+
+  /// The costliest chats, most first (then the most tokens): 20 at most.
+  @$pb.TagNumber(6)
+  $pb.PbList<UsageChat> get chats => $_getList(5);
+
+  /// The agents whose turns in the range reported no cost (Codex, Ante):
+  /// their cost isn't zero, it isn't known.
+  @$pb.TagNumber(7)
+  $pb.PbList<$core.String> get noCost => $_getList(6);
+
+  /// When the first turn kept ended, of all (ms); 0 when none is.
+  @$pb.TagNumber(8)
+  $fixnum.Int64 get earliest => $_getI64(7);
+  @$pb.TagNumber(8)
+  set earliest($fixnum.Int64 value) => $_setInt64(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasEarliest() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearEarliest() => $_clearField(8);
+
+  /// The latest of each account limit an agent reported of itself.
+  @$pb.TagNumber(9)
+  $pb.PbList<UsageLimit> get limits => $_getList(8);
+}
+
+/// Turns summed: their cost in each currency the agent reported it in
+/// (none when no turn reported one), their tokens, and how many there were.
+class UsageTotals extends $pb.GeneratedMessage {
+  factory UsageTotals({
+    $core.Iterable<UsageCost>? cost,
+    $fixnum.Int64? inputTokens,
+    $fixnum.Int64? outputTokens,
+    $fixnum.Int64? cacheReadTokens,
+    $fixnum.Int64? cacheWriteTokens,
+    $fixnum.Int64? turns,
+  }) {
+    final result = UsageTotals._();
+    if (cost != null) result.cost.addAll(cost);
+    if (inputTokens != null) result.inputTokens = inputTokens;
+    if (outputTokens != null) result.outputTokens = outputTokens;
+    if (cacheReadTokens != null) result.cacheReadTokens = cacheReadTokens;
+    if (cacheWriteTokens != null) result.cacheWriteTokens = cacheWriteTokens;
+    if (turns != null) result.turns = turns;
+    return result;
+  }
+
+  UsageTotals._();
+
+  factory UsageTotals.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      UsageTotals()..mergeFromBuffer(data, registry);
+  factory UsageTotals.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      UsageTotals()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UsageTotals',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: UsageTotals.$_createMessage)
+    ..pPM<UsageCost>(1, _omitFieldNames ? '' : 'cost',
+        subBuilder: UsageCost.$_createMessage)
+    ..aInt64(2, _omitFieldNames ? '' : 'inputTokens')
+    ..aInt64(3, _omitFieldNames ? '' : 'outputTokens')
+    ..aInt64(4, _omitFieldNames ? '' : 'cacheReadTokens')
+    ..aInt64(5, _omitFieldNames ? '' : 'cacheWriteTokens')
+    ..aInt64(6, _omitFieldNames ? '' : 'turns')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UsageTotals clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UsageTotals copyWith(void Function(UsageTotals) updates) =>
+      super.copyWith((message) => updates(message as UsageTotals))
+          as UsageTotals;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use UsageTotals() / UsageTotals.new instead')
+  static UsageTotals create() => UsageTotals._();
+  static $pb.GeneratedMessage $_createMessage() => UsageTotals._();
+  @$core.override
+  UsageTotals createEmptyInstance() => UsageTotals._();
+  @$core.pragma('dart2js:noInline')
+  static UsageTotals getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<UsageTotals>(
+          UsageTotals.$_createMessage);
+  static UsageTotals? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<UsageCost> get cost => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get inputTokens => $_getI64(1);
+  @$pb.TagNumber(2)
+  set inputTokens($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasInputTokens() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearInputTokens() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get outputTokens => $_getI64(2);
+  @$pb.TagNumber(3)
+  set outputTokens($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasOutputTokens() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearOutputTokens() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get cacheReadTokens => $_getI64(3);
+  @$pb.TagNumber(4)
+  set cacheReadTokens($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasCacheReadTokens() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCacheReadTokens() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get cacheWriteTokens => $_getI64(4);
+  @$pb.TagNumber(5)
+  set cacheWriteTokens($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasCacheWriteTokens() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearCacheWriteTokens() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get turns => $_getI64(5);
+  @$pb.TagNumber(6)
+  set turns($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasTurns() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearTurns() => $_clearField(6);
+}
+
+class UsageCost extends $pb.GeneratedMessage {
+  factory UsageCost({
+    $core.String? currency,
+    $core.double? amount,
+  }) {
+    final result = UsageCost._();
+    if (currency != null) result.currency = currency;
+    if (amount != null) result.amount = amount;
+    return result;
+  }
+
+  UsageCost._();
+
+  factory UsageCost.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      UsageCost()..mergeFromBuffer(data, registry);
+  factory UsageCost.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      UsageCost()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UsageCost',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: UsageCost.$_createMessage)
+    ..aOS(1, _omitFieldNames ? '' : 'currency')
+    ..aD(2, _omitFieldNames ? '' : 'amount')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UsageCost clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UsageCost copyWith(void Function(UsageCost) updates) =>
+      super.copyWith((message) => updates(message as UsageCost)) as UsageCost;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use UsageCost() / UsageCost.new instead')
+  static UsageCost create() => UsageCost._();
+  static $pb.GeneratedMessage $_createMessage() => UsageCost._();
+  @$core.override
+  UsageCost createEmptyInstance() => UsageCost._();
+  @$core.pragma('dart2js:noInline')
+  static UsageCost getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UsageCost>(UsageCost.$_createMessage);
+  static UsageCost? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get currency => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set currency($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCurrency() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCurrency() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.double get amount => $_getN(1);
+  @$pb.TagNumber(2)
+  set amount($core.double value) => $_setDouble(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAmount() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAmount() => $_clearField(2);
+}
+
+class UsageGroup extends $pb.GeneratedMessage {
+  factory UsageGroup({
+    $core.String? key,
+    UsageTotals? totals,
+  }) {
+    final result = UsageGroup._();
+    if (key != null) result.key = key;
+    if (totals != null) result.totals = totals;
+    return result;
+  }
+
+  UsageGroup._();
+
+  factory UsageGroup.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      UsageGroup()..mergeFromBuffer(data, registry);
+  factory UsageGroup.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      UsageGroup()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UsageGroup',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: UsageGroup.$_createMessage)
+    ..aOS(1, _omitFieldNames ? '' : 'key')
+    ..aOM<UsageTotals>(2, _omitFieldNames ? '' : 'totals',
+        subBuilder: UsageTotals.$_createMessage)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UsageGroup clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UsageGroup copyWith(void Function(UsageGroup) updates) =>
+      super.copyWith((message) => updates(message as UsageGroup)) as UsageGroup;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use UsageGroup() / UsageGroup.new instead')
+  static UsageGroup create() => UsageGroup._();
+  static $pb.GeneratedMessage $_createMessage() => UsageGroup._();
+  @$core.override
+  UsageGroup createEmptyInstance() => UsageGroup._();
+  @$core.pragma('dart2js:noInline')
+  static UsageGroup getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UsageGroup>(UsageGroup.$_createMessage);
+  static UsageGroup? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get key => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set key($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKey() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  UsageTotals get totals => $_getN(1);
+  @$pb.TagNumber(2)
+  set totals(UsageTotals value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTotals() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTotals() => $_clearField(2);
+  @$pb.TagNumber(2)
+  UsageTotals ensureTotals() => $_ensure(1);
+}
+
+class UsageChat extends $pb.GeneratedMessage {
+  factory UsageChat({
+    $core.String? chatId,
+    $core.String? title,
+    $core.String? agent,
+    UsageTotals? totals,
+  }) {
+    final result = UsageChat._();
+    if (chatId != null) result.chatId = chatId;
+    if (title != null) result.title = title;
+    if (agent != null) result.agent = agent;
+    if (totals != null) result.totals = totals;
+    return result;
+  }
+
+  UsageChat._();
+
+  factory UsageChat.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      UsageChat()..mergeFromBuffer(data, registry);
+  factory UsageChat.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      UsageChat()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UsageChat',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: UsageChat.$_createMessage)
+    ..aOS(1, _omitFieldNames ? '' : 'chatId')
+    ..aOS(2, _omitFieldNames ? '' : 'title')
+    ..aOS(3, _omitFieldNames ? '' : 'agent')
+    ..aOM<UsageTotals>(4, _omitFieldNames ? '' : 'totals',
+        subBuilder: UsageTotals.$_createMessage)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UsageChat clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UsageChat copyWith(void Function(UsageChat) updates) =>
+      super.copyWith((message) => updates(message as UsageChat)) as UsageChat;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use UsageChat() / UsageChat.new instead')
+  static UsageChat create() => UsageChat._();
+  static $pb.GeneratedMessage $_createMessage() => UsageChat._();
+  @$core.override
+  UsageChat createEmptyInstance() => UsageChat._();
+  @$core.pragma('dart2js:noInline')
+  static UsageChat getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UsageChat>(UsageChat.$_createMessage);
+  static UsageChat? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get chatId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set chatId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasChatId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearChatId() => $_clearField(1);
+
+  /// The chat's name or title; "" when the chat is gone (its usage stays).
+  @$pb.TagNumber(2)
+  $core.String get title => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set title($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTitle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTitle() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get agent => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set agent($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAgent() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAgent() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  UsageTotals get totals => $_getN(3);
+  @$pb.TagNumber(4)
+  set totals(UsageTotals value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasTotals() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearTotals() => $_clearField(4);
+  @$pb.TagNumber(4)
+  UsageTotals ensureTotals() => $_ensure(3);
+}
+
+/// An account limit as the agent reported it (Claude's rate limits).
+class UsageLimit extends $pb.GeneratedMessage {
+  factory UsageLimit({
+    $core.String? agent,
+    $core.String? kind,
+    $core.String? status,
+    $core.double? utilization,
+    $fixnum.Int64? resetsAt,
+    $fixnum.Int64? seen,
+  }) {
+    final result = UsageLimit._();
+    if (agent != null) result.agent = agent;
+    if (kind != null) result.kind = kind;
+    if (status != null) result.status = status;
+    if (utilization != null) result.utilization = utilization;
+    if (resetsAt != null) result.resetsAt = resetsAt;
+    if (seen != null) result.seen = seen;
+    return result;
+  }
+
+  UsageLimit._();
+
+  factory UsageLimit.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      UsageLimit()..mergeFromBuffer(data, registry);
+  factory UsageLimit.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      UsageLimit()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UsageLimit',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: UsageLimit.$_createMessage)
+    ..aOS(1, _omitFieldNames ? '' : 'agent')
+    ..aOS(2, _omitFieldNames ? '' : 'kind')
+    ..aOS(3, _omitFieldNames ? '' : 'status')
+    ..aD(4, _omitFieldNames ? '' : 'utilization')
+    ..aInt64(5, _omitFieldNames ? '' : 'resetsAt')
+    ..aInt64(6, _omitFieldNames ? '' : 'seen')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UsageLimit clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UsageLimit copyWith(void Function(UsageLimit) updates) =>
+      super.copyWith((message) => updates(message as UsageLimit)) as UsageLimit;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use UsageLimit() / UsageLimit.new instead')
+  static UsageLimit create() => UsageLimit._();
+  static $pb.GeneratedMessage $_createMessage() => UsageLimit._();
+  @$core.override
+  UsageLimit createEmptyInstance() => UsageLimit._();
+  @$core.pragma('dart2js:noInline')
+  static UsageLimit getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UsageLimit>(UsageLimit.$_createMessage);
+  static UsageLimit? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get agent => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set agent($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasAgent() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAgent() => $_clearField(1);
+
+  /// Its window as the agent names it ("five_hour", "seven_day"); "" when
+  /// it doesn't say.
+  @$pb.TagNumber(2)
+  $core.String get kind => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set kind($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasKind() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearKind() => $_clearField(2);
+
+  /// "allowed", "allowed_warning" or "rejected", as the agent says.
+  @$pb.TagNumber(3)
+  $core.String get status => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set status($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasStatus() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearStatus() => $_clearField(3);
+
+  /// How much of it is used, 0 to 1, when the agent said.
+  @$pb.TagNumber(4)
+  $core.double get utilization => $_getN(3);
+  @$pb.TagNumber(4)
+  set utilization($core.double value) => $_setDouble(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasUtilization() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearUtilization() => $_clearField(4);
+
+  /// When it resets (ms); 0 when not said.
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get resetsAt => $_getI64(4);
+  @$pb.TagNumber(5)
+  set resetsAt($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasResetsAt() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearResetsAt() => $_clearField(5);
+
+  /// When the agent reported it (ms).
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get seen => $_getI64(5);
+  @$pb.TagNumber(6)
+  set seen($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSeen() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSeen() => $_clearField(6);
+}
+
 class NushiServiceApi {
   final $pb.RpcClient _client;
 
@@ -35005,6 +35687,15 @@ class NushiServiceApi {
           $pb.ClientContext? ctx, LinkChatPullRequest request) =>
       _client.invoke<LinkChatPullResponse>(
           ctx, 'NushiService', 'LinkChatPull', request, LinkChatPullResponse());
+
+  /// What the chats' turns used from from to to (ADR 0136): totals, by day,
+  /// agent, model and project folder, the costliest chats, and the account
+  /// limits agents reported. The Mac's only: it names project folders and
+  /// chats' titles, which the phone has no page for. API 126.
+  $async.Future<GetUsageResponse> getUsage(
+          $pb.ClientContext? ctx, GetUsageRequest request) =>
+      _client.invoke<GetUsageResponse>(
+          ctx, 'NushiService', 'GetUsage', request, GetUsageResponse());
 
   /// Streams every change to every chat from now on. The first message is
   /// empty: it says the subscription is live.

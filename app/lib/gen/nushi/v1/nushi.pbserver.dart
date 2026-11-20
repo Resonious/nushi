@@ -329,6 +329,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
       $pb.ServerContext ctx, $0.FindChatPullRequest request);
   $async.Future<$0.LinkChatPullResponse> linkChatPull(
       $pb.ServerContext ctx, $0.LinkChatPullRequest request);
+  $async.Future<$0.GetUsageResponse> getUsage(
+      $pb.ServerContext ctx, $0.GetUsageRequest request);
   $async.Future<$0.EventsResponse> events(
       $pb.ServerContext ctx, $0.EventsRequest request);
 
@@ -642,6 +644,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return $0.FindChatPullRequest();
       case 'LinkChatPull':
         return $0.LinkChatPullRequest();
+      case 'GetUsage':
+        return $0.GetUsageRequest();
       case 'Events':
         return $0.EventsRequest();
       default:
@@ -971,6 +975,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return findChatPull(ctx, request as $0.FindChatPullRequest);
       case 'LinkChatPull':
         return linkChatPull(ctx, request as $0.LinkChatPullRequest);
+      case 'GetUsage':
+        return getUsage(ctx, request as $0.GetUsageRequest);
       case 'Events':
         return events(ctx, request as $0.EventsRequest);
       default:
