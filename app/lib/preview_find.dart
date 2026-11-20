@@ -335,14 +335,15 @@ class _RenderLineHits extends RenderProxyBox {
   }
 }
 
-/// The paragraph whose matches a [LineHits] under [root] paints, if one is
-/// laid out there.
-RenderParagraph? hitParagraphIn(RenderObject root) {
+/// The paragraph whose matches the [nth] [LineHits] under [root] (from 0,
+/// in paint order) paints, if one is laid out there.
+RenderParagraph? hitParagraphIn(RenderObject root, [int nth = 0]) {
   RenderParagraph? found;
+  var seen = 0;
   void visit(RenderObject o) {
     if (found != null) return;
     if (o is _RenderLineHits) {
-      found = o._paragraph();
+      if (seen++ == nth) found = o._paragraph();
     } else {
       o.visitChildren(visit);
     }

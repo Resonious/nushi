@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
+import 'package:nushi/preview_find.dart';
 import 'package:nushi/theme/theme.dart';
+import 'package:nushi/transcript_find.dart';
 
 /// [text] indented two spaces a level, when it is JSON; else as it is.
 String prettyJson(String text) {
@@ -72,7 +75,10 @@ String prettyJson(String text) {
 /// A CSV file as a table: its first row the header, then up to
 /// [CsvTable.rows] rows (saying so when there are more), each column as
 /// wide as its longest cell, up to 40 characters; wider than the pane, it
-/// scrolls sideways.
+/// scrolls sideways. Under a [FindSlot] (the Files pane's) ⌘F finds in
+/// the cells it shows, the header's too, every row though only those in
+/// sight are laid out; a match cut off by its cell's ellipsis tints the
+/// cell.
 class CsvTable extends StatefulWidget {
   const new(this.text, {super.key, this.padding});
 
@@ -86,7 +92,11 @@ class CsvTable extends StatefulWidget {
   State<CsvTable> createState() => _CsvTableState();
 }
 
-class _CsvTableState extends State<CsvTable> {
+/// A match in a table: its row (0 the header), its cell and its
+/// characters there.
+typedef _CellHit = ({int row, int cell, int start, int end});
+
+class _CsvTableState extends State<CsvTable> with FindInSlot<CsvTable> {
   late (List<List<String>>, int) _csv = _parse();
   (List<List<String>>, int) _parse() =>
       parseCsv(widget.text, keep: CsvTable.rows + 1);
@@ -94,21 +104,161 @@ class _CsvTableState extends State<CsvTable> {
   @override
   void didUpdateWidget(CsvTable old) {
     super.didUpdateWidget(old);
-    if (old.text != widget.text) _csv = _parse();
+    if (old.text != widget.text) {
+      _csv = _parse();
+      // The find looks in the new cells, once this build is done.
+      if (find?.query != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _look(_looked);
+        });
+      }
+    }
   }
 
   final _across = ScrollController();
+  final _down = ScrollController();
+
+  /// The find's matches, for the lowered query [_looked]; each cell's, by
+  /// its row and cell; the last ask brought into view; whether the table
+  /// starts below the bar, for a match in its first rows.
+  List<_CellHit> _hits = const [];
+  Map<(int, int), List<int>> _byCell = const {};
+  String _looked = '';
+  int _shownAsk = -1;
+  bool _roomAbove = false;
 
   @override
   void dispose() {
     _across.dispose();
+    _down.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
+  void findChanged() {
+    final f = find!;
+    final q = (f.query ?? '').toLowerCase();
+    if (f.query == null) _roomAbove = false;
+    if (q != _looked) _look(q);
+    setState(() {}); // the cells' marks
+    _showCurrent();
+  }
+
+  void _look(String query) {
+    _looked = query;
+    final hits = <_CellHit>[];
+    final byCell = <(int, int), List<int>>{};
+    for (final (r, cells) in _csv.$1.indexed) {
+      for (final (c, text) in cells.indexed) {
+        for (final (start, end) in hitsIn(text, query)) {
+          (byCell[(r, c)] ??= []).add(hits.length);
+          hits.add((row: r, cell: c, start: start, end: end));
+        }
+      }
+    }
+    _hits = hits;
+    _byCell = byCell;
+    find?.found([for (final h in hits) '${h.row}:${h.cell}:${h.start}']);
+  }
+
+  /// Cell [c] of row [r]'s matches, as its [LineHits] paints them.
+  List<LineHit> _cellHits(int r, int c) {
+    final at = _byCell[(r, c)];
+    final f = find;
+    if (at == null || f == null || f.query == null) return const [];
+    final now = _hits.isEmpty ? -1 : f.at.clamp(0, _hits.length - 1);
+    return [
+      for (final n in at)
+        (start: _hits[n].start, end: _hits[n].end, now: n == now),
+    ];
+  }
+
+  void _showCurrent() {
+    final f = find;
+    if (f == null || f.query == null || f.asked == _shownAsk) return;
+    _shownAsk = f.asked;
+    if (_hits.isEmpty) return;
+    _reveal(_hits[f.at.clamp(0, _hits.length - 1)], 30);
+  }
+
+  /// Takes the table to [hit]: the header's sideways only; a row's, once
+  /// it's laid out, onto the match ([revealFound]), until then near it.
+  void _reveal(_CellHit hit, int tries) =>
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final view = context.findRenderObject();
+        if (!mounted || tries == 0 || view is! RenderBox) return;
+        RenderParagraph? p;
+        if (hit.row == 0) {
+          if (_header.currentContext?.findRenderObject() case final h?) {
+            p = hitParagraphIn(h, hit.cell);
+          }
+          if (p != null) p.showOnScreen(rect: _rectOf(p, hit));
+          return;
+        }
+        final s = _sliverOf(_list.currentContext?.findRenderObject());
+        if (s == null || s.firstChild == null || !_down.hasClients) return;
+        for (var c = s.firstChild; c != null; c = s.childAfter(c)) {
+          if (s.indexOf(c) != hit.row - 1) continue;
+          p = hitParagraphIn(c, hit.cell);
+          if (p == null || !p.hasSize) return;
+          final r = revealFound(
+            scroll: _down,
+            box: p,
+            rect: _rectOf(p, hit),
+            view: view,
+            roomAbove: _roomAbove,
+          );
+          if (r == Revealed.needsRoom) {
+            setState(() => _roomAbove = true);
+            _reveal(hit, tries - 1);
+          }
+          return;
+        }
+        final first = s.firstChild!;
+        final each = first.size.height;
+        final pos = _down.position;
+        pos.jumpTo(
+          ((hit.row - 1) * each - pos.viewportDimension * 0.3).clamp(
+            pos.minScrollExtent,
+            pos.maxScrollExtent,
+          ),
+        );
+        _reveal(hit, tries - 1);
+      });
+
+  static Rect _rectOf(RenderParagraph p, _CellHit hit) {
+    final boxes = hitBoxes(p, hit.start, hit.end);
+    return boxes.isEmpty
+        ? Offset.zero & p.size
+        : boxes.reduce((a, b) => a.expandToInclude(b));
+  }
+
+  static RenderSliverMultiBoxAdaptor? _sliverOf(RenderObject? root) {
+    RenderSliverMultiBoxAdaptor? found;
+    void visit(RenderObject o) {
+      if (found != null) return;
+      if (o is RenderSliverMultiBoxAdaptor) {
+        found = o;
+      } else {
+        o.visitChildren(visit);
+      }
+    }
+
+    if (root != null) visit(root);
+    return found;
+  }
+
+  final GlobalKey _header = GlobalKey();
+  final GlobalKey _list = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) =>
+      FindFrame(find: find, child: _table(context));
+
+  Widget _table(BuildContext context) {
     final theme = NushiTheme.of(context);
     final t = theme.t;
+    final colors = findColors(t);
     final (rows, total) = _csv;
     if (rows.isEmpty) {
       return Center(
@@ -138,22 +288,28 @@ class _CsvTableState extends State<CsvTable> {
     ];
     final width = widths.fold(0.0, (a, w) => a + w);
     final pad = widget.padding ?? EdgeInsets.zero;
-    Widget row(List<String> cells, TextStyle style, {bool header = false}) =>
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: header ? t.raised : null,
-            border: Border(bottom: BorderSide(color: t.line)),
-          ),
-          child: Row(
-            children: [
-              for (var c = 0; c < columns; c++)
-                SizedBox(
-                  width: widths[c],
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
+    Widget row(int r, TextStyle style, {Key? key}) {
+      final cells = rows[r];
+      final header = r == 0;
+      return DecoratedBox(
+        key: key,
+        decoration: BoxDecoration(
+          color: header ? t.raised : null,
+          border: Border(bottom: BorderSide(color: t.line)),
+        ),
+        child: Row(
+          children: [
+            for (var c = 0; c < columns; c++)
+              SizedBox(
+                width: widths[c],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  child: LineHits(
+                    hits: _cellHits(r, c),
+                    colors: colors,
                     child: Text(
                       c < cells.length ? cells[c] : '',
                       maxLines: 1,
@@ -162,12 +318,20 @@ class _CsvTableState extends State<CsvTable> {
                     ),
                   ),
                 ),
-            ],
-          ),
-        );
+              ),
+          ],
+        ),
+      );
+    }
+
     final body = rows.length - 1;
     return Padding(
-      padding: EdgeInsets.fromLTRB(pad.left, pad.top, pad.right, 0),
+      padding: EdgeInsets.fromLTRB(
+        pad.left,
+        pad.top + (_roomAbove ? FindBar.height : 0),
+        pad.right,
+        0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -191,13 +355,14 @@ class _CsvTableState extends State<CsvTable> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        row(rows.first, head, header: true),
+                        row(0, head, key: _header),
                         Expanded(
                           child: ListView.builder(
+                            key: _list,
+                            controller: _down,
                             padding: EdgeInsets.only(bottom: pad.bottom),
                             itemCount: body,
-                            itemBuilder: (context, i) =>
-                                row(rows[i + 1], style),
+                            itemBuilder: (context, i) => row(i + 1, style),
                           ),
                         ),
                       ],

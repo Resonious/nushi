@@ -146,7 +146,7 @@ The chat's own actions are also in the menu bar's Chat menu, its ⋯ menu, and i
 - **In the chat**, every match is marked in the text, the current one in the accent, and the chat goes to it and stays there, however much the agent writes, until you go back to the bottom. A match in something closed (a tool row, a thought, a subagent's steps) marks the row with how many it holds, and shows in place once you open it. ⏎ and ⇧⏎ go through the matches; Esc closes. In a long chat it finds in what's loaded, and says so under the field ("Searching loaded messages"): Load all brings in the rest, and the find goes on in all of it.
 - **In Changes**, it lists the files with the text in their path or either side and marks it in the diff. ⏎ and ⇧⏎ go through the file shown and on to the next file; Esc closes.
 - **In a focused terminal**, it finds in its scrollback.
-- **In the Files pane**, with the focus in a file, it finds in the file as it shows: rendered Markdown, the editor's text, or a read-only file's every line. Matches are marked and counted as in the chat; ⏎ and ⇧⏎ go through them; Esc closes and the focus goes back to the file.
+- **In the Files pane**, with the focus in a file, it finds in the file as it shows: rendered Markdown, a CSV's table (the rows it shows, and its header), the editor's text, or a read-only file's every line. Matches are marked and counted as in the chat; ⏎ and ⇧⏎ go through them; Esc closes and the focus goes back to the file.
 
 ## When a turn fails
 

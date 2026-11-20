@@ -100,7 +100,7 @@ Press ⌘F with a file in the Files pane to find text in it, the same way you fi
 3. Press ⏎ for the next match and ⇧⏎ for the one before. The file scrolls to each one.
 4. Press Esc to close the bar.
 
-It works in rendered Markdown, in a file you're editing, and in one that shows read-only (it finds in every line, not just those on screen).
+It works in rendered Markdown, in a CSV's table (its header too; a match hidden past a cell's "…" marks the whole cell), in a file you're editing, and in one that shows read-only. It finds in every line or row, not just those on screen.
 
 ## Use the browser
 
