@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -46,7 +47,7 @@ func chatKinds(dir string, known []knownagents.Agent, agentSvc *agents.Service) 
 		kinds = append(kinds, chats.Kind{
 			Harness: harness,
 			MCP:     a.MCP != nil,
-			Explain: agentSvc.Explain(name),
+			Explain: signedOut(a.Agent.SignIn, agentSvc.Explain(name)),
 			Ready:   func() error { _, err := agentSvc.Run(name); return err },
 			Launch: func(h acp.Client, log *slog.Logger) (chats.Agent, error) {
 				run, err := agentSvc.Run(name)
@@ -71,4 +72,33 @@ func newTrust(known []knownagents.Agent, st trust.Store) *trust.Service {
 		byName[a.Agent.Name] = a.Trust
 	}
 	return trust.New(byName, st)
+}
+
+// signedOutError is a start the agent refused for want of a sign-in, in
+// the user's words; the agent's own error stays underneath.
+type signedOutError struct {
+	signIn string
+	err    error
+}
+
+func (e *signedOutError) Error() string {
+	if e.signIn == "" {
+		return "it isn't signed in. Sign in with its CLI in a terminal, then start the chat again."
+	}
+	return "it isn't signed in. Run " + e.signIn + " in a terminal, then start the chat again."
+}
+
+func (e *signedOutError) Unwrap() error { return e.err }
+
+// signedOut is explain, but for a start the agent refused with ACP's
+// Authentication required (Codex with no login, through either of its
+// agents): Nushi signs no agent in, so it says how the user does, signIn
+// being the command ("": unknown).
+func signedOut(signIn string, explain func(error) error) func(error) error {
+	return func(err error) error {
+		if aerr := (*acp.Error)(nil); errors.As(err, &aerr) && aerr.Code == acp.ErrorCodeAuthenticationRequired {
+			return &signedOutError{signIn: signIn, err: err}
+		}
+		return explain(err)
+	}
 }

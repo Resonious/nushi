@@ -35,6 +35,9 @@ type Agent struct {
 	// SignedIn says whether the CLI is signed in, "yes" or "no", or ""
 	// when it can't tell cheaply; run runs the CLI with args (Probe).
 	SignedIn func(run func(args ...string) ([]byte, error)) string
+	// SignIn is what the user runs in a terminal to sign the CLI in:
+	// "codex login". "": Nushi doesn't know it.
+	SignIn string
 	// Own says whether the agent runs, for now, through Nushi's own ACP
 	// agent rather than its Adapter: Codex through the Go agent, as the
 	// user's setting says (ADR 0142). It is asked each time, so a change

@@ -87,7 +87,7 @@ func All(projects string, codexGo func() bool) []Agent {
 		},
 		{
 			Harness: codex.Harness{}, Local: codex.Local{},
-			Agent: agents.Agent{CLI: codex.CLI, Tested: codex.Tested,
+			Agent: agents.Agent{CLI: codex.CLI, Tested: codex.Tested, SignIn: "codex login",
 				Adapter: &agents.Adapter{Lock: codex.Adapter, Package: codex.AdapterPackage, Bin: codex.AdapterBin, Download: codex.AdapterDownload, Disk: codex.AdapterDisk},
 				// The Go agent needs no Node and nothing set up.
 				Own: codexGo},
