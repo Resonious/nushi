@@ -12,23 +12,19 @@ import (
 type Stat struct {
 	Pid, Ppid int
 	Pgid      int // its process group (pgrp)
-	Session   int
 	TTY       int // its controlling terminal's device number (tty_nr), 0 for none
 	State     byte
 	Comm      string // the executable's name, at most 15 bytes, any of them
 	// Started is when it started by the wall clock as it is now: btime,
 	// read anew for each call (or the boot time given to AllFrom), plus
-	// SinceBoot, as procps computes ps's lstart. btime is the wall clock less the time since boot, in whole
-	// seconds, so a step of the clock (NTP, chrony's makestep,
+	// how long after the boot it started (starttime), as procps computes
+	// ps's lstart. btime is the wall clock less the time since boot, in
+	// whole seconds, so a step of the clock (NTP, chrony's makestep,
 	// settimeofday, a VM's time sync) moves it, and Started with it, by
 	// the step. That keeps Started comparable with time.Now and with ps
 	// (claudehistory's procStart), but the same process may get another
-	// Started after a step: to know a process again across one, or
-	// across a daemon's restart, compare SinceBoot within one BootID.
+	// Started after a step.
 	Started time.Time
-	// SinceBoot is how long after the boot it started (starttime), on
-	// the boot clock, which no step of the wall clock moves.
-	SinceBoot time.Duration
 }
 
 // userHZ is the unit of stat's times. It is fixed at 100 in the Linux
@@ -54,7 +50,7 @@ func parseStat(b []byte, boot time.Time) (Stat, error) {
 	if len(f) < 20 || len(f[0]) != 1 {
 		return Stat{}, fmt.Errorf("stat of %d: %d fields after comm", pid, len(f))
 	}
-	var n [4]int
+	var n [4]int // ppid, pgrp, session (only checked) and tty_nr
 	for i := range n {
 		if n[i], err = strconv.Atoi(string(f[1+i])); err != nil {
 			return Stat{}, fmt.Errorf("stat of %d: field %d: %w", pid, 4+i, err)
@@ -66,9 +62,9 @@ func parseStat(b []byte, boot time.Time) (Stat, error) {
 	}
 	since := time.Duration(ticks) * (time.Second / userHZ)
 	return Stat{
-		Pid: pid, Ppid: n[0], Pgid: n[1], Session: n[2], TTY: n[3],
+		Pid: pid, Ppid: n[0], Pgid: n[1], TTY: n[3],
 		State: f[0][0], Comm: string(b[open+1 : end]),
-		Started: boot.Add(since), SinceBoot: since,
+		Started: boot.Add(since),
 	}, nil
 }
 

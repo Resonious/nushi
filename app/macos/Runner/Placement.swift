@@ -61,11 +61,6 @@ enum Placement {
     [r.minX, r.minY, r.width, r.height].map { String(Double($0)) }.joined(separator: " ")
   }
 
-  /// The frame AppKit saved under the old autosave name ("NSWindow Frame
-  /// Nushi": the frame, the screen's, then a tile state), read once to
-  /// move to `NushiWindowPlacement`.
-  static func legacy(_ text: String?) -> CGRect? { rect(text) }
-
   /// [f] no bigger than [room] and moved inside it, as little as it takes.
   static func fit(_ f: CGRect, in room: CGRect) -> CGRect {
     let w = min(f.width, room.width), h = min(f.height, room.height)

@@ -10,6 +10,7 @@ import 'package:nushi/preview_entry.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/tool_parts.dart' show plainPath;
 import 'package:nushi/web_page.dart';
+import 'package:nushi/web_views.dart';
 
 // Pages where the app has no web view of its own (Linux, ADR 0104): a file's
 // preview and a browser tab each show a placeholder in the page's place,
@@ -118,6 +119,37 @@ class OutsideTab implements BrowserHost {
     _failed.dispose();
     _blocked.dispose();
   }
+}
+
+/// The web views of a platform whose browser tabs open outside (Linux's,
+/// and Windows's until it has its own, ADR 0134): not embedded, so a link
+/// opens outside too, each tab an [OutsideTab], no web view to take
+/// presses or keep data. It declares `implements`, not `on`: a platform's
+/// class mixes it in beside its own [WebViews].
+mixin OutsideTabs implements WebViews {
+  @override
+  bool get embedded => false;
+
+  @override
+  BrowserHost tab(BrowserTab tab) => OutsideTab(tab);
+
+  /// The browser that opens https, as [openWithBrowser], with its errors,
+  /// for http and https alone (never a file, whatever a caller passes).
+  @override
+  Future<void> openLink(Uri url) async {
+    if (url.scheme != 'http' && url.scheme != 'https') {
+      throw const BrowserError('Only a web link opens in the browser.');
+    }
+    await openWithBrowser(url);
+  }
+
+  /// No web view takes presses.
+  @override
+  Future<Duration?> sincePress({bool pointerOnly = false}) async => null;
+
+  /// The browser keeps its own data.
+  @override
+  Future<void> clearData() async {}
 }
 
 /// What a page's placeholder says (ADR 0104).

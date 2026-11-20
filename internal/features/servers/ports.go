@@ -3,7 +3,6 @@ package servers
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/netip"
 	"path/filepath"
 	"strconv"
@@ -43,7 +42,7 @@ func (s *Service) pickPort(ctx context.Context, sv *server) (int, error) {
 		if held {
 			continue
 		}
-		if !taken(ctx, p) {
+		if dialLoopback(ctx, p) == "" {
 			return p, nil
 		}
 		s.mu.Lock()
@@ -56,14 +55,19 @@ func (s *Service) pickPort(ctx context.Context, sv *server) (int, error) {
 	return 0, fmt.Errorf("no free port from %d to %d", e.Port, last)
 }
 
-// taken says whether a connection to localhost's port p is taken.
-func taken(ctx context.Context, p int) bool {
-	for _, host := range []string{"127.0.0.1", "::1"} {
-		if dials(ctx, net.JoinHostPort(host, strconv.Itoa(p))) {
-			return true
+// loopback is localhost's addresses: a server may listen on either.
+var loopback = []netip.Addr{netip.AddrFrom4([4]byte{127, 0, 0, 1}), netip.IPv6Loopback()}
+
+// dialLoopback is the first of 127.0.0.1 and ::1 on which a connection to
+// localhost's port is taken, as host:port, or "" when neither is.
+func dialLoopback(ctx context.Context, port int) string {
+	for _, a := range loopback {
+		at := netip.AddrPortFrom(a, uint16(port)).String() //nolint:gosec // a port, 1 to 65535
+		if dials(ctx, at) {
+			return at
 		}
 	}
-	return false
+	return ""
 }
 
 // holder names the program a connection to localhost's port reaches, as
@@ -76,7 +80,7 @@ func (s *Service) holder(port int) string {
 	if err != nil {
 		return ""
 	}
-	for _, a := range []netip.Addr{netip.AddrFrom4([4]byte{127, 0, 0, 1}), netip.IPv6Loopback()} {
+	for _, a := range loopback {
 		reach := listeners.Reaching(ls, netip.AddrPortFrom(a, uint16(port))) //nolint:gosec // a port, 1 to 65535
 		if len(reach) == 0 {
 			continue
@@ -95,6 +99,11 @@ func (s *Service) holder(port int) string {
 func (s *Service) unreserve(sv *server) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	s.unreserveLocked(sv)
+}
+
+// unreserveLocked lets the server's port go. Called with s.mu.
+func (s *Service) unreserveLocked(sv *server) {
 	for p, id := range s.reserved {
 		if id == sv.id {
 			delete(s.reserved, p)

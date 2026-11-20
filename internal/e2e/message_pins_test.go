@@ -58,9 +58,7 @@ func TestPinMessage(t *testing.T) {
 	}
 
 	// Kept across a restart, the chat reopened from Nushi's copy.
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	a.follow(id, a.get(id))
 	if got := pinned(); !slices.Equal(got, []string{reply}) {
 		t.Fatalf("after a restart: %v", got)

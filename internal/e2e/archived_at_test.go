@@ -61,9 +61,7 @@ func TestArchivedUnixMs(t *testing.T) {
 		t.Fatalf("archived anew: %d, before %d", second, first)
 	}
 
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	if got := at(x); got != second {
 		t.Fatalf("after a restart: %d, want %d", got, second)
 	}

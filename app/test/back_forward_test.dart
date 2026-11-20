@@ -21,8 +21,6 @@ import 'harness.dart';
 // Back and Forward through the places visited (ADR 0119): the chevrons
 // after the sidebar's button, ⌘[ and ⌘], View's items and the palette's.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const _back = 'Back\u2002⌘[';
 const _forward = 'Forward\u2002⌘]';
 
@@ -34,7 +32,6 @@ Future<Daemon> _app(
 }) async {
   viewport(tester, Size(width, 700), brightness: brightness);
   sidebarHidden.value = hidden;
-  paneWidths.value = {};
   final d = await FakeDaemon([
     chat('a', 'claude', 'Fix the login redirect'),
     chat('b', 'codex', 'Bump the API version', age: 1),
@@ -54,13 +51,6 @@ Future<void> _visit(WidgetTester tester, Daemon d, List<String> ids) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> _meta(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
-}
-
 /// Whether the button named [tooltip] can be pressed.
 bool _on(WidgetTester tester, String tooltip) =>
     tester
@@ -74,18 +64,8 @@ bool _on(WidgetTester tester, String tooltip) =>
     null;
 
 /// View's item [label] in the menu bar.
-PlatformMenuItem _viewItem(WidgetTester tester, String label) {
-  final view = tester
-      .widget<PlatformMenuBar>(find.byType(PlatformMenuBar))
-      .menus
-      .whereType<PlatformMenu>()
-      .firstWhere((m) => m.label == 'View');
-  Iterable<PlatformMenuItem> items(PlatformMenuItem m) => switch (m) {
-    PlatformMenuItemGroup(:final members) => members.expand(items),
-    _ => [m],
-  };
-  return view.menus.expand(items).firstWhere((m) => m.label == label);
-}
+PlatformMenuItem _viewItem(WidgetTester tester, String label) =>
+    viewItems(tester).firstWhere((m) => m.label == label);
 
 void main() {
   setUpAll(loadFonts);
@@ -170,7 +150,7 @@ void main() {
     await _visit(tester, d, ['a']);
     expect(_on(tester, _forward), isFalse);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⌘[ and ⌘], from the composer too; ⌥⌘↑ and ⌥⌘↓ go through '
       'the sidebar instead', (tester) async {
@@ -179,9 +159,9 @@ void main() {
     // The composer has the focus.
     await tester.tap(find.byType(EditableText).first);
     await tester.pump();
-    await _meta(tester, LogicalKeyboardKey.bracketLeft);
+    await cmdKey(tester, LogicalKeyboardKey.bracketLeft);
     expect(d.selectedId, 'c');
-    await _meta(tester, LogicalKeyboardKey.bracketRight);
+    await cmdKey(tester, LogicalKeyboardKey.bracketRight);
     expect(d.selectedId, 'a');
     // The sidebar's order: b, a (nushi's, the newest first), then c.
     expect(chatOrder(d).map((c) => c.id), ['a', 'b', 'c']);
@@ -195,7 +175,7 @@ void main() {
     expect(keyLabel(previousChatKey), '⌥⌘↑');
     expect(keyLabel(backKey), '⌘[');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('an archived or deleted chat is passed over', (tester) async {
     final d = await _app(tester);
@@ -211,7 +191,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_on(tester, _forward), isFalse, reason: 'b archived, c gone');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Jira and GitHub are places too; Settings isn’t', (tester) async {
     final d = await _app(tester);
@@ -232,7 +212,7 @@ void main() {
     expect(d.place, const GitHubPlace());
     expect(_viewItem(tester, 'Forward').shortcut, forwardKey);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the palette has them', (tester) async {
     final d = await _app(tester);
@@ -246,7 +226,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(d.selectedId, 'a');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('on Linux Alt+Left and Alt+Right, which a text field keeps', (
     tester,
@@ -308,7 +288,7 @@ void main() {
         matchesGoldenFile('goldens/title_buttons_$name.png'),
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   group('renders', () {
@@ -332,7 +312,7 @@ void main() {
               'title_buttons_${width.toInt()}_${b.name}_$state',
             );
             d.dispose();
-          }, variant: _mac);
+          }, variant: onMac);
         }
       }
     }

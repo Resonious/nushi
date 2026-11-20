@@ -28,12 +28,17 @@ type Reader interface {
 	// SetSkillOn turns one of its skills on or off, found by its source
 	// and name among those it lists for folder.
 	SetSkillOn(ctx context.Context, folder, source, name string, on bool) error
-	// CanTrash says why Trash wouldn't move path, for what it is or where
-	// it is, and moves nothing: nil for a skill's folder Trash takes.
-	CanTrash(ctx context.Context, folder, path string) error
-	// Trash moves one of its own skills' folders to the Trash (shared
-	// ones go through Service.Trash): only one CanTrash passes.
-	Trash(ctx context.Context, folder, path string) error
+	// Own are the places its own skills' folders are in for folder, the
+	// project's and yours: Trash takes one of its skills (and a link of
+	// its to a shared one) only from right in one of them.
+	Own(folder string) (project, yours []string)
+}
+
+// Refuser is an agent with reasons of its own a skill in one of its
+// places stays out of the Trash (opencode's skills in a group or in one
+// file), said before the place's check.
+type Refuser interface {
+	Refuse(folder, path string) error
 }
 
 // SharedReader is an agent that loads shared skills it doesn't list as
@@ -74,15 +79,15 @@ type Linker interface {
 type Service struct {
 	readers map[string]Reader
 	order   []string // the agents' names, as the app lists them
-	// trash moves a shared skill's folder to the Trash, only right in one
-	// of the project's roots or yours (skillfile.Trash); canTrash says why
-	// it wouldn't, and moves nothing (skillfile.CanTrash).
+	// trash moves a skill's folder to the Trash, only right in one of the
+	// project's roots or yours (skillfile.Trash); canTrash says why it
+	// wouldn't, and moves nothing (skillfile.CanTrash).
 	trash    func(ctx context.Context, project, yours []string, path string) error
 	canTrash func(project, yours []string, path string) error
 }
 
 // New takes each agent's reader, in the order the agents are listed, what
-// says why a shared skill's folder wouldn't go to the Trash
+// says why a skill's folder wouldn't go to the Trash
 // (skillfile.CanTrash) and what moves it there (skillfile.Trash).
 func New(order []string, readers map[string]Reader, canTrash func(project, yours []string, path string) error,
 	trash func(ctx context.Context, project, yours []string, path string) error) *Service {
@@ -132,10 +137,10 @@ func (s *Service) List(ctx context.Context, agent, folder string) (model.Skills,
 	}
 	out.Skills = slices.DeleteFunc(out.Skills, func(sk model.Skill) bool { return sk.Source == "shared" || vias[sk.Path] })
 	for i := range out.Skills {
-		out.Skills[i].NoTrash = r.CanTrash(ctx, folder, out.Skills[i].Path) != nil
+		out.Skills[i].NoTrash = s.canTrashOwn(r, folder, out.Skills[i].Path) != nil
 	}
 	for _, sk := range shared {
-		sk.NoTrash = s.canTrashShared(ctx, folder, sk) != nil
+		sk.NoTrash = s.canTrashShared(folder, sk) != nil
 		_, err := s.linker(ctx, r, agent, folder, sk.Path, shared)
 		sk.NoLink = err != nil
 		out.Skills = append(out.Skills, sk)
@@ -277,12 +282,34 @@ func place(sk model.Skill) (project, yours []string) {
 	return []string{filepath.Dir(sk.Path)}, nil
 }
 
+// canTrashOwn says why Trash wouldn't move path, a skill (or a link to a
+// shared one) of the agent whose reader is r, and moves nothing.
+func (s *Service) canTrashOwn(r Reader, folder, path string) error {
+	if rf, ok := r.(Refuser); ok {
+		if err := rf.Refuse(folder, path); err != nil {
+			return err
+		}
+	}
+	project, yours := r.Own(folder)
+	return s.canTrash(project, yours, path)
+}
+
+// trashOwn moves path, a skill (or a link to a shared one) of the agent
+// whose reader is r, to the Trash: only one canTrashOwn passes.
+func (s *Service) trashOwn(ctx context.Context, r Reader, folder, path string) error {
+	if err := s.canTrashOwn(r, folder, path); err != nil {
+		return err
+	}
+	project, yours := r.Own(folder)
+	return s.trash(ctx, project, yours, path)
+}
+
 // canTrashShared says why Trash wouldn't move the shared skill sk, or a
 // link to it an agent lists, and moves nothing.
-func (s *Service) canTrashShared(ctx context.Context, folder string, sk model.Skill) error {
+func (s *Service) canTrashShared(folder string, sk model.Skill) error {
 	for _, a := range sk.Agents {
 		if a.Via != "" {
-			if err := s.readers[a.Agent].CanTrash(ctx, folder, a.Via); err != nil {
+			if err := s.canTrashOwn(s.readers[a.Agent], folder, a.Via); err != nil {
 				return err
 			}
 		}
@@ -307,14 +334,14 @@ func (s *Service) Trash(ctx context.Context, agent, folder, path string) error {
 		if err != nil {
 			return err
 		}
-		return r.Trash(ctx, folder, path)
+		return s.trashOwn(ctx, r, folder, path)
 	}
-	if err := s.canTrashShared(ctx, folder, shared[i]); err != nil {
+	if err := s.canTrashShared(folder, shared[i]); err != nil {
 		return err
 	}
 	for _, a := range shared[i].Agents {
 		if a.Via != "" {
-			if err := s.readers[a.Agent].Trash(ctx, folder, a.Via); err != nil {
+			if err := s.trashOwn(ctx, s.readers[a.Agent], folder, a.Via); err != nil {
 				return err
 			}
 		}

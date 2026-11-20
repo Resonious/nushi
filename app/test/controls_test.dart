@@ -497,24 +497,22 @@ void main() {
       viewport(tester, const Size(220, 72), ratio: 2);
       await tester.pumpWidget(
         // Without the debug banner, which would lie over it.
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: NushiTheme(tokens).toThemeData(),
-          home: Scaffold(
-            body: Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Builder(
-                  builder: (context) => tooltip(
-                    context,
-                    withKey('Hide file tree', '⇧⌘Y'),
-                    const SizedBox(width: 16, height: 16),
-                  ),
+        themed(
+          Align(
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Builder(
+                builder: (context) => tooltip(
+                  context,
+                  withKey('Hide file tree', '⇧⌘Y'),
+                  const SizedBox(width: 16, height: 16),
                 ),
               ),
             ),
           ),
+          tokens: tokens,
+          banner: false,
         ),
       );
       tester.state<TooltipState>(find.byType(Tooltip)).ensureTooltipVisible();

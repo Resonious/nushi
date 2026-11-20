@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nushi/daemon.dart';
 import 'package:nushi/project_rail.dart';
 import 'package:nushi/project_tile.dart';
 import 'package:nushi/theme/theme.dart';
@@ -16,10 +13,7 @@ import 'project_tile_fixture.dart';
 // The rail in the sidebar is in `project_rail_test.dart`.
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   // Every form of a tile and of the rail's own, in a strip wide enough
   // that a golden isn't a few letters alone.

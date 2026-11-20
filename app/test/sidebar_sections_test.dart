@@ -11,6 +11,7 @@ import 'package:nushi/sidebar_view.dart' show shownProject;
 import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
+import 'harness.dart';
 import 'sidebar_fixture.dart';
 
 Finder _in(String text) =>
@@ -315,8 +316,6 @@ void main() {
     sidebarSections.value = const [
       Section(id: 's1', name: 'Reviews', chats: ['e', 'a', 'b']),
     ];
-    sidebarGroupBy.value = GroupBy.project;
-    sidebarSort.value = SortBy.manual;
     projectRail.value = true;
     sidebarProject.value = '/Users/me/ledger-poc';
     pinnedEveryProject.value = false; // attic's pin out of the way
@@ -378,6 +377,6 @@ void main() {
         matchesGoldenFile('goldens/sidebar_arrange_menu_$name.png'),
       );
       d.dispose();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 }

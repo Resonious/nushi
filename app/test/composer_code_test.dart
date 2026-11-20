@@ -5,6 +5,7 @@ import 'package:nushi/composer_code.dart';
 import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
+import 'harness.dart';
 import 'spell_harness.dart';
 
 // Code in the composer's text shows in the code font (codeRuns, codePaints),
@@ -340,10 +341,7 @@ void main() {
       expect(_styleAt(tester, 4)?.fontFamily, isNot(NushiTheme.codeFont));
       expect(_styleAt(tester, 4)?.fontSize, isNot(0));
       // Undone, it's back, and hidden again.
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-      await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-      await tester.pump();
+      await cmdKey(tester, LogicalKeyboardKey.keyZ, settle: false);
       expect(chat.draft.text.text, 'run `make` now');
       expect(_shown(tester, 9), isFalse, reason: 'the caret is after it');
     });

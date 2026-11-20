@@ -6,15 +6,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
-import 'package:nushi/files_pane.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
-import 'package:nushi/main.dart';
 import 'package:nushi/markdown_outline.dart';
 import 'package:nushi/rail.dart';
-import 'package:nushi/settings.dart';
 
 import 'fake_daemon.dart';
-import 'harness.dart';
+import 'preview_fixture.dart';
+
+export 'preview_fixture.dart' show inPane;
 
 // What the Markdown outline's tests share (markdown_outline_test.dart, its
 // looks in markdown_outline_look_test.dart): a roadmap to preview, the app
@@ -95,22 +94,13 @@ Future<Daemon> outlineApp(
   double width = 1700,
   Brightness? brightness,
   String file = 'docs/roadmap.md',
-}) async {
-  viewport(tester, Size(width, 900), brightness: brightness);
-  showDetails.value = false;
-  paneWidths.value = {};
-  final d = await outlineDaemon().connect(tester);
-  d.select('c');
-  await tester.pumpWidget(NushiApp(daemon: d));
-  await tester.pumpAndSettle();
-  d.chats['c']!.openInFiles(file);
-  await tester.pumpAndSettle();
-  return d;
-}
-
-/// [f] in the preview pane.
-Finder inPane(Finder f) =>
-    find.descendant(of: find.byType(FilesPane), matching: f);
+}) => previewApp(
+  tester,
+  outlineDaemon(),
+  size: Size(width, 900),
+  brightness: brightness,
+  file: file,
+);
 
 /// The rail.
 Finder get rail => find.byType(Rail);

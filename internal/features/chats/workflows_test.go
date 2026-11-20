@@ -140,9 +140,7 @@ func workflowService(t *testing.T, timing Timing, read func(model.Workflow) (mod
 			}
 		}})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	return workflowFixture{svc, agent, svc.chats[id], files, events}
+	return workflowFixture{svc, agent, startChat(t, svc, t.TempDir()), files, events}
 }
 
 func cmpDuration(a, b time.Duration) time.Duration {
@@ -742,7 +740,7 @@ func TestAWorkflowWithoutFiles(t *testing.T) {
 // An agent without workflow files (a plain ACP agent, or Claude's harness
 // alone, as tests run it) follows nothing: the call stays plain.
 func TestNoWorkflowWithoutItsFiles(t *testing.T) {
-	c := &chat{kind: testKind(testHarness{}), ctx: t.Context(), publish: func(model.Event) {}}
+	c := &chat{svc: &Service{ctx: t.Context()}, kind: testKind(testHarness{}), publish: func(model.Event) {}}
 	it := model.Item{ID: wfCall, Kind: model.ToolCall, Tool: "Workflow", Status: "completed", Text: "Workflow launched in background. Task ID: t1\nRun ID: wf_1\n"}
 	c.mu.Lock()
 	c.workflowLocked(&it)

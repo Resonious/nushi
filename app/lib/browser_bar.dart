@@ -5,6 +5,7 @@ import 'package:nushi/app_actions.dart';
 import 'package:nushi/browser_address.dart';
 import 'package:nushi/browser_page.dart';
 import 'package:nushi/controls.dart';
+import 'package:nushi/text_width.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/web_page.dart' show openInBrowserOrSay;
 import 'package:nushi/web_views.dart';
@@ -288,20 +289,8 @@ class _Shown extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, box) {
-      final scale = MediaQuery.textScalerOf(context);
       // Measured as the Text below draws it: over the default style.
-      final measured = DefaultTextStyle.of(context).style.merge(style);
-      double width(String text) {
-        final p = TextPainter(
-          text: TextSpan(text: text, style: measured),
-          textDirection: TextDirection.ltr,
-          textScaler: scale,
-          maxLines: 1,
-        )..layout();
-        final w = p.width;
-        p.dispose();
-        return w;
-      }
+      double width(String text) => textWidth(context, text, style);
 
       var name = host;
       if (width(name) > box.maxWidth) {

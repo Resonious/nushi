@@ -68,33 +68,25 @@ void main() {
           text: _text,
         );
         await tester.pumpWidget(
-          MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: NushiTheme(tokens).toThemeData(),
-            home: Scaffold(
-              body: Previews(
-                open: opened.add,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ItemView(item, chat, d, live: false, still: false),
-                      // The same message again: no second call.
-                      Offstage(
-                        child: ItemView(
-                          item,
-                          chat,
-                          d,
-                          live: false,
-                          still: false,
-                        ),
-                      ),
-                    ],
-                  ),
+          themed(
+            Previews(
+              open: opened.add,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ItemView(item, chat, d, live: false, still: false),
+                    // The same message again: no second call.
+                    Offstage(
+                      child: ItemView(item, chat, d, live: false, still: false),
+                    ),
+                  ],
                 ),
               ),
             ),
+            tokens: tokens,
+            banner: false,
           ),
         );
         await tester.pumpAndSettle();
@@ -162,37 +154,34 @@ void main() {
       final d = await fake.connect(tester);
       final chat = ChatState('c', '/Users/me/repo')..agent = 'claude';
       await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: const NushiTheme(Tokens.dark).toThemeData(),
-          home: Scaffold(
-            body: Previews(
-              open: (_) {},
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: SizedBox(
-                    width: 420,
-                    child: ItemView(
-                      Item(
-                        id: 'm',
-                        kind: ItemKind.ITEM_KIND_AGENT_MESSAGE,
-                        text:
-                            'The records:\n\n'
-                            '- `$path`: the first export\n'
-                            '- `$path` again, then more words after it\n',
-                      ),
-                      chat,
-                      d,
-                      live: false,
-                      still: false,
+        themed(
+          Previews(
+            open: (_) {},
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: 420,
+                  child: ItemView(
+                    Item(
+                      id: 'm',
+                      kind: ItemKind.ITEM_KIND_AGENT_MESSAGE,
+                      text:
+                          'The records:\n\n'
+                          '- `$path`: the first export\n'
+                          '- `$path` again, then more words after it\n',
                     ),
+                    chat,
+                    d,
+                    live: false,
+                    still: false,
                   ),
                 ),
               ),
             ),
           ),
+          banner: false,
         ),
       );
       await tester.pumpAndSettle();

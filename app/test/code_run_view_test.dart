@@ -59,34 +59,31 @@ Future<_View> _view(
   Widget message = LinkedMarkdown(text, chat, d, live: live);
   if (phone) message = TouchTargets(child: message);
   await tester.pumpWidget(
-    MaterialApp(
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        backgroundColor: tokens.base,
-        body: Align(
-          alignment: Alignment.topLeft,
-          child: RepaintBoundary(
-            key: const Key('view'),
-            child: Container(
-              width: 640,
-              color: tokens.base,
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  message,
-                  if (box)
-                    ListenableBuilder(
-                      listenable: chat,
-                      builder: (context, _) => Composer(chat: chat, daemon: d),
-                    ),
-                ],
-              ),
+    themed(
+      Align(
+        alignment: Alignment.topLeft,
+        child: RepaintBoundary(
+          key: const Key('view'),
+          child: Container(
+            width: 640,
+            color: tokens.base,
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                message,
+                if (box)
+                  ListenableBuilder(
+                    listenable: chat,
+                    builder: (context, _) => Composer(chat: chat, daemon: d),
+                  ),
+              ],
             ),
           ),
         ),
       ),
+      tokens: tokens,
     ),
   );
   await tester.pump();
@@ -95,9 +92,7 @@ Future<_View> _view(
 
 /// Lets the calls, the stream's messages and the frames through.
 Future<void> _settle(WidgetTester tester) async {
-  for (var i = 0; i < 10; i++) {
-    await tester.pump();
-  }
+  await frames(tester, 10);
 }
 
 /// Runs the bash block and lets it write [output], then end with [exit]
@@ -276,6 +271,6 @@ void main() {
   test('outputs are kept by block', () {
     final runs = CodeRuns('c', ValueNotifier(const []));
     expect(identical(runs.of('ls'), runs.of('ls')), isTrue);
-    runs.dispose();
+    runs.close();
   });
 }

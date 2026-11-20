@@ -122,13 +122,7 @@ Future<(FakeDaemon, Daemon)> openView(
     await tester.pumpWidget(NushiApp(daemon: d));
   } else {
     clock = () => DateTime(2026, 10, 25, 12);
-    await tester.pumpWidget(
-      MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: NushiTheme(tokens).toThemeData(),
-        home: Scaffold(body: JiraView(d)),
-      ),
-    );
+    await tester.pumpWidget(themed(JiraView(d), tokens: tokens, banner: false));
   }
   await tester.pumpAndSettle();
   return (fake, d);

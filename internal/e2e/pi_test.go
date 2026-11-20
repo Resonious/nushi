@@ -30,7 +30,7 @@ func aPiChat(t *testing.T, agent string) {
 	a := open(t, d)
 	start := must(a.c.StartChat(ctx, connect.NewRequest(&nushiv1.StartChatRequest{Agent: agent, Folder: t.TempDir()})))
 	var ids []string
-	for _, o := range start.Config {
+	for _, o := range a.get(start.ChatId).Config {
 		ids = append(ids, o.Id+"/"+o.Category+"="+o.Current)
 	}
 	if got := strings.Join(ids, " "); got != "model/model=fake/m1 thinking/thought_level=low" {
@@ -71,16 +71,14 @@ func aPiChat(t *testing.T, agent string) {
 	must(a.c.RewindChat(ctx, connect.NewRequest(&nushiv1.RewindChatRequest{ChatId: id, ItemId: second})))
 	a.waitFor("the rewind", idle)
 
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	snap = a.get(id)
 	if got := transcript(a.follow(id, snap)); got != "USER_MESSAGE:hello:\nAGENT_MESSAGE:You said: hello:" {
 		t.Errorf("replayed:\n%s", got)
 	}
 	plan := must(a.c.PlanDeleteChat(ctx, connect.NewRequest(&nushiv1.PlanDeleteChatRequest{ChatId: id})))
 	must(a.c.DeleteChat(ctx, connect.NewRequest(&nushiv1.DeleteChatRequest{ChatId: id})))
-	left, _ := filepath.Glob(filepath.Join(piStores(dataDir).Sessions, "*.jsonl"))
+	left, _ := filepath.Glob(filepath.Join(piStores(t, dataDir).Sessions, "*.jsonl"))
 	if !plan.DeletesHistory || len(left) != 0 {
 		t.Errorf("Delete left the sessions %v (plan %v)", left, plan)
 	}

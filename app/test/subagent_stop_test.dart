@@ -7,7 +7,6 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/details_panel.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/subagent_pane.dart';
 import 'package:nushi/subagents.dart';
 
@@ -112,8 +111,6 @@ final _items = <Item>[
 /// daemon that gets its calls.
 Future<(Daemon, FakeDaemon)> _app(WidgetTester tester, double width) async {
   viewport(tester, Size(width, 640));
-  showDetails.value = true;
-  paneWidths.value = {};
   // The turn ended; the running subagent and make watch go on (API 84).
   final running = ChatStatus(background: 2);
   final c = chat('c', 'claude', 'ClickHouse time binding', status: running);
@@ -130,9 +127,7 @@ Future<(Daemon, FakeDaemon)> _app(WidgetTester tester, double width) async {
 }
 
 Future<void> _pump(WidgetTester tester) async {
-  for (var i = 0; i < 5; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, 5, const Duration(milliseconds: 100));
 }
 
 /// A mouse over [finder]'s middle.
@@ -149,8 +144,6 @@ Finder _line(String id) =>
 
 Finder get _stops =>
     find.byWidgetPredicate((w) => w is Tooltip && w.message == 'Stop');
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 void main() {
   setUpAll(loadFonts);
@@ -226,7 +219,7 @@ void main() {
     await _pump(tester);
     expect(find.descendant(of: card, matching: find.text('stopped')), findsOne);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, mode) in [
     ('dark', Brightness.dark),
@@ -260,7 +253,7 @@ void main() {
           'subagent_stop_${size}_$name',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

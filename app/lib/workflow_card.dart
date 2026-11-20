@@ -117,7 +117,7 @@ class WorkflowCard extends StatelessWidget {
                         if (hover && !phone && live && daemon != null)
                           stopButton(context, daemon!, chat, call.id, size: 13)
                         else
-                          TaskMark(workflowMark(w)),
+                          TaskMark(w.state),
                         if (!phone)
                           Icon(
                             Icons.chevron_right,

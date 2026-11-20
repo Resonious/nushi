@@ -84,9 +84,7 @@ List<Item> _items() => [
 ];
 
 Future<void> _pump(WidgetTester tester) async {
-  for (var i = 0; i < 5; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, 5, const Duration(milliseconds: 100));
 }
 
 /// The run's title: its words, as wide as the row gives them.
@@ -153,7 +151,7 @@ void main() {
       );
       await render(tester, find.byType(NushiApp), 'narrow_rows_pane_$width');
       d.dispose();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   testWidgets('a run and its rows fit from a narrow pane up, with big '

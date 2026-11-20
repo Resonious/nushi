@@ -14,7 +14,6 @@ import 'package:nushi/github_review.dart';
 import 'package:nushi/github_thread.dart';
 import 'package:nushi/github_view.dart';
 import 'package:nushi/send_to_agent.dart';
-import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
 import 'github_fixture.dart' show openView, pull, testNow;
@@ -26,18 +25,15 @@ Future<void> _inPlace(WidgetTester tester, Daemon d) async {
   d.go(const GitHubPlace());
   clock = () => testNow;
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: const NushiTheme(Tokens.dark).toThemeData(),
-      home: Scaffold(
-        body: ListenableBuilder(
-          listenable: d,
-          builder: (_, _) => switch (d.place) {
-            GitHubPlace() => GitHubView(d),
-            _ => const Text('A chat'),
-          },
-        ),
+    themed(
+      ListenableBuilder(
+        listenable: d,
+        builder: (_, _) => switch (d.place) {
+          GitHubPlace() => GitHubView(d),
+          _ => const Text('A chat'),
+        },
       ),
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();
@@ -78,10 +74,7 @@ String _draft(String id) => commentDraft(
 );
 
 Future<void> _post(WidgetTester tester) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
+  await cmdKey(tester, LogicalKeyboardKey.enter);
 }
 
 void main() {

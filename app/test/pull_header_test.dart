@@ -6,9 +6,8 @@ import 'package:nushi/github_files.dart';
 import 'package:nushi/pull_header.dart';
 
 import 'fake_daemon.dart';
+import 'harness.dart';
 import 'pull_fixture.dart';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 String _move(GitHubPull p, int todo) {
   final m = moveWords(p, todo);
@@ -98,7 +97,7 @@ void main() {
       final tabs = tester.getRect(find.text('Files 12')).top;
       expect(tabs, lessThan(section == GitHubFiles ? 100 : 600));
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('narrow: the buttons go under the branches', (tester) async {
@@ -113,5 +112,5 @@ void main() {
     final review = tester.getRect(find.text('Review…'));
     expect(review.top, greaterThan(title.bottom));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

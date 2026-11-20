@@ -203,5 +203,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ReplyBox), findsOneWidget);
     await endPhone(tester, phone);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

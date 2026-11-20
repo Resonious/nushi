@@ -66,8 +66,6 @@ double _opacity(WidgetTester tester) => tester
     )
     .opacity;
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   testWidgets('Jump to latest glides from far up in a long chat, briefly; '
       'its chip fades in and out', (tester) async {
@@ -101,7 +99,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 16));
     expect(find.byType(JumpChip), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('with Reduce Motion Jump to latest jumps and the chip just '
       'goes', (tester) async {
@@ -118,7 +116,7 @@ void main() {
     expect(p.pixels, p.maxScrollExtent);
     expect(find.byType(JumpChip), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a chat left scrolled up opens there again, the chip showing; '
       'one left at its bottom opens at its bottom', (tester) async {
@@ -163,7 +161,7 @@ void main() {
     expect(p.pixels, p.maxScrollExtent);
     expect(find.byType(JumpChip), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a chat that needs you opens at its bottom', (tester) async {
     final d = await _app(tester, turns: 40, waiting: {'a'});
@@ -178,5 +176,5 @@ void main() {
     p = _list(tester);
     expect(p.pixels, p.maxScrollExtent);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

@@ -38,7 +38,11 @@ class WindowsClipboardFiles implements ClipboardFiles {
           height,
           rgba,
         ),
-        (_, _, final dib?) => await dibAsPng(dib),
+        // Pixels the isolate couldn't read: a BMP file the engine reads.
+        (_, _, final dib?) => switch (dibAsBmp(dib)) {
+          final bmp? => await _asPng(await ui.instantiateImageCodec(bmp)),
+          null => null,
+        },
         _ => null,
       };
     } on Object catch (e) {
@@ -145,19 +149,6 @@ Uint8List? _global(int format) {
 
 /// [text] as a NUL-ended UTF-16 string, for a leaf call.
 Uint16List _wide(String text) => Uint16List.fromList([...text.codeUnits, 0]);
-
-/// [dib], a `CF_DIB` (a BITMAPINFOHEADER or a later one, its masks or
-/// palette, then its pixels), as PNG: its 24- and 32-bit pixels read here
-/// ([dibPixels]), any other kind as a BMP file the engine reads.
-Future<Uint8List?> dibAsPng(Uint8List dib) async {
-  if (dibPixels(dib) case (final width, final height, final rgba)) {
-    return await rgbaAsPng(width, height, rgba);
-  }
-  if (dibAsBmp(dib) case final bmp?) {
-    return await _asPng(await ui.instantiateImageCodec(bmp));
-  }
-  return null;
-}
 
 /// [rgba], straight RGBA rows of [width] by [height], as PNG.
 Future<Uint8List?> rgbaAsPng(int width, int height, Uint8List rgba) async {

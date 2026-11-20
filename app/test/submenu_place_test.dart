@@ -8,13 +8,10 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/menu.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/submenu.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 // The owner's report: under the composer, the model menu's More models
 // opened wholly above its row, up and to the right of the menu, so the
@@ -44,7 +41,7 @@ void main() {
         moreOrLessEquals(menu.right + Submenu.gap, epsilon: 0.01),
       );
       expect(Offset.zero & window, _contains(sub));
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a $what submenu with room under its row opens level with '
         'it, as it did', (tester) async {
@@ -61,7 +58,7 @@ void main() {
           epsilon: 0.01,
         ),
       );
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a $what submenu is in its place the first frame it shows', (
       tester,
@@ -80,7 +77,7 @@ void main() {
       expect(shown.bottom, _panel(tester, find.text('More')).bottom);
       await tester.pumpAndSettle();
       expect(_panel(tester, find.text('Sub 2')), shown);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('typing in a slid-up submenu’s filter leaves the field where '
@@ -102,7 +99,7 @@ void main() {
     await tester.enterText(find.byType(TextField), '');
     await tester.pumpAndSettle();
     expect(_panel(tester, find.byType(TextField)), before);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (what, rows, window) in [
     ('plain', 10, const Size(800, 260)),
@@ -124,7 +121,7 @@ void main() {
         matching: find.byType(Scrollable),
       );
       expect(tester.state<ScrollableState>(scroll.first).position.pixels, 0);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('with no room on its right a submenu slides up on its row’s '
@@ -143,7 +140,7 @@ void main() {
     expect(sub.bottom, greaterThanOrEqualTo(row.bottom));
     expect(sub.bottom, moreOrLessEquals(menu.bottom, epsilon: 0.01));
     expect(Offset.zero & _window, _contains(sub));
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a submenu’s submenu slides up beside its own row', (
     tester,
@@ -181,7 +178,7 @@ void main() {
     expect(sub.top, lessThan(row.top));
     expect(sub.bottom, moreOrLessEquals(menu.bottom, epsilon: 0.01));
     expect(Offset.zero & _window, _contains(sub));
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a slid-up submenu opens under the pointer and takes the '
       'keys as before', (tester) async {
@@ -212,7 +209,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(picked, 'Sub 2');
     expect(find.text('More'), findsNothing); // closed
-  }, variant: _mac);
+  }, variant: onMac);
 
   // The model menu under the composer, More models open, the whole window.
   for (final width in [720.0, 1700.0]) {
@@ -225,7 +222,6 @@ void main() {
             const MethodChannel('nushi/fonts'),
             (_) async => <String>[],
           );
-      paneWidths.value = {};
       final fake = FakeDaemon([chat('c', 'claude', 'Plant the beds')])
         ..answer = ((input) => switch (input) {
           GetChatRequest() => GetChatResponse(
@@ -281,7 +277,7 @@ void main() {
         'more_models_${width.toInt()}',
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }
 

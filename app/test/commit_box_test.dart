@@ -8,9 +8,7 @@ import 'package:nushi/chat.dart';
 import 'package:nushi/commit_box.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/theme/theme.dart';
-import 'package:nushi/toast.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
@@ -46,7 +44,6 @@ Future<(Daemon, ChatState, List<Object?>)> _view(
   Brightness brightness = Brightness.dark,
 }) async {
   viewport(tester, size, brightness: brightness);
-  paneWidths.value = {};
   final asked = <Object?>[];
   final fake = FakeDaemon([])
     ..answer = (input) {
@@ -73,14 +70,9 @@ Future<(Daemon, ChatState, List<Object?>)> _view(
   final state = ChatState('c', '/x')..scope = Scope.uncommitted.name;
   addTearDown(() => state.scope = null);
   await tester.pumpWidget(
-    MaterialApp(
-      builder: (context, child) => ToastHost(child: child!),
-      theme: NushiTheme(
-        brightness == Brightness.dark ? Tokens.dark : Tokens.light,
-      ).toThemeData(),
-      home: Scaffold(
-        body: ChangesView(chat: state, daemon: d),
-      ),
+    themed(
+      ChangesView(chat: state, daemon: d),
+      tokens: brightness == Brightness.dark ? Tokens.dark : Tokens.light,
     ),
   );
   await tester.pumpAndSettle();
@@ -176,7 +168,6 @@ void main() {
         _ => null,
       };
     viewport(tester, const Size(1100, 700));
-    paneWidths.value = {};
     final d = await fake.connect(tester);
     final state = ChatState('c', '/x')..scope = Scope.uncommitted.name;
     addTearDown(() => state.scope = null);

@@ -59,8 +59,6 @@ Item _call(String id, String command, String output) => Item(
   text: output,
 );
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The app on chat c (and another, d); GetGitHubItems answers what
 /// [item] gives.
 Future<(Daemon, FakeDaemon)> _app(
@@ -238,7 +236,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(LivePullCard), findsNothing);
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('merged, and before GitHub answers ($name)', (tester) async {
@@ -276,7 +274,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(LivePullCard), findsNothing);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('failing checks say so on the card', (tester) async {
@@ -293,5 +291,5 @@ void main() {
     expect(find.text('2 checks failing'), findsOneWidget);
     await render(tester, find.byType(NushiApp), 'pull_live_failing');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

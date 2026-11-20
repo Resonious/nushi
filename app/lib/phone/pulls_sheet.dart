@@ -7,7 +7,7 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_card.dart';
 import 'package:nushi/github_items.dart';
 import 'package:nushi/pull_link.dart' show addressOf;
-import 'package:nushi/pull_rows.dart' show badgeColor, badgeCounts;
+import 'package:nushi/pull_rows.dart' show badgeCounts, badgeFace;
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 
@@ -129,25 +129,7 @@ class _Row extends StatelessWidget {
                 ],
               ),
             ),
-            if (n != null)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 5,
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: badgeColor(t, n),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  Text(
-                    '${n.passed}/${n.total}',
-                    style: theme.code(t.textSecondary, size: 12),
-                  ),
-                ],
-              ),
+            if (n != null) badgeFace(theme, n, dot: 8, size: 12),
           ],
         ),
       ),

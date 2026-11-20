@@ -177,7 +177,7 @@ func (c *chat) titleLocked(item, text string) {
 		select {
 		case slots <- struct{}{}:
 			defer func() { <-slots }()
-		case <-c.ctx.Done():
+		case <-c.svc.ctx.Done():
 			c.mu.Lock()
 			delete(c.titling, item)
 			c.mu.Unlock()
@@ -186,7 +186,7 @@ func (c *chat) titleLocked(item, text string) {
 		if !c.stillPinned(item) {
 			return // unpinned while it waited
 		}
-		ctx, cancel := context.WithTimeout(c.ctx, titleTimeout)
+		ctx, cancel := context.WithTimeout(c.svc.ctx, titleTimeout)
 		defer cancel()
 		made, err := maker.MessageTitle(ctx, agent.Call, sid, titleText(text))
 		title := agentTitle(made)

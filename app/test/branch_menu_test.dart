@@ -12,9 +12,7 @@ import 'package:nushi/details_panel.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/panel_widgets.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/theme/theme.dart';
-import 'package:nushi/toast.dart';
 import 'package:nushi/worktree.dart';
 
 import 'fake_daemon.dart';
@@ -87,24 +85,21 @@ Future<Daemon> _panel(
   viewport(tester, const Size(560, 460), ratio: 2);
   final d = await fake.connect(tester);
   await tester.pumpWidget(
-    MaterialApp(
-      builder: (context, child) => ToastHost(child: child!),
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: Align(
-          alignment: Alignment.topLeft,
-          child: SizedBox(
-            width: DetailsPanel.width,
-            height: 460,
-            child: DetailsPanel(
-              chat: chat,
-              daemon: d,
-              onChanges: onChanges ?? () {},
-            ),
+    themed(
+      Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: DetailsPanel.width,
+          height: 460,
+          child: DetailsPanel(
+            chat: chat,
+            daemon: d,
+            onChanges: onChanges ?? () {},
           ),
         ),
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();
@@ -162,7 +157,6 @@ Finder _row(String label) => find.ancestor(
 
 void main() {
   setUpAll(loadFonts);
-  setUp(() => collapsedWidgets.value = {});
 
   // The whole window, wide and as narrow as shows the panel: the menu
   // opens under the row, inside the window; the row's ▾ at the panel's
@@ -170,7 +164,6 @@ void main() {
   for (final width in [1700.0, 1140.0]) {
     testWidgets('the Branch menu in a ${width.round()} window', (tester) async {
       viewport(tester, Size(width, 620));
-      showDetails.value = true;
       final c = Chat(
         id: 'c',
         agent: 'claude',
@@ -221,7 +214,7 @@ void main() {
       expect(menu.top, greaterThan(chevron.bottom));
       expect(tester.takeException(), isNull);
       await closeView(tester, d);
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   for (final (name, tokens) in [

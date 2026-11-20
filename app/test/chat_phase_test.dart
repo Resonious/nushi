@@ -6,6 +6,7 @@ import 'package:nushi/chat.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/phone/chats_screen.dart';
 import 'package:nushi/status.dart';
+import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
@@ -50,20 +51,15 @@ void main() {
       themed(
         ListView(
           children: [
-            for (final c in _chats.values) ...[
+            for (final c in _chats.values)
               ChatRow(d.chats[c.id]!, onTap: () {}),
-              ChatStatusWord(
-                d.chats[c.id]!,
-                key: Key('mac ${c.id}'),
-                style: const TextStyle(),
-              ),
-            ],
           ],
         ),
         still: true,
       ),
     );
     await tester.pump();
+    final t = NushiTheme.of(tester.element(find.byType(ChatRow).first)).t;
     for (final MapEntry(key: word, value: c) in _chats.entries) {
       final phone = find.descendant(
         of: find.ancestor(
@@ -74,14 +70,7 @@ void main() {
       );
       expect(phone, findsOne, reason: 'the phone, ${c.title}');
       expect(
-        tester
-            .widget<Text>(
-              find.descendant(
-                of: find.byKey(Key('mac ${c.id}')),
-                matching: find.byType(Text),
-              ),
-            )
-            .data,
+        phaseWord(d.chats[c.id]!.phase, t).$1,
         word,
         reason: 'the Mac, ${c.title}',
       );

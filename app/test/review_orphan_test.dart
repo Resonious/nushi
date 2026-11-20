@@ -15,8 +15,6 @@ import 'package:nushi/settings.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const _new = 'package sub\n\nfunc Sub(a, b int) int {\n\treturn a - b\n}\n';
 
 /// The owner's report: a review comment went with a queued message, the
@@ -46,7 +44,6 @@ void main() {
           const MethodChannel('nushi/fonts'),
           (_) async => <String>[],
         );
-    paneWidths.value = {};
     showDetails.value = false;
     files = [
       FileChange(
@@ -94,9 +91,7 @@ void main() {
   /// Lets the view take what changed: a busy chat's spinner never
   /// settles.
   Future<void> settle(WidgetTester tester) async {
-    for (var i = 0; i < 6; i++) {
-      await tester.pump(const Duration(milliseconds: 200));
-    }
+    await frames(tester, 6, const Duration(milliseconds: 200));
   }
 
   /// Send to agent, which shows the chat, then back to Changes to look.
@@ -190,7 +185,7 @@ void main() {
     expect(commentsOf('c'), isEmpty);
     expect(find.text('Check for overflow.'), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('one not sent when the commit lands shows outdated, counted, '
       'with Edit and Remove', (tester) async {
@@ -215,7 +210,7 @@ void main() {
     expect(commentsOf('c'), isEmpty);
     expect(inHeader('Changes'), findsOne);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('sent and answered, then a commit: dropped', (tester) async {
     final (d, chat) = await open(tester);
@@ -230,7 +225,7 @@ void main() {
     await commit(tester, chat);
     expect(commentsOf('c'), isEmpty);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the queued message removed after the commit: its comment '
       'goes with it', (tester) async {
@@ -249,7 +244,7 @@ void main() {
     expect(inHeader('Changes'), findsOne);
     expect(find.text('Check for overflow.'), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the queued message taken back to edit: sent again, the '
       'comment stays sent; its card removed from the box, it goes', (
@@ -282,7 +277,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     expect(commentsOf('c'), isEmpty);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("the owner's second report: a stranded comment sent to the "
       'box and its card removed is gone; the next Send to agent sends only '
@@ -320,7 +315,7 @@ void main() {
     expect(splitReplies(chat.queue.single.text).$1, hasLength(1));
     expect(commentsOf('c').map((c) => c.id), ['2']);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a comment made in another view shows in this one, named by '
       'its view', (tester) async {
@@ -344,7 +339,7 @@ void main() {
     await settle(tester);
     expect(commentsOf('c'), isEmpty);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   /// Sends the box to the agent as a message (to a busy chat, the agent
   /// takes it into the turn): the cards go with it into the transcript.
@@ -395,7 +390,7 @@ void main() {
     expect(commentsOf('c'), isEmpty);
     expect(find.text('Check for overflow.'), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('sent, then the agent changed the file around its lines: '
       'dropped once the turn ends', (tester) async {
@@ -406,7 +401,7 @@ void main() {
     await answer(tester, chat, '// Package sub subtracts.\n$_new');
     expect(commentsOf('c'), isEmpty);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('sent and answered with the file unchanged: it stays, dimmed, '
       'and Remove on hover takes it out', (tester) async {
@@ -426,7 +421,7 @@ void main() {
     expect(commentsOf('c'), isEmpty);
     expect(find.text('Check for overflow.'), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('sent and outdated above its file while the turn runs: '
       'Remove on hover takes it out', (tester) async {
@@ -454,7 +449,7 @@ void main() {
     expect(commentsOf('c'), isEmpty);
     expect(find.text('Check for overflow.'), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   // Changes with a comment whose file was committed, another file still
   // changed: the comment above the list, at full size.
@@ -497,6 +492,6 @@ void main() {
         'review_orphan_${width.round()}_${brightness.name}',
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

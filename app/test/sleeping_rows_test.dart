@@ -1,4 +1,3 @@
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/agent_mark.dart';
@@ -6,7 +5,6 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/phone/chats_screen.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/sidebar_row.dart';
 import 'package:nushi/status.dart';
 import 'package:nushi/theme/theme.dart';
@@ -20,8 +18,6 @@ import 'sidebar_fixture.dart';
 // green dot. The rows of every state side by side, in goldens and in the
 // window at full size (`make renders TEST=test/sleeping_rows_test.dart`).
 
-Int64 _ago(Duration d) => Int64(fixtureNow.subtract(d).millisecondsSinceEpoch);
-
 Chat _chat(
   String id,
   String agent,
@@ -34,8 +30,8 @@ Chat _chat(
   agent: agent,
   title: title,
   folder: folder,
-  createdUnixMs: _ago(Duration(minutes: minutes)),
-  updatedUnixMs: _ago(Duration(minutes: minutes)),
+  createdUnixMs: msAgo(Duration(minutes: minutes)),
+  updatedUnixMs: msAgo(Duration(minutes: minutes)),
   status: status ?? ChatStatus(),
 );
 
@@ -46,7 +42,7 @@ List<Chat> _chats() => [
     'w',
     'claude',
     'Wire the ledger',
-    status: ChatStatus(busy: true, started: _ago(Duration.zero)),
+    status: ChatStatus(busy: true, started: msAgo(Duration.zero)),
   ),
   _chat(
     'n',
@@ -261,7 +257,6 @@ void main() {
       final name = '${width.toInt()}_${brightness.name}';
       testWidgets('the window with sleeping rows, $name', (tester) async {
         viewport(tester, Size(width, 760), brightness: brightness);
-        paneWidths.value = {};
         final d = await _keepAsleep(FakeDaemon(_chats())).connect(tester);
         await tester.pumpWidget(NushiApp(daemon: d));
         d.select(_selected);
@@ -269,7 +264,7 @@ void main() {
         expectTextInside(tester, width);
         await render(tester, find.byType(NushiApp), 'sleeping_rows_$name');
         await closeView(tester, d);
-      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      }, variant: onMac);
     }
   }
 }

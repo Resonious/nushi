@@ -13,8 +13,6 @@ import 'package:nushi/subagents.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-final TargetPlatformVariant _mac = .only(TargetPlatform.macOS);
-
 const _repo = '/Users/me/nushi';
 final String _base = 'b' * 40;
 
@@ -100,8 +98,6 @@ Future<Daemon> _app(
         const MethodChannel('nushi/fonts'),
         (_) async => <String>[],
       );
-  paneWidths.value = {};
-  showDetails.value = true;
   final fake = FakeDaemon([chat('c', 'claude', 'Rewrite the parser')])
     ..answer = (input) => switch (input) {
       GetChatRequest() => GetChatResponse(
@@ -191,7 +187,7 @@ void main() {
         expect(ends, hasLength(1));
         await shot(tester, 'related_chat_$w');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('a worktree in Changes, $w wide, $theme', (tester) async {
         if (width == 1700) sidebarHidden.value = true;
@@ -203,7 +199,7 @@ void main() {
         await tester.pumpAndSettle();
         await shot(tester, 'related_changes_$w');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('comments in a worktree, $w wide, $theme', (tester) async {
         final d = await _app(tester, size(), brightness);
@@ -243,7 +239,7 @@ void main() {
         expectTextInside(tester, width);
         await shot(tester, 'related_comments_$w');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('a removed one, $w wide, $theme', (tester) async {
         final d = await _app(tester, size(), brightness);
@@ -254,7 +250,7 @@ void main() {
         await tester.pumpAndSettle();
         await shot(tester, 'related_removed_$w');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('the menu open, $w wide, $theme', (tester) async {
         final d = await _app(tester, size(), brightness);
@@ -264,7 +260,7 @@ void main() {
         await tester.pumpAndSettle();
         await shot(tester, 'related_menu_$w');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('back on the tab, unread, $w wide, $theme', (tester) async {
         final d = await _app(tester, size(), brightness);
@@ -277,7 +273,7 @@ void main() {
         expect(find.text('Show its changes'), findsOne);
         await shot(tester, 'related_unread_$w');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('moved on since read, $w wide, $theme', (tester) async {
         final d = await _app(tester, size(), brightness);
@@ -297,7 +293,7 @@ void main() {
         );
         await shot(tester, 'related_behind_$w');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('commits gone, $w wide, $theme', (tester) async {
         final d = await _app(tester, size(), brightness);
@@ -314,7 +310,7 @@ void main() {
         );
         await shot(tester, 'related_gone_$w');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

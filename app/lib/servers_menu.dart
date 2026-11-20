@@ -32,7 +32,6 @@ class ServersButton extends StatefulWidget {
     required this.chat,
     required this.daemon,
     super.key,
-    this.size = 18,
     this.padding = 5,
     this.collapse,
   });
@@ -44,8 +43,7 @@ class ServersButton extends StatefulWidget {
   /// text shows in the box; null when it isn't.
   final VoidCallback? collapse;
 
-  /// Its glyph's size and the room around it ([IconTap]'s).
-  final double size;
+  /// The room around its glyph ([IconTap]'s).
   final double padding;
 
   @override
@@ -74,7 +72,7 @@ class _ServersButtonState extends State<ServersButton> {
         child: MenuIcon.line(
           LineIcon.server,
           tooltip: 'Servers',
-          size: widget.size,
+          size: 18,
           padding: widget.padding,
           color: NushiTheme.of(context).t.text,
           filter: false,

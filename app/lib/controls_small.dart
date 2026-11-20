@@ -180,13 +180,9 @@ class IconTap extends StatelessWidget {
           padding: EdgeInsets.all(padding - inset),
           decoration: BoxDecoration(
             color: danger
-                ? (look.hover
-                      ? Color.alphaBlend(_tint(t, look), t.crashed)
-                      : t.crashed)
+                ? _over(t, look, t.crashed)
                 : lit
-                ? (look.hover
-                      ? Color.alphaBlend(_tint(t, look), t.accentSoft)
-                      : t.accentSoft)
+                ? _over(t, look, t.accentSoft)
                 : look.hover
                 ? _tint(t, look)
                 : _working || held
@@ -386,9 +382,7 @@ class PillLink extends StatelessWidget {
             vertical: 2,
           ),
           decoration: BoxDecoration(
-            color: look.hover
-                ? Color.alphaBlend(_tint(t, look), t.accentSoft)
-                : t.accentSoft,
+            color: _over(t, look, t.accentSoft),
             borderRadius: BorderRadius.circular(NushiTheme.pill),
           ),
           foregroundDecoration: focusRing(

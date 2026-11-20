@@ -48,12 +48,12 @@ void main() {
 
   test('remembered: categories only, markdown-only answers not', () {
     rememberContext('a', GetContextUsageResponse(markdown: 'only text'));
-    expect(recalledContext('a'), isNull);
+    expect(rememberedContexts, isNot(contains('a')));
     rememberContext(
       'b',
       GetContextUsageResponse(categories: asked, markdown: '# Context'),
     );
-    final (_, r) = recalledContext('b')!;
+    final (_, r) = lastContext('b')!;
     expect(r.categories.length, asked.length);
     expect(r.markdown, isEmpty);
   });
@@ -63,7 +63,7 @@ void main() {
     askedContext('m', GetContextUsageResponse(markdown: 'only text'));
     expect(lastContext('m')!.$2.markdown, 'only text');
     expect(contextAskedAt('m'), isNotNull);
-    expect(recalledContext('m'), isNull); // not on disk
+    expect(rememberedContexts, isNot(contains('m'))); // not on disk
     askedContext('n', GetContextUsageResponse(categories: asked));
     forgetContext('m');
     forgetContext('n');

@@ -164,7 +164,7 @@ func TestAddComment(t *testing.T) {
 
 func TestAttachment(t *testing.T) {
 	f := newFake(t)
-	f.routes["GET /rest/api/3/attachment/thumbnail/10000"] = func(w http.ResponseWriter, _ *http.Request) {
+	f.routes["GET /rest/api/3/attachment/content/10000"] = func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "image/png")
 		_, _ = w.Write([]byte("png"))
 	}
@@ -172,10 +172,10 @@ func TestAttachment(t *testing.T) {
 		_, _ = w.Write(make([]byte, maxAttachment+1))
 	}
 	c := f.client()
-	if b, mime, err := c.Attachment(t.Context(), "10000", true); err != nil || string(b) != "png" || mime != "image/png" {
+	if b, mime, err := c.Attachment(t.Context(), "10000"); err != nil || string(b) != "png" || mime != "image/png" {
 		t.Errorf("%q %q %v", b, mime, err)
 	}
-	if _, _, err := c.Attachment(t.Context(), "10001", false); err == nil {
+	if _, _, err := c.Attachment(t.Context(), "10001"); err == nil {
 		t.Error("an attachment over the limit was read")
 	}
 }

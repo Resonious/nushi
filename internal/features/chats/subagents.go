@@ -24,7 +24,7 @@ func (c *chat) subagentLocked(call *model.Item) bool { //nolint:gocyclo // one t
 	}
 	old := sa
 	var background, elsewhere bool
-	if sub := c.kind.subagents; sub != nil {
+	if sub := c.kind.subOutput; sub != nil {
 		if call.AgentID == "" {
 			call.AgentID = sub.SubagentID(call.Text)
 		}
@@ -45,7 +45,7 @@ func (c *chat) subagentLocked(call *model.Item) bool { //nolint:gocyclo // one t
 	switch {
 	case sa.Said != "": // the agent said, of its session (children.go)
 		sa.State = sa.Said
-	case call.Status == "pending" || call.Status == "in_progress":
+	case callRunning(call.Status):
 		sa.State = "running"
 	case call.Status == "failed":
 		sa.State = "failed"
@@ -59,7 +59,7 @@ func (c *chat) subagentLocked(call *model.Item) bool { //nolint:gocyclo // one t
 	default:
 		sa.State = "done"
 	}
-	now := c.timing.now()
+	now := c.svc.timing.now()
 	switch {
 	case sa.State == "running" && sa.Started.IsZero() && !c.reopeningLocked():
 		sa.Started = now

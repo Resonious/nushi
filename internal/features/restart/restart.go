@@ -24,18 +24,18 @@ type Chats interface {
 	Holding() []model.Hold
 }
 
-// Terminals are the terminals beside chats (internal/features/terminals),
-// which end with the daemon, and what else does: the dev servers
-// (internal/features/servers, ADR 0098), as Together; and an update's
-// install (internal/features/updates, ADR 0109), which doesn't end with
-// the daemon but is waited out.
-type Terminals interface {
-	Busy() bool            // one runs a command
-	Running() []model.Hold // those that run one
+// Runners are what runs beside the chats, as Together: the terminals
+// (internal/features/terminals) and the dev servers
+// (internal/features/servers, ADR 0098), which end with the daemon, and an
+// update's install (internal/features/updates, ADR 0109), which doesn't
+// but is waited out.
+type Runners interface {
+	Busy() bool            // one runs something
+	Running() []model.Hold // those that run something
 }
 
-// Together is several Terminals as one: busy while any is.
-type Together []Terminals
+// Together is several Runners as one: busy while any is.
+type Together []Runners
 
 // Busy says whether any of them is busy.
 func (t Together) Busy() bool {
@@ -59,8 +59,8 @@ func (t Together) Running() []model.Hold {
 // Service waits, once asked, for nothing to run, and then says the daemon
 // is to stop (Due).
 type Service struct {
-	chats Chats
-	terms Terminals
+	chats   Chats
+	runners Runners
 
 	// Every is how often it looks again while it waits; Lease how long an
 	// ask holds unless asked again: an app that quit can't start the new
@@ -78,8 +78,8 @@ type Service struct {
 }
 
 // New returns the service, not asked yet.
-func New(chats Chats, terms Terminals) *Service {
-	return &Service{chats: chats, terms: terms, Every: time.Second, Lease: 15 * time.Second, due: make(chan struct{})}
+func New(chats Chats, runners Runners) *Service {
+	return &Service{chats: chats, runners: runners, Every: time.Second, Lease: 15 * time.Second, due: make(chan struct{})}
 }
 
 // WhenIdle asks for the restart, or again: at once if nothing would be
@@ -93,7 +93,7 @@ func (s *Service) WhenIdle() []model.Hold {
 		go s.wait()
 	}
 	s.mu.Unlock()
-	return append(s.chats.Holding(), s.terms.Running()...)
+	return append(s.chats.Holding(), s.runners.Running()...)
 }
 
 // Due is closed when the daemon is to stop for its restart: the chats
@@ -106,9 +106,9 @@ func (s *Service) wait() {
 	last := "-"
 	for {
 		holding := "" // a chat's id, or "" for a terminal
-		if !s.terms.Busy() {
+		if !s.runners.Busy() {
 			var ok bool
-			if ok, holding = s.chats.Rest(); ok && !s.terms.Busy() {
+			if ok, holding = s.chats.Rest(); ok && !s.runners.Busy() {
 				slog.Info("restarting into the newer daemon: nothing runs")
 				close(s.due)
 				return

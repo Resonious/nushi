@@ -53,9 +53,7 @@ func TestARealShellHoldsItsCommandRunning(t *testing.T) {
 	tree := &lookingTree{}
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude"}, Launch: agent.launch}}, Options{Processes: tree, Timing: Timing{CommandPoll: 5 * time.Millisecond}})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	file := filepath.Join(taskDir(t), waitTask+".output")
 	in, err := json.Marshal(map[string]any{"command": command, "run_in_background": true})
 	testcheck.NoErr(t, err)

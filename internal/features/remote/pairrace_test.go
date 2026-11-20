@@ -25,7 +25,7 @@ func TestAllowRacingARevokeLeavesNoGhost(t *testing.T) {
 		other, err := s.add("other", "web", newKey(t).Public)
 		s.mu.Unlock()
 		testcheck.NoErr(t, err)
-		qr, _, err := s.StartPairing()
+		qr, err := s.StartPairing()
 		testcheck.NoErr(t, err)
 		o := parseQR(t, qr)
 		b := newKey(t)

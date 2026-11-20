@@ -1,9 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nushi/daemon.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/menu.dart';
 import 'package:nushi/review.dart';
@@ -14,10 +11,7 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),
@@ -26,7 +20,7 @@ void main() {
     testWidgets(
       "a chat row's right-click menu: rows a pointer hits without aiming, "
       'in groups, with icons, the key on the right, Delete in red ($name)',
-      variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+      variant: onMac,
       (tester) async {
         viewport(tester, const Size(520, 520));
         final d = await FakeDaemon([
@@ -40,22 +34,20 @@ void main() {
           ),
         ]).connect(tester);
         await tester.pumpWidget(
-          MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: NushiTheme(tokens).toThemeData(),
-            home: Scaffold(
-              body: Align(
-                alignment: Alignment.topLeft,
-                child: SizedBox(
-                  width: 260,
-                  height: 500,
-                  child: ListenableBuilder(
-                    listenable: d,
-                    builder: (context, _) => Sidebar(daemon: d),
-                  ),
+          themed(
+            Align(
+              alignment: Alignment.topLeft,
+              child: SizedBox(
+                width: 260,
+                height: 500,
+                child: ListenableBuilder(
+                  listenable: d,
+                  builder: (context, _) => Sidebar(daemon: d),
                 ),
               ),
             ),
+            tokens: tokens,
+            banner: false,
           ),
         );
         await tester.pump();
@@ -113,7 +105,7 @@ void main() {
   testWidgets(
     'a row’s menu offers the review comments added since it '
     'was built',
-    variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+    variant: onMac,
     (tester) async {
       viewport(tester, const Size(1200, 700));
       final d = await FakeDaemon([

@@ -40,10 +40,10 @@ func pushed(it model.Item) bool {
 //
 //nolint:contextcheck // as an agent's update is taken, after the request behind it is gone: the chat's own life bounds it
 func (c *chat) pushedLocked(it model.Item) {
-	if c.replaying || c.quiet || c.parent != nil || c.worktrees == nil || !pushed(it) {
+	if c.replaying || c.muted || c.parent != nil || c.worktrees == nil || !pushed(it) {
 		return
 	}
-	ctx, cancel := context.WithTimeout(c.ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.svc.ctx, 5*time.Second)
 	defer cancel()
 	branch := c.worktrees.Branch(ctx, c.record.Folder)
 	if branch == "" {

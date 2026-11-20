@@ -1,6 +1,5 @@
 import 'package:nushi/alerts_linux.dart';
 import 'package:nushi/app_install_linux.dart';
-import 'package:nushi/back_swipe_linux.dart';
 import 'package:nushi/clipboard_files_linux.dart';
 import 'package:nushi/conventions.dart';
 import 'package:nushi/desktop_linux.dart';
@@ -28,7 +27,6 @@ Native linuxNative() => Native(
   fonts: const LinuxFonts(),
   install: LinuxAppInstall(),
   loginItem: LinuxLoginItem(),
-  swipes: const LinuxPageSwipes(),
   web: const LinuxWebViews(),
   window: const LinuxWindow(),
   speller: LinuxSpeller.open(),

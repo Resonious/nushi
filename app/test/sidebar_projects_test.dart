@@ -1,12 +1,9 @@
-import 'dart:io';
-
 import 'package:connectrpc/connect.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/arrangement.dart';
-import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/project_tile.dart';
@@ -92,10 +89,7 @@ MenuItemButton _entry(WidgetTester tester, String label) => tester.widget(
 
 void main() {
   final macOS = TargetPlatformVariant.only(TargetPlatform.macOS);
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   testWidgets('a folder joins the projects with an unarchived chat, and '
       'stays, an empty group, with its chats archived or deleted', (
@@ -401,7 +395,6 @@ void main() {
       final name = '${width.toInt()}_${brightness.name}';
       testWidgets('the window with empty projects, $name', (tester) async {
         viewport(tester, Size(width, 760), brightness: brightness);
-        paneWidths.value = {};
         sidebarProjects.value = {'/Users/me/zeta', '/Users/me/work/cappy'};
         sidebarOrder.value = [_ledger, '/Users/me/zeta', _cappy];
         sidebarCollapsed.value = {'/Users/me/work/cappy'};

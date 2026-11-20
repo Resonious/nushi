@@ -10,20 +10,10 @@
 // and answers when it replies, never blocking the window on an owner
 // that's slow to.
 
-// Answers [call] with [response], or says why it couldn't.
-static void clipboard_respond(FlMethodCall* call, FlMethodResponse* response) {
-  g_autoptr(GError) error = nullptr;
-  if (!fl_method_call_respond(call, response, &error)) {
-    g_warning("nushi/clipboard: %s", error->message);
-  }
-}
-
 // Answers the call [user_data] (a reference, given up here) with [result].
 static void clipboard_answer(gpointer user_data, FlValue* result) {
   g_autoptr(FlMethodCall) call = FL_METHOD_CALL(user_data);
-  g_autoptr(FlMethodResponse) response =
-      FL_METHOD_RESPONSE(fl_method_success_response_new(result));
-  clipboard_respond(call, response);
+  channel_answer(call, result);
 }
 
 // The copied files (a file manager's copy): only the URIs that name a file
@@ -114,9 +104,7 @@ static void clipboard_call(FlMethodChannel* channel, FlMethodCall* call,
     gtk_clipboard_request_targets(clipboard, targets_received,
                                   g_object_ref(call));
   } else {
-    g_autoptr(FlMethodResponse) response =
-        FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
-    clipboard_respond(call, response);
+    channel_not_implemented(call);
   }
 }
 

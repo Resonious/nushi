@@ -177,15 +177,14 @@ func run() error {
 		Scratch: filepath.Join(dir, "scratch"), Uploads: filepath.Join(dir, "uploads"), Publish: hub.Publish, Tools: mcpTools(toolSvc, filepath.Join(dir, "nushid.sock")),
 		Viewers: remoteSvc, Processes: proctree.Tree{}, Copies: copies, CopiesOn: st.KeepTranscripts, CopyDays: st.TranscriptDays, Sleep: st})
 	shows.UseChats(chatSvc)
-	go chatSvc.EndStalePrompts() // what a daemon that stopped left pending
 	// Each terminal names its own shell (terminal.Terminal's Name).
 	termSvc := terminals.New(shellStarter(agentSvc), "", chatSvc, hub.Publish)
 	chatSvc.UseTerminals(termSvc)
-	go follow(hub, termSvc.Follow)
+	go hub.Follow(context.Background(), termSvc.Follow)
 	srvSvc := newServers(dir, chatSvc, agentSvc, hub.Publish)
 	chatSvc.UseServers(srvSvc)
 	serverTools.Use(srvSvc)
-	go follow(hub, srvSvc.Follow)
+	go hub.Follow(context.Background(), srvSvc.Follow)
 	agentSvc.UseChats(chatSvc)
 	// The API, on the socket for the app (with the token) and on each
 	// paired device's channel (ADR 0034).
@@ -200,7 +199,7 @@ func run() error {
 	if err := usePush(st, sv.Remote, chatSvc, kinds); err != nil {
 		return err
 	}
-	go follow(hub, sv.Remote.Follow)
+	go hub.Follow(context.Background(), sv.Remote.Follow)
 	// A handler's panic, which net/http recovers, is logged with its stack.
 	errorLog := slog.NewLogLogger(slog.Default().Handler(), slog.LevelError)
 	socket, devices := api.Handlers(sv, toolSvc, token)
@@ -291,12 +290,6 @@ func version() string {
 		}
 	}
 	return cmp.Or(api.Release, "dev") + " (" + cmp.Or(rev, "unknown") + dirty + " " + info.GoVersion + ")"
-}
-
-// follow gives fn every event, in the daemon, for its life: never
-// dropped, however far behind (events.Unbounded).
-func follow(hub *events.Hub, fn func(model.Event)) {
-	_ = hub.Subscribe(context.Background(), func(e model.Event) bool { fn(e); return true }, events.Unbounded()) // ends only with fn's false
 }
 
 // loadToken reads the client token, making a new one on first start or

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:nushi/chat.dart';
+import 'package:nushi/plain_text.dart';
 import 'package:nushi/status.dart';
 import 'package:nushi/theme/theme.dart';
-
-String _capital(String word) => word[0].toUpperCase() + word.substring(1);
 
 /// A state's ink and the soft fill its pill has: a state that asks for
 /// nothing (idle, asleep, new) is a quiet word on a card's fill.
@@ -53,7 +52,7 @@ class PhasePill extends StatelessWidget {
         children: [
           ?lead,
           Text(
-            _capital(phaseName(phase)),
+            capital(phaseName(phase)),
             maxLines: 1,
             softWrap: false,
             style: theme.ui(

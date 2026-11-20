@@ -26,6 +26,7 @@ import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
+import 'preview_fixture.dart';
 
 /// A minified line of nearly 5,000 characters (past that it's cut): far
 /// wider than any pane.
@@ -38,8 +39,6 @@ final String _code = [
   _long,
   for (var i = 4; i <= 200; i++) 'line $i of the kettle',
 ].join('\n');
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 Item _wrote(String id, String path) => Item(
   id: id,
@@ -93,21 +92,13 @@ Future<Daemon> _app(
   double width = 1700,
   Brightness? brightness,
   String file = 'src/tea.go',
-}) async {
-  viewport(tester, Size(width, 900), brightness: brightness);
-  showDetails.value = false;
-  paneWidths.value = {};
-  final d = await _fake().connect(tester);
-  d.select('c');
-  await tester.pumpWidget(NushiApp(daemon: d));
-  await tester.pumpAndSettle();
-  d.chats['c']!.openInFiles(file);
-  await tester.pumpAndSettle();
-  return d;
-}
-
-Finder _inPane(Finder f) =>
-    find.descendant(of: find.byType(FilesPane), matching: f);
+}) => previewApp(
+  tester,
+  _fake(),
+  size: Size(width, 900),
+  brightness: brightness,
+  file: file,
+);
 
 /// Opens the Files pane's ⋯ and says whether Word wrap is checked.
 Future<bool> _wordWrap(WidgetTester tester) async {
@@ -138,16 +129,7 @@ String _palette(WidgetTester tester, Daemon d) => appActions(
 
 /// The View menu's items' labels, and picks the one called [pick].
 List<String> _viewMenu(WidgetTester tester, {String? pick}) {
-  final view = tester
-      .widget<PlatformMenuBar>(find.byType(PlatformMenuBar))
-      .menus
-      .whereType<PlatformMenu>()
-      .firstWhere((m) => m.label == 'View');
-  Iterable<PlatformMenuItem> items(PlatformMenuItem m) => switch (m) {
-    PlatformMenuItemGroup(:final members) => members.expand(items),
-    _ => [m],
-  };
-  final all = view.menus.expand(items).toList();
+  final all = viewItems(tester);
   if (pick != null) all.firstWhere((m) => m.label == pick).onSelected!();
   return [for (final m in all) m.label];
 }
@@ -227,7 +209,7 @@ void main() {
     expect(readSaved()['wrap'], isFalse);
     expect(await _wordWrap(tester), isFalse);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⌥Z leaves a rendered file alone, and wraps its Source', (
     tester,
@@ -237,25 +219,24 @@ void main() {
     await tester.tap(find.byType(PreviewBody));
     await _altZ(tester);
     expect(wrapLines.value, isFalse);
-    await tester.tap(_inPane(find.byType(SourceButton)));
+    await tester.tap(inPane(find.byType(SourceButton)));
     await tester.pumpAndSettle();
     await tester.tap(find.byType(SourceView));
     await tester.pumpAndSettle();
     await _altZ(tester);
     expect(wrapLines.value, isTrue);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⌥Z typed in the tree’s search field is a character, not '
       'wrapping', (tester) async {
-    filesTree.value = true;
     final d = await _app(tester);
-    await tester.tap(_inPane(find.byType(TextField)));
+    await tester.tap(inPane(find.byType(TextField)));
     await tester.pumpAndSettle();
     await _altZ(tester);
     expect(wrapLines.value, isTrue);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a pane too narrow for its buttons still has Word wrap in its '
       '⋯', (tester) async {
@@ -276,14 +257,14 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(_inPane(find.byTooltip('More')));
+    await tester.tap(inPane(find.byTooltip('More')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Word wrap'));
     await tester.pumpAndSettle();
     expect(wrapLines.value, isFalse);
     expect(_across(tester), isNotNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('wrap off, a long line runs on: the view scrolls sideways '
       'and the numbers stay put', (tester) async {
@@ -324,7 +305,7 @@ void main() {
     expect(tester.getRect(_number(3)), number);
     expect(tester.takeException(), isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('wrapped, the long line takes many rows and nothing scrolls '
       'sideways', (tester) async {
@@ -335,7 +316,7 @@ void main() {
     );
     expect(_across(tester), isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a switch keeps the line on top', (tester) async {
     final d = await _app(tester);
@@ -372,21 +353,12 @@ void main() {
     await toggle();
     expect(topLine(), off);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('wrap off, a selection still copies the whole line', (
     tester,
   ) async {
-    final copied = <String>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied.add((call.arguments as Map)['text'] as String);
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     wrapLines.value = false;
     final d = await _app(tester);
     _across(tester)!.jumpTo(2000);
@@ -404,7 +376,7 @@ void main() {
     expect(copied.last, startsWith('package main\n\n$_long\nline 4 '));
     expect(copied.last, contains('line 5 of the kettle\nline 6 of'));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, brightness) in [
     ('dark', Brightness.dark),
@@ -426,9 +398,7 @@ void main() {
         );
         await tester.pumpWidget(PhoneApp(phone));
         await phone.start();
-        for (var i = 0; i < 8; i++) {
-          await tester.pump();
-        }
+        await frames(tester, 8);
         await tester.tap(find.text('Brew the tea'));
         await tester.pumpAndSettle();
         PreviewScreen.open(
@@ -467,32 +437,27 @@ void main() {
       final c = d.chats['c']!..openInFiles('src/tea.go');
       // The pane on its own, cut to its two rows.
       await tester.pumpWidget(
-        MaterialApp(
-          theme: NushiTheme(
-            brightness == Brightness.dark ? Tokens.dark : Tokens.light,
-          ).toThemeData(),
-          home: Scaffold(
-            body: Center(
-              child: RepaintBoundary(
-                key: const ValueKey('row'),
-                child: ClipRect(
-                  child: SizedBox(
-                    width: 820,
-                    height: PaneHeader.height + FilesBar.height,
-                    child: OverflowBox(
-                      alignment: Alignment.topCenter,
-                      maxHeight: 200,
-                      // On a pane's fill, as the chat's area backs it.
-                      child: ColoredBox(
-                        color:
-                            (brightness == Brightness.dark
-                                    ? Tokens.dark
-                                    : Tokens.light)
-                                .base,
-                        child: SizedBox(
-                          height: 200,
-                          child: FilesPane(chat: c, daemon: d, onClose: () {}),
-                        ),
+        themed(
+          Center(
+            child: RepaintBoundary(
+              key: const ValueKey('row'),
+              child: ClipRect(
+                child: SizedBox(
+                  width: 820,
+                  height: PaneHeader.height + FilesBar.height,
+                  child: OverflowBox(
+                    alignment: Alignment.topCenter,
+                    maxHeight: 200,
+                    // On a pane's fill, as the chat's area backs it.
+                    child: ColoredBox(
+                      color:
+                          (brightness == Brightness.dark
+                                  ? Tokens.dark
+                                  : Tokens.light)
+                              .base,
+                      child: SizedBox(
+                        height: 200,
+                        child: FilesPane(chat: c, daemon: d, onClose: () {}),
                       ),
                     ),
                   ),
@@ -500,6 +465,7 @@ void main() {
               ),
             ),
           ),
+          tokens: brightness == Brightness.dark ? Tokens.dark : Tokens.light,
         ),
       );
       await tester.pumpAndSettle();
@@ -508,7 +474,7 @@ void main() {
         matchesGoldenFile('goldens/files_top_row_$name.png'),
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     for (final width in [1700.0, 720.0]) {
       for (final wrap in [true, false]) {
@@ -525,7 +491,7 @@ void main() {
             'preview_wrap_${width.toInt()}_${wrap ? 'on' : 'off'}_$name',
           );
           await closeView(tester, d);
-        }, variant: _mac);
+        }, variant: onMac);
       }
     }
   }

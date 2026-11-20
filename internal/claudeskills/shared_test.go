@@ -69,7 +69,7 @@ func TestSharedThroughALink(t *testing.T) {
 	old := skillfile.TrashProgram
 	skillfile.TrashProgram = []string{filepath.Join(bin, "trash")}
 	defer func() { skillfile.TrashProgram = old }()
-	if err := (Claude{}).Trash(ctx, deeper, link); err != nil {
+	if err := trashOwn(ctx, deeper, link); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(filepath.Join(shared, "SKILL.md")); err != nil {
@@ -95,12 +95,7 @@ func (o others) List(context.Context, string) (model.Skills, error) {
 	return model.Skills{Skills: o, ReadsShared: true}, nil
 }
 func (others) SetSkillOn(context.Context, string, string, string, bool) error { return nil }
-func (others) CanTrash(_ context.Context, _, path string) error {
-	return fmt.Errorf("%s isn't its own", path)
-}
-func (o others) Trash(ctx context.Context, folder, path string) error {
-	return o.CanTrash(ctx, folder, path)
-}
+func (others) Own(string) (project, yours []string)                           { return nil, nil }
 
 // Claude's list says of each skill what Delete, and of each shared one
 // what Link for Claude, would refuse, and they refuse exactly those: no

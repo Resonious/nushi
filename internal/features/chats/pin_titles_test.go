@@ -122,9 +122,7 @@ func TestPinTitledByTheAgent(t *testing.T) {
 			h := titledHarness{testHarness{Name: "claude", Title: "Claude"}, titles}
 			svc := newService(t, []Kind{{Harness: h, Launch: agent.launch}}, Options{Scratch: t.TempDir()})
 			t.Cleanup(svc.Close)
-			id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-			testcheck.NoErr(t, err)
-			c := svc.chats[id]
+			c := startChat(t, svc, t.TempDir())
 			answered(t, svc, agent, c, "t1", "m1")
 			c.mu.Lock()
 			c.items[c.indexLocked("m1")].Text = "## The plan\n\nFirst the relay."
@@ -162,9 +160,7 @@ func TestPinTitlesAskedOnceAndFewAtOnce(t *testing.T) {
 	h := titledHarness{testHarness{Name: "claude", Title: "Claude"}, titles}
 	svc := newService(t, []Kind{{Harness: h, Launch: agent.launch}}, Options{Scratch: t.TempDir()})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	turns(t, svc, agent, c, "t1", "t2", "t3")
 
 	for _, step := range []struct {

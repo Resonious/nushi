@@ -843,7 +843,7 @@ type NushiServiceClient interface {
 	GetRemote(context.Context, *connect.Request[v1.GetRemoteRequest]) (*connect.Response[v1.GetRemoteResponse], error)
 	SetRemote(context.Context, *connect.Request[v1.SetRemoteRequest]) (*connect.Response[v1.SetRemoteResponse], error)
 	// Starts pairing a phone (remote access must be on): the text for the QR
-	// code, good until it expires. Once a phone holding it connects,
+	// code, good for a few minutes. Once a phone holding it connects,
 	// Remote.pairing has its name and the code both screens show.
 	StartPairing(context.Context, *connect.Request[v1.StartPairingRequest]) (*connect.Response[v1.StartPairingResponse], error)
 	// Allows or denies the phone that connected, named by its code.
@@ -900,7 +900,7 @@ type NushiServiceClient interface {
 	AddJiraComment(context.Context, *connect.Request[v1.AddJiraCommentRequest]) (*connect.Response[v1.AddJiraCommentResponse], error)
 	// An issue for a new chat: from its link, its key, or words of it.
 	FindJiraIssues(context.Context, *connect.Request[v1.FindJiraIssuesRequest]) (*connect.Response[v1.FindJiraIssuesResponse], error)
-	// An attachment's file or thumbnail (20 MB at most).
+	// An attachment's file (20 MB at most).
 	GetJiraAttachment(context.Context, *connect.Request[v1.GetJiraAttachmentRequest]) (*connect.Response[v1.GetJiraAttachmentResponse], error)
 	// GitHub (ADR 0045): the hosts gh is signed in to (its token read by the
 	// daemon through go-gh) and those given a pasted token (the keychain).
@@ -3245,7 +3245,7 @@ type NushiServiceHandler interface {
 	GetRemote(context.Context, *connect.Request[v1.GetRemoteRequest]) (*connect.Response[v1.GetRemoteResponse], error)
 	SetRemote(context.Context, *connect.Request[v1.SetRemoteRequest]) (*connect.Response[v1.SetRemoteResponse], error)
 	// Starts pairing a phone (remote access must be on): the text for the QR
-	// code, good until it expires. Once a phone holding it connects,
+	// code, good for a few minutes. Once a phone holding it connects,
 	// Remote.pairing has its name and the code both screens show.
 	StartPairing(context.Context, *connect.Request[v1.StartPairingRequest]) (*connect.Response[v1.StartPairingResponse], error)
 	// Allows or denies the phone that connected, named by its code.
@@ -3302,7 +3302,7 @@ type NushiServiceHandler interface {
 	AddJiraComment(context.Context, *connect.Request[v1.AddJiraCommentRequest]) (*connect.Response[v1.AddJiraCommentResponse], error)
 	// An issue for a new chat: from its link, its key, or words of it.
 	FindJiraIssues(context.Context, *connect.Request[v1.FindJiraIssuesRequest]) (*connect.Response[v1.FindJiraIssuesResponse], error)
-	// An attachment's file or thumbnail (20 MB at most).
+	// An attachment's file (20 MB at most).
 	GetJiraAttachment(context.Context, *connect.Request[v1.GetJiraAttachmentRequest]) (*connect.Response[v1.GetJiraAttachmentResponse], error)
 	// GitHub (ADR 0045): the hosts gh is signed in to (its token read by the
 	// daemon through go-gh) and those given a pasted token (the keychain).

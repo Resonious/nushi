@@ -5,7 +5,6 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/items.dart';
 import 'package:nushi/main.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/sidebar.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/transcript.dart';
@@ -22,7 +21,6 @@ Future<Daemon> _twoLongChats(
   Brightness? brightness,
 }) async {
   viewport(tester, Size(width, 1000), brightness: brightness);
-  showDetails.value = true;
   final a = chat('a', 'claude', 'Alpha long chat');
   final b = chat('b', 'claude', 'Beta long chat', age: 5);
   final items = {'a': longChat('a'), 'b': longChat('b')};
@@ -87,7 +85,7 @@ void main() {
     }
     expect(_items(), all);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a row shows the press as the pointer goes down, before the '
       'click ends', (tester) async {
@@ -105,7 +103,7 @@ void main() {
     expect(_rowColor(tester, 'Beta long chat'), t.accentSoft);
     await tester.pumpAndSettle();
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a long chat stays at its bottom in every frame it fills in', (
     tester,
@@ -140,7 +138,7 @@ void main() {
     expect(painted.length, greaterThan(2), reason: 'it fills in over frames');
     expect(painted, everyElement(moreOrLessEquals(0)));
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('scrolled up while it fills in, what shows stays put', (
     tester,
@@ -159,7 +157,7 @@ void main() {
     expect(_items(), 81);
     expect(tester.getTopLeft(reply).dy, moreOrLessEquals(y, epsilon: 1));
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('only the chats picked last keep their items; one let go '
       'loads again when picked', (tester) async {

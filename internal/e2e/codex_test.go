@@ -30,7 +30,7 @@ func TestACodexChat(t *testing.T) {
 	}
 	first := start("codex")
 	var ids []string
-	for _, o := range first.Config {
+	for _, o := range a.get(first.ChatId).Config {
 		ids = append(ids, o.Id+"/"+o.Category)
 	}
 	if got := strings.Join(ids, " "); got != "mode/mode model/model reasoning_effort/thought_level" {
@@ -41,10 +41,10 @@ func TestACodexChat(t *testing.T) {
 		t.Errorf("status = %v, want fork but no rewind or context", st)
 	}
 	must(a.c.SetConfigOption(ctx, connect.NewRequest(&nushiv1.SetConfigOptionRequest{ChatId: first.ChatId, ConfigId: "mode", Value: "workspace-write"})))
-	if mode := modeOf(start("codex").Config); mode != "workspace-write" {
+	if mode := modeOf(a.get(start("codex").ChatId).Config); mode != "workspace-write" {
 		t.Errorf("a new Codex chat starts in %q, want the mode picked last", mode)
 	}
-	if mode := modeOf(start("").Config); mode == "workspace-write" {
+	if mode := modeOf(a.get(start("").ChatId).Config); mode == "workspace-write" {
 		t.Error("the other agent took Codex's mode")
 	}
 
@@ -55,9 +55,7 @@ func TestACodexChat(t *testing.T) {
 		t.Errorf("transcript:\n%s\nwant:\n%s", got, want)
 	}
 
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	snap = a.get(first.ChatId)
 	if got := transcript(a.follow(first.ChatId, snap)); got != want {
 		t.Errorf("replayed:\n%s\nwant:\n%s", got, want)

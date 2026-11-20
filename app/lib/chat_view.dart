@@ -195,6 +195,31 @@ class _Archived extends StatelessWidget {
   final Daemon daemon;
 
   @override
+  Widget build(BuildContext context) => _ReadOnlyBar(
+    words: chat.items.isEmpty
+        ? 'Archived. Unarchive it to see its history and go on.'
+        : 'Archived. Unarchive it to go on.',
+    actions: [
+      RunButton(
+        label: 'Unarchive',
+        kind: ButtonKind.primary,
+        run: () =>
+            daemon.client.archiveChat(ArchiveChatRequest(chatId: chat.id)),
+      ),
+    ],
+  );
+}
+
+/// In place of the composer for a chat that can't go on: a line over it,
+/// [icon] and [words] saying why, and [actions] at its end.
+class _ReadOnlyBar extends StatelessWidget {
+  const new({required this.words, required this.actions, this.icon});
+
+  final String words;
+  final List<Widget> actions;
+  final IconData? icon;
+
+  @override
   Widget build(BuildContext context) {
     final theme = NushiTheme.of(context);
     final t = theme.t;
@@ -209,20 +234,9 @@ class _Archived extends StatelessWidget {
       child: Row(
         spacing: NushiTheme.barGap,
         children: [
-          Expanded(
-            child: Text(
-              chat.items.isEmpty
-                  ? 'Archived. Unarchive it to see its history and go on.'
-                  : 'Archived. Unarchive it to go on.',
-              style: theme.ui(t.textSecondary),
-            ),
-          ),
-          RunButton(
-            label: 'Unarchive',
-            kind: ButtonKind.primary,
-            run: () =>
-                daemon.client.archiveChat(ArchiveChatRequest(chatId: chat.id)),
-          ),
+          if (icon case final icon?) Icon(icon, size: 15, color: t.textMuted),
+          Expanded(child: Text(words, style: theme.ui(t.textSecondary))),
+          ...actions,
         ],
       ),
     );
@@ -293,42 +307,23 @@ class _Expired extends StatelessWidget {
   final Daemon daemon;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = NushiTheme.of(context);
-    final t = theme.t;
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: t.line)),
+  Widget build(BuildContext context) => _ReadOnlyBar(
+    icon: Icons.history_toggle_off,
+    words: chat.items.any((it) => it.kind != ItemKind.ITEM_KIND_NOTICE)
+        ? 'Read-only: Nushi’s copy of the transcript.'
+        : 'Read-only.',
+    actions: [
+      Button(
+        label: 'Delete…',
+        kind: ButtonKind.destructive,
+        onPressed: () => showDeleteChat(context, chat, daemon),
       ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: NushiTheme.gutter,
-        vertical: 10,
+      Button(
+        label: 'Start a new chat here',
+        kind: ButtonKind.primary,
+        onPressed: () =>
+            newChat(context, daemon, chat.scratch ? '' : chat.folder),
       ),
-      child: Row(
-        spacing: NushiTheme.barGap,
-        children: [
-          Icon(Icons.history_toggle_off, size: 15, color: t.textMuted),
-          Expanded(
-            child: Text(
-              chat.items.any((it) => it.kind != ItemKind.ITEM_KIND_NOTICE)
-                  ? 'Read-only: Nushi’s copy of the transcript.'
-                  : 'Read-only.',
-              style: theme.ui(t.textSecondary),
-            ),
-          ),
-          Button(
-            label: 'Delete…',
-            kind: ButtonKind.destructive,
-            onPressed: () => showDeleteChat(context, chat, daemon),
-          ),
-          Button(
-            label: 'Start a new chat here',
-            kind: ButtonKind.primary,
-            onPressed: () =>
-                newChat(context, daemon, chat.scratch ? '' : chat.folder),
-          ),
-        ],
-      ),
-    );
-  }
+    ],
+  );
 }

@@ -96,29 +96,26 @@ void main() {
   ]) {
     testWidgets('syntax colors ($name)', (tester) async {
       viewport(tester, const Size(900, 560));
-      final theme = NushiTheme(tokens);
       await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: theme.toThemeData(),
-          home: Scaffold(
-            body: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  height: 240,
-                  child: DiffBox(
-                    FileChange(path: 'ledger.rb', oldText: _old, newText: _new),
-                    fit: false,
-                  ),
+        themed(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 240,
+                child: DiffBox(
+                  FileChange(path: 'ledger.rb', oldText: _old, newText: _new),
+                  fit: false,
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(12),
-                  child: AgentMarkdown(_block),
-                ),
-              ],
-            ),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(12),
+                child: AgentMarkdown(_block),
+              ),
+            ],
           ),
+          tokens: tokens,
+          banner: false,
         ),
       );
       // The diff's colors come from an isolate.
@@ -140,15 +137,13 @@ void main() {
     testWidgets('jsonnet, HCL and Zig ($name)', (tester) async {
       viewport(tester, const Size(720, 760));
       await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: NushiTheme(tokens).toThemeData(),
-          home: const Scaffold(
-            body: Padding(
-              padding: EdgeInsets.all(12),
-              child: SingleChildScrollView(child: AgentMarkdown(_others)),
-            ),
+        themed(
+          const Padding(
+            padding: EdgeInsets.all(12),
+            child: SingleChildScrollView(child: AgentMarkdown(_others)),
           ),
+          tokens: tokens,
+          banner: false,
         ),
       );
       await tester.pump();

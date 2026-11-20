@@ -85,7 +85,7 @@ class Transcript extends StatefulWidget {
 }
 
 /// What the find bar covers of the transcript's top right.
-const double _findBarWidth = 340.0 + NushiTheme.gutter;
+const double _findBarWidth = FindBar.width + NushiTheme.gutter;
 
 /// How far under the transcript's top a message gone to from the pins'
 /// menu lands.

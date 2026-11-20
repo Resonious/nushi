@@ -50,17 +50,17 @@ Finder _line(String text) => find.ancestor(
 void main() {
   setUpAll(loadFonts);
 
-  group('indentLevels', () {
+  group('indents', () {
     test('leading columns in steps of the tab size, a tab to its stop', () {
-      expect(indentLevels(['    a', '\ta', '  \ta', '        a', 'a'], 4), [
+      expect(indents(['    a', '\ta', '  \ta', '        a', 'a'], 4).levels, [
         1,
         1,
         1,
         2,
         0,
       ]);
-      expect(indentLevels(['\ta', '\t\ta', '  a'], 2), [1, 2, 1]);
-      expect(indentLevels(['\t\ta'], 8), [2]);
+      expect(indents(['\ta', '\t\ta', '  a'], 2).levels, [1, 2, 1]);
+      expect(indents(['\t\ta'], 8).levels, [2]);
     });
 
     test('a file indenting with spaces steps what it indents by, whatever '
@@ -87,7 +87,7 @@ void main() {
 
     test('a blank line takes the lesser of the lines around it; one at the '
         'end or the start, none', () {
-      expect(indentLevels(['a', '    b', '', '        c', '    d', ''], 4), [
+      expect(indents(['a', '    b', '', '        c', '    d', ''], 4).levels, [
         0,
         1,
         1,
@@ -95,7 +95,7 @@ void main() {
         1,
         0,
       ]);
-      expect(indentLevels(['', '  ', '    a'], 4), [0, 0, 1]);
+      expect(indents(['', '  ', '    a'], 4).levels, [0, 0, 1]);
     });
 
     test('a blank run past the look has none, and one pass each way does '
@@ -105,13 +105,13 @@ void main() {
         for (var i = 0; i < 500; i++) '',
         '        b',
       ];
-      final levels = indentLevels(lines, 4);
+      final levels = indents(lines, 4).levels;
       // The line with text after it is 500 on: past the look, so none.
       expect(levels[1], 0);
       expect(levels[250], 0, reason: 'past 200 lines each way');
       expect(levels[500], 0);
       expect(
-        indentLevels(['    a', ...List.filled(199, ''), '    b'], 4)[1],
+        indents(['    a', ...List.filled(199, ''), '    b'], 4).levels[1],
         1,
       );
       // Large and linear: 50,000 lines of long blank runs (150 each,
@@ -122,7 +122,7 @@ void main() {
           if (i % 151 == 0) '    x' else '',
       ];
       indentLinesRead = 0;
-      final read = indentLevels(big, 4);
+      final read = indents(big, 4).levels;
       expect(read, hasLength(50000));
       expect(read[75], 1, reason: 'a blank in the middle of a run');
       expect(indentLinesRead, lessThanOrEqualTo(3 * big.length));

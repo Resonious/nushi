@@ -41,14 +41,6 @@ func BootTime() (time.Time, error) {
 	return parseBootTime(b)
 }
 
-// BootID names this boot (/proc/sys/kernel/random/boot_id): a Stat's
-// SinceBoot means the same moment only within one. Empty when it can't
-// be read.
-func BootID() string {
-	b, _ := os.ReadFile(filepath.Join(root, "sys", "kernel", "random", "boot_id"))
-	return string(bytes.TrimSpace(b))
-}
-
 // All reads the stat of every process /proc lists, in no particular
 // order, skipping each one that ended or can't be read. The boot time is
 // read once for the whole list, so its Started times agree.

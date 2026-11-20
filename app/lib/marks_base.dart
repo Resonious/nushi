@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:nushi/changes_span.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/daemon.dart';
@@ -34,8 +36,9 @@ const MarksBase lastCommitBase = (base: '', from: MarksFrom.lastCommit);
 /// [chat]'s base for its marks and dots, found when first asked and again
 /// once it may have moved: the chat's turn ended, it committed, or its
 /// folder or worktree changed. One lookup for every file shown and the
-/// tree.
-final class ChatMarksBase {
+/// tree, and one notice to each of them (a file's `LineBase`, the tree's
+/// `TreeDots`) when it may have moved, to ask again.
+final class ChatMarksBase extends ChangeNotifier {
   new _(this.chat) {
     _key = _keyNow();
     _wasBusy = chat.busy;
@@ -51,9 +54,9 @@ final class ChatMarksBase {
   (String, String, int) _keyNow() =>
       (chat.folder, chat.worktree?.base ?? '', chat.commits);
 
-  /// Forgets the base when it may have moved. Run from the chat's own
-  /// listener and again before each answer, so whichever of the chat's
-  /// listeners asks first gets the new base.
+  /// Forgets the base when it may have moved, and tells its listeners.
+  /// Run from the chat's own listener and again before each answer, so
+  /// whoever asks first gets the new base.
   void _check() {
     final ended = _wasBusy && !chat.busy;
     _wasBusy = chat.busy;
@@ -61,6 +64,7 @@ final class ChatMarksBase {
     if (ended || key != _key) {
       _key = key;
       _found = null;
+      notifyListeners();
     }
   }
 

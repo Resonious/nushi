@@ -85,8 +85,8 @@ func TestPicksDroppedKeptAndFollowed(t *testing.T) {
 
 	opts := slices.Clone(agent.session.ConfigOptions)
 	opts[1].Select = &acp.SessionConfigSelect{CurrentValue: "opus", Options: opts[1].Select.Options}
-	_ = c.SessionUpdate(t.Context(), &acp.SessionNotification{SessionID: "s1", Update: acp.SessionUpdate{SessionUpdate: "config_option_update",
-		ConfigOptionUpdate: &acp.ConfigOptionUpdate{ConfigOptions: opts}}})
+	send(c, acp.SessionUpdate{SessionUpdate: "config_option_update",
+		ConfigOptionUpdate: &acp.ConfigOptionUpdate{ConfigOptions: opts}})
 	if got := picksOf(c); got["model"] != "opus" || got["effort"] != "" {
 		t.Errorf("after the agent's own change: %v", got)
 	}

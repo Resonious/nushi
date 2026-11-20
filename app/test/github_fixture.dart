@@ -278,11 +278,7 @@ Future<(FakeDaemon, Daemon)> openView(
   } else {
     clock = () => testNow;
     await tester.pumpWidget(
-      MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: NushiTheme(tokens).toThemeData(),
-        home: Scaffold(body: GitHubView(d)),
-      ),
+      themed(GitHubView(d), tokens: tokens, banner: false),
     );
   }
   await tester.pumpAndSettle();

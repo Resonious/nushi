@@ -79,8 +79,8 @@ func TestCheck(t *testing.T) {
 	}
 	var got []string
 	for _, u := range uses {
-		rel, _ := filepath.Rel(root, u.path)
-		got = append(got, filepath.ToSlash(rel)+": "+u.what)
+		rel, _ := filepath.Rel(root, u.Path)
+		got = append(got, filepath.ToSlash(rel)+": "+u.What)
 	}
 	slices.Sort(got)
 	want := []string{

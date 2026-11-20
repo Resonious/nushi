@@ -111,7 +111,7 @@ func All(projects string) []Agent {
 			Skills: ompskills.OMP{}, Trust: omptrust.Trust{},
 		},
 		{
-			Harness: opencode.Harness{}, Local: opencode.Local{},
+			Harness: opencode.Harness{}, Local: opencode.Harness{},
 			Agent:  agents.Agent{CLI: opencode.CLI, Min: opencode.Min, Tested: opencode.Tested},
 			Skills: opencodeskills.OpenCode{}, Trust: opencodetrust.Trust{},
 		},

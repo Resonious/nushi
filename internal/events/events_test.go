@@ -14,7 +14,7 @@ import (
 func subscribe(ctx context.Context, t *testing.T, h *Hub, fn func(model.Event) bool) <-chan error {
 	t.Helper()
 	live, ended := make(chan struct{}), make(chan error, 1)
-	go func() { ended <- h.Subscribe(ctx, fn, OnLive(func() bool { close(live); return true })) }()
+	go func() { ended <- h.Subscribe(ctx, fn, func() bool { close(live); return true }) }()
 	<-live
 	return ended
 }
@@ -146,7 +146,7 @@ func TestAnUnboundedSubscriberIsKept(t *testing.T) {
 	got := make(chan int64, 100)
 	live := make(chan struct{})
 	go func() {
-		_ = h.Subscribe(t.Context(), func(e model.Event) bool {
+		_ = h.subscribe(t.Context(), func(e model.Event) bool {
 			select {
 			case stuck <- struct{}{}:
 			default:
@@ -154,7 +154,7 @@ func TestAnUnboundedSubscriberIsKept(t *testing.T) {
 			<-release
 			got <- e.Seq
 			return true
-		}, Unbounded(), OnLive(func() bool { close(live); return true }))
+		}, func() bool { close(live); return true }, true) // Follow, said live
 	}()
 	<-live
 	h.Publish(model.Event{Seq: 1})

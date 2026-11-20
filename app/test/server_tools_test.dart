@@ -40,9 +40,6 @@ Item _call(
       : const JsonEncoder.withIndent('  ').convert(args),
 );
 
-Item _say(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
-
 /// The ask to run [title]'s tool, with the command the daemon resolved.
 Item _ask(String title, String input, {String command = ''}) => Item(
   id: 'ask',
@@ -165,9 +162,9 @@ void main() {
         tester,
         items: [
           _call('a', 'preview_list', {}, text: '[{"name": "web"}]'),
-          _say('m', 'Starting it.'),
+          agentSays('m', 'Starting it.'),
           _call('b', 'preview_start', {'name': 'web'}, codex: true),
-          _say('n', 'And its logs.'),
+          agentSays('n', 'And its logs.'),
           _call('c', 'preview_logs', {'name': 'web'}, text: 'VITE ready'),
         ],
       );
@@ -200,7 +197,7 @@ void main() {
           size: Size(width, 900),
           items: [
             _call('c', 'preview_logs', {'name': 'web'}, text: logs),
-            _say('m', 'Then it failed.'),
+            agentSays('m', 'Then it failed.'),
             _call(
               'f',
               'preview_start',
@@ -258,7 +255,7 @@ void main() {
         tester,
         items: [
           _call('a', 'show', {'url': 'http://localhost:5173/about'}),
-          _say('m', 'And then.'),
+          agentSays('m', 'And then.'),
           _call('b', 'show', {'url': 'http://localhost:9'}, status: 'failed'),
         ],
       );

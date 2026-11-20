@@ -210,6 +210,9 @@ class FindBar extends StatefulWidget {
   static const height = 48.0;
   static const withNote = 66.0;
 
+  /// How wide the bar is.
+  static const width = 340.0;
+
   @override
   State<FindBar> createState() => _FindBarState();
 }
@@ -289,7 +292,7 @@ class _FindBarState extends State<FindBar> {
           ],
         );
         return Container(
-          width: 340,
+          width: FindBar.width,
           padding: const EdgeInsets.fromLTRB(10, 4, 4, 4),
           decoration: floatBox(t, radius: NushiTheme.card),
           child: all == null && !widget.loading

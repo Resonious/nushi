@@ -11,7 +11,6 @@ import 'package:nushi/settings.dart';
 void main() {
   setUpAll(() {
     // Read before anything else is: the tests' own data folder.
-    Directory(dataDir).createSync(recursive: true);
     File('$dataDir/app.json').writeAsStringSync(
       jsonEncode({
         'appFont': 'Avenir Next',

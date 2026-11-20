@@ -182,8 +182,6 @@ Future<(Daemon, FakeDaemon)> _app(
   return (d, fake);
 }
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -370,7 +368,7 @@ void main() {
     );
     expect(_rich('Postgres'), findsOneWidget, reason: 'still open');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('open in a 360-wide card, nothing overflows', (tester) async {
     await tester.pumpWidget(_card(_three(), width: 360));
@@ -450,7 +448,7 @@ void main() {
           await tester.pumpAndSettle();
         }
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 

@@ -50,7 +50,6 @@ Future<(Daemon, FakeDaemon)> _app(
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
   }
   showDetails.value = details;
-  paneWidths.value = {};
   final c = chat('c', 'claude', 'Fix the login redirect');
   final fake = FakeDaemon([c])
     ..answer = ((input) => switch (input) {
@@ -73,8 +72,6 @@ Future<(Daemon, FakeDaemon)> _app(
   await tester.pumpAndSettle();
   return (d, fake);
 }
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 Finder get _details => find.byType(DetailsPanel);
 Finder get _text => find.text(_asked);
@@ -134,7 +131,7 @@ void main() {
     expect(_x(tester, _details), rest);
     expect(_paneEdge(tester), edge);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('closing, the details keep their place until they are out, '
       'taking no pointer; the transcript takes the room at once', (
@@ -161,7 +158,7 @@ void main() {
     await tester.pump();
     expect(_details, findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a second toggle mid-slide turns it back from where it is', (
     tester,
@@ -184,7 +181,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_details, findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the text takes a click mid-glide, where it is drawn', (
     tester,
@@ -199,7 +196,7 @@ void main() {
     expect(hit.path.any((e) => e.target == text), isTrue);
     await tester.pumpAndSettle();
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('with Reduce Motion the panes and the text are where they go '
       'at once', (tester) async {
@@ -217,7 +214,7 @@ void main() {
     await tester.pump();
     expect(_details, findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the sidebar slides out over the view, which takes the window '
       'at once, and back in; the text glides', (tester) async {
@@ -246,7 +243,7 @@ void main() {
     expect(_x(tester, find.byType(Sidebar)), 0);
     expect(_x(tester, _text), from);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('in a narrow window the text re-wraps where it goes rather '
       'than glide in from off the edge', (tester) async {
@@ -258,7 +255,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_x(tester, _text), at);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the terminal slides up laid out at its own height: its '
       'shell is sized once', (tester) async {
@@ -294,5 +291,5 @@ void main() {
     expect(resizes(), sized);
     expect(_transcript(tester).height, chatHeight);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

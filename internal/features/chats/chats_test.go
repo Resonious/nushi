@@ -3,7 +3,6 @@ package chats
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -34,7 +33,7 @@ func TestPromptStreamsTheReply(t *testing.T) {
 		}
 	}
 	agent := &fakeAgent{updates: []acp.SessionUpdate{chunk("m1", "Hel"), chunk("m1", "lo"), chunk("", "!"), chunk("m2", "Bye")}}
-	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) { agent.h = h; return agent, nil }}}, Options{Publish: publish})
+	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: agent.launch}}, Options{Publish: publish})
 
 	folder := t.TempDir()
 	id, err := svc.Start(context.Background(), "", folder, false)
@@ -101,9 +100,9 @@ func TestToolCallUpdatesMergeIntoOneItem(t *testing.T) {
 		return []acp.ToolCallContent{{Type: "content", Content: &acp.Content{Content: acp.ContentBlock{Type: "text", Text: &acp.TextContent{Text: s}}}}}
 	}
 	at := time.Date(2026, 11, 19, 9, 0, 0, 0, time.UTC)
-	c := &chat{remembered: &memModes{}, id: "s1", sid: "s1", kind: &kind{}, publish: func(model.Event) {}, record: model.ChatRecord{Folder: "/w"},
-		timing: Timing{Now: func() time.Time { return at }}}
-	for _, u := range []acp.SessionUpdate{
+	c := &chat{svc: &Service{remembered: &memModes{}, timing: Timing{Now: func() time.Time { return at }}}, id: "s1", sid: "s1", kind: &kind{},
+		publish: func(model.Event) {}, record: model.ChatRecord{Folder: "/w"}}
+	send(c, []acp.SessionUpdate{
 		{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "Terminal", Kind: "execute", Status: "pending"}},
 		{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Title: "ls -la", Content: text("List files")}},
 		{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed", Content: text("a.txt")}},
@@ -112,9 +111,7 @@ func TestToolCallUpdatesMergeIntoOneItem(t *testing.T) {
 			{Type: "diff", Diff: &acp.Diff{Path: "/w/new.txt", NewText: "made"}},                  // no old text: a new file
 			{Type: "diff", Diff: &acp.Diff{Path: "/w/empty.txt", OldText: new(""), NewText: "x"}}, // "": an empty one
 		}, Locations: []acp.ToolCallLocation{{Path: "/w/a.txt"}, {Path: "/elsewhere/b.txt"}}}},
-	} {
-		_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: u})
-	}
+	}...)
 	want := []model.Item{
 		{ID: "t1", Kind: model.ToolCall, Title: "ls -la", ToolKind: "execute", Status: "completed", Text: "a.txt", Started: at, Ended: at},
 		{ID: "t2", Kind: model.ToolCall, Title: "Edit", ToolKind: "edit", Started: at, Paths: []string{"a.txt", "/elsewhere/b.txt"},
@@ -129,8 +126,8 @@ func TestToolCallUpdatesMergeIntoOneItem(t *testing.T) {
 func TestToolCallKeepsItsRawInputAndOutput(t *testing.T) {
 	text := []acp.ToolCallContent{{Type: "content", Content: &acp.Content{Content: acp.ContentBlock{Type: "text", Text: &acp.TextContent{Text: "found 1"}}}}}
 	long := `{"jql": "` + strings.Repeat("é", 6000) + `"}`
-	c := &chat{remembered: &memModes{}, id: "s1", sid: "s1", kind: &kind{}, publish: func(model.Event) {}, record: model.ChatRecord{Folder: "/w"}}
-	for _, u := range []acp.SessionUpdate{
+	c := &chat{svc: &Service{remembered: &memModes{}}, id: "s1", sid: "s1", kind: &kind{}, publish: func(model.Event) {}, record: model.ChatRecord{Folder: "/w"}}
+	send(c, []acp.SessionUpdate{
 		// Claude's MCP call: an empty input first, then the whole of it; its
 		// result both as content and as rawOutput.
 		{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "mcp__gw__invoke_tool", Kind: "other", Status: "pending", RawInput: json.RawMessage(`{}`)}},
@@ -147,9 +144,7 @@ func TestToolCallKeepsItsRawInputAndOutput(t *testing.T) {
 		{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t5", Title: "edit", RawInput: json.RawMessage(`{"file_path":"/w/a.go","content":"x"}`)}},
 		{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t5", Status: "completed", RawOutput: json.RawMessage(`"written"`),
 			Content: []acp.ToolCallContent{{Type: "diff", Diff: &acp.Diff{Path: "/w/a.go", NewText: "x"}}}}},
-	} {
-		_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: u})
-	}
+	}...)
 	got := map[string][2]string{}
 	for _, it := range c.items {
 		got[it.ID] = [2]string{it.Input, it.RawOutput}
@@ -173,7 +168,7 @@ func TestToolCallKeepsItsRawInputAndOutput(t *testing.T) {
 
 func TestPermissionWaitsForTheUsersPick(t *testing.T) {
 	events := make(chan model.Event, 100)
-	c := &chat{remembered: &memModes{}, id: "s1", sid: "s1", kind: &kind{}, agent: &fakeAgent{}, publish: func(e model.Event) { events <- e }, waiting: map[string]chan<- string{}}
+	c := &chat{svc: &Service{remembered: &memModes{}}, id: "s1", sid: "s1", kind: &kind{}, agent: &fakeAgent{}, publish: func(e model.Event) { events <- e }, waiting: map[string]chan<- string{}}
 	svc := &Service{chats: map[string]*chat{"s1": c}}
 	c.addLocked(model.Item{ID: "t1", Kind: model.ToolCall, Title: "rm -rf build"})
 
@@ -237,7 +232,7 @@ func TestPermissionWaitsForTheUsersPick(t *testing.T) {
 }
 
 func TestPlanUpdatesInPlaceWithinATurn(t *testing.T) {
-	c := &chat{remembered: &memModes{}, id: "s1", sid: "s1", kind: &kind{}, publish: func(model.Event) {}}
+	c := &chat{svc: &Service{remembered: &memModes{}}, id: "s1", sid: "s1", kind: &kind{}, publish: func(model.Event) {}}
 	plan := func(statuses ...string) acp.SessionUpdate {
 		var entries []acp.PlanEntry
 		for _, s := range statuses {
@@ -249,11 +244,9 @@ func TestPlanUpdatesInPlaceWithinATurn(t *testing.T) {
 		MessageID: "m1", Content: acp.ContentBlock{Type: "text", Text: &acp.TextContent{Text: "hmm"}}}}
 	message := acp.SessionUpdate{SessionUpdate: "agent_message_chunk", AgentMessageChunk: &acp.ContentChunk{
 		MessageID: "m1", Content: acp.ContentBlock{Type: "text", Text: &acp.TextContent{Text: "hi"}}}}
-	for _, u := range []acp.SessionUpdate{thought, message, plan("pending", "pending"), plan("completed", "in_progress")} {
-		_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: u})
-	}
+	send(c, thought, message, plan("pending", "pending"), plan("completed", "in_progress"))
 	c.addLocked(model.Item{Kind: model.UserMessage, Text: "again"})
-	_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: plan("pending")})
+	send(c, plan("pending"))
 
 	var kinds []model.ItemKind
 	for _, it := range c.items {
@@ -284,9 +277,7 @@ func TestAPlanSentAgainUnchangedAddsNoCard(t *testing.T) {
 	}
 	agent := &fakeAgent{}
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: agent.launch}}, Options{})
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	cards := func(c *chat) []string {
 		c.mu.Lock()
 		defer c.mu.Unlock()
@@ -338,11 +329,8 @@ func TestUsageIsWhatTheAgentReported(t *testing.T) {
 		updates: []acp.SessionUpdate{usage(100, &acp.Cost{Amount: 0.5, Currency: "USD"}), usage(120, nil)},
 		usage:   &acp.Usage{InputTokens: 3, OutputTokens: 4, CachedReadTokens: new(uint64(5)), TotalTokens: 12},
 	}
-	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) { agent.h = h; return agent, nil }}}, Options{Publish: publish})
-	id, err := svc.Start(context.Background(), "", t.TempDir(), false)
-	if err != nil {
-		t.Fatal(err)
-	}
+	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: agent.launch}}, Options{Publish: publish})
+	id := startChat(t, svc, t.TempDir()).id
 	if err := svc.Prompt(t.Context(), id, model.Message{Text: "hi"}, SendIdle); err != nil {
 		t.Fatal(err)
 	}
@@ -356,16 +344,14 @@ func TestUsageIsWhatTheAgentReported(t *testing.T) {
 }
 
 func TestImagesJoinTheirMessageOrToolCall(t *testing.T) {
-	c := &chat{remembered: &memModes{}, id: "s1", sid: "s1", kind: &kind{}, busy: true, publish: func(model.Event) {}}
+	c := &chat{svc: &Service{remembered: &memModes{}}, id: "s1", sid: "s1", kind: &kind{}, busy: true, publish: func(model.Event) {}}
 	img := &acp.ImageContent{MimeType: "image/png", Data: "iVBORw=="}
-	for _, u := range []acp.SessionUpdate{ // as session/load replays a prompt with an image
+	send(c, []acp.SessionUpdate{ // as session/load replays a prompt with an image
 		{SessionUpdate: "user_message_chunk", UserMessageChunk: &acp.ContentChunk{Content: acp.ContentBlock{Type: "text", Text: &acp.TextContent{Text: "look"}}}},
 		{SessionUpdate: "user_message_chunk", UserMessageChunk: &acp.ContentChunk{Content: acp.ContentBlock{Type: "image", Image: img}}},
 		{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "Read a.png", Content: []acp.ToolCallContent{
 			{Type: "content", Content: &acp.Content{Content: acp.ContentBlock{Type: "image", Image: img}}}}}},
-	} {
-		_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: u})
-	}
+	}...)
 	png := []model.Image{{MimeType: "image/png", Data: []byte("\x89PNG"), Hash: ImageHash([]byte("\x89PNG")), Size: 4}}
 	if len(c.items) != 2 || c.items[0].Text != "look" || !reflect.DeepEqual(c.items[0].Images, png) || !reflect.DeepEqual(c.items[1].Images, png) {
 		t.Errorf("items = %+v", c.items)
@@ -373,7 +359,7 @@ func TestImagesJoinTheirMessageOrToolCall(t *testing.T) {
 }
 
 func TestSubagentUpdatesGoUnderTheirToolCall(t *testing.T) {
-	c := &chat{remembered: &memModes{}, id: "s1", sid: "s1", kind: testKind(testHarness{}), publish: func(model.Event) {}, record: model.ChatRecord{Folder: "/w"}}
+	c := &chat{svc: &Service{remembered: &memModes{}}, id: "s1", sid: "s1", kind: testKind(testHarness{}), publish: func(model.Event) {}, record: model.ChatRecord{Folder: "/w"}}
 	under := func(parent string) map[string]any {
 		return map[string]any{"claudeCode": map[string]any{"parentToolUseId": parent}}
 	}
@@ -384,7 +370,7 @@ func TestSubagentUpdatesGoUnderTheirToolCall(t *testing.T) {
 		}
 		return ch
 	}
-	for _, u := range []acp.SessionUpdate{
+	send(c, []acp.SessionUpdate{
 		{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "a1", Title: "Find it", Kind: "think", Status: "pending",
 			Meta: map[string]any{"claudeCode": map[string]any{"toolName": "Agent"}}, RawInput: []byte(`{"subagent_type":"Explore"}`)}},
 		{SessionUpdate: "agent_message_chunk", AgentMessageChunk: chunk("Main text", "")},
@@ -395,17 +381,15 @@ func TestSubagentUpdatesGoUnderTheirToolCall(t *testing.T) {
 		{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "h1", RawInput: []byte(`{"message":"The report"}`)}},
 		{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "h1", Status: "completed", Content: []acp.ToolCallContent{
 			{Type: "content", Content: &acp.Content{Content: acp.ContentBlock{Type: "text", Text: &acp.TextContent{Text: "ok"}}}}}}},
-	} {
-		_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: u})
-	}
+	}...)
 	if sa := c.items[0].Subagent; sa == nil || sa.State != "running" || sa.Started.IsZero() || !c.items[len(c.items)-1].Report {
 		t.Fatalf("while its call runs: %+v", c.items)
 	}
 	// Started in the background: the call completes at once; its report
 	// (already in) ends it.
-	_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: acp.SessionUpdate{SessionUpdate: "tool_call_update",
+	send(c, acp.SessionUpdate{SessionUpdate: "tool_call_update",
 		ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "a1", Status: "completed", Content: []acp.ToolCallContent{
-			{Type: "content", Content: &acp.Content{Content: acp.ContentBlock{Type: "text", Text: &acp.TextContent{Text: "Async agent launched"}}}}}}}})
+			{Type: "content", Content: &acp.Content{Content: acp.ContentBlock{Type: "text", Text: &acp.TextContent{Text: "Async agent launched"}}}}}}})
 	if sa := c.items[0].Subagent; sa.State != "done" || sa.Result != "The report" || sa.Ended.IsZero() {
 		t.Errorf("subagent = %+v", sa)
 	}
@@ -422,17 +406,13 @@ func TestSubagentUpdatesGoUnderTheirToolCall(t *testing.T) {
 	}
 	// A message runs it again (Claude's SendMessage): a step after its
 	// report, then a new report.
-	for _, u := range []acp.SessionUpdate{
-		{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "r2", Title: "Read b.go", Kind: "read", Meta: under("a1")}},
-	} {
-		_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: u})
-	}
+	send(c, acp.SessionUpdate{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "r2", Title: "Read b.go", Kind: "read", Meta: under("a1")}})
 	if sa := c.items[0].Subagent; sa.State != "running" || !sa.Ended.IsZero() {
 		t.Errorf("run again: %+v", sa)
 	}
-	_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: acp.SessionUpdate{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{
+	send(c, acp.SessionUpdate{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{
 		ToolCallID: "h2", Title: "SubagentHandback", RawInput: []byte(`{"message":"Second report"}`), Meta: map[string]any{
-			"claudeCode": map[string]any{"parentToolUseId": "a1", "toolName": "SubagentHandback"}}}}})
+			"claudeCode": map[string]any{"parentToolUseId": "a1", "toolName": "SubagentHandback"}}}})
 	if sa := c.items[0].Subagent; sa.State != "done" || sa.Result != "Second report" {
 		t.Errorf("after its second report: %+v", sa)
 	}
@@ -443,7 +423,7 @@ func TestBackgroundCommandsAreFollowed(t *testing.T) {
 	testcheck.NoErr(t, os.WriteFile(file, []byte("half"), 0o600))
 	events := make(chan model.Event, 100)
 	var counts []int // how many run in the background, as each status said (under c.mu)
-	c := &chat{remembered: &memModes{}, id: "s1", sid: "s1", kind: testKind(testHarness{}), agent: &fakeAgent{}, ctx: t.Context(), timing: Timing{CommandPoll: 10 * time.Millisecond}, record: model.ChatRecord{Folder: "/w"},
+	c := &chat{svc: &Service{remembered: &memModes{}, ctx: t.Context(), timing: Timing{CommandPoll: 10 * time.Millisecond}}, id: "s1", sid: "s1", kind: testKind(testHarness{}), agent: &fakeAgent{}, record: model.ChatRecord{Folder: "/w"},
 		publish: func(e model.Event) {
 			if e.Status != nil {
 				counts = append(counts, e.Status.Background)
@@ -453,15 +433,13 @@ func TestBackgroundCommandsAreFollowed(t *testing.T) {
 	text := func(s string) []acp.ToolCallContent {
 		return []acp.ToolCallContent{{Type: "content", Content: &acp.Content{Content: acp.ContentBlock{Type: "text", Text: &acp.TextContent{Text: s}}}}}
 	}
-	for _, u := range []acp.SessionUpdate{
+	send(c, []acp.SessionUpdate{
 		{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "sleep 9", Kind: "execute", Status: "pending",
 			Meta: map[string]any{"claudeCode": map[string]any{"toolName": "Bash"}}}},
 		{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed",
 			Content: text("Command running in background with ID: b1. Output is being written to: " + file + ". You will be notified."),
 			Meta:    map[string]any{"claudeCode": map[string]any{"toolName": "Bash", "toolResponse": map[string]any{"backgroundTaskId": "b1"}}}}},
-	} {
-		_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: u})
-	}
+	}...)
 	shell := func(want string) model.BackgroundCommand {
 		t.Helper()
 		for { // every change comes with an event; a state never reached hangs the test
@@ -493,8 +471,8 @@ func TestBackgroundCommandsAreFollowed(t *testing.T) {
 	c.mu.Lock()
 	c.items[0].BackgroundCommand = nil
 	c.mu.Unlock()
-	_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: acp.SessionUpdate{SessionUpdate: "tool_call_update",
-		ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}}})
+	send(c, acp.SessionUpdate{SessionUpdate: "tool_call_update",
+		ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}})
 	shell("running")
 	c.mu.Lock()
 	c.agent = nil
@@ -511,11 +489,11 @@ func TestAnEndLineTheCommandPrintedIsntItsEnd(t *testing.T) {
 		r := reads[min(len(states), len(reads)-1)]
 		return r[0], r[1], nil
 	}
-	c := &chat{remembered: &memModes{}, id: "s1", timing: Timing{CommandPoll: time.Millisecond}, kind: testKind(testHarness{read: read}), publish: func(e model.Event) {
+	c := &chat{svc: &Service{remembered: &memModes{}, ctx: t.Context(), timing: Timing{CommandPoll: time.Millisecond}}, id: "s1", kind: testKind(testHarness{read: read}), publish: func(e model.Event) {
 		if e.Item != nil && e.Item.BackgroundCommand != nil {
 			states = append(states, e.Item.BackgroundCommand.State)
 		}
-	}, agent: &fakeAgent{}, ctx: t.Context(), items: []model.Item{{ID: "t1", BackgroundCommand: &model.BackgroundCommand{State: "running"}}}}
+	}, agent: &fakeAgent{}, items: []model.Item{{ID: "t1", BackgroundCommand: &model.BackgroundCommand{State: "running"}}}}
 	c.followCommand("t1", "b1", "f", c.agent)
 	if c.items[0].BackgroundCommand.State != "done" || slices.Contains(states, "stopped") {
 		t.Errorf("states %q, the end %+v", states, c.items[0].BackgroundCommand)
@@ -534,10 +512,8 @@ func TestToolsForAChatOnAnIssue(t *testing.T) {
 		asked = append(asked, chat+" "+agent+" "+issue.Key)
 		return []acp.MCPServer{{Stdio: &acp.MCPServerStdio{Name: "nushi", Command: "/bin/true"}}}
 	}
-	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake", ClientMCP: true}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) { agent.h = h; return agent, nil }}}, Options{Tools: tools})
-	if _, err := svc.Start(t.Context(), "", t.TempDir(), false); err != nil {
-		t.Fatal(err)
-	}
+	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake", ClientMCP: true}, Launch: agent.launch}}, Options{Tools: tools})
+	startChat(t, svc, t.TempDir())
 	if len(agent.mcp) != 0 {
 		t.Errorf("a chat without an issue got %v", agent.mcp)
 	}
@@ -560,10 +536,8 @@ func TestNoToolsForAnAgentThatTakesNone(t *testing.T) {
 	tools := func(string, string, *model.ChatIssue) []acp.MCPServer {
 		return []acp.MCPServer{{Stdio: &acp.MCPServerStdio{Name: "nushi", Command: "/bin/true"}}}
 	}
-	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) { agent.h = h; return agent, nil }}}, Options{Tools: tools})
-	if _, err := svc.Start(t.Context(), "", t.TempDir(), false); err != nil {
-		t.Fatal(err)
-	}
+	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: agent.launch}}, Options{Tools: tools})
+	startChat(t, svc, t.TempDir())
 	if len(agent.mcp) != 0 {
 		t.Errorf("session/new got %v", agent.mcp)
 	}
@@ -601,7 +575,7 @@ func TestWroteIsWhatTheChatsToolCallsWorkedOn(t *testing.T) {
 // A replay says nothing of when a message came: it isn't given the time
 // of the replay, and merging keeps the copy's.
 func TestReplayedAgentMessageHasNoTime(t *testing.T) {
-	c := &chat{remembered: &memModes{}, kind: &kind{}, quiet: true}
+	c := &chat{svc: &Service{remembered: &memModes{}}, kind: &kind{}, muted: true}
 	c.addLocked(model.Item{ID: "m1", Kind: model.AgentMessage, Text: "Hello"})
 	if !c.items[0].Sent.IsZero() {
 		t.Errorf("replayed message sent at %v", c.items[0].Sent)

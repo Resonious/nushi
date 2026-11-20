@@ -360,9 +360,7 @@ func TestAGoneFolderLeavesNoReplayGoing(t *testing.T) {
 	dir := t.TempDir()
 	folder := filepath.Join(dir, "gone")
 	testcheck.NoErr(t, os.Mkdir(folder, 0o700))
-	id, err := svc.Start(t.Context(), "", folder, false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, folder)
 	testcheck.NoErr(t, os.Remove(folder))
 	if err := svc.load(t.Context(), c); err == nil {
 		t.Fatal("loaded a chat whose folder is gone")

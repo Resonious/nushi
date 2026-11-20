@@ -177,25 +177,23 @@ func TestAForkKeepsTheScratchFolder(t *testing.T) {
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude"}, Launch: agent.launch}}, Options{Sessions: sessions, Scratch: t.TempDir()})
 	t.Cleanup(svc.Close)
 	ctx := t.Context()
-	id, err := svc.Start(ctx, "", "", false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, "")
 	agent.updates = []acp.SessionUpdate{chunk("m1", "ok")}
-	testcheck.NoErr(t, svc.Prompt(ctx, id, model.Message{Text: "one"}, SendIdle))
+	testcheck.NoErr(t, svc.Prompt(ctx, c.id, model.Message{Text: "one"}, SendIdle))
 	eventually(t, c, func() bool { return !c.busy })
 	sessions.mu.Lock()
 	sessions.stored = []model.ChatRecord{c.record}
 	sessions.mu.Unlock()
-	plan, err := svc.PlanDelete(ctx, id)
+	plan, err := svc.PlanDelete(ctx, c.id)
 	if testcheck.NoErr(t, err); plan.Scratch == "" {
 		t.Fatal("no scratch folder to delete without a fork") // the test proves nothing then
 	}
-	fork, err := svc.ForkAsChat(ctx, id, "")
+	fork, err := svc.ForkAsChat(ctx, c.id, "")
 	testcheck.NoErr(t, err)
 	sessions.mu.Lock()
 	sessions.stored = []model.ChatRecord{c.record, svc.chats[fork].record}
 	sessions.mu.Unlock()
-	if plan, err := svc.PlanDelete(ctx, id); err != nil || plan.Scratch != "" {
+	if plan, err := svc.PlanDelete(ctx, c.id); err != nil || plan.Scratch != "" {
 		t.Errorf("Delete would remove the fork's folder: %+v, %v", plan, err)
 	}
 }
@@ -208,13 +206,11 @@ func TestAForkOfAChatWithNoFolderHasNone(t *testing.T) {
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude"}, Launch: agent.launch}}, Options{Sessions: &memSessions{}, Scratch: t.TempDir()})
 	t.Cleanup(svc.Close)
 	ctx := t.Context()
-	id, err := svc.Start(ctx, "", "", false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, "")
 	agent.updates = []acp.SessionUpdate{chunk("m1", "ok")}
-	testcheck.NoErr(t, svc.Prompt(ctx, id, model.Message{Text: "one"}, SendIdle))
+	testcheck.NoErr(t, svc.Prompt(ctx, c.id, model.Message{Text: "one"}, SendIdle))
 	eventually(t, c, func() bool { return !c.busy })
-	fork, err := svc.ForkAsChat(ctx, id, "")
+	fork, err := svc.ForkAsChat(ctx, c.id, "")
 	testcheck.NoErr(t, err)
 	f := svc.chats[fork]
 	f.mu.Lock()
@@ -223,7 +219,7 @@ func TestAForkOfAChatWithNoFolderHasNone(t *testing.T) {
 	if !r.Scratch || r.Folder != c.record.Folder {
 		t.Errorf("the fork has a folder: scratch %v, folder %q, the chat's %q", r.Scratch, r.Folder, c.record.Folder)
 	}
-	side, err := svc.Fork(ctx, id)
+	side, err := svc.Fork(ctx, c.id)
 	testcheck.NoErr(t, err)
 	kept, err := svc.KeepSide(ctx, side)
 	testcheck.NoErr(t, err)
@@ -342,13 +338,11 @@ func TestNewChatsAreFoundOnceStored(t *testing.T) {
 		publish(e)
 	}
 	ctx := t.Context()
-	id, err := svc.Start(ctx, "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	agent.updates = []acp.SessionUpdate{chunk("m1", "ok")}
-	testcheck.NoErr(t, svc.Prompt(ctx, id, model.Message{Text: "one"}, SendIdle))
+	testcheck.NoErr(t, svc.Prompt(ctx, c.id, model.Message{Text: "one"}, SendIdle))
 	eventually(t, c, func() bool { return !c.busy })
-	fork, err := svc.ForkAsChat(ctx, id, "")
+	fork, err := svc.ForkAsChat(ctx, c.id, "")
 	testcheck.NoErr(t, err)
 	mu.Lock()
 	defer mu.Unlock()
@@ -369,9 +363,7 @@ func TestKeepingASideChatAsItCloses(t *testing.T) {
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude", redelete: 10 * time.Millisecond}, Launch: agent.launch}}, Options{})
 	t.Cleanup(svc.Close)
 	ctx := t.Context()
-	cid, err := svc.Start(ctx, "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[cid]
+	c := startChat(t, svc, t.TempDir())
 	turn(t, svc, c, "one")
 	var kept, closed []string
 	for range 40 {

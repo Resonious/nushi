@@ -34,11 +34,11 @@ func TestFetchAPullsHead(t *testing.T) {
 	ctx := t.Context()
 	base := t.TempDir()
 	testcheck.Git(t, base, "init", "-q", "-b", "main")
-	write(t, filepath.Join(base, "a.txt"), "a\n")
+	testcheck.Write(t, filepath.Join(base, "a.txt"), "a\n")
 	testcheck.Git(t, base, "add", ".")
 	testcheck.Git(t, base, "commit", "-q", "-m", "a")
 	testcheck.Git(t, base, "checkout", "-q", "-b", "feature")
-	write(t, filepath.Join(base, "a.txt"), "feature\n")
+	testcheck.Write(t, filepath.Join(base, "a.txt"), "feature\n")
 	testcheck.Git(t, base, "commit", "-q", "-am", "feature")
 	testcheck.Git(t, base, "update-ref", "refs/pull/7/head", "HEAD") // as GitHub keeps a fork's
 	testcheck.Git(t, base, "checkout", "-q", "main")
@@ -91,7 +91,7 @@ func TestHead(t *testing.T) {
 	ctx := t.Context()
 	repo := t.TempDir()
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
-	write(t, filepath.Join(repo, "a.txt"), "a\n")
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "a\n")
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "a")
 	if b, r := Head(ctx, repo); b != "main" || r != "" {

@@ -164,14 +164,7 @@ class _FileListState extends State<FileList> {
 
   void _reveal() {
     final i = _rows.indexWhere((r) => r.file?.path == widget.selected);
-    if (i < 0 || !_scroll.hasClients) return;
-    final p = _scroll.position;
-    final top = i * _row;
-    if (top < p.pixels) {
-      p.jumpTo(top);
-    } else if (top + _row > p.pixels + p.viewportDimension) {
-      p.jumpTo(top + _row - p.viewportDimension);
-    }
+    if (i >= 0) revealRowAt(_scroll, i, _row);
   }
 
   KeyEventResult _key(FocusNode _, KeyEvent e) {

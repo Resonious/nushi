@@ -153,16 +153,11 @@ String reason(Unreachable? why) => switch (why) {
 /// "last seen 10:42", or with the day when it wasn't today.
 String seenAt(DateTime s, {DateTime? now}) {
   final n = now ?? clock();
-  String two(int v) => v.toString().padLeft(2, '0');
   final time = '${two(s.hour)}:${two(s.minute)}';
   if (s.year == n.year && s.month == n.month && s.day == n.day) {
     return 'last seen $time';
   }
-  const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', //
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
-  return 'last seen ${months[s.month - 1]} ${s.day}, $time';
+  return 'last seen ${months[s.month - 1].substring(0, 3)} ${s.day}, $time';
 }
 
 /// A newer version of the app is installed and waits: Reload brings it in

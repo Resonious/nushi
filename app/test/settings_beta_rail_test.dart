@@ -19,7 +19,6 @@ void main() {
   setUpAll(() async {
     await loadFonts();
     // Read before anything else is.
-    Directory(dataDir).createSync(recursive: true); // the tests' own
     File('$dataDir/app.json').writeAsStringSync(
       jsonEncode({
         'projectRail': true,

@@ -55,11 +55,11 @@ type ChatRecord struct {
 	// Pulls are the chat's pull requests other than the one it was started
 	// from (GitHub), in the order linked (ADR 0117): found by the head of
 	// a branch it pushed, opened by a tool call of the chat, or linked by
-	// hand; at most MaxPulls with GitHub's. Pull is the first of them,
-	// still written for a release before Pulls (ADR 0108); a record
+	// hand; at most MaxPulls with GitHub's. Pull is the first of them
+	// as a release before Pulls wrote it, no longer written: a record
 	// without Pulls takes it as its first. NoPulls are the ones unlinked by hand (node ids, or Key
 	// for one without), never found or opened again; NoPull is the number
-	// a release before Pulls kept for that.
+	// a release before Pulls kept for that, read still.
 	Pulls   []ChatGitHub `json:",omitempty"`
 	NoPulls []string     `json:",omitempty"`
 	Pull    *ChatGitHub  `json:",omitempty"`

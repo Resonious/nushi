@@ -18,8 +18,6 @@ import 'harness.dart';
 
 // UX review, finding 23: ⌘F in a transcript and in Changes.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Item _msg(String id, ItemKind kind, String text) =>
     Item(id: id, kind: kind, text: text);
 
@@ -32,7 +30,6 @@ Future<Daemon> _app(WidgetTester tester) async {
         const MethodChannel('nushi/fonts'),
         (_) async => <String>[],
       );
-  paneWidths.value = {};
   showDetails.value = false;
   const user = ItemKind.ITEM_KIND_USER_MESSAGE;
   const agent = ItemKind.ITEM_KIND_AGENT_MESSAGE;
@@ -75,10 +72,7 @@ Future<Daemon> _app(WidgetTester tester) async {
 }
 
 Future<void> _cmdF(WidgetTester tester) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
+  await cmdKey(tester, LogicalKeyboardKey.keyF);
 }
 
 /// The marks of the find on the transcript.
@@ -129,7 +123,7 @@ void main() {
     expect(find.byType(FindBar), findsNothing);
     expect(_marks(tester), isEmpty);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⌘F in Changes: the files with the text, its hits in the diff', (
     tester,
@@ -156,7 +150,7 @@ void main() {
     expect(find.textContaining('add.go', findRichText: true), findsWidgets);
     expect(chat.changesFind.query, isNull);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⌘F in Changes: ⏎ goes on to the next file with the text, and '
       '⇧⏎ back to the end of the one before', (tester) async {
@@ -200,7 +194,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find_.files, (2, 2));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   test('a diff is found through top to bottom, an unchanged line once', () {
     final diff = TextDiff.compute(

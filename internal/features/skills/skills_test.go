@@ -16,9 +16,11 @@ type fakeReader struct {
 	listed int // List's calls
 	calls  *[]string
 	name   string
-	// refused are the paths CanTrash, and a linker's CanLink, refuse.
+	// refused are the paths Refuse, and a linker's CanLink, refuse.
 	refused []string
 }
+
+var _ Refuser = (*fakeReader)(nil)
 
 func (f *fakeReader) List(context.Context, string) (model.Skills, error) {
 	f.listed++
@@ -28,17 +30,13 @@ func (f *fakeReader) SetSkillOn(_ context.Context, _, source, name string, on bo
 	*f.calls = append(*f.calls, fmt.Sprintf("%s skill %s %s %v", f.name, source, name, on))
 	return nil
 }
-func (f *fakeReader) CanTrash(_ context.Context, _, path string) error {
+func (f *fakeReader) Own(string) (project, yours []string) {
+	return []string{"/r/." + f.name + "/skills"}, nil
+}
+func (f *fakeReader) Refuse(_, path string) error {
 	if slices.Contains(f.refused, path) {
 		return fmt.Errorf("%s refuses %s", f.name, path)
 	}
-	return nil
-}
-func (f *fakeReader) Trash(ctx context.Context, folder, path string) error {
-	if err := f.CanTrash(ctx, folder, path); err != nil {
-		return err
-	}
-	*f.calls = append(*f.calls, f.name+" trash "+path)
 	return nil
 }
 
@@ -52,8 +50,8 @@ func (f *fakeClaude) SetBuiltInOn(_ context.Context, _ string, on bool) error {
 	*f.calls = append(*f.calls, fmt.Sprintf("builtin %v", on))
 	return nil
 }
-func (f *fakeClaude) CanLink(ctx context.Context, folder, path string) error {
-	return f.CanTrash(ctx, folder, path)
+func (f *fakeClaude) CanLink(_ context.Context, folder, path string) error {
+	return f.Refuse(folder, path)
 }
 func (f *fakeClaude) Link(ctx context.Context, folder, path string) error {
 	if err := f.CanLink(ctx, folder, path); err != nil {
@@ -203,8 +201,8 @@ func TestTrashAndLink(t *testing.T) {
 			t.Errorf("linked %v", c)
 		}
 	}
-	want := []string{"claude trash /r/.claude/skills/b", "trash /r/.agents/skills/b in [/r/.agents/skills] []",
-		"claude trash /r/.claude/skills/own", "link /r/.agents/skills/a"}
+	want := []string{"trash /r/.claude/skills/b in [/r/.claude/skills] []", "trash /r/.agents/skills/b in [/r/.agents/skills] []",
+		"trash /r/.claude/skills/own in [/r/.claude/skills] []", "link /r/.agents/skills/a"}
 	if !reflect.DeepEqual(*calls, want) {
 		t.Errorf("calls:\n%q\nwant\n%q", *calls, want)
 	}

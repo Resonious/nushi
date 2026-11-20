@@ -25,7 +25,7 @@ func (c *chat) update(n *acp.SessionNotification, from *child) {
 
 func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:gocognit,gocyclo,maintidx // one case per ACP update kind
 	replayed := slices.Contains(replayKinds, n.Update.SessionUpdate)
-	if c.kept && replayed {
+	if c.outlived && replayed {
 		return // session/load's replay of a transcript the chat still has
 	}
 	parent, ok := c.stepOfLocked(n, from)
@@ -33,8 +33,8 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 		return
 	}
 	if c.replaying && replayed { // it goes aside, to be merged with the copy
-		c.items, c.replay, c.quiet = c.replay, c.items, true
-		defer func() { c.items, c.replay, c.quiet = c.replay, c.items, false }()
+		c.items, c.replay, c.muted = c.replay, c.items, true
+		defer func() { c.items, c.replay, c.muted = c.replay, c.items, false }()
 	}
 	if c.commandTaskLocked(n.Update) {
 		return // a background command's task, told on its call: no step of the agent's work
@@ -105,8 +105,8 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 		c.commands = c.kind.withTerminalCommands(listed)
 		c.emitLocked(model.Event{ChatID: c.id, Commands: slices.Clone(c.commands)})
 		c.statusChangedLocked() // CanAskContext
-		if len(listed) > 0 && !slices.Equal(listed, c.remembered.Commands(c.kind.Name)) {
-			if err := c.remembered.SetCommands(c.kind.Name, listed); err != nil {
+		if len(listed) > 0 && !slices.Equal(listed, c.svc.remembered.Commands(c.kind.Name)) {
+			if err := c.svc.remembered.SetCommands(c.kind.Name, listed); err != nil {
 				c.logLocked().Warn("commands not remembered", "err", err)
 			}
 		}
@@ -192,7 +192,7 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 		c.publishLocked(*it)
 		c.reportedLocked(*it)
 		c.passedOnLocked(*it)
-		if t.Status == "completed" || t.Status == "failed" {
+		if callEnded(string(t.Status)) {
 			c.openedPullLocked(*it)
 			c.pushedLocked(*it)
 			c.stoppedLocked(*it)
@@ -201,7 +201,7 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 				c.relatedStepLocked()
 			}
 		}
-		if (t.Status == "completed" || t.Status == "failed") && it.Parent == "" && !c.started.IsZero() {
+		if callEnded(string(t.Status)) && it.Parent == "" && !c.started.IsZero() {
 			c.deliverLocked() // between tool calls: the agent's chance to take queued messages
 		}
 	}
@@ -303,7 +303,7 @@ func (c *chat) chunkLocked(kind model.ItemKind, m *acp.ContentChunk, parent stri
 		return
 	}
 	item := model.Item{ID: id, Kind: kind, Text: text, Images: images, Parent: parent}
-	if s, ok := m.Meta[model.SentMeta].(string); ok && c.quiet && kind != model.Thought {
+	if s, ok := m.Meta[model.SentMeta].(string); ok && c.muted && kind != model.Thought {
 		item.Sent, _ = time.Parse(time.RFC3339Nano, s) // a zero time if it isn't one: not known
 	}
 	c.unnotedLocked(&item)

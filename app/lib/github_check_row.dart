@@ -5,6 +5,7 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_parts.dart';
 import 'package:nushi/send_to_agent.dart';
+import 'package:nushi/status.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 
@@ -25,10 +26,7 @@ String checkTook(GitHubCheck c) {
   final from = c.startedMs.toInt();
   final to = c.completedMs.toInt();
   if (from <= 0 || to < from) return '';
-  final s = (to - from) ~/ 1000;
-  return s < 60
-      ? '${s}s'
-      : '${s ~/ 60}m ${(s % 60).toString().padLeft(2, '0')}s';
+  return elapsed(Duration(seconds: (to - from) ~/ 1000));
 }
 
 /// A failed or running check: its state, workflow and name, whether it's

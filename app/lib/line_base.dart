@@ -56,11 +56,7 @@ enum NoMarks {
 /// file as saved.
 class LineBase extends ChangeNotifier implements ValueListenable<String?> {
   new(this.daemon, this.chat, this.watch) {
-    _folder = chat.folder;
-    _worktree = chat.worktree?.base ?? '';
-    _commits = chat.commits;
-    _wasBusy = chat.busy;
-    chat.addListener(_chatChanged);
+    marksBaseOf(chat).addListener(_baseMoved);
     watch.addListener(_fileChanged);
     _fileChanged();
   }
@@ -114,16 +110,12 @@ class LineBase extends ChangeNotifier implements ValueListenable<String?> {
   /// What the marks count from, as the path row and a mark's card say it:
   /// "since main", "since this chat began", "since the last commit".
   String get since => switch (_from) {
-    MarksFrom.branch => 'since ${baseName(_against)}',
+    MarksFrom.branch => 'since ${branchLabel(_against)}',
     MarksFrom.chat => 'since this chat began',
     MarksFrom.lastCommit => 'since the last commit',
   };
 
   String? _sha;
-  late String _folder;
-  late String _worktree;
-  late int _commits;
-  late bool _wasBusy;
   int _asked = 0; // only the latest question's answer lands
   bool _disposed = false;
 
@@ -140,21 +132,10 @@ class LineBase extends ChangeNotifier implements ValueListenable<String?> {
     unawaited(ask());
   }
 
-  void _chatChanged() {
-    final ended = _wasBusy && !chat.busy;
-    _wasBusy = chat.busy;
-    final worktree = chat.worktree?.base ?? '';
-    final moved = _folder != chat.folder || _worktree != worktree;
-    final committed = _commits != chat.commits;
-    if (ended || moved || committed) {
-      // A commit can be the chat's first, which moves its start
-      // (marksBaseOf finds it again).
-      _folder = chat.folder;
-      _worktree = worktree;
-      _commits = chat.commits;
-      unawaited(ask());
-    }
-  }
+  // The chat's turn ended, it committed, or its folder or worktree
+  // changed: the base may have moved (a commit can be the chat's first,
+  // which moves its start), and the file's marks with it.
+  void _baseMoved() => unawaited(ask());
 
   /// Asks again what the file was before the chat's work.
   Future<void> ask() async {
@@ -305,7 +286,7 @@ class LineBase extends ChangeNotifier implements ValueListenable<String?> {
   void dispose() {
     _disposed = true;
     _slowly?.cancel();
-    chat.removeListener(_chatChanged);
+    marksBaseOf(chat).removeListener(_baseMoved);
     watch.removeListener(_fileChanged);
     super.dispose();
   }
@@ -313,7 +294,7 @@ class LineBase extends ChangeNotifier implements ValueListenable<String?> {
 
 /// A base branch's name as the path row says it: a remote's `origin/`
 /// left off ("main"), a commit's hash shortened.
-String baseName(String base) {
+String branchLabel(String base) {
   if (RegExp(r'^[0-9a-f]{40}$').hasMatch(base)) return base.substring(0, 7);
   return base.startsWith('origin/') ? base.substring(7) : base;
 }

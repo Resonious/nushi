@@ -73,16 +73,8 @@ typedef FileText = ({String text, FileCodec codec});
   final codec = FileCodec(bom: bom, crlf: crlf > 0);
   final text = crlf > 0 ? raw.replaceAll('\r\n', '\n') : raw;
   // What can't come back the same isn't edited (a BOM after the first).
-  if (!_same(codec.encode(text), bytes)) {
+  if (!listEquals(codec.encode(text), bytes)) {
     return (null, 'it wouldn’t be saved as it is.');
   }
   return ((text: text, codec: codec), null);
-}
-
-bool _same(List<int> a, List<int> b) {
-  if (a.length != b.length) return false;
-  for (var i = 0; i < a.length; i++) {
-    if (a[i] != b[i]) return false;
-  }
-  return true;
 }

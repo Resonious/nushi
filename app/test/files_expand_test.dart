@@ -30,11 +30,6 @@ import 'panes_app.dart';
 // either pane (ADR 0123): it takes the whole chat pane until Collapse, Esc,
 // the pane hidden, a browser tab shown, a terminal or another tab.
 
-const _both = TargetPlatformVariant({
-  TargetPlatform.macOS,
-  TargetPlatform.linux,
-});
-
 Finder _inFiles(String tooltip) => find.descendant(
   of: find.byType(FilesPane),
   matching: find.byTooltip(tooltip),
@@ -49,10 +44,7 @@ Future<void> _tap(WidgetTester tester, Finder f) async {
 
 /// ⌘W.
 Future<void> _close(WidgetTester tester) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(LogicalKeyboardKey.keyW);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
+  await cmdKey(tester, LogicalKeyboardKey.keyW);
 }
 
 Future<void> _esc(WidgetTester tester) async {
@@ -207,7 +199,7 @@ void main() {
     expect(tester.getRect(files).left, greaterThan(TitleButtons.right));
     await render(tester, find.byType(Pane), 'files_expanded_1700');
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets('⌘W stays in the Files pane with the keys: blank, beside the '
       'browser or covering it, it closes none of its tabs', (tester) async {
@@ -333,10 +325,7 @@ void main() {
     final beside = tester.getRect(find.byType(FilesPane));
     await _tap(tester, _expand);
     await _tap(tester, find.byType(SourceEditor));
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyF);
     expect(find.byType(EditorFindBar), findsOneWidget);
     final bar = find.descendant(
       of: find.byType(EditorFindBar),
@@ -371,10 +360,7 @@ void main() {
     );
     final c = d.chats['c']!;
     Future<void> find0() async {
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-      await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-      await tester.pumpAndSettle();
+      await cmdKey(tester, LogicalKeyboardKey.keyF);
     }
 
     await _tap(tester, _expand);

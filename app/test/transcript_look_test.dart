@@ -29,8 +29,6 @@ import 'package:nushi/trust_card.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// A small screenshot, as a message's image.
 final Uint8List _shot = base64.decode(
   'iVBORw0KGgoAAAANSUhEUgAAAGAAAAA8CAIAAAAWtijjAAAAh0lEQVR42u3XsQ2AIABEUTayJ1'
@@ -59,9 +57,6 @@ Item _tool(
   input: input,
   diffs: diffs,
 );
-
-Item _say(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
 
 const _old = '''
 func (h *Handler) Feed(w http.ResponseWriter, r *http.Request) {
@@ -103,7 +98,7 @@ final _items = <Item>[
   _tool('r1', 'read', 'Read', paths: ['internal/store/posts.go']),
   _tool('r2', 'read', 'Read', paths: ['internal/feed/handler.go']),
   _tool('r3', 'search', 'Search for ListPosts'),
-  _say(
+  agentSays(
     'm1',
     '`ListPosts` reads the whole table in one query. I’ll give it a keyset '
         'cursor on `(published, id)`, so a post published while someone '
@@ -188,7 +183,7 @@ final _items = <Item>[
       ),
     ],
   ),
-  _say(
+  agentSays(
     'm2',
     'The store and the handler page now.\n\n'
         '```go\nfunc ParseCursor(q url.Values) (Cursor, error) {\n'
@@ -388,7 +383,7 @@ void main() {
           'look_transcript_${w}_${b.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('its end at the window’s height, the agent working, '
           '${b.name}, $w wide', (tester) async {
@@ -415,7 +410,7 @@ void main() {
           'look_working_${w}_${b.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('a permission and a question, ${b.name}, $w wide', (
         tester,
@@ -427,7 +422,7 @@ void main() {
           idle: true,
           items: [
             _items.first,
-            _say('m', 'Two things before I go on.'),
+            agentSays('m', 'Two things before I go on.'),
             _permission(),
             _question(),
           ],
@@ -439,7 +434,7 @@ void main() {
           'look_cards_${w}_${b.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('the subagent’s pane, ${b.name}, $w wide', (tester) async {
         final (d, _) = await _app(tester, size: size, brightness: b);
@@ -452,7 +447,7 @@ void main() {
           'look_subagent_${w}_${b.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     // The composer's states, as the chat's view has it: 720 and 400 wide
@@ -642,7 +637,6 @@ void main() {
       addTearDown(
         tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
       );
-      Collapsible.opened.clear();
       final c = chat('c', 'claude', 'Paginate the feed');
       final fake = FakeDaemon([c])
         ..answer = ((input) => input is GetChatRequest

@@ -45,9 +45,7 @@ func TestSetChatColor(t *testing.T) {
 	}
 
 	// Kept across a restart.
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	if got := color(); got != "amber" {
 		t.Fatalf("after a restart: %q", got)
 	}

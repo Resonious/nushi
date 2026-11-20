@@ -8,15 +8,12 @@ import 'package:nushi/main.dart';
 import 'package:nushi/replies.dart';
 import 'package:nushi/reply_cards.dart';
 import 'package:nushi/send_to_agent.dart';
-import 'package:nushi/settings.dart';
 
 import 'fake_daemon.dart';
 import 'github_fixture.dart' show pull;
 import 'harness.dart';
 
 const _repo = 'afrase/nushi-gh-test';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 Finder get _send => find.byTooltip(
   "Send to the agent: a reply card in the chat's box, to send",
@@ -69,8 +66,6 @@ void main() {
   testWidgets("send to agent: a comment and a failed check go to the chat's "
       'box as reply cards, together', (tester) async {
     viewport(tester, const Size(1500, 900));
-    showDetails.value = true;
-    pullSeen.value = {};
     final c = chat('c', 'claude', 'Add Sub and Neg');
     final fake = FakeDaemon([c])
       ..answer = (input) => switch (input) {
@@ -169,7 +164,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ReplyCards), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a review thread: Send to agent in a tab, none in the GitHub '
       'view', (tester) async {

@@ -29,23 +29,16 @@ import 'sidebar_fixture.dart';
 
 void main() {
   final macOS = TargetPlatformVariant.only(TargetPlatform.macOS);
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   for (final width in [1700.0, 720.0]) {
     for (final brightness in Brightness.values) {
       final name = '${width.toInt()}_${brightness.name}';
       testWidgets('the window with the projects’ tiles, $name', (tester) async {
         viewport(tester, Size(width, 900), brightness: brightness);
-        paneWidths.value = {};
         sidebarProjects.value = {'/Users/me/zeta'};
         // A mark and a color, an image of the user's own, an animated
         // one (at rest: its first frame), and a repository's icon.
-        if (tileImagesDir.existsSync()) {
-          tileImagesDir.deleteSync(recursive: true);
-        }
         final photo = keepTileImage((
           bytes: await photoPng(tester, width: 1200, height: 800),
           kind: 'png',
@@ -99,9 +92,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
         await render(tester, find.byType(NushiApp), 'tiles_menu_$name');
         await tester.tap(find.text('Change tile…'));
-        for (var i = 0; i < 4; i++) {
-          await tester.pump(const Duration(milliseconds: 300));
-        }
+        await frames(tester, 4, const Duration(milliseconds: 300));
         await tester.enterText(find.byType(TextField), 'G7');
         await tester.tap(find.byTooltip('Amber'));
         await tester.pump();
@@ -154,9 +145,7 @@ void main() {
           'tiles_dialog_framed_$name',
         );
         await tester.tap(find.widgetWithText(Button, 'Save'));
-        for (var i = 0; i < 4; i++) {
-          await tester.pump(const Duration(milliseconds: 300));
-        }
+        await frames(tester, 4, const Duration(milliseconds: 300));
         expect(projectTiles.value[garden]!.crop, isNotNull);
         await untilReal(
           tester,
@@ -179,9 +168,7 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 300));
         await tester.tap(find.text('Change tile…'));
-        for (var i = 0; i < 4; i++) {
-          await tester.pump(const Duration(milliseconds: 300));
-        }
+        await frames(tester, 4, const Duration(milliseconds: 300));
         await tester.tap(find.widgetWithText(Button, 'Choose image…'));
         await untilReal(
           tester,
@@ -220,20 +207,14 @@ void main() {
         await render(tester, find.byType(NushiApp), 'tiles_dialog_trim_$name');
         await end.up();
         await tester.tap(find.widgetWithText(Button, 'Cancel'));
-        for (var i = 0; i < 4; i++) {
-          await tester.pump(const Duration(milliseconds: 300));
-        }
+        await frames(tester, 4, const Duration(milliseconds: 300));
         await closeView(tester, d);
       }, variant: macOS);
 
       testWidgets('the window with the project rail, $name', (tester) async {
         viewport(tester, Size(width, 900), brightness: brightness);
-        paneWidths.value = {};
         projectRail.value = true;
         sidebarProjects.value = {'/Users/me/zeta'};
-        if (tileImagesDir.existsSync()) {
-          tileImagesDir.deleteSync(recursive: true);
-        }
         final photo = keepTileImage((
           bytes: await photoPng(tester, width: 1200, height: 800),
           kind: 'png',
@@ -322,9 +303,7 @@ void main() {
 
         // Narrowed to a project.
         await tester.tap(find.byTooltip('ledger-poc\n$ledger'));
-        for (var i = 0; i < 5; i++) {
-          await tester.pump(const Duration(milliseconds: 300));
-        }
+        await frames(tester, 5, const Duration(milliseconds: 300));
         expectTextInside(tester, width);
         await render(tester, find.byType(NushiApp), 'rail_one_$name');
 
@@ -337,18 +316,14 @@ void main() {
         expectTextInside(tester, width);
         await render(tester, find.byType(NushiApp), 'rail_menu_$name');
         await tester.tap(find.text('Change tile…'));
-        for (var i = 0; i < 4; i++) {
-          await tester.pump(const Duration(milliseconds: 300));
-        }
+        await frames(tester, 4, const Duration(milliseconds: 300));
         await tester.enterText(find.byType(TextField), 'G7');
         await tester.tap(find.byTooltip('Amber'));
         await tester.pump();
         expectTextInside(tester, width);
         await render(tester, find.byType(NushiApp), 'rail_tile_dialog_$name');
         await tester.tap(find.widgetWithText(Button, 'Save'));
-        for (var i = 0; i < 4; i++) {
-          await tester.pump(const Duration(milliseconds: 300));
-        }
+        await frames(tester, 4, const Duration(milliseconds: 300));
         await closeView(tester, d);
       }, variant: macOS);
     }

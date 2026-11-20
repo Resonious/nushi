@@ -179,11 +179,7 @@ func (s *server) GetGitHubJobLog(ctx context.Context, req *connect.Request[nushi
 }
 
 func (s *server) ReplyGitHubThread(ctx context.Context, req *connect.Request[nushiv1.ReplyGitHubThreadRequest]) (*connect.Response[nushiv1.ReplyGitHubThreadResponse], error) {
-	c, err := s.GitHub.Reply(ctx, req.Msg.Host, req.Msg.Thread, req.Msg.Body)
-	if err != nil {
-		return nil, githubErr(err)
-	}
-	return connect.NewResponse(&nushiv1.ReplyGitHubThreadResponse{Comment: ghCommentProto(c)}), nil
+	return done[nushiv1.ReplyGitHubThreadResponse](s.GitHub.Reply(ctx, req.Msg.Host, req.Msg.Thread, req.Msg.Body), githubErr)
 }
 
 func (s *server) ResolveGitHubThread(ctx context.Context, req *connect.Request[nushiv1.ResolveGitHubThreadRequest]) (*connect.Response[nushiv1.ResolveGitHubThreadResponse], error) {
@@ -199,11 +195,7 @@ func (s *server) RerunGitHubChecks(ctx context.Context, req *connect.Request[nus
 }
 
 func (s *server) AddGitHubComment(ctx context.Context, req *connect.Request[nushiv1.AddGitHubCommentRequest]) (*connect.Response[nushiv1.AddGitHubCommentResponse], error) {
-	c, err := s.GitHub.Comment(ctx, req.Msg.Host, req.Msg.Subject, req.Msg.Body)
-	if err != nil {
-		return nil, githubErr(err)
-	}
-	return connect.NewResponse(&nushiv1.AddGitHubCommentResponse{Comment: ghCommentProto(c)}), nil
+	return done[nushiv1.AddGitHubCommentResponse](s.GitHub.Comment(ctx, req.Msg.Host, req.Msg.Subject, req.Msg.Body), githubErr)
 }
 
 func (s *server) SubmitGitHubReview(ctx context.Context, req *connect.Request[nushiv1.SubmitGitHubReviewRequest]) (*connect.Response[nushiv1.SubmitGitHubReviewResponse], error) {

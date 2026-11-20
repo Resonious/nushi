@@ -13,12 +13,12 @@ import 'package:nushi/theme/theme.dart';
 
 /// [child] coming as it's given and going as it's taken away (null): its
 /// run goes from 0 to 1 over [enter] through [curve] as it comes, and back
-/// over [exit] through [leave] as it goes, [builder] drawing the child at
-/// its run. While it goes it shows the last child it was given (the same
-/// widget, so what it read stays) and takes no pointer or focus; once gone
-/// it's nothing. What it's given at its first build is there at once
-/// unless it [arrives] (a pane opened beside a view that was there), and
-/// under Reduce Motion everything is.
+/// over [Motion.exit] through [Motion.leave] as it goes, [builder] drawing
+/// the child at its run. While it goes it shows the last child it was
+/// given (the same widget, so what it read stays) and takes no pointer or
+/// focus; once gone it's nothing. What it's given at its first build is
+/// there at once unless it [arrives] (a pane opened beside a view that was
+/// there), and under Reduce Motion everything is.
 ///
 /// Not [shown], a child goes as one taken away does, but stays: once gone
 /// it's kept, laid out but not drawn, taking no pointer or focus, its
@@ -31,9 +31,7 @@ class Presence extends StatefulWidget {
     required this.builder,
     super.key,
     this.enter = Motion.enter,
-    this.exit = Motion.exit,
     this.curve = Motion.settle,
-    this.leave = Motion.leave,
     this.arrives = false,
     this.shown = true,
   });
@@ -48,9 +46,7 @@ class Presence extends StatefulWidget {
   )
   builder;
   final Duration enter;
-  final Duration exit;
   final Curve curve;
-  final Curve leave;
 
   @override
   State<Presence> createState() => _PresenceState();
@@ -69,14 +65,14 @@ class _PresenceState extends State<Presence>
     _run = AnimationController(
       vsync: this,
       duration: widget.enter,
-      reverseDuration: widget.exit,
+      reverseDuration: Motion.exit,
       value: _last == null || widget.arrives || !widget.shown ? 0 : 1,
     )..addStatusListener(_ran);
     // Going, the run goes back through [Presence.leave]: it gathers speed.
     _curved = CurvedAnimation(
       parent: _run,
       curve: widget.curve,
-      reverseCurve: widget.leave.flipped,
+      reverseCurve: Motion.leave.flipped,
     );
   }
 

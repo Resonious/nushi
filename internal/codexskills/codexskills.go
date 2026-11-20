@@ -114,10 +114,10 @@ func (c Codex) SetSkillOn(ctx context.Context, folder, source, name string, on b
 	return setOn(configFile(), skillFile(s.Path), s.Name, on)
 }
 
-// own are the places Codex's own skill folders are in: the project's
+// Own are the places Codex's own skill folders are in: the project's
 // .codex/skills and your skills folder (not Codex's own .system ones,
 // which it puts back).
-func own(folder string) (project, yours []string) {
+func (Codex) Own(folder string) (project, yours []string) {
 	for _, r := range roots(folder) {
 		switch r.source {
 		case "user":
@@ -127,18 +127,4 @@ func own(folder string) (project, yours []string) {
 		}
 	}
 	return project, yours
-}
-
-// CanTrash says why Trash wouldn't move path: nil only for a skill's
-// folder right in one of Codex's own places.
-func (Codex) CanTrash(_ context.Context, folder, path string) error {
-	project, yours := own(folder)
-	return skillfile.CanTrash(project, yours, path)
-}
-
-// Trash moves one of Codex's skill folders to the Trash: only one
-// CanTrash passes.
-func (Codex) Trash(ctx context.Context, folder, path string) error {
-	project, yours := own(folder)
-	return skillfile.Trash(ctx, project, yours, path)
 }

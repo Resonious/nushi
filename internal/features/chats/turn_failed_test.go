@@ -1,7 +1,6 @@
 package chats
 
 import (
-	"context"
 	"errors"
 	"slices"
 	"strings"
@@ -114,9 +113,7 @@ func steeredOf(c *chat) map[string]bool {
 
 // ranTool has the agent run and end a tool call in the chat's turn.
 func ranTool(c *chat, id string) {
-	for _, u := range []acp.SessionUpdate{toolCall(id, "in_progress"), toolDone(id)} {
-		_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: u})
-	}
+	send(c, toolCall(id, "in_progress"), toolDone(id))
 }
 
 // A message steered into a turn is marked so, which the app's Continue

@@ -22,8 +22,6 @@ import 'harness.dart';
 // the chat, which doesn't move; it goes once the pointer has been off it
 // for a moment, never while its menu is open.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const _show = 'Show the sidebar\u2002⌘\\';
 
 Future<Daemon> _window(
@@ -33,7 +31,6 @@ Future<Daemon> _window(
 }) async {
   viewport(tester, Size(width, 700), brightness: brightness);
   sidebarHidden.value = true;
-  paneWidths.value = {};
   final d = await FakeDaemon([
     chat('a', 'claude', 'Fix the login redirect after it expires'),
     chat('b', 'codex', 'Bump the API version', age: 1),
@@ -104,7 +101,7 @@ void main() {
     expect(find.byType(Sidebar), findsNothing);
     expect(tester.getRect(find.byType(ChatHeader)), header);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a menu of it open keeps it, the pointer on the menu', (
     tester,
@@ -141,7 +138,7 @@ void main() {
     expect(find.text('Rename'), findsNothing);
     expect(find.byType(Sidebar), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('its edge dragged past it keeps it until let go', (tester) async {
     // Dragged wider than its most, the pointer leaves the card: the peek
@@ -169,7 +166,7 @@ void main() {
     expect(find.byType(Sidebar), findsNothing);
     expect(paneWidths.value['sidebar'], sidebarMost(1200));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the button pressed while it peeks shows it for good, at once '
       'where it was', (tester) async {
@@ -188,13 +185,11 @@ void main() {
     expect(find.byType(Sidebar), findsOneWidget);
     expect(shown.top, floating.top, reason: 'at the height it floated at');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('hidden by its button, it doesn’t peek until the pointer has '
       'left the button and come back', (tester) async {
     viewport(tester, const Size(1200, 700));
-    sidebarHidden.value = false;
-    paneWidths.value = {};
     final d = await FakeDaemon([chat('a', 'claude', 'One')]).connect(tester);
     await tester.pumpWidget(NushiApp(daemon: d));
     await tester.pumpAndSettle();
@@ -212,7 +207,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(Sidebar), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the pointer resting on the window’s left edge peeks; one '
       'passing doesn’t', (tester) async {
@@ -233,7 +228,7 @@ void main() {
     await tester.pump(SidebarBeside.grace * 2);
     expect(find.byType(Sidebar), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('under Reduce Motion it comes and goes at once', (tester) async {
     tester.platformDispatcher.accessibilityFeaturesTestValue =
@@ -245,7 +240,7 @@ void main() {
     await tester.pump();
     expect(tester.getRect(find.byType(Sidebar)).left, NushiTheme.windowPad);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('on Linux too, under its title bar', (tester) async {
     native
@@ -278,7 +273,7 @@ void main() {
             'sidebar_peek_${width.toInt()}_${b.name}',
           );
           d.dispose();
-        }, variant: _mac);
+        }, variant: onMac);
       }
     }
   });

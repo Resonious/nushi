@@ -10,14 +10,6 @@
 // counterpart: the system's title bar moves and zooms the window here
 // (ADR 0104).
 
-// Answers [call] with [response], or says why it couldn't.
-static void window_respond(FlMethodCall* call, FlMethodResponse* response) {
-  g_autoptr(GError) error = nullptr;
-  if (!fl_method_call_respond(call, response, &error)) {
-    g_warning("nushi/window: %s", error->message);
-  }
-}
-
 // The token [call]'s map carries, or null.
 static const gchar* window_token(FlMethodCall* call) {
   FlValue* args = fl_method_call_get_args(call);
@@ -43,9 +35,7 @@ static void window_present(FlMethodCall* call) {
     }
     gtk_window_present(window);
   }
-  g_autoptr(FlMethodResponse) response =
-      FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
-  window_respond(call, response);
+  channel_answer(call, nullptr);
 }
 
 static void window_call(FlMethodChannel* channel, FlMethodCall* call,
@@ -54,9 +44,7 @@ static void window_call(FlMethodChannel* channel, FlMethodCall* call,
     window_present(call);
     return;
   }
-  g_autoptr(FlMethodResponse) response =
-      FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
-  window_respond(call, response);
+  channel_not_implemented(call);
 }
 
 void window_register(FlView* view) {

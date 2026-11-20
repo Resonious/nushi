@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,10 +10,10 @@ import 'package:nushi/palette.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/sidebar.dart';
 import 'package:nushi/sidebar_view.dart';
-import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
+import 'sidebar_fixture.dart';
 
 const _ledger = '/Users/me/ledger-poc';
 
@@ -35,34 +33,13 @@ List<Chat> _chats({Map<String, int> pins = const {}}) => [
 
 /// The sidebar alone, 260 wide, on [chats].
 Future<Daemon> _sidebar(WidgetTester tester, List<Chat> chats) async {
-  viewport(tester, const Size(400, 600));
-  final d = await FakeDaemon(chats).connect(tester);
-  await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: const NushiTheme(Tokens.dark).toThemeData(),
-      home: MediaQuery(
-        data: const MediaQueryData(disableAnimations: true),
-        child: Scaffold(
-          body: Align(
-            alignment: Alignment.topLeft,
-            child: RepaintBoundary(
-              key: const Key('shot'),
-              child: SizedBox(
-                width: 260,
-                height: 560,
-                child: ListenableBuilder(
-                  listenable: d,
-                  builder: (context, _) => Sidebar(daemon: d),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    ),
+  final (d, _) = await arrangedSidebar(
+    tester,
+    chats: chats,
+    size: const Size(400, 600),
+    height: 560,
+    settle: false,
   );
-  await tester.pump();
   return d;
 }
 
@@ -135,19 +112,9 @@ Future<(Daemon, FakeDaemon)> _app(
 Finder _inSidebar(String title) =>
     find.descendant(of: find.byType(Sidebar), matching: find.text(title));
 
-Future<void> _key(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
-}
-
 void main() {
   final macOS = TargetPlatformVariant.only(TargetPlatform.macOS);
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   testWidgets('a double click opens a chat; only its menu renames it', (
     tester,
@@ -289,7 +256,7 @@ void main() {
 
     d.select('c');
     await tester.pumpAndSettle();
-    await _key(tester, LogicalKeyboardKey.keyD);
+    await cmdKey(tester, LogicalKeyboardKey.keyD);
     expect(pinned(), ['a', 'c']);
     expect(_ys(tester, 'Cap the rates'), lessThan(_ys(tester, 'Seed data')));
 
@@ -297,7 +264,7 @@ void main() {
     d.select('d');
     await tester.pumpAndSettle();
     chatOpened.value = {...chatOpened.value, 'e': clockMs() + 1000};
-    await _key(tester, LogicalKeyboardKey.keyK);
+    await cmdKey(tester, LogicalKeyboardKey.keyK);
     final rows = find.descendant(
       of: find.byType(ListView).last,
       matching: find.byType(Text),
@@ -325,7 +292,7 @@ void main() {
 
     d.select('c');
     await tester.pumpAndSettle();
-    await _key(tester, LogicalKeyboardKey.keyK);
+    await cmdKey(tester, LogicalKeyboardKey.keyK);
     await tester.enterText(
       find.descendant(
         of: find.byType(Palette),

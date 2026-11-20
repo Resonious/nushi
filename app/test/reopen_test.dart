@@ -54,13 +54,7 @@ Future<Daemon> _show(
   Tokens tokens = Tokens.dark,
 }) async {
   final d = await fake.connect(tester);
-  await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(body: child(d)),
-    ),
-  );
+  await tester.pumpWidget(themed(child(d), tokens: tokens, banner: false));
   await tester.pumpAndSettle();
   return d;
 }
@@ -226,7 +220,7 @@ void main() {
     await tester.pump();
     expect(_reopens(fake), ['c', 'c', 'c']);
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   // A chat kept though its agent deleted its session (its worktree has
   // work): quiet, not an error; Delete… instead of Try again.

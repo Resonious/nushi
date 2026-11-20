@@ -4,7 +4,6 @@ import 'package:connectrpc/connect.dart';
 import 'package:flutter/material.dart';
 
 import 'package:nushi/chat.dart';
-import 'package:nushi/clock.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/drawn.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -216,7 +215,7 @@ class _WorkflowPaneState extends State<WorkflowPane> {
                 ),
               ),
             ),
-            TaskMark(workflowMark(w)),
+            TaskMark(w.state),
           ],
         ),
         if (workflowEndWords(w) case final words when words.isNotEmpty)
@@ -416,11 +415,8 @@ class _AgentRow extends StatelessWidget {
 }
 
 /// How long an agent ran, or runs; '' when not known.
-String _agentTime(WorkflowAgent a) {
-  final since = msTime(a.started.toInt());
-  final end = a.state == 'running' ? clock() : msTime(a.ended.toInt());
-  return since == null || end == null ? '' : elapsed(end.difference(since));
-}
+String _agentTime(WorkflowAgent a) =>
+    ranFor(a.started.toInt(), a.ended.toInt(), runs: a.state == 'running');
 
 /// How often a running agent's steps are read while they show.
 const _stepsEvery = Duration(seconds: 3);

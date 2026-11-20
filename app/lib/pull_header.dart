@@ -10,17 +10,6 @@ import 'package:nushi/widgets.dart';
 
 export 'package:nushi/pull_lights.dart';
 
-/// A pull request's state as a pill ([ItemStatePill]): GitHub's icon and word
-/// on its color's tint.
-class StatePill extends StatelessWidget {
-  const new(this.item, {super.key});
-
-  final GitHubItem item;
-
-  @override
-  Widget build(BuildContext context) => ItemStatePill(item);
-}
-
 /// The page's head: the state pill, `repo#n`, who opened it and when, the
 /// title, head › base, commits and the diff's size; [actions] at the
 /// right of the first line; then whose move it is ([todo] things block the
@@ -87,7 +76,7 @@ class PullHeader extends StatelessWidget {
                 runSpacing: 4,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  StatePill(it),
+                  ItemStatePill(it),
                   Text(
                     '${it.ref.repo}#${it.ref.number}',
                     style: theme.code(t.textSecondary, size: 12),

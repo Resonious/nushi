@@ -49,6 +49,15 @@ void main() {
     expect(elapsed(const Duration(seconds: 64)), '1m 04s');
   });
 
+  test('how long something ran: to its end, or to now while it runs', () {
+    final start = fixtureNow.millisecondsSinceEpoch - 64000;
+    expect(ranFor(start, start + 12000, runs: false), '12s');
+    expect(ranFor(start, 0, runs: true), '1m 04s');
+    // Its start or its end never seen: nothing.
+    expect(ranFor(0, start, runs: false), '');
+    expect(ranFor(start, 0, runs: false), '');
+  });
+
   test('a subagent gathers the items it made', () {
     final items = [
       Item(
@@ -70,8 +79,6 @@ void main() {
 
   test("a running subagent's time counts to the app's clock, its waits "
       'left out', () {
-    Int64 ago(Duration d) =>
-        Int64(fixtureNow.subtract(d).millisecondsSinceEpoch);
     // It started ten minutes ago, worked 20s, waited, and has worked again
     // for 2m 40s.
     final subs = subagentsOf([
@@ -82,9 +89,9 @@ void main() {
         status: 'in_progress',
         subagent: Subagent(
           state: 'running',
-          started: ago(const Duration(minutes: 10)),
+          started: msAgo(const Duration(minutes: 10)),
           worked: Int64(20000),
-          workingSince: ago(const Duration(minutes: 2, seconds: 40)),
+          workingSince: msAgo(const Duration(minutes: 2, seconds: 40)),
         ),
       ),
     ]);
@@ -95,7 +102,7 @@ void main() {
       ..workingSince = Int64.ZERO
       ..worked = Int64(192500)
       ..tokens = Int64(48120);
-    expect(subagentState(subs.single), 'done · 3m 12s · 48k tokens');
+    expect(subagentState(subs.single), 'done · 3m 12s · 48.1k tokens');
     // One the daemon didn't see work (replayed): neither.
     subs.single.call.subagent
       ..worked = Int64.ZERO

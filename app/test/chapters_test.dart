@@ -190,7 +190,7 @@ void main() {
       }
       await render(tester, find.byType(ChatView), 'chapters_$name');
       await closeView(tester, d);
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   testWidgets('a band goes edge to edge; the agent’s text keeps its '
@@ -222,5 +222,5 @@ void main() {
     );
     expect(prose.left, view.left + NushiTheme.gutter);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

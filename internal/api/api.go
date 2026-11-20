@@ -245,10 +245,10 @@ func (s *server) Events(ctx context.Context, req *connect.Request[nushiv1.Events
 		}
 		err = stream.Send(toProto(e, req.Msg.ImageRefs))
 		return err == nil
-	}, events.OnLive(func() bool {
+	}, func() bool {
 		err = stream.Send(&nushiv1.EventsResponse{})
 		return err == nil
-	}))
+	})
 	if behind != nil {
 		// A client that stopped reading (a frozen app, a phone on a bad
 		// link): its events were dropped, and it subscribes again and

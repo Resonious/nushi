@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/beside.dart';
+import 'package:nushi/beside_fit.dart';
 import 'package:nushi/panes.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/theme/theme.dart';
@@ -12,11 +13,8 @@ void main() {
       main: const SizedBox.expand(key: Key('main')),
       least: 360,
       panes: [
-        SidePane(
-          'preview',
-          initial: 560,
-          min: 300,
-          cap: cap,
+        SidePane.of(
+          PaneSpec('preview', initial: 560, min: 300, cap: cap),
           child: const SizedBox.expand(key: Key('pane')),
         ),
       ],
@@ -93,18 +91,17 @@ void main() {
           main: const SizedBox.expand(key: Key('main')),
           least: 360,
           panes: [
-            SidePane(
-              'files',
-              initial: 260,
-              min: 200,
-              cap: 480,
+            SidePane.of(
+              const PaneSpec('files', initial: 260, min: 200, cap: 480),
               child: const SizedBox.expand(key: Key('files body')),
             ),
-            SidePane(
-              'preview',
-              initial: 560,
-              min: 300,
-              cap: double.infinity,
+            SidePane.of(
+              const PaneSpec(
+                'preview',
+                initial: 560,
+                min: 300,
+                cap: double.infinity,
+              ),
               child: const SizedBox.expand(key: Key('pane')),
             ),
           ],
@@ -174,7 +171,6 @@ void main() {
     tester.view.physicalSize = const Size(2601, 1600);
     tester.view.devicePixelRatio = 2;
     addTearDown(tester.view.reset);
-    paneWidths.value = {};
     await tester.pumpWidget(beside(double.infinity));
     final drag = await tester.startGesture(edge(tester));
     await drag.moveBy(const Offset(-20, 0));
@@ -211,11 +207,8 @@ void main() {
           ),
           panes: [
             if (open.value)
-              SidePane(
-                'p',
-                initial: 300,
-                min: 200,
-                cap: 800,
+              SidePane.of(
+                const PaneSpec('p', initial: 300, min: 200, cap: 800),
                 child: const SizedBox.expand(key: Key('pane')),
               ),
           ],
@@ -228,7 +221,6 @@ void main() {
       tester.view.physicalSize = const Size(1000, 800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      paneWidths.value = {};
       open.value = true;
       cover.value = null;
       await tester.pumpWidget(app());

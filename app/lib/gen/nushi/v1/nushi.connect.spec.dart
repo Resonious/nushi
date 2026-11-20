@@ -978,7 +978,7 @@ abstract final class NushiService {
   );
 
   /// Starts pairing a phone (remote access must be on): the text for the QR
-  /// code, good until it expires. Once a phone holding it connects,
+  /// code, good for a few minutes. Once a phone holding it connects,
   /// Remote.pairing has its name and the code both screens show.
   static const startPairing = connect.Spec(
     '/$name/StartPairing',
@@ -1185,7 +1185,7 @@ abstract final class NushiService {
     nushiv1nushi.FindJiraIssuesResponse.new,
   );
 
-  /// An attachment's file or thumbnail (20 MB at most).
+  /// An attachment's file (20 MB at most).
   static const getJiraAttachment = connect.Spec(
     '/$name/GetJiraAttachment',
     connect.StreamType.unary,

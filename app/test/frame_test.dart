@@ -24,8 +24,6 @@ import 'fake_daemon.dart';
 import 'fake_shells.dart';
 import 'harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 final _items = <Item>[
   Item(
     id: 'u',
@@ -185,7 +183,7 @@ void main() {
       expect(find.byType(DetailsPanel), findsNothing);
       expect(at('Show details'), hidden);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   for (final (theme, brightness) in [
@@ -238,7 +236,7 @@ void main() {
         expect(status.right, lessThanOrEqualTo(side.right));
         expectTextInside(tester, width);
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       // For the owner's look (2026-11-11): the details shown and hidden.
       for (final (state, details) in [('open', true), ('closed', false)]) {
@@ -261,7 +259,7 @@ void main() {
           );
           expectTextInside(tester, width);
           await closeView(tester, d);
-        }, variant: _mac);
+        }, variant: onMac);
       }
 
       testWidgets('the sidebar hidden, $w wide, $theme', (tester) async {
@@ -288,7 +286,7 @@ void main() {
         expect(menu.right, pane.right - ChatHeader.end);
         expectTextInside(tester, width);
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     // What takes the chat's place sits in the same pane, its header the
@@ -334,7 +332,7 @@ void main() {
           expect(header.height, PaneHeader.height);
           expectTextInside(tester, width);
           await closeView(tester, d);
-        }, variant: _mac);
+        }, variant: onMac);
       }
     }
 
@@ -352,7 +350,7 @@ void main() {
         await render(tester, find.byType(NushiApp), 'frame-terminal-$theme');
         await closeView(tester, d);
       },
-      variant: _mac,
+      variant: onMac,
       skip: rendersDir == null,
     );
 
@@ -368,7 +366,7 @@ void main() {
       expect(pane.top, NushiTheme.windowPad);
       expect(pane.right, 1700 - NushiTheme.windowPad);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     // To look at only (`make renders`).
     testWidgets(
@@ -388,7 +386,7 @@ void main() {
         await render(tester, find.byType(NushiApp), 'frame-menu-$theme');
         await closeView(tester, d);
       },
-      variant: _mac,
+      variant: onMac,
       skip: rendersDir == null,
     );
   }

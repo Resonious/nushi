@@ -3,10 +3,6 @@ package e2e
 import (
 	"bytes"
 	"context"
-	"image"
-	"image/color"
-	"image/png"
-	"math/rand/v2"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -17,23 +13,6 @@ import (
 	"github.com/afrase/nushi/internal/model"
 )
 
-// noisePNG is a w×h PNG of noise, which doesn't compress: about 4·w·h
-// bytes.
-func noisePNG(t *testing.T, w, h int) []byte {
-	t.Helper()
-	img := image.NewNRGBA(image.Rect(0, 0, w, h))
-	r := rand.New(rand.NewPCG(1, 2)) //nolint:gosec // test pixels
-	for i := range img.Pix {
-		img.Pix[i] = uint8(r.UintN(256)) //nolint:gosec // below 256
-	}
-	img.Set(0, 0, color.Black)
-	var b bytes.Buffer
-	if err := png.Encode(&b, img); err != nil {
-		t.Fatal(err)
-	}
-	return b.Bytes()
-}
-
 // A phone takes a chat's larger images as references and each on its own
 // (ADR 0099); the Mac, which doesn't ask, gets them inline as before.
 func TestImagesAsReferences(t *testing.T) {
@@ -41,7 +20,7 @@ func TestImagesAsReferences(t *testing.T) {
 	d := startDaemon(t, t.TempDir(), &acptest.History{})
 	mac := open(t, d)
 	phone := openAt(t, d.devices)
-	big, small := noisePNG(t, 200, 150), noisePNG(t, 4, 4)
+	big, small := acptest.NoisePNG(200, 150, 1), acptest.NoisePNG(4, 4, 1)
 	if len(big) <= 64<<10 || len(small) > 64<<10 {
 		t.Fatalf("sizes: %d, %d", len(big), len(small))
 	}
@@ -96,8 +75,8 @@ func TestImagesAsReferences(t *testing.T) {
 	// from that chat only.
 	ref := snap.Items[0].Images[0].Sha256
 	got := must(phone.c.GetChatImage(ctx, connect.NewRequest(&nushiv1.GetChatImageRequest{ChatId: id, Sha256: ref})))
-	if !bytes.Equal(got.Data, big) || got.MimeType != "image/png" {
-		t.Errorf("GetChatImage: %d bytes, %q", len(got.Data), got.MimeType)
+	if !bytes.Equal(got.Data, big) {
+		t.Errorf("GetChatImage: %d bytes", len(got.Data))
 	}
 	refused := func(chat, hash string, code connect.Code) {
 		t.Helper()
@@ -158,7 +137,7 @@ func TestAnEventOfAHeldImage(t *testing.T) {
 	ctx := context.Background()
 	d := startDaemon(t, t.TempDir(), &acptest.History{})
 	mac := open(t, d)
-	big := noisePNG(t, 200, 150)
+	big := acptest.NoisePNG(200, 150, 1)
 	id := mac.start(&nushiv1.StartChatRequest{Agent: "codex", Folder: t.TempDir()})
 	must(mac.c.SendPrompt(ctx, connect.NewRequest(&nushiv1.SendPromptRequest{ChatId: id, Text: "look",
 		Images: []*nushiv1.ImageData{{MimeType: "image/png", Data: big}}})))

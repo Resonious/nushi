@@ -253,19 +253,10 @@ func bridgeMeta(meta map[string]any, key string) string {
 	return s
 }
 
-// Parent reads the Agent call a step comes from.
+// Parent reads the Agent call a step comes from. There's no SubagentOutput:
+// an Agent call lasts as long as its subagent, its output is the report,
+// and Ante can't reach a subagent (no id, message box or Stop for one).
 func (Harness) Parent(meta map[string]any) string { return bridgeMeta(meta, "parentToolUseId") }
-
-// Background is false: an Agent call lasts as long as its subagent.
-func (Harness) Background(string) bool { return false }
-
-// ReportElsewhere is false: the bridge gives an Agent call its report as
-// its output.
-func (Harness) ReportElsewhere(string) bool { return false }
-
-// SubagentID is empty: Ante has no way to reach a subagent, so Nushi has no
-// id to reach it by, and no message box or Stop for it.
-func (Harness) SubagentID(string) string { return "" }
 
 // ToolCall adds what the bridge tells of a call: the Agent call it is a step
 // of, its tool's name, and for an Agent call the subagent's type, task and

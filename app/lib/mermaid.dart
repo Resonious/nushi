@@ -34,6 +34,17 @@ class DrawnDiagram {
   final bool retry;
 }
 
+/// How long a diagram waits on a platform's hidden web view, its queue
+/// included, before it's [diagramTooLong].
+Duration diagramWait = const Duration(minutes: 1);
+
+/// What a diagram that took too long to draw is: drawn again when next
+/// asked for.
+const diagramTooLong = DrawnDiagram(
+  error: 'The diagram took too long to draw',
+  retry: true,
+);
+
 /// Draws a diagram as a picture, `width` points wide at most, in the
 /// colors given: on the Mac, mermaid.js in one hidden web view
 /// (`mermaid_macos.dart`). It answers a failure as a [DrawnDiagram]'s

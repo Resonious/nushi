@@ -3,7 +3,6 @@ package jira
 import (
 	"cmp"
 	"context"
-	"encoding/json"
 	"errors"
 	"strconv"
 	"strings"
@@ -11,89 +10,23 @@ import (
 	"testing"
 	"time"
 
+	"github.com/afrase/nushi/internal/keychain/keychaintest"
 	"github.com/afrase/nushi/internal/model"
+	"github.com/afrase/nushi/internal/store/storetest"
 )
 
-var (
-	errLocked  = errors.New("locked")
-	errRestart = errors.New("Nushi's daemon can't reach your keychain: restart it")
-	errMissing = errors.New("not in the keychain")
-)
+var errRestart = errors.New("Nushi's daemon can't reach your keychain: restart it")
 
 var testKeys = Keys{
-	NeedsOK: func(err error) bool { return errors.Is(err, errLocked) },
+	NeedsOK: func(err error) bool { return errors.Is(err, keychaintest.ErrLocked) },
 	Restart: func(err error) bool { return errors.Is(err, errRestart) },
-	Missing: func(err error) bool { return errors.Is(err, errMissing) },
-}
-
-// fakeTokens is a keychain in memory; locked makes reads without a
-// prompt fail as an earlier build's item does.
-type fakeTokens struct {
-	mu     sync.Mutex
-	items  map[string]string
-	locked bool
-	fail   error // every read's
-}
-
-func (k *fakeTokens) Set(account, _ string, secret []byte) error {
-	k.mu.Lock()
-	defer k.mu.Unlock()
-	k.items[account] = string(secret)
-	return nil
-}
-
-func (k *fakeTokens) Get(account string, prompt bool) ([]byte, error) {
-	k.mu.Lock()
-	defer k.mu.Unlock()
-	if k.locked && !prompt {
-		return nil, errLocked
-	}
-	if k.fail != nil {
-		return nil, k.fail
-	}
-	v, ok := k.items[account]
-	if !ok {
-		return nil, errMissing
-	}
-	return []byte(v), nil
-}
-
-func (k *fakeTokens) Delete(account string) error {
-	k.mu.Lock()
-	defer k.mu.Unlock()
-	delete(k.items, account)
-	return nil
+	Missing: func(err error) bool { return errors.Is(err, keychaintest.ErrMissing) },
 }
 
 type memStore struct {
+	storetest.Answers
 	sites  []model.JiraSite
 	writes []model.JiraWrite
-	cache  map[string]json.RawMessage // by area, name and key
-}
-
-func (m *memStore) Cached(area, name, key string) (time.Time, json.RawMessage, error) {
-	d, ok := m.cache[area+" "+name+" "+key]
-	if !ok {
-		return time.Time{}, nil, nil
-	}
-	return time.Unix(1, 0), d, nil
-}
-
-func (m *memStore) Cache(area, name, key string, _ time.Time, data json.RawMessage) error {
-	if m.cache == nil {
-		m.cache = map[string]json.RawMessage{}
-	}
-	m.cache[area+" "+name+" "+key] = data
-	return nil
-}
-
-func (m *memStore) ForgetCache(area, name string) error {
-	for k := range m.cache {
-		if strings.HasPrefix(k, area+" "+name+" ") {
-			delete(m.cache, k)
-		}
-	}
-	return nil
 }
 
 func (m *memStore) JiraWrites() ([]model.JiraWrite, error) { return m.writes, nil }
@@ -166,13 +99,13 @@ func (f *fakeClient) AddComment(_ context.Context, _, markdown string) (model.Ji
 	return model.JiraComment{ID: "1", Body: markdown}, nil
 }
 
-func (f *fakeClient) Attachment(context.Context, string, bool) ([]byte, string, error) {
+func (f *fakeClient) Attachment(context.Context, string) ([]byte, string, error) {
 	return []byte("x"), "image/png", nil
 }
 
-func newService(t *testing.T) (*Service, *fakeTokens, *[]*fakeClient) {
+func newService(t *testing.T) (*Service, *keychaintest.Keychain, *[]*fakeClient) {
 	t.Helper()
-	tokens := &fakeTokens{items: map[string]string{}}
+	tokens := &keychaintest.Keychain{}
 	var opened []*fakeClient
 	sites := Sites{
 		Connect: func(_ context.Context, site, _, token string) (Client, model.JiraSite, error) {
@@ -205,8 +138,8 @@ func TestSites(t *testing.T) {
 	if SiteID(site) != "e.atlassian.net" || site.Email != "me@e.com" || !site.Expires.Equal(expires) {
 		t.Errorf("site %+v", site)
 	}
-	if tokens.items["me@e.com on e.atlassian.net"] != "good" {
-		t.Errorf("the keychain has %v", tokens.items)
+	if tokens.Items["me@e.com on e.atlassian.net"] != "good" {
+		t.Errorf("the keychain has %v", tokens.Items)
 	}
 	if err := s.SetBoard("e.atlassian.net", model.JiraBoard{ID: 7, Name: "A board"}); err != nil {
 		t.Fatal(err)
@@ -214,7 +147,7 @@ func TestSites(t *testing.T) {
 
 	// A new build of Nushi: the keychain wants the user's OK.
 	s2 := New(s.sites, tokens, s.store, s.keys)
-	tokens.locked = true
+	tokens.Locked = true
 	states, err := s2.Sites()
 	if err != nil || len(states) != 1 || !states[0].NeedsOK || states[0].Board != 7 {
 		t.Fatalf("%+v, %v", states, err)
@@ -235,8 +168,8 @@ func TestSites(t *testing.T) {
 	if err := s2.RemoveSite("e.atlassian.net"); err != nil {
 		t.Fatal(err)
 	}
-	if len(tokens.items) != 0 {
-		t.Errorf("the token stayed: %v", tokens.items)
+	if len(tokens.Items) != 0 {
+		t.Errorf("the token stayed: %v", tokens.Items)
 	}
 	if states, _ := s2.Sites(); len(states) != 0 {
 		t.Errorf("still listed: %+v", states)
@@ -340,7 +273,7 @@ func TestWrites(t *testing.T) {
 			t.Errorf("%q taken as a key", key)
 		}
 	}
-	if _, _, err := s.Attachment(t.Context(), "e.atlassian.net", "../1", false); err == nil {
+	if _, _, err := s.Attachment(t.Context(), "e.atlassian.net", "../1"); err == nil {
 		t.Error("an attachment id that isn't one")
 	}
 }
@@ -395,7 +328,7 @@ func TestCache(t *testing.T) {
 	if _, err := s.Issue(t.Context(), "e.atlassian.net", "A-1"); err != nil {
 		t.Fatal(err)
 	}
-	tokens.locked = true // the cache needs no token
+	tokens.Locked = true // the cache needs no token
 	s2 := New(s.sites, tokens, s.store, s.keys)
 	if l, at, err := s2.CachedList("e.atlassian.net", Mine, ""); err != nil || at.IsZero() || len(l.Issues) != 1 || l.Issues[0].Key != "A-1" {
 		t.Errorf("mine: %+v %v %v", l, at, err)
@@ -420,7 +353,7 @@ func TestCache(t *testing.T) {
 	if _, _, err := s2.CachedList("e.atlassian.net", Mine, ""); err == nil {
 		t.Error("a removed site's list")
 	}
-	for k := range s.store.(*memStore).cache {
+	for k := range s.store.(*memStore).Kept {
 		if strings.Contains(k, "e.atlassian.net") {
 			t.Errorf("kept after the site went: %s", k)
 		}
@@ -434,7 +367,7 @@ func TestTokenProblems(t *testing.T) {
 	if _, err := s.AddSite(t.Context(), "https://e.atlassian.net", "me@e.com", "good", time.Time{}); err != nil {
 		t.Fatal(err)
 	}
-	tokens.fail = errRestart
+	tokens.Fail = errRestart
 	s2 := New(s.sites, tokens, s.store, s.keys)
 	st, _ := s2.Sites()
 	if !st[0].Restart || st[0].NeedsOK || st[0].Problem != errRestart.Error() {
@@ -443,8 +376,8 @@ func TestTokenProblems(t *testing.T) {
 	if err := s2.AllowToken("e.atlassian.net"); !errors.Is(err, errRestart) {
 		t.Errorf("Allow: %v", err)
 	}
-	tokens.fail = nil
-	delete(tokens.items, "me@e.com on e.atlassian.net")
+	tokens.Fail = nil
+	delete(tokens.Items, "me@e.com on e.atlassian.net")
 	st, _ = s2.Sites()
 	if st[0].Restart || st[0].NeedsOK || !strings.Contains(st[0].Problem, "add the site again") {
 		t.Errorf("%+v", st[0])

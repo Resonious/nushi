@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"maps"
 	"net/url"
 	"regexp"
 	"slices"
@@ -82,11 +83,7 @@ func (s *Service) remotesOf(ctx context.Context, folder string) [][2]string {
 	remotes, err := s.Remotes(ctx, folder)
 	var repos [][2]string
 	if err == nil {
-		names := make([]string, 0, len(remotes))
-		for name := range remotes {
-			names = append(names, name)
-		}
-		slices.Sort(names)
+		names := slices.Sorted(maps.Keys(remotes))
 		for _, name := range names {
 			h, r, ok := parseRemote(remotes[name])
 			if _, _, err := githubapi.SplitRepo(r); ok && err == nil && !slices.Contains(repos, [2]string{h, r}) { // a name GitHub could have

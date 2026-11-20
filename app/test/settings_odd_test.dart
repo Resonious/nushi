@@ -10,7 +10,6 @@ void main() {
     // An app.json with the Files pane's values of the right type but none
     // the app offers (hand-edited, or another app's): read before anything
     // else is.
-    Directory(dataDir).createSync(recursive: true); // the tests' own
     File('$dataDir/app.json')
         .writeAsStringSync(jsonEncode({'tabSize': 3, 'filesTreeSide': 'up'}));
   });

@@ -10,6 +10,7 @@ import 'package:nushi/jira_work.dart';
 import 'package:nushi/keys.dart';
 import 'package:nushi/menu.dart';
 import 'package:nushi/settings.dart';
+import 'package:nushi/text_width.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 
@@ -203,20 +204,14 @@ class TaskList extends StatelessWidget {
   }
 
   /// The key's column: as wide as a long key (`ABCD-12345`).
-  static double _keyWidth(BuildContext context, NushiTheme theme) {
-    final p = TextPainter(
-      text: TextSpan(
-        text: 'ABCD-12345',
-        style: theme.code(theme.t.textSecondary, size: 11.5),
-      ),
-      textDirection: TextDirection.ltr,
-      textScaler: MediaQuery.textScalerOf(context),
-      maxLines: 1,
-    )..layout();
-    final w = p.width.ceilToDouble() + 16;
-    p.dispose();
-    return w;
-  }
+  static double _keyWidth(BuildContext context, NushiTheme theme) =>
+      textWidth(
+        context,
+        'ABCD-12345',
+        theme.code(theme.t.textSecondary, size: 11.5),
+        merge: false,
+      ).ceilToDouble() +
+      16;
 }
 
 /// A row's columns, the same in every row and card: the key's width,

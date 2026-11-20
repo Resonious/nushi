@@ -1073,7 +1073,6 @@ class Chat extends $pb.GeneratedMessage {
     $core.String? agent,
     $core.String? folder,
     $core.String? title,
-    $core.String? mode,
     $fixnum.Int64? createdUnixMs,
     ChatStatus? status,
     $core.bool? archived,
@@ -1098,7 +1097,6 @@ class Chat extends $pb.GeneratedMessage {
     if (agent != null) result.agent = agent;
     if (folder != null) result.folder = folder;
     if (title != null) result.title = title;
-    if (mode != null) result.mode = mode;
     if (createdUnixMs != null) result.createdUnixMs = createdUnixMs;
     if (status != null) result.status = status;
     if (archived != null) result.archived = archived;
@@ -1137,7 +1135,6 @@ class Chat extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'agent')
     ..aOS(3, _omitFieldNames ? '' : 'folder')
     ..aOS(4, _omitFieldNames ? '' : 'title')
-    ..aOS(5, _omitFieldNames ? '' : 'mode')
     ..aInt64(6, _omitFieldNames ? '' : 'createdUnixMs')
     ..aOM<ChatStatus>(7, _omitFieldNames ? '' : 'status',
         subBuilder: ChatStatus.$_createMessage)
@@ -1222,145 +1219,135 @@ class Chat extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   void clearTitle() => $_clearField(4);
 
-  /// The mode it was last in.
-  @$pb.TagNumber(5)
-  $core.String get mode => $_getSZ(4);
-  @$pb.TagNumber(5)
-  set mode($core.String value) => $_setString(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasMode() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearMode() => $_clearField(5);
-
   @$pb.TagNumber(6)
-  $fixnum.Int64 get createdUnixMs => $_getI64(5);
+  $fixnum.Int64 get createdUnixMs => $_getI64(4);
   @$pb.TagNumber(6)
-  set createdUnixMs($fixnum.Int64 value) => $_setInt64(5, value);
+  set createdUnixMs($fixnum.Int64 value) => $_setInt64(4, value);
   @$pb.TagNumber(6)
-  $core.bool hasCreatedUnixMs() => $_has(5);
+  $core.bool hasCreatedUnixMs() => $_has(4);
   @$pb.TagNumber(6)
   void clearCreatedUnixMs() => $_clearField(6);
 
   /// Whether it works or waits on the user, for a list of chats.
   @$pb.TagNumber(7)
-  ChatStatus get status => $_getN(6);
+  ChatStatus get status => $_getN(5);
   @$pb.TagNumber(7)
   set status(ChatStatus value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasStatus() => $_has(6);
+  $core.bool hasStatus() => $_has(5);
   @$pb.TagNumber(7)
   void clearStatus() => $_clearField(7);
   @$pb.TagNumber(7)
-  ChatStatus ensureStatus() => $_ensure(6);
+  ChatStatus ensureStatus() => $_ensure(5);
 
   /// Archived chats have no agent running and take no prompts.
   @$pb.TagNumber(8)
-  $core.bool get archived => $_getBF(7);
+  $core.bool get archived => $_getBF(6);
   @$pb.TagNumber(8)
-  set archived($core.bool value) => $_setBool(7, value);
+  set archived($core.bool value) => $_setBool(6, value);
   @$pb.TagNumber(8)
-  $core.bool hasArchived() => $_has(7);
+  $core.bool hasArchived() => $_has(6);
   @$pb.TagNumber(8)
   void clearArchived() => $_clearField(8);
 
   /// The agent's session id (claude --resume <id>).
   @$pb.TagNumber(9)
-  $core.String get sessionId => $_getSZ(8);
+  $core.String get sessionId => $_getSZ(7);
   @$pb.TagNumber(9)
-  set sessionId($core.String value) => $_setString(8, value);
+  set sessionId($core.String value) => $_setString(7, value);
   @$pb.TagNumber(9)
-  $core.bool hasSessionId() => $_has(8);
+  $core.bool hasSessionId() => $_has(7);
   @$pb.TagNumber(9)
   void clearSessionId() => $_clearField(9);
 
   /// The git worktree the chat runs in, if it's one Nushi made for it or
   /// another than its repository's own folder (found).
   @$pb.TagNumber(10)
-  Worktree get worktree => $_getN(9);
+  Worktree get worktree => $_getN(8);
   @$pb.TagNumber(10)
   set worktree(Worktree value) => $_setField(10, value);
   @$pb.TagNumber(10)
-  $core.bool hasWorktree() => $_has(9);
+  $core.bool hasWorktree() => $_has(8);
   @$pb.TagNumber(10)
   void clearWorktree() => $_clearField(10);
   @$pb.TagNumber(10)
-  Worktree ensureWorktree() => $_ensure(9);
+  Worktree ensureWorktree() => $_ensure(8);
 
   /// Its folder is a scratch folder of its own: it has no folder yet.
   @$pb.TagNumber(11)
-  $core.bool get scratch => $_getBF(10);
+  $core.bool get scratch => $_getBF(9);
   @$pb.TagNumber(11)
-  set scratch($core.bool value) => $_setBool(10, value);
+  set scratch($core.bool value) => $_setBool(9, value);
   @$pb.TagNumber(11)
-  $core.bool hasScratch() => $_has(10);
+  $core.bool hasScratch() => $_has(9);
   @$pb.TagNumber(11)
   void clearScratch() => $_clearField(11);
 
   /// The Jira issue it was started from, if it was.
   @$pb.TagNumber(12)
-  $core.String get jiraSite => $_getSZ(11);
+  $core.String get jiraSite => $_getSZ(10);
   @$pb.TagNumber(12)
-  set jiraSite($core.String value) => $_setString(11, value);
+  set jiraSite($core.String value) => $_setString(10, value);
   @$pb.TagNumber(12)
-  $core.bool hasJiraSite() => $_has(11);
+  $core.bool hasJiraSite() => $_has(10);
   @$pb.TagNumber(12)
   void clearJiraSite() => $_clearField(12);
 
   @$pb.TagNumber(13)
-  $core.String get jiraKey => $_getSZ(12);
+  $core.String get jiraKey => $_getSZ(11);
   @$pb.TagNumber(13)
-  set jiraKey($core.String value) => $_setString(12, value);
+  set jiraKey($core.String value) => $_setString(11, value);
   @$pb.TagNumber(13)
-  $core.bool hasJiraKey() => $_has(12);
+  $core.bool hasJiraKey() => $_has(11);
   @$pb.TagNumber(13)
   void clearJiraKey() => $_clearField(13);
 
   /// The GitHub pull request or issue it was started from, if it was.
   @$pb.TagNumber(14)
-  GitHubLink get github => $_getN(13);
+  GitHubLink get github => $_getN(12);
   @$pb.TagNumber(14)
   set github(GitHubLink value) => $_setField(14, value);
   @$pb.TagNumber(14)
-  $core.bool hasGithub() => $_has(13);
+  $core.bool hasGithub() => $_has(12);
   @$pb.TagNumber(14)
   void clearGithub() => $_clearField(14);
   @$pb.TagNumber(14)
-  GitHubLink ensureGithub() => $_ensure(13);
+  GitHubLink ensureGithub() => $_ensure(12);
 
   /// A turn ended (it finished, or failed with an error to read; not one
   /// the user stopped) while no client showed the chat (SetDeviceView): the
   /// chat state done. Showing it, or archiving it, clears it. API 76; named
   /// unseen before API 92 (the same field).
   @$pb.TagNumber(15)
-  $core.bool get done => $_getBF(14);
+  $core.bool get done => $_getBF(13);
   @$pb.TagNumber(15)
-  set done($core.bool value) => $_setBool(14, value);
+  set done($core.bool value) => $_setBool(13, value);
   @$pb.TagNumber(15)
-  $core.bool hasDone() => $_has(14);
+  $core.bool hasDone() => $_has(13);
   @$pb.TagNumber(15)
   void clearDone() => $_clearField(15);
 
   /// The chat's pull request: the one it was started from (github), else the
   /// one whose head is its branch, found or linked by hand. API 81.
   @$pb.TagNumber(16)
-  GitHubLink get pull => $_getN(15);
+  GitHubLink get pull => $_getN(14);
   @$pb.TagNumber(16)
   set pull(GitHubLink value) => $_setField(16, value);
   @$pb.TagNumber(16)
-  $core.bool hasPull() => $_has(15);
+  $core.bool hasPull() => $_has(14);
   @$pb.TagNumber(16)
   void clearPull() => $_clearField(16);
   @$pb.TagNumber(16)
-  GitHubLink ensurePull() => $_ensure(15);
+  GitHubLink ensurePull() => $_ensure(14);
 
   /// Its place among the pinned chats, from 1 (the top); 0 when it isn't
   /// pinned (PinChats). API 90.
   @$pb.TagNumber(17)
-  $core.int get pin => $_getIZ(16);
+  $core.int get pin => $_getIZ(15);
   @$pb.TagNumber(17)
-  set pin($core.int value) => $_setSignedInt32(16, value);
+  set pin($core.int value) => $_setSignedInt32(15, value);
   @$pb.TagNumber(17)
-  $core.bool hasPin() => $_has(16);
+  $core.bool hasPin() => $_has(15);
   @$pb.TagNumber(17)
   void clearPin() => $_clearField(17);
 
@@ -1369,11 +1356,11 @@ class Chat extends $pb.GeneratedMessage {
   /// for none (SetChatColor). A client shows a name it doesn't know as none.
   /// API 99.
   @$pb.TagNumber(18)
-  $core.String get color => $_getSZ(17);
+  $core.String get color => $_getSZ(16);
   @$pb.TagNumber(18)
-  set color($core.String value) => $_setString(17, value);
+  set color($core.String value) => $_setString(16, value);
   @$pb.TagNumber(18)
-  $core.bool hasColor() => $_has(17);
+  $core.bool hasColor() => $_has(16);
   @$pb.TagNumber(18)
   void clearColor() => $_clearField(18);
 
@@ -1381,17 +1368,17 @@ class Chat extends $pb.GeneratedMessage {
   /// (PinMessage); a client shows them in the transcript's order, and an id
   /// it doesn't have among the items as nothing. API 102.
   @$pb.TagNumber(19)
-  $pb.PbList<$core.String> get pinnedMessages => $_getList(18);
+  $pb.PbList<$core.String> get pinnedMessages => $_getList(17);
 
   /// When a message was last sent to it or a turn of it last ended; 0 for
   /// neither since the daemon kept it (a client goes by created_unix_ms).
   /// What the sidebar sorts by Last updated.
   @$pb.TagNumber(20)
-  $fixnum.Int64 get updatedUnixMs => $_getI64(19);
+  $fixnum.Int64 get updatedUnixMs => $_getI64(18);
   @$pb.TagNumber(20)
-  set updatedUnixMs($fixnum.Int64 value) => $_setInt64(19, value);
+  set updatedUnixMs($fixnum.Int64 value) => $_setInt64(18, value);
   @$pb.TagNumber(20)
-  $core.bool hasUpdatedUnixMs() => $_has(19);
+  $core.bool hasUpdatedUnixMs() => $_has(18);
   @$pb.TagNumber(20)
   void clearUpdatedUnixMs() => $_clearField(20);
 
@@ -1399,23 +1386,23 @@ class Chat extends $pb.GeneratedMessage {
   /// a few words made from the message at once, replaced by the agent's
   /// own when it can make one (Claude). A client lists a pin by it. API 104.
   @$pb.TagNumber(21)
-  $pb.PbList<MessagePin> get messagePins => $_getList(20);
+  $pb.PbList<MessagePin> get messagePins => $_getList(19);
 
   /// Its pull requests, the primary (pull) first: the one it was started
   /// from, found by its branch's head, opened by its tool call, or linked by
   /// hand; 10 at most (ADR 0117). API 118.
   @$pb.TagNumber(22)
-  $pb.PbList<GitHubLink> get pulls => $_getList(21);
+  $pb.PbList<GitHubLink> get pulls => $_getList(20);
 
   /// When it was last archived, in Unix milliseconds; 0 while it isn't, and
   /// for one archived before the daemon kept the time. The sidebar lists
   /// the archived by it, the latest first. API 125.
   @$pb.TagNumber(23)
-  $fixnum.Int64 get archivedUnixMs => $_getI64(22);
+  $fixnum.Int64 get archivedUnixMs => $_getI64(21);
   @$pb.TagNumber(23)
-  set archivedUnixMs($fixnum.Int64 value) => $_setInt64(22, value);
+  set archivedUnixMs($fixnum.Int64 value) => $_setInt64(21, value);
   @$pb.TagNumber(23)
-  $core.bool hasArchivedUnixMs() => $_has(22);
+  $core.bool hasArchivedUnixMs() => $_has(21);
   @$pb.TagNumber(23)
   void clearArchivedUnixMs() => $_clearField(23);
 }
@@ -2037,11 +2024,9 @@ class GetChatImageRequest extends $pb.GeneratedMessage {
 
 class GetChatImageResponse extends $pb.GeneratedMessage {
   factory GetChatImageResponse({
-    $core.String? mimeType,
     $core.List<$core.int>? data,
   }) {
     final result = GetChatImageResponse._();
-    if (mimeType != null) result.mimeType = mimeType;
     if (data != null) result.data = data;
     return result;
   }
@@ -2059,7 +2044,6 @@ class GetChatImageResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'GetChatImageResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
       createEmptyInstance: GetChatImageResponse.$_createMessage)
-    ..aOS(1, _omitFieldNames ? '' : 'mimeType')
     ..a<$core.List<$core.int>>(
         2, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
@@ -2087,21 +2071,12 @@ class GetChatImageResponse extends $pb.GeneratedMessage {
           GetChatImageResponse.$_createMessage);
   static GetChatImageResponse? _defaultInstance;
 
-  @$pb.TagNumber(1)
-  $core.String get mimeType => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set mimeType($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasMimeType() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearMimeType() => $_clearField(1);
-
   @$pb.TagNumber(2)
-  $core.List<$core.int> get data => $_getN(1);
+  $core.List<$core.int> get data => $_getN(0);
   @$pb.TagNumber(2)
-  set data($core.List<$core.int> value) => $_setBytes(1, value);
+  set data($core.List<$core.int> value) => $_setBytes(0, value);
   @$pb.TagNumber(2)
-  $core.bool hasData() => $_has(1);
+  $core.bool hasData() => $_has(0);
   @$pb.TagNumber(2)
   void clearData() => $_clearField(2);
 }
@@ -2690,7 +2665,6 @@ class Agent extends $pb.GeneratedMessage {
     $core.bool? deleteArchives,
     $core.String? path,
     $core.String? version,
-    $core.String? page,
     $core.String? problem,
     $core.String? signedIn,
     Adapter? adapter,
@@ -2706,7 +2680,6 @@ class Agent extends $pb.GeneratedMessage {
     if (deleteArchives != null) result.deleteArchives = deleteArchives;
     if (path != null) result.path = path;
     if (version != null) result.version = version;
-    if (page != null) result.page = page;
     if (problem != null) result.problem = problem;
     if (signedIn != null) result.signedIn = signedIn;
     if (adapter != null) result.adapter = adapter;
@@ -2736,7 +2709,6 @@ class Agent extends $pb.GeneratedMessage {
     ..aOB(5, _omitFieldNames ? '' : 'deleteArchives')
     ..aOS(6, _omitFieldNames ? '' : 'path')
     ..aOS(7, _omitFieldNames ? '' : 'version')
-    ..aOS(8, _omitFieldNames ? '' : 'page')
     ..aOS(9, _omitFieldNames ? '' : 'problem')
     ..aOS(10, _omitFieldNames ? '' : 'signedIn')
     ..aOM<Adapter>(11, _omitFieldNames ? '' : 'adapter',
@@ -2840,79 +2812,69 @@ class Agent extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   void clearVersion() => $_clearField(7);
 
-  /// Where to get it, until 0.27.3; no longer sent.
-  @$pb.TagNumber(8)
-  $core.String get page => $_getSZ(7);
-  @$pb.TagNumber(8)
-  set page($core.String value) => $_setString(7, value);
-  @$pb.TagNumber(8)
-  $core.bool hasPage() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearPage() => $_clearField(8);
-
   /// Why it can't run, in a few words ("Not installed", "Needs Node");
   /// empty when it can.
   @$pb.TagNumber(9)
-  $core.String get problem => $_getSZ(8);
+  $core.String get problem => $_getSZ(7);
   @$pb.TagNumber(9)
-  set problem($core.String value) => $_setString(8, value);
+  set problem($core.String value) => $_setString(7, value);
   @$pb.TagNumber(9)
-  $core.bool hasProblem() => $_has(8);
+  $core.bool hasProblem() => $_has(7);
   @$pb.TagNumber(9)
   void clearProblem() => $_clearField(9);
 
   /// Whether the CLI is signed in, "yes" or "no", when it can tell
   /// cheaply; empty otherwise.
   @$pb.TagNumber(10)
-  $core.String get signedIn => $_getSZ(9);
+  $core.String get signedIn => $_getSZ(8);
   @$pb.TagNumber(10)
-  set signedIn($core.String value) => $_setString(9, value);
+  set signedIn($core.String value) => $_setString(8, value);
   @$pb.TagNumber(10)
-  $core.bool hasSignedIn() => $_has(9);
+  $core.bool hasSignedIn() => $_has(8);
   @$pb.TagNumber(10)
   void clearSignedIn() => $_clearField(10);
 
   /// The npm package its ACP side comes in, when it needs one.
   @$pb.TagNumber(11)
-  Adapter get adapter => $_getN(10);
+  Adapter get adapter => $_getN(9);
   @$pb.TagNumber(11)
   set adapter(Adapter value) => $_setField(11, value);
   @$pb.TagNumber(11)
-  $core.bool hasAdapter() => $_has(10);
+  $core.bool hasAdapter() => $_has(9);
   @$pb.TagNumber(11)
   void clearAdapter() => $_clearField(11);
   @$pb.TagNumber(11)
-  Adapter ensureAdapter() => $_ensure(10);
+  Adapter ensureAdapter() => $_ensure(9);
 
   /// A chat can start: it's installed, has what it needs, and its adapter
   /// (if any) is set up.
   @$pb.TagNumber(12)
-  $core.bool get ready => $_getBF(11);
+  $core.bool get ready => $_getBF(10);
   @$pb.TagNumber(12)
-  set ready($core.bool value) => $_setBool(11, value);
+  set ready($core.bool value) => $_setBool(10, value);
   @$pb.TagNumber(12)
-  $core.bool hasReady() => $_has(11);
+  $core.bool hasReady() => $_has(10);
   @$pb.TagNumber(12)
   void clearReady() => $_clearField(12);
 
   /// Its chats whose agent runs (they sleep when the adapter changes).
   @$pb.TagNumber(13)
-  $core.int get awake => $_getIZ(12);
+  $core.int get awake => $_getIZ(11);
   @$pb.TagNumber(13)
-  set awake($core.int value) => $_setSignedInt32(12, value);
+  set awake($core.int value) => $_setSignedInt32(11, value);
   @$pb.TagNumber(13)
-  $core.bool hasAwake() => $_has(12);
+  $core.bool hasAwake() => $_has(11);
   @$pb.TagNumber(13)
   void clearAwake() => $_clearField(13);
 
   /// Its MCP servers are only yours, the user scope, with no off switch or
   /// legacy SSE; others have Claude's scopes and those (API 97).
   @$pb.TagNumber(15)
-  $core.bool get mcpUserOnly => $_getBF(13);
+  $core.bool get mcpUserOnly => $_getBF(12);
   @$pb.TagNumber(15)
-  set mcpUserOnly($core.bool value) => $_setBool(13, value);
+  set mcpUserOnly($core.bool value) => $_setBool(12, value);
   @$pb.TagNumber(15)
-  $core.bool hasMcpUserOnly() => $_has(13);
+  $core.bool hasMcpUserOnly() => $_has(12);
   @$pb.TagNumber(15)
   void clearMcpUserOnly() => $_clearField(15);
 }
@@ -4333,14 +4295,12 @@ class MoveChatResponse extends $pb.GeneratedMessage {
 class StartChatResponse extends $pb.GeneratedMessage {
   factory StartChatResponse({
     $core.String? chatId,
-    $core.Iterable<ConfigOption>? config,
     $core.Iterable<FolderRun>? headRuns,
     $core.String? headFolder,
     $core.String? headRunsKey,
   }) {
     final result = StartChatResponse._();
     if (chatId != null) result.chatId = chatId;
-    if (config != null) result.config.addAll(config);
     if (headRuns != null) result.headRuns.addAll(headRuns);
     if (headFolder != null) result.headFolder = headFolder;
     if (headRunsKey != null) result.headRunsKey = headRunsKey;
@@ -4361,8 +4321,6 @@ class StartChatResponse extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
       createEmptyInstance: StartChatResponse.$_createMessage)
     ..aOS(1, _omitFieldNames ? '' : 'chatId')
-    ..pPM<ConfigOption>(2, _omitFieldNames ? '' : 'config',
-        subBuilder: ConfigOption.$_createMessage)
     ..pPM<FolderRun>(3, _omitFieldNames ? '' : 'headRuns',
         subBuilder: FolderRun.$_createMessage)
     ..aOS(4, _omitFieldNames ? '' : 'headFolder')
@@ -4401,32 +4359,28 @@ class StartChatResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearChatId() => $_clearField(1);
 
-  /// The chat's config options as it starts; changes arrive as events.
-  @$pb.TagNumber(2)
-  $pb.PbList<ConfigOption> get config => $_getList(1);
-
   /// A chat on a pull request whose head brings code for the agent to run
   /// that nobody trusted (a fork's head counts no earlier trust) didn't
   /// start: what the head runs, in the worktree at head_folder (removed
   /// since), for the trust card; start again with head_runs_key to run it.
   @$pb.TagNumber(3)
-  $pb.PbList<FolderRun> get headRuns => $_getList(2);
+  $pb.PbList<FolderRun> get headRuns => $_getList(1);
 
   @$pb.TagNumber(4)
-  $core.String get headFolder => $_getSZ(3);
+  $core.String get headFolder => $_getSZ(2);
   @$pb.TagNumber(4)
-  set headFolder($core.String value) => $_setString(3, value);
+  set headFolder($core.String value) => $_setString(2, value);
   @$pb.TagNumber(4)
-  $core.bool hasHeadFolder() => $_has(3);
+  $core.bool hasHeadFolder() => $_has(2);
   @$pb.TagNumber(4)
   void clearHeadFolder() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.String get headRunsKey => $_getSZ(4);
+  $core.String get headRunsKey => $_getSZ(3);
   @$pb.TagNumber(5)
-  set headRunsKey($core.String value) => $_setString(4, value);
+  set headRunsKey($core.String value) => $_setString(3, value);
   @$pb.TagNumber(5)
-  $core.bool hasHeadRunsKey() => $_has(4);
+  $core.bool hasHeadRunsKey() => $_has(3);
   @$pb.TagNumber(5)
   void clearHeadRunsKey() => $_clearField(5);
 }
@@ -12817,11 +12771,9 @@ class GetProjectIconRequest extends $pb.GeneratedMessage {
 
 class GetProjectIconResponse extends $pb.GeneratedMessage {
   factory GetProjectIconResponse({
-    $core.String? mimeType,
     $core.List<$core.int>? data,
   }) {
     final result = GetProjectIconResponse._();
-    if (mimeType != null) result.mimeType = mimeType;
     if (data != null) result.data = data;
     return result;
   }
@@ -12839,7 +12791,6 @@ class GetProjectIconResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'GetProjectIconResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
       createEmptyInstance: GetProjectIconResponse.$_createMessage)
-    ..aOS(1, _omitFieldNames ? '' : 'mimeType')
     ..a<$core.List<$core.int>>(
         2, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
@@ -12868,23 +12819,13 @@ class GetProjectIconResponse extends $pb.GeneratedMessage {
           GetProjectIconResponse.$_createMessage);
   static GetProjectIconResponse? _defaultInstance;
 
-  /// "image/png" or "image/jpeg"; "" with no data when the folder has no
-  /// icon.
-  @$pb.TagNumber(1)
-  $core.String get mimeType => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set mimeType($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasMimeType() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearMimeType() => $_clearField(1);
-
+  /// Empty when the folder has no icon.
   @$pb.TagNumber(2)
-  $core.List<$core.int> get data => $_getN(1);
+  $core.List<$core.int> get data => $_getN(0);
   @$pb.TagNumber(2)
-  set data($core.List<$core.int> value) => $_setBytes(1, value);
+  set data($core.List<$core.int> value) => $_setBytes(0, value);
   @$pb.TagNumber(2)
-  $core.bool hasData() => $_has(1);
+  $core.bool hasData() => $_has(0);
   @$pb.TagNumber(2)
   void clearData() => $_clearField(2);
 }
@@ -17002,7 +16943,6 @@ class Item extends $pb.GeneratedMessage {
 class Workflow extends $pb.GeneratedMessage {
   factory Workflow({
     $core.String? runId,
-    $core.String? taskId,
     $core.String? name,
     $core.String? description,
     $core.String? state,
@@ -17021,7 +16961,6 @@ class Workflow extends $pb.GeneratedMessage {
   }) {
     final result = Workflow._();
     if (runId != null) result.runId = runId;
-    if (taskId != null) result.taskId = taskId;
     if (name != null) result.name = name;
     if (description != null) result.description = description;
     if (state != null) result.state = state;
@@ -17054,7 +16993,6 @@ class Workflow extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
       createEmptyInstance: Workflow.$_createMessage)
     ..aOS(1, _omitFieldNames ? '' : 'runId')
-    ..aOS(2, _omitFieldNames ? '' : 'taskId')
     ..aOS(3, _omitFieldNames ? '' : 'name')
     ..aOS(4, _omitFieldNames ? '' : 'description')
     ..aOS(5, _omitFieldNames ? '' : 'state')
@@ -17093,7 +17031,7 @@ class Workflow extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<Workflow>(Workflow.$_createMessage);
   static Workflow? _defaultInstance;
 
-  /// The agent's ids for the run and its task (Stop goes by the task's).
+  /// The agent's id for the run.
   @$pb.TagNumber(1)
   $core.String get runId => $_getSZ(0);
   @$pb.TagNumber(1)
@@ -17103,148 +17041,139 @@ class Workflow extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearRunId() => $_clearField(1);
 
-  @$pb.TagNumber(2)
-  $core.String get taskId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set taskId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasTaskId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearTaskId() => $_clearField(2);
-
   /// Its name and what it does, in the agent's words.
   @$pb.TagNumber(3)
-  $core.String get name => $_getSZ(2);
+  $core.String get name => $_getSZ(1);
   @$pb.TagNumber(3)
-  set name($core.String value) => $_setString(2, value);
+  set name($core.String value) => $_setString(1, value);
   @$pb.TagNumber(3)
-  $core.bool hasName() => $_has(2);
+  $core.bool hasName() => $_has(1);
   @$pb.TagNumber(3)
   void clearName() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get description => $_getSZ(3);
+  $core.String get description => $_getSZ(2);
   @$pb.TagNumber(4)
-  set description($core.String value) => $_setString(3, value);
+  set description($core.String value) => $_setString(2, value);
   @$pb.TagNumber(4)
-  $core.bool hasDescription() => $_has(3);
+  $core.bool hasDescription() => $_has(2);
   @$pb.TagNumber(4)
   void clearDescription() => $_clearField(4);
 
   /// "running", then "done", "failed", "stopped" or "unknown" (it ended and
   /// the agent's word for how is in end).
   @$pb.TagNumber(5)
-  $core.String get state => $_getSZ(4);
+  $core.String get state => $_getSZ(3);
   @$pb.TagNumber(5)
-  set state($core.String value) => $_setString(4, value);
+  set state($core.String value) => $_setString(3, value);
   @$pb.TagNumber(5)
-  $core.bool hasState() => $_has(4);
+  $core.bool hasState() => $_has(3);
   @$pb.TagNumber(5)
   void clearState() => $_clearField(5);
 
   /// How it ended: the agent's word ("completed", "killed"…), or Nushi's
   /// when the agent gave none ("Claude quit while it ran").
   @$pb.TagNumber(6)
-  $core.String get end => $_getSZ(5);
+  $core.String get end => $_getSZ(4);
   @$pb.TagNumber(6)
-  set end($core.String value) => $_setString(5, value);
+  set end($core.String value) => $_setString(4, value);
   @$pb.TagNumber(6)
-  $core.bool hasEnd() => $_has(5);
+  $core.bool hasEnd() => $_has(4);
   @$pb.TagNumber(6)
   void clearEnd() => $_clearField(6);
 
   /// When it started and ended, and when its files last changed, in Unix
   /// milliseconds; 0 when not known.
   @$pb.TagNumber(7)
-  $fixnum.Int64 get started => $_getI64(6);
+  $fixnum.Int64 get started => $_getI64(5);
   @$pb.TagNumber(7)
-  set started($fixnum.Int64 value) => $_setInt64(6, value);
+  set started($fixnum.Int64 value) => $_setInt64(5, value);
   @$pb.TagNumber(7)
-  $core.bool hasStarted() => $_has(6);
+  $core.bool hasStarted() => $_has(5);
   @$pb.TagNumber(7)
   void clearStarted() => $_clearField(7);
 
   @$pb.TagNumber(8)
-  $fixnum.Int64 get ended => $_getI64(7);
+  $fixnum.Int64 get ended => $_getI64(6);
   @$pb.TagNumber(8)
-  set ended($fixnum.Int64 value) => $_setInt64(7, value);
+  set ended($fixnum.Int64 value) => $_setInt64(6, value);
   @$pb.TagNumber(8)
-  $core.bool hasEnded() => $_has(7);
+  $core.bool hasEnded() => $_has(6);
   @$pb.TagNumber(8)
   void clearEnded() => $_clearField(8);
 
   @$pb.TagNumber(9)
-  $fixnum.Int64 get active => $_getI64(8);
+  $fixnum.Int64 get active => $_getI64(7);
   @$pb.TagNumber(9)
-  set active($fixnum.Int64 value) => $_setInt64(8, value);
+  set active($fixnum.Int64 value) => $_setInt64(7, value);
   @$pb.TagNumber(9)
-  $core.bool hasActive() => $_has(8);
+  $core.bool hasActive() => $_has(7);
   @$pb.TagNumber(9)
   void clearActive() => $_clearField(9);
 
   /// Its phases, in the order reached (32 at most).
   @$pb.TagNumber(10)
-  $pb.PbList<WorkflowPhase> get phases => $_getList(9);
+  $pb.PbList<WorkflowPhase> get phases => $_getList(8);
 
   /// How many agents it ran, and of those how many ended well and failed.
   @$pb.TagNumber(11)
-  $core.int get agents => $_getIZ(10);
+  $core.int get agents => $_getIZ(9);
   @$pb.TagNumber(11)
-  set agents($core.int value) => $_setSignedInt32(10, value);
+  set agents($core.int value) => $_setSignedInt32(9, value);
   @$pb.TagNumber(11)
-  $core.bool hasAgents() => $_has(10);
+  $core.bool hasAgents() => $_has(9);
   @$pb.TagNumber(11)
   void clearAgents() => $_clearField(11);
 
   @$pb.TagNumber(12)
-  $core.int get done => $_getIZ(11);
+  $core.int get done => $_getIZ(10);
   @$pb.TagNumber(12)
-  set done($core.int value) => $_setSignedInt32(11, value);
+  set done($core.int value) => $_setSignedInt32(10, value);
   @$pb.TagNumber(12)
-  $core.bool hasDone() => $_has(11);
+  $core.bool hasDone() => $_has(10);
   @$pb.TagNumber(12)
   void clearDone() => $_clearField(12);
 
   @$pb.TagNumber(13)
-  $core.int get failed => $_getIZ(12);
+  $core.int get failed => $_getIZ(11);
   @$pb.TagNumber(13)
-  set failed($core.int value) => $_setSignedInt32(12, value);
+  set failed($core.int value) => $_setSignedInt32(11, value);
   @$pb.TagNumber(13)
-  $core.bool hasFailed() => $_has(12);
+  $core.bool hasFailed() => $_has(11);
   @$pb.TagNumber(13)
   void clearFailed() => $_clearField(13);
 
   /// The labels of up to 8 agents running now, and how many run.
   @$pb.TagNumber(14)
-  $pb.PbList<$core.String> get running => $_getList(13);
+  $pb.PbList<$core.String> get running => $_getList(12);
 
   @$pb.TagNumber(15)
-  $core.int get runningCount => $_getIZ(14);
+  $core.int get runningCount => $_getIZ(13);
   @$pb.TagNumber(15)
-  set runningCount($core.int value) => $_setSignedInt32(14, value);
+  set runningCount($core.int value) => $_setSignedInt32(13, value);
   @$pb.TagNumber(15)
-  $core.bool hasRunningCount() => $_has(14);
+  $core.bool hasRunningCount() => $_has(13);
   @$pb.TagNumber(15)
   void clearRunningCount() => $_clearField(15);
 
   /// How a failed run ended, in the agent's words (its error's first line).
   @$pb.TagNumber(16)
-  $core.String get summary => $_getSZ(15);
+  $core.String get summary => $_getSZ(14);
   @$pb.TagNumber(16)
-  set summary($core.String value) => $_setString(15, value);
+  set summary($core.String value) => $_setString(14, value);
   @$pb.TagNumber(16)
-  $core.bool hasSummary() => $_has(15);
+  $core.bool hasSummary() => $_has(14);
   @$pb.TagNumber(16)
   void clearSummary() => $_clearField(16);
 
   /// Nothing of it changed for so long (an hour) that it no longer counts as
   /// the chat's work, though nothing says it ended.
   @$pb.TagNumber(17)
-  $core.bool get stalled => $_getBF(16);
+  $core.bool get stalled => $_getBF(15);
   @$pb.TagNumber(17)
-  set stalled($core.bool value) => $_setBool(16, value);
+  set stalled($core.bool value) => $_setBool(15, value);
   @$pb.TagNumber(17)
-  $core.bool hasStalled() => $_has(16);
+  $core.bool hasStalled() => $_has(15);
   @$pb.TagNumber(17)
   void clearStalled() => $_clearField(17);
 }
@@ -22040,12 +21969,10 @@ class Device extends $pb.GeneratedMessage {
 
 class Pairing extends $pb.GeneratedMessage {
   factory Pairing({
-    $fixnum.Int64? expires,
     $core.String? name,
     $core.String? code,
   }) {
     final result = Pairing._();
-    if (expires != null) result.expires = expires;
     if (name != null) result.name = name;
     if (code != null) result.code = code;
     return result;
@@ -22064,7 +21991,6 @@ class Pairing extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'Pairing',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
       createEmptyInstance: Pairing.$_createMessage)
-    ..aInt64(1, _omitFieldNames ? '' : 'expires')
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOS(3, _omitFieldNames ? '' : 'code')
     ..hasRequiredFields = false;
@@ -22089,32 +22015,22 @@ class Pairing extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<Pairing>(Pairing.$_createMessage);
   static Pairing? _defaultInstance;
 
-  /// Unix milliseconds: the QR code is good until then.
-  @$pb.TagNumber(1)
-  $fixnum.Int64 get expires => $_getI64(0);
-  @$pb.TagNumber(1)
-  set expires($fixnum.Int64 value) => $_setInt64(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasExpires() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearExpires() => $_clearField(1);
-
   /// Once a phone has connected: its name, and the code both screens show.
   @$pb.TagNumber(2)
-  $core.String get name => $_getSZ(1);
+  $core.String get name => $_getSZ(0);
   @$pb.TagNumber(2)
-  set name($core.String value) => $_setString(1, value);
+  set name($core.String value) => $_setString(0, value);
   @$pb.TagNumber(2)
-  $core.bool hasName() => $_has(1);
+  $core.bool hasName() => $_has(0);
   @$pb.TagNumber(2)
   void clearName() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get code => $_getSZ(2);
+  $core.String get code => $_getSZ(1);
   @$pb.TagNumber(3)
-  set code($core.String value) => $_setString(2, value);
+  set code($core.String value) => $_setString(1, value);
   @$pb.TagNumber(3)
-  $core.bool hasCode() => $_has(2);
+  $core.bool hasCode() => $_has(1);
   @$pb.TagNumber(3)
   void clearCode() => $_clearField(3);
 }
@@ -22375,11 +22291,9 @@ class StartPairingRequest extends $pb.GeneratedMessage {
 class StartPairingResponse extends $pb.GeneratedMessage {
   factory StartPairingResponse({
     $core.String? qr,
-    $fixnum.Int64? expires,
   }) {
     final result = StartPairingResponse._();
     if (qr != null) result.qr = qr;
-    if (expires != null) result.expires = expires;
     return result;
   }
 
@@ -22397,7 +22311,6 @@ class StartPairingResponse extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
       createEmptyInstance: StartPairingResponse.$_createMessage)
     ..aOS(1, _omitFieldNames ? '' : 'qr')
-    ..aInt64(2, _omitFieldNames ? '' : 'expires')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -22432,15 +22345,6 @@ class StartPairingResponse extends $pb.GeneratedMessage {
   $core.bool hasQr() => $_has(0);
   @$pb.TagNumber(1)
   void clearQr() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $fixnum.Int64 get expires => $_getI64(1);
-  @$pb.TagNumber(2)
-  set expires($fixnum.Int64 value) => $_setInt64(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasExpires() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearExpires() => $_clearField(2);
 }
 
 class ConfirmPairingRequest extends $pb.GeneratedMessage {
@@ -25780,12 +25684,10 @@ class GetJiraJqlResponse extends $pb.GeneratedMessage {
   factory GetJiraJqlResponse({
     $core.Iterable<JiraJqlField>? fields,
     $core.Iterable<$core.String>? functions,
-    $core.Iterable<$core.String>? words,
   }) {
     final result = GetJiraJqlResponse._();
     if (fields != null) result.fields.addAll(fields);
     if (functions != null) result.functions.addAll(functions);
-    if (words != null) result.words.addAll(words);
     return result;
   }
 
@@ -25805,7 +25707,6 @@ class GetJiraJqlResponse extends $pb.GeneratedMessage {
     ..pPM<JiraJqlField>(1, _omitFieldNames ? '' : 'fields',
         subBuilder: JiraJqlField.$_createMessage)
     ..pPS(2, _omitFieldNames ? '' : 'functions')
-    ..pPS(3, _omitFieldNames ? '' : 'words')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -25835,9 +25736,6 @@ class GetJiraJqlResponse extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(2)
   $pb.PbList<$core.String> get functions => $_getList(1);
-
-  @$pb.TagNumber(3)
-  $pb.PbList<$core.String> get words => $_getList(2);
 }
 
 class JiraJqlField extends $pb.GeneratedMessage {
@@ -26696,13 +26594,7 @@ class AddJiraCommentRequest extends $pb.GeneratedMessage {
 }
 
 class AddJiraCommentResponse extends $pb.GeneratedMessage {
-  factory AddJiraCommentResponse({
-    JiraComment? comment,
-  }) {
-    final result = AddJiraCommentResponse._();
-    if (comment != null) result.comment = comment;
-    return result;
-  }
+  factory AddJiraCommentResponse() => AddJiraCommentResponse._();
 
   AddJiraCommentResponse._();
 
@@ -26717,8 +26609,6 @@ class AddJiraCommentResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'AddJiraCommentResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
       createEmptyInstance: AddJiraCommentResponse.$_createMessage)
-    ..aOM<JiraComment>(1, _omitFieldNames ? '' : 'comment',
-        subBuilder: JiraComment.$_createMessage)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -26744,29 +26634,16 @@ class AddJiraCommentResponse extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<AddJiraCommentResponse>(
           AddJiraCommentResponse.$_createMessage);
   static AddJiraCommentResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  JiraComment get comment => $_getN(0);
-  @$pb.TagNumber(1)
-  set comment(JiraComment value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasComment() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearComment() => $_clearField(1);
-  @$pb.TagNumber(1)
-  JiraComment ensureComment() => $_ensure(0);
 }
 
 class GetJiraAttachmentRequest extends $pb.GeneratedMessage {
   factory GetJiraAttachmentRequest({
     $core.String? site,
     $core.String? id,
-    $core.bool? thumbnail,
   }) {
     final result = GetJiraAttachmentRequest._();
     if (site != null) result.site = site;
     if (id != null) result.id = id;
-    if (thumbnail != null) result.thumbnail = thumbnail;
     return result;
   }
 
@@ -26785,7 +26662,6 @@ class GetJiraAttachmentRequest extends $pb.GeneratedMessage {
       createEmptyInstance: GetJiraAttachmentRequest.$_createMessage)
     ..aOS(1, _omitFieldNames ? '' : 'site')
     ..aOS(2, _omitFieldNames ? '' : 'id')
-    ..aOB(3, _omitFieldNames ? '' : 'thumbnail')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -26830,15 +26706,6 @@ class GetJiraAttachmentRequest extends $pb.GeneratedMessage {
   $core.bool hasId() => $_has(1);
   @$pb.TagNumber(2)
   void clearId() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.bool get thumbnail => $_getBF(2);
-  @$pb.TagNumber(3)
-  set thumbnail($core.bool value) => $_setBool(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasThumbnail() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearThumbnail() => $_clearField(3);
 }
 
 class GetJiraAttachmentResponse extends $pb.GeneratedMessage {
@@ -31818,13 +31685,7 @@ class ReplyGitHubThreadRequest extends $pb.GeneratedMessage {
 }
 
 class ReplyGitHubThreadResponse extends $pb.GeneratedMessage {
-  factory ReplyGitHubThreadResponse({
-    GitHubComment? comment,
-  }) {
-    final result = ReplyGitHubThreadResponse._();
-    if (comment != null) result.comment = comment;
-    return result;
-  }
+  factory ReplyGitHubThreadResponse() => ReplyGitHubThreadResponse._();
 
   ReplyGitHubThreadResponse._();
 
@@ -31839,8 +31700,6 @@ class ReplyGitHubThreadResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'ReplyGitHubThreadResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
       createEmptyInstance: ReplyGitHubThreadResponse.$_createMessage)
-    ..aOM<GitHubComment>(1, _omitFieldNames ? '' : 'comment',
-        subBuilder: GitHubComment.$_createMessage)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -31868,17 +31727,6 @@ class ReplyGitHubThreadResponse extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<ReplyGitHubThreadResponse>(
           ReplyGitHubThreadResponse.$_createMessage);
   static ReplyGitHubThreadResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  GitHubComment get comment => $_getN(0);
-  @$pb.TagNumber(1)
-  set comment(GitHubComment value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasComment() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearComment() => $_clearField(1);
-  @$pb.TagNumber(1)
-  GitHubComment ensureComment() => $_ensure(0);
 }
 
 class ResolveGitHubThreadRequest extends $pb.GeneratedMessage {
@@ -33731,13 +33579,7 @@ class AddGitHubCommentRequest extends $pb.GeneratedMessage {
 }
 
 class AddGitHubCommentResponse extends $pb.GeneratedMessage {
-  factory AddGitHubCommentResponse({
-    GitHubComment? comment,
-  }) {
-    final result = AddGitHubCommentResponse._();
-    if (comment != null) result.comment = comment;
-    return result;
-  }
+  factory AddGitHubCommentResponse() => AddGitHubCommentResponse._();
 
   AddGitHubCommentResponse._();
 
@@ -33752,8 +33594,6 @@ class AddGitHubCommentResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'AddGitHubCommentResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
       createEmptyInstance: AddGitHubCommentResponse.$_createMessage)
-    ..aOM<GitHubComment>(1, _omitFieldNames ? '' : 'comment',
-        subBuilder: GitHubComment.$_createMessage)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -33780,17 +33620,6 @@ class AddGitHubCommentResponse extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<AddGitHubCommentResponse>(
           AddGitHubCommentResponse.$_createMessage);
   static AddGitHubCommentResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  GitHubComment get comment => $_getN(0);
-  @$pb.TagNumber(1)
-  set comment(GitHubComment value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasComment() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearComment() => $_clearField(1);
-  @$pb.TagNumber(1)
-  GitHubComment ensureComment() => $_ensure(0);
 }
 
 /// A comment of a review not yet sent, on line (from start_line, if more
@@ -34845,7 +34674,7 @@ class NushiServiceApi {
           ctx, 'NushiService', 'SetRemote', request, SetRemoteResponse());
 
   /// Starts pairing a phone (remote access must be on): the text for the QR
-  /// code, good until it expires. Once a phone holding it connects,
+  /// code, good for a few minutes. Once a phone holding it connects,
   /// Remote.pairing has its name and the code both screens show.
   $async.Future<StartPairingResponse> startPairing(
           $pb.ClientContext? ctx, StartPairingRequest request) =>
@@ -34996,7 +34825,7 @@ class NushiServiceApi {
       _client.invoke<FindJiraIssuesResponse>(ctx, 'NushiService',
           'FindJiraIssues', request, FindJiraIssuesResponse());
 
-  /// An attachment's file or thumbnail (20 MB at most).
+  /// An attachment's file (20 MB at most).
   $async.Future<GetJiraAttachmentResponse> getJiraAttachment(
           $pb.ClientContext? ctx, GetJiraAttachmentRequest request) =>
       _client.invoke<GetJiraAttachmentResponse>(ctx, 'NushiService',

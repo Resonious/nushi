@@ -23,4 +23,13 @@ void window_register(FlView* view);
 void channel_register(FlView* view, const gchar* name,
                       FlMethodChannelMethodCallHandler handler);
 
+// Answers [call] with [response], or warns why it couldn't.
+void channel_respond(FlMethodCall* call, FlMethodResponse* response);
+
+// Answers [call] with [result].
+void channel_answer(FlMethodCall* call, FlValue* result);
+
+// Answers [call] as a method its channel doesn't have.
+void channel_not_implemented(FlMethodCall* call);
+
 #endif  // RUNNER_CHANNELS_H_

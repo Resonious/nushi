@@ -5,28 +5,19 @@ import (
 	"context"
 	"errors"
 	"strings"
-
-	"github.com/afrase/nushi/internal/model"
 )
 
 // The writes are GraphQL mutations, each one request (GitHub counts five
 // points of its secondary limit for one), a second apart.
 
 const replyMutation = `mutation Reply($thread: ID!, $body: String!) {
-  addPullRequestReviewThreadReply(input: {pullRequestReviewThreadId: $thread, body: $body}) { comment ` + saidFields + ` }
+  addPullRequestReviewThreadReply(input: {pullRequestReviewThreadId: $thread, body: $body}) { clientMutationId }
 }`
 
 // Reply adds a reply to a review thread.
-func (c *Client) Reply(ctx context.Context, thread, body string) (model.GitHubComment, error) {
-	var data struct {
-		AddPullRequestReviewThreadReply struct {
-			Comment said `json:"comment"`
-		} `json:"addPullRequestReviewThreadReply"`
-	}
-	if _, err := c.graphql(ctx, replyMutation, map[string]any{"thread": thread, "body": body}, &data); err != nil {
-		return model.GitHubComment{}, err
-	}
-	return data.AddPullRequestReviewThreadReply.Comment.comment(), nil
+func (c *Client) Reply(ctx context.Context, thread, body string) error {
+	_, err := c.graphql(ctx, replyMutation, map[string]any{"thread": thread, "body": body}, new(any))
+	return err
 }
 
 const resolveMutation = `mutation Resolve($thread: ID!) {
@@ -48,23 +39,14 @@ func (c *Client) Resolve(ctx context.Context, thread string, resolve bool) error
 }
 
 const commentMutation = `mutation Comment($subject: ID!, $body: String!) {
-  addComment(input: {subjectId: $subject, body: $body}) { commentEdge { node ` + saidFields + ` } }
+  addComment(input: {subjectId: $subject, body: $body}) { clientMutationId }
 }`
 
 // Comment adds a comment to a pull request's or an issue's conversation
 // (subject is its node id).
-func (c *Client) Comment(ctx context.Context, subject, body string) (model.GitHubComment, error) {
-	var data struct {
-		AddComment struct {
-			CommentEdge struct {
-				Node said `json:"node"`
-			} `json:"commentEdge"`
-		} `json:"addComment"`
-	}
-	if _, err := c.graphql(ctx, commentMutation, map[string]any{"subject": subject, "body": body}, &data); err != nil {
-		return model.GitHubComment{}, err
-	}
-	return data.AddComment.CommentEdge.Node.comment(), nil
+func (c *Client) Comment(ctx context.Context, subject, body string) error {
+	_, err := c.graphql(ctx, commentMutation, map[string]any{"subject": subject, "body": body}, new(any))
+	return err
 }
 
 // Draft is a comment of a review not yet sent: on Line (from StartLine,

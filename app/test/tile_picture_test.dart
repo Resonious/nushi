@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
+import 'package:nushi/images.dart';
 import 'package:nushi/project_tile.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/tile_crop.dart';
@@ -85,17 +86,20 @@ void main() {
 
   test('an image’s kind is what its first bytes say', () {
     expect(
-      tileImageKind([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0]),
+      imageKind([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0]),
       'png',
     );
-    expect(tileImageKind([0xFF, 0xD8, 0xFF, 0xE0]), 'jpg');
-    expect(tileImageKind('GIF89a...'.codeUnits), 'gif');
-    expect(tileImageKind('GIF87a...'.codeUnits), 'gif');
-    expect(tileImageKind('RIFF\x10\x00\x00\x00WEBPVP8 '.codeUnits), 'webp');
-    expect(tileImageKind('RIFF\x10\x00\x00\x00WAVEfmt '.codeUnits), isNull);
-    expect(tileImageKind('<svg xmlns='.codeUnits), isNull);
-    expect(tileImageKind('BM'.codeUnits), isNull);
-    expect(tileImageKind(const []), isNull);
+    expect(imageKind([0xFF, 0xD8, 0xFF, 0xE0]), 'jpg');
+    expect(imageKind('GIF89a...'.codeUnits), 'gif');
+    expect(imageKind('GIF87a...'.codeUnits), 'gif');
+    expect(imageKind('RIFF\x10\x00\x00\x00WEBPVP8 '.codeUnits), 'webp');
+    expect(imageKind('RIFF\x10\x00\x00\x00WAVEfmt '.codeUnits), isNull);
+    expect(imageKind('<svg xmlns='.codeUnits), isNull);
+    expect(imageKind('BM'.codeUnits), isNull);
+    // Only a PNG's whole signature, and a GIF's version, make one.
+    expect(imageKind([0x89, 0x50, 0x4E, 0x47, 0, 0, 0, 0]), isNull);
+    expect(imageKind('GIF88a...'.codeUnits), isNull);
+    expect(imageKind(const []), isNull);
     expect(animatedGif().sublist(0, 6), 'GIF89a'.codeUnits);
   });
 

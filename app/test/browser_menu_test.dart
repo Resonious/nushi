@@ -29,24 +29,21 @@ Future<ChatState> _pane(
   viewport(tester, size);
   final c = ChatState('c', '/Users/me/nushi');
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      builder: (context, child) => ToastHost(child: child!),
-      home: Scaffold(
-        body: ValueListenableBuilder(
-          valueListenable: c.browser.shown,
-          builder: (context, tab, _) => tab is BrowserTab
-              ? BrowserPane(
-                  key: ObjectKey(tab),
-                  chat: c,
-                  tab: tab,
-                  onClose: () {},
-                  onExpand: () {},
-                )
-              : const SizedBox.shrink(),
-        ),
+    themed(
+      ValueListenableBuilder(
+        valueListenable: c.browser.shown,
+        builder: (context, tab, _) => tab is BrowserTab
+            ? BrowserPane(
+                key: ObjectKey(tab),
+                chat: c,
+                tab: tab,
+                onClose: () {},
+                onExpand: () {},
+              )
+            : const SizedBox.shrink(),
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   return c;

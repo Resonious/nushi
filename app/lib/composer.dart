@@ -98,13 +98,13 @@ class _ComposerState extends State<Composer> {
     super.initState();
     _draft.addListener(_draftChanged);
     _replyCount = _draft.replies.value.length;
-    _completions.addListener(_imagesChanged);
-    _spell.addListener(_imagesChanged); // marks that came without typing
+    _completions.addListener(_rebuild);
+    _spell.addListener(_rebuild); // marks that came without typing
     _draft.quote.addListener(_quote);
     _quote(); // one given before the box was built
     _draft.put.addListener(_put);
     _put();
-    widget.chat.rewinding.addListener(_imagesChanged);
+    widget.chat.rewinding.addListener(_rebuild);
     widget.chat.takeBack.addListener(_takeBack);
     _takeBack(); // one taken back while the box wasn't there
     _pasted = pastedFiles.stream.listen(_paste);
@@ -115,14 +115,23 @@ class _ComposerState extends State<Composer> {
   /// as if typed there, the focus with it. Not while it's locked.
   bool _typed(String c) {
     if (_locked) return false;
-    final text = '${_text.text}$c';
+    _setText('${_text.text}$c');
+    return true;
+  }
+
+  /// Puts [text] in the box, the cursor at its end and the focus there.
+  void _setText(String text) {
     _text.value = TextEditingValue(
       text: text,
       selection: TextSelection.collapsed(offset: text.length),
     );
-    _focus.requestFocus();
-    return true;
+    if (mounted) _focus.requestFocus();
   }
+
+  /// Puts [text] after what the box holds, a blank line between.
+  void _append(String text) => _setText(
+    _text.text.trim().isEmpty ? text : '${_text.text.trimRight()}\n\n$text',
+  );
 
   late final StreamSubscription<List<XFile>> _pasted;
 
@@ -132,7 +141,9 @@ class _ComposerState extends State<Composer> {
     unawaited(attached(context, attachFiles(widget.chat, files, api: _api)));
   }
 
-  void _imagesChanged() => setState(() {}); // and completions, and the lock
+  /// Builds again for what the box shows but doesn't hold: completions,
+  /// spelling marks, the lock.
+  void _rebuild() => setState(() {});
 
   bool get _locked => widget.chat.rewinding.value;
 
@@ -150,7 +161,7 @@ class _ComposerState extends State<Composer> {
     _draft.removeListener(_draftChanged);
     _draft.quote.removeListener(_quote);
     _draft.put.removeListener(_put);
-    widget.chat.rewinding.removeListener(_imagesChanged);
+    widget.chat.rewinding.removeListener(_rebuild);
     widget.chat.takeBack.removeListener(_takeBack);
     _esc?.cancel();
     unawaited(_pasted.cancel());
@@ -164,16 +175,7 @@ class _ComposerState extends State<Composer> {
     final q = _draft.quote.value;
     if (q == null) return;
     _draft.quote.value = null;
-    final quoted = q.trim().split('\n').map((l) => '> $l').join('\n');
-    final before = _text.text.trim().isEmpty
-        ? ''
-        : '${_text.text.trimRight()}\n\n';
-    final text = '$before$quoted\n\n';
-    _text.value = TextEditingValue(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
-    );
-    _focus.requestFocus();
+    _append('${q.trim().split('\n').map((l) => '> $l').join('\n')}\n\n');
   }
 
   /// Puts the draft's [Draft.put] in the box, after a blank line when it
@@ -182,15 +184,7 @@ class _ComposerState extends State<Composer> {
     final p = _draft.put.value;
     if (p == null) return;
     _draft.put.value = null;
-    final before = _text.text.trim().isEmpty
-        ? ''
-        : '${_text.text.trimRight()}\n\n';
-    final text = '$before$p';
-    _text.value = TextEditingValue(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
-    );
-    _focus.requestFocus();
+    _append(p);
   }
 
   KeyEventResult _onKey(FocusNode _, KeyEvent e) {
@@ -295,12 +289,7 @@ class _ComposerState extends State<Composer> {
     _images.value = [..._images.value, ...images];
     final before = _text.text.trim();
     final all = [if (before.isNotEmpty) before, if (text.isNotEmpty) text];
-    final joined = all.join('\n\n');
-    _text.value = TextEditingValue(
-      text: joined,
-      selection: TextSelection.collapsed(offset: joined.length),
-    );
-    if (mounted) _focus.requestFocus();
+    _setText(all.join('\n\n'));
   }
 
   void _takeBack() {

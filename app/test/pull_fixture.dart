@@ -12,8 +12,6 @@ import 'harness.dart';
 
 const fixtureRepo = 'octo/notes';
 
-Int64 _ago(Duration d) => Int64(fixtureNow.subtract(d).millisecondsSinceEpoch);
-
 GitHubComment said(
   String author,
   String body, {
@@ -28,7 +26,7 @@ GitHubComment said(
   bot: bot,
   body: body,
   url: 'https://github.com/$fixtureRepo/pull/412#c',
-  createdMs: _ago(age),
+  createdMs: msAgo(age),
   review: review,
 );
 
@@ -119,7 +117,7 @@ GitHubPull fixturePull() => GitHubPull(
     url: 'https://github.com/$fixtureRepo/pull/412',
     state: 'open',
     author: 'afrase',
-    updatedMs: _ago(const Duration(minutes: 1)),
+    updatedMs: msAgo(const Duration(minutes: 1)),
     checks: 'failure',
     review: 'changes_requested',
     unresolved: 2,

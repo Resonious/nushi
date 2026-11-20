@@ -44,10 +44,6 @@ String commandState(Item it) {
 String lastLine(Item it) =>
     it.backgroundCommand.output.trimRight().split('\n').last.trim();
 
-/// The command's [TaskMark]: room while it runs (its words shine), a check
-/// that draws as it's done, a red mark when it failed.
-Widget commandMark(Item it) => TaskMark(it.backgroundCommand.state);
-
 /// [commandState] in [style], red once it failed, ticking and shining while
 /// it runs.
 Widget commandStateText(BuildContext context, Item it, TextStyle style) =>
@@ -158,7 +154,7 @@ class BackgroundCommandPane extends StatelessWidget {
                               Flexible(
                                 child: commandStateText(context, it, small),
                               ),
-                              commandMark(it),
+                              TaskMark(it.backgroundCommand.state),
                             ],
                           ),
                           if (it.backgroundCommand.state == 'started')

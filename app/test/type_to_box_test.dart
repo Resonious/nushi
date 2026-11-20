@@ -207,10 +207,7 @@ void main() {
   testWidgets('a letter in a text field stays there', (tester) async {
     final d = await _open(tester);
     // The find bar's field.
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyF);
     final focus = FocusManager.instance.primaryFocus;
     expect(
       focus?.context?.findAncestorStateOfType<EditableTextState>(),

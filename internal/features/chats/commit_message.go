@@ -73,9 +73,7 @@ func (s *Service) CommitMessage(ctx context.Context, chatID string, diff func(co
 	defer c.mu.Unlock()
 	switch {
 	case run.toolCalled:
-		stop, done := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
-		defer done()
-		_ = agent.Cancel(stop, &acp.CancelNotification{SessionID: acp.SessionID(fork)})
+		_ = cancelTurn(agent, &acp.CancelNotification{SessionID: acp.SessionID(fork)}, c.svc.timing.stopGrace())
 		return "", errors.New("the agent reached for a tool instead of answering; try again")
 	case err != nil:
 		return "", err
@@ -110,15 +108,10 @@ func readOnly(ctx context.Context, agent Agent, fork string, config []model.Conf
 		return slices.ContainsFunc(o.Values, func(v model.ConfigValue) bool { return v.Value == mode })
 	}
 	i := slices.IndexFunc(config, func(o model.ConfigOption) bool { return o.Category == "mode" && offers(o) })
-	switch {
-	case i < 0:
+	if i < 0 {
 		return fmt.Errorf("no mode %q", mode)
-	case config[i].ID == legacyMode:
-		_, err := agent.SetSessionMode(ctx, &acp.SetSessionModeRequest{SessionID: acp.SessionID(fork), ModeID: acp.SessionModeID(mode)})
-		return err
 	}
-	_, err := agent.SetSessionConfigOption(ctx, &acp.SetSessionConfigOptionRequest{SessionID: acp.SessionID(fork), ConfigID: acp.SessionConfigID(config[i].ID),
-		ValueID: &acp.SetSessionConfigOptionRequestValueID{Value: acp.SessionConfigValueID(mode)}})
+	_, err := setOption(ctx, agent, fork, config[i], mode)
 	return err
 }
 

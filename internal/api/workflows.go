@@ -53,7 +53,7 @@ func workflowErr(err error) error {
 }
 
 func workflowProto(w model.Workflow) *nushiv1.Workflow {
-	out := &nushiv1.Workflow{RunId: w.RunID, TaskId: w.TaskID, Name: w.Name, Description: w.Description, State: w.State, End: w.End,
+	out := &nushiv1.Workflow{RunId: w.RunID, Name: w.Name, Description: w.Description, State: w.State, End: w.End,
 		Started: unixMs(w.Started), Ended: unixMs(w.Ended), Active: unixMs(w.Active), Agents: int32(w.Agents), Done: int32(w.Done),
 		Failed: int32(w.Failed), Running: w.Running, RunningCount: int32(w.RunningCount), Summary: w.Summary, Stalled: w.Stalled}
 	for _, p := range w.Phases {

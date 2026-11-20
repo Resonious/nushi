@@ -5,7 +5,6 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/app_actions.dart';
-import 'package:nushi/browser_page.dart';
 import 'package:nushi/browser_pane.dart';
 import 'package:nushi/chat_header.dart';
 import 'package:nushi/conventions.dart';
@@ -59,7 +58,6 @@ Future<(FakeDaemon, Daemon)> _app(
 }) async {
   viewport(tester, Size(width, 900), brightness: brightness);
   showDetails.value = false;
-  paneWidths.value = {};
   final c = chat('c', 'claude', 'Build the tea shop');
   final fake = FakeDaemon([c])
     ..answer = ((input) => input is GetChatRequest
@@ -193,7 +191,6 @@ void main() {
       ..web = const LinuxWebViews()
       ..window = const LinuxWindow()
       ..conventions = linuxConventions;
-    addTearDown(() => defaultBrowser.value = null);
     final (_, d) = await _app(tester);
     d.chats['c']!.openInFiles('site/index.html');
     await tester.pumpAndSettle();

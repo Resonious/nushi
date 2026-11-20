@@ -91,10 +91,7 @@ class BottomFollower extends ChangeNotifier {
     _held = true;
     _stopGlide();
     _set(false);
-    if (to == null) return;
-    _jumping = true;
-    scroll.position.jumpTo(to);
-    _jumping = false;
+    if (to != null) _move(to);
   }
 
   void _set(bool v) {
@@ -111,10 +108,7 @@ class BottomFollower extends ChangeNotifier {
   void stick() => WidgetsBinding.instance.addPostFrameCallback((_) {
     if (!following || !scroll.hasClients) return;
     final p = scroll.position;
-    if (p.pixels >= p.maxScrollExtent) return;
-    _jumping = true;
-    p.jumpTo(p.maxScrollExtent);
-    _jumping = false;
+    if (p.pixels < p.maxScrollExtent) _move(p.maxScrollExtent);
   });
 
   /// Takes the list's notifications. Only the user's scrolls of the list

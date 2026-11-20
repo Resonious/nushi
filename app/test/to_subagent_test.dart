@@ -64,7 +64,6 @@ void main() {
       'agent passed it on', (tester) async {
     viewport(tester, const Size(1400, 700));
     showDetails.value = false;
-    paneWidths.value = {};
     final c = chat('c', 'claude', 'Fix the login redirect');
     final fake = FakeDaemon([c])
       ..answer = (input) => input is GetChatRequest
@@ -96,13 +95,12 @@ void main() {
       lessThan(tester.getRect(inPane('Look at auth/session.go too')).top),
     );
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('what is typed while a message to a subagent sends stays, '
       'and a failed one comes back before it', (tester) async {
     viewport(tester, const Size(1400, 700));
     showDetails.value = false;
-    paneWidths.value = {};
     final c = chat('c', 'claude', 'Fix the login redirect');
     var sent = Completer<SendPromptResponse>();
     final fake = FakeDaemon([c])
@@ -144,5 +142,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(typed(), 'Look at the tests too\n\nand the docs');
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

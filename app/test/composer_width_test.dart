@@ -56,7 +56,7 @@ void main() {
       await tester.pump();
       expect(chat.draft.text.text, 'half a sentence');
       d.dispose();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 }
 

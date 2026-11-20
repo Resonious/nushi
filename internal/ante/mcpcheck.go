@@ -17,21 +17,13 @@ import (
 // write to the bridge's stderr, which the daemon logs; the MCP check's
 // are dropped.
 func Server(bin string, env []string, stderr io.Writer) Spawn {
-	return func(cwd string) (io.WriteCloser, io.Reader, func(), error) {
+	return func(cwd string) (agentproc.Program, error) {
 		p, err := agentproc.Pipe(bin, []string{"serve", "--stdio"}, cwd, env, stderr) // lives until the session or the check ends, which kills it
 		if err != nil {
-			return nil, nil, nil, err
+			return agentproc.Program{}, err
 		}
-		return hostIn{p.In, p.Said}, p.Out, p.Kill, nil
+		return p.Program(), nil
 	}
-}
-
-// hostIn is the stdin of a host Server started, with what the host last
-// wrote to stderr, which says why it stopped when it did (host.stopped). A
-// test's Spawn has none.
-type hostIn struct {
-	io.WriteCloser
-	said func() string
 }
 
 // CheckMCP has a throwaway Ante host connect to your MCP servers and says

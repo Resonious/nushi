@@ -17,11 +17,6 @@ import 'long_chat.dart';
 // ⌘F's jump: the current match in view, whatever its distance, on a chat
 // as long as the owner's. Its marks are in find_marks_test.dart.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
-Item _agent(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
-
 /// The app on chat c with [items]; [settle] lets it fill in first.
 Future<Daemon> _app(
   WidgetTester tester,
@@ -47,10 +42,7 @@ Future<Daemon> _app(
 }
 
 Future<void> _type(WidgetTester tester, String query) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pump();
+  await cmdKey(tester, LogicalKeyboardKey.keyF, settle: false);
   await tester.pump();
   await tester.enterText(
     find.descendant(
@@ -131,7 +123,7 @@ Future<void> _stream(WidgetTester tester, Daemon d, int n) async {
         chatId: 'c',
         seq: Int64(_seq++),
         item: ItemEvent(
-          item: _agent('s$_seq', 'Streamed words.\n\n${'More. ' * 40}'),
+          item: agentSays('s$_seq', 'Streamed words.\n\n${'More. ' * 40}'),
           index: chat.items.length,
         ),
       ),
@@ -149,57 +141,57 @@ void main() {
     tester,
   ) async {
     final d = await _app(tester, [
-      _agent('top', 'The needle is here, far above.'),
+      agentSays('top', 'The needle is here, far above.'),
       ...longChat('a', turns: 40),
     ]);
     await _type(tester, 'needle');
     expect(find.text('1 of 1'), findsOne);
     _inView(tester, 'needle');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a long chat still filling in: typing goes to the match', (
     tester,
   ) async {
     final d = await _app(tester, [
-      _agent('top', 'The needle is here, far above.'),
+      agentSays('top', 'The needle is here, far above.'),
       ...longChat('a', turns: 40),
     ], settle: false);
     await _type(tester, 'needle');
     _inView(tester, 'needle');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a long chat still filling in: a match halfway up', (
     tester,
   ) async {
     final d = await _app(tester, [
       ...longChat('a', turns: 20),
-      _agent('mid', 'The needle is here, halfway.'),
+      agentSays('mid', 'The needle is here, halfway.'),
       ...longChat('b', turns: 20),
     ], settle: false);
     await _type(tester, 'needle');
     _inView(tester, 'needle');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a match deep in a long message comes into view itself', (
     tester,
   ) async {
     final d = await _app(tester, [
-      _agent('m', _long(400, {350})),
+      agentSays('m', _long(400, {350})),
       ...longChat('a', turns: 4),
     ]);
     await _type(tester, 'needle');
     _inView(tester, 'needle');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⏎ goes on to the next match in the same long message', (
     tester,
   ) async {
     final d = await _app(tester, [
-      _agent('m', _long(400, {20, 350})),
+      agentSays('m', _long(400, {20, 350})),
       ...longChat('a', turns: 4),
     ]);
     await _type(tester, 'needle');
@@ -207,15 +199,15 @@ void main() {
     await tester.pumpAndSettle();
     _inView(tester, 'needle', n: 1);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⇧⏎ from the first match goes round to the last, far below', (
     tester,
   ) async {
     final d = await _app(tester, [
-      _agent('top', 'A needle at the top.'),
+      agentSays('top', 'A needle at the top.'),
       ...longChat('a', turns: 30),
-      _agent('end', 'A needle at the end.'),
+      agentSays('end', 'A needle at the end.'),
     ]);
     await _type(tester, 'needle');
     _inView(tester, 'needle');
@@ -226,25 +218,25 @@ void main() {
     expect(find.text('2 of 2'), findsOne);
     _inView(tester, 'needle at the end');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a match that shows stays where it is', (tester) async {
     final d = await _app(tester, [
       ...longChat('a', turns: 10),
-      _agent('m', 'A needle just above the end.'),
-      _agent('n', 'The last words of the chat.'),
+      agentSays('m', 'A needle just above the end.'),
+      agentSays('n', 'The last words of the chat.'),
     ]);
     final before = _scroll(tester).pixels;
     await _type(tester, 'needle');
     expect(_scroll(tester).pixels, before);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a match under the find bar is brought out from under it', (
     tester,
   ) async {
     final d = await _app(tester, [
-      _agent('l', 'Lines.\n\n${'Words to the far right and more. ' * 400}'),
+      agentSays('l', 'Lines.\n\n${'Words to the far right and more. ' * 400}'),
       ...longChat('a', turns: 4),
     ]);
     await _type(tester, 'far right');
@@ -252,7 +244,7 @@ void main() {
     final at = _rect(tester, 'far right');
     expect(at.overlaps(bar), isFalse, reason: '$at under $bar');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a chat's first message, right under the find bar, comes out "
       'from under it', (tester) async {
@@ -269,14 +261,14 @@ void main() {
     final at = _rect(tester, 'needle');
     expect(at.overlaps(bar), isFalse, reason: '$at under $bar');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a match off a code block's right edge comes into view", (
     tester,
   ) async {
     final wide = 'wide ' * 300;
     final d = await _app(tester, [
-      _agent('c', 'Code:\n\n```\n$wide needle\n```'),
+      agentSays('c', 'Code:\n\n```\n$wide needle\n```'),
       ...longChat('a', turns: 10),
     ]);
     await _type(tester, 'needle');
@@ -286,12 +278,12 @@ void main() {
     expect(at.left, greaterThanOrEqualTo(list.left));
     _inView(tester, 'needle');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a streaming chat stays where a jump put it, until the user '
       'goes back to the bottom', (tester) async {
     final d = await _app(tester, [
-      _agent('top', 'The needle is here, far above.'),
+      agentSays('top', 'The needle is here, far above.'),
       ...longChat('a', turns: 20),
     ]);
     await _type(tester, 'needle');
@@ -306,15 +298,15 @@ void main() {
     await _stream(tester, d, 1);
     expect(s.pixels, s.maxScrollExtent);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a jump to the very bottom doesn't follow it from there", (
     tester,
   ) async {
     final d = await _app(tester, [
-      _agent('top', 'A needle at the top.'),
+      agentSays('top', 'A needle at the top.'),
       ...longChat('a', turns: 20),
-      _agent('end', 'A needle at the end.'),
+      agentSays('end', 'A needle at the end.'),
     ]);
     await _type(tester, 'needle');
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -325,14 +317,14 @@ void main() {
     await _stream(tester, d, 2);
     expect(s.pixels, at);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a jump the follower would pull back as the chat fills in', (
     tester,
   ) async {
     final d = await _app(tester, [
       ...longChat('a', turns: 20),
-      _agent('mid', 'The needle is here, halfway.'),
+      agentSays('mid', 'The needle is here, halfway.'),
       ...longChat('b', turns: 20),
     ], settle: false);
     await _type(tester, 'needle');
@@ -341,5 +333,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(_scroll(tester).pixels, at);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

@@ -197,7 +197,7 @@ func (s *Service) snapshot() model.Remote {
 		r.Devices = append(r.Devices, d)
 	}
 	if p := s.pairing; p != nil {
-		r.Pairing = &model.Pairing{Expires: p.expires, Name: p.name, Code: p.code}
+		r.Pairing = &model.Pairing{Name: p.name, Code: p.code}
 	}
 	return r
 }

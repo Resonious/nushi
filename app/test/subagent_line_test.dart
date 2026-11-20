@@ -42,15 +42,11 @@ void main() {
       child: LiveText(() => '${++built}', live: live, style: const TextStyle()),
     );
     await tester.pumpWidget(line(live: true));
-    for (var i = 0; i < 2; i++) {
-      await tester.pump(const Duration(seconds: 1));
-    }
+    await frames(tester, 2, const Duration(seconds: 1));
     expect(built, 3);
     await tester.pumpWidget(line(live: false));
     final done = built;
-    for (var i = 0; i < 5; i++) {
-      await tester.pump(const Duration(seconds: 1));
-    }
+    await frames(tester, 5, const Duration(seconds: 1));
     expect(built, done);
     await tester.pumpWidget(line(live: true)); // live again: ticks again
     await tester.pump(const Duration(seconds: 1));

@@ -251,9 +251,6 @@ class ChatPull extends ChangeNotifier {
   DateTime? _asked;
   int _rechecks = 0;
 
-  /// The tab's pull request ([current]).
-  GitHubLink? get link => current;
-
   /// The chat's pull requests in the widget's order: as linked, a stack's
   /// base first (ADR 0117).
   List<GitHubLink> get links => orderPulls(chat.pulls, itemOf);

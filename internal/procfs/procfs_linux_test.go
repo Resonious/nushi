@@ -131,13 +131,6 @@ func TestPids(t *testing.T) {
 	}
 }
 
-// The boot's id is a UUID, the same at each read.
-func TestBootID(t *testing.T) {
-	if id := BootID(); len(id) != len("8e0d2f2c-3a4b-4c5d-9e6f-0a1b2c3d4e5f") || id != BootID() {
-		t.Fatalf("boot id %q", id)
-	}
-}
-
 func TestNamespaceAndMachine(t *testing.T) {
 	if ns := PidNamespace(); len(ns) < len("pid:[1]") || ns[:5] != "pid:[" {
 		t.Fatalf("pid namespace %q", ns)

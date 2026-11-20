@@ -16,13 +16,10 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/panes.dart';
 import 'package:nushi/preview_path.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 const _model = 'claude-opus-5-5[1m]';
 
@@ -49,8 +46,6 @@ void main() {
             const MethodChannel('nushi/fonts'),
             (_) async => <String>[],
           );
-      paneWidths.value = {};
-      showDetails.value = true;
       final link = GitHubLink(
         host: 'github.com',
         repo: 'afrase/nushi',
@@ -156,6 +151,6 @@ void main() {
         '${file}_${width.toInt()}_$name',
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

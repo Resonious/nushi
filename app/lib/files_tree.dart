@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:nushi/chat.dart';
-import 'package:nushi/controls.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/double_clicks.dart';
 import 'package:nushi/file_filter.dart';
@@ -99,14 +98,7 @@ class _FilesTreeState extends State<FilesTree> {
 
   void _reveal(String path) {
     final i = _rows.indexWhere((r) => r.entry && r.path == path);
-    if (i < 0 || !_scroll.hasClients) return;
-    final p = _scroll.position;
-    final top = i * FilesTree.row;
-    if (top < p.pixels) {
-      p.jumpTo(top);
-    } else if (top + FilesTree.row > p.pixels + p.viewportDimension) {
-      p.jumpTo(top + FilesTree.row - p.viewportDimension);
-    }
+    if (i >= 0) revealRowAt(_scroll, i, FilesTree.row);
   }
 
   /// A row clicked, or ⏎ on it: a folder opens or closes (in a filter's

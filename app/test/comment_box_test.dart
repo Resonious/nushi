@@ -32,10 +32,7 @@ void main() {
     Button reply() =>
         tester.widget<Button>(find.widgetWithText(Button, 'Reply'));
     Future<void> commandEnter() async {
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-      await tester.pumpAndSettle();
+      await cmdKey(tester, LogicalKeyboardKey.enter);
     }
 
     expect(reply().onPressed, isNull);

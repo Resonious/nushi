@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:connectrpc/connect.dart';
 import 'package:diff_view/diff_view.dart';
@@ -158,7 +157,6 @@ void main() {
 
   testWidgets("my folders' repositories, picked, are remembered across a "
       'relaunch', (tester) async {
-    Directory(dataDir).createSync(recursive: true);
     final (_, d) = await openView(tester);
     await tester.tap(find.text('All repositories'));
     await tester.pumpAndSettle();
@@ -229,10 +227,7 @@ void main() {
       find.byType(TextField).first,
       'Fixed in the next commit.',
     );
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.enter);
     final reply = fake.calls.whereType<ReplyGitHubThreadRequest>().single;
     expect((reply.thread, reply.body), ('T1', 'Fixed in the next commit.'));
     await tester.tap(find.text('Resolve').first);
@@ -504,10 +499,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.getRect(last).top, greaterThan(view.bottom));
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.enter);
     await tester.tap(_clone.first);
     await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -526,10 +518,7 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.keyJ);
     await tester.pumpAndSettle();
     expect(find.byTooltip('Start work\u2002⌘⏎'), findsOneWidget);
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.enter);
     await tester.tap(_clone.first);
     await tester.pumpAndSettle();
     expect(find.text("the pull request's head"), findsOneWidget);
@@ -765,7 +754,7 @@ void main() {
         matchesGoldenFile('goldens/github_window_1700_$name.png'),
       );
       await closeView(tester, d);
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
 
     // The window at both widths, the inbox, a pull request's page and its
     // files, to look at (`make renders`).
@@ -792,7 +781,7 @@ void main() {
         expect(find.byType(GitHubFiles), findsOneWidget);
         await render(tester, app, 'github_files_${w.round()}_$name');
         await closeView(tester, d);
-      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      }, variant: onMac);
     }
   }
 }

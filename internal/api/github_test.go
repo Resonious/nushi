@@ -72,7 +72,7 @@ func TestGitHubLogsNoTokenNorText(t *testing.T) {
 		case r.URL.Path == "/api/v3/user":
 			_, _ = w.Write([]byte(`{"login":"octo"}`))
 		case bytes.Contains(body, []byte("mutation Reply")):
-			_, _ = w.Write([]byte(`{"data":{"addPullRequestReviewThreadReply":{"comment":{"id":"C1","body":"` + text + `"}}}}`))
+			_, _ = w.Write([]byte(`{"data":{"addPullRequestReviewThreadReply":{"clientMutationId":null}}}`))
 		default:
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			_, _ = w.Write([]byte(`{"message":"Validation failed: ` + text + `"}`))
@@ -90,10 +90,8 @@ func TestGitHubLogsNoTokenNorText(t *testing.T) {
 	svc := github.New(github.Deps{
 		Gh:     github.Gh{Token: func(context.Context, string) (string, string, error) { return "", "", nil }, Hosts: func() []string { return nil }, Reload: func() {}},
 		Tokens: memTokens{}, Store: &memHosts{Store: store.New(t.TempDir())},
-		Open:    func(h, token string) github.Client { return githubapi.New(h, token, gh.Client().Transport) },
-		NeedsOK: func(error) bool { return false },
-		Restart: func(error) bool { return false },
-		Missing: func(error) bool { return false },
+		Open: func(h, token string) github.Client { return githubapi.New(h, token, gh.Client().Transport) },
+		Keys: github.Keys{NeedsOK: func(error) bool { return false }, Restart: func(error) bool { return false }, Missing: func(error) bool { return false }},
 	})
 	c := client(t, New(Services{GitHub: svc}))
 	ctx := context.Background()

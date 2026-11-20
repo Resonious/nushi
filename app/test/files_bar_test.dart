@@ -27,12 +27,6 @@ import 'right_panes_fixture.dart';
 // The Files pane's second row (ADR 0123), as Claude desktop's: Collapse
 // all folders, the tree's button (⇧⌘Y) and the ⋯, at its right end.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-const _both = TargetPlatformVariant({
-  TargetPlatform.macOS,
-  TargetPlatform.linux,
-});
-
 bool get _linux => defaultTargetPlatform == TargetPlatform.linux;
 
 const PanesOpen _files = (
@@ -73,16 +67,7 @@ Future<void> _treeKeys(WidgetTester tester) async {
 
 /// The View menu's items, flattened; picks the one called [pick].
 List<String> _viewMenu(WidgetTester tester, {String? pick}) {
-  final view = tester
-      .widget<PlatformMenuBar>(find.byType(PlatformMenuBar))
-      .menus
-      .whereType<PlatformMenu>()
-      .firstWhere((m) => m.label == 'View');
-  Iterable<PlatformMenuItem> items(PlatformMenuItem m) => switch (m) {
-    PlatformMenuItemGroup(:final members) => members.expand(items),
-    _ => [m],
-  };
-  final all = view.menus.expand(items).toList();
+  final all = viewItems(tester);
   if (pick != null) all.firstWhere((m) => m.label == pick).onSelected!();
   return [for (final m in all) m.label];
 }
@@ -185,7 +170,7 @@ void main() {
     expect(find.byType(FilesTree), findsOneWidget);
     expect(tester.getRect(find.byType(FilesPane)), pane);
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets('⇧⌘Y, the ⋯, View › Show File Tree and the palette show and '
       'hide it in step with the button', (tester) async {
@@ -248,7 +233,7 @@ void main() {
       expect(item.shortcut, fileTreeKey);
     }
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets('on Changes with Files open, View and the palette both say '
       'Show, picking it shows the tree on the Chat tab, and the label '
@@ -271,7 +256,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_viewMenu(tester), contains('Show File Tree'));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final was in [true, false]) {
     testWidgets('with Files closed, ⇧⌘Y opens it with its tree, from the '
@@ -289,7 +274,7 @@ void main() {
       expect(readSaved()['filesTree'], isTrue);
       expect(find.byType(FilesTree), findsOneWidget);
       await closeView(tester, d);
-    }, variant: _both);
+    }, variant: macAndLinux);
   }
 
   testWidgets('hiding the tree lets Files come beside a window too narrow '
@@ -309,7 +294,7 @@ void main() {
     expect(tester.getRect(pane).left, tester.getRect(header).right);
     expect(tester.takeException(), isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('beside the browser, hiding the tree moves their boundary: '
       'Files narrows to its least without the tree and the browser takes '
@@ -348,7 +333,7 @@ void main() {
     expect(tester.getRect(files).width, 500);
     expect(tester.getRect(browser).width, 440);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Collapse all folders closes every folder at once and ends '
       'their watches; it is off with none open in the ⋯ and the palette, '
@@ -413,7 +398,7 @@ void main() {
     expect(_button(tester, _collapse).onTap, isNull);
     expect(_palette(tester, d, Act.collapseFolders).enabled, isFalse);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⋯: Claude desktop’s rows, its order and lines, its checks and '
       'keys', (tester) async {
@@ -488,7 +473,7 @@ void main() {
     expect(_checked('Show whitespace'), isTrue);
     await render(tester, find.byType(NushiApp), 'files_menu');
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets('with the tree hidden, a click on the file’s name shows the '
       'tree on it', (tester) async {
@@ -508,7 +493,7 @@ void main() {
     expect(find.byType(FilesTree), findsOneWidget);
     expect(folderTreeOf(c).selected, 'README.md');
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),
@@ -520,19 +505,17 @@ void main() {
       final c = d.chats['c']!;
       filesChats.value = {'c'};
       await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: NushiTheme(tokens).toThemeData(),
-          home: Scaffold(
-            body: Align(
-              alignment: Alignment.topRight,
-              child: SizedBox(
-                width: 520,
-                height: 500,
-                child: FilesPane(chat: c, daemon: d, onClose: () {}),
-              ),
+        themed(
+          Align(
+            alignment: Alignment.topRight,
+            child: SizedBox(
+              width: 520,
+              height: 500,
+              child: FilesPane(chat: c, daemon: d, onClose: () {}),
             ),
           ),
+          tokens: tokens,
+          banner: false,
         ),
       );
       await tester.pumpAndSettle();
@@ -543,7 +526,7 @@ void main() {
         matchesGoldenFile('goldens/files_menu_$name.png'),
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the second row’s icons, 2×, $name', (tester) async {
       viewport(tester, const Size(220, 44), ratio: 2);
@@ -582,6 +565,6 @@ void main() {
         find.byKey(const ValueKey('icons')),
         matchesGoldenFile('goldens/files_icons_$name.png'),
       );
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

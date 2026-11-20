@@ -116,8 +116,7 @@ func conversation(it model.Item, t Transcript) bool {
 // has it still running and the agent has it ended. A time only the replay
 // has joins the copy's.
 func pick(copied, replayed model.Item) model.Item {
-	ended := func(s string) bool { return s == "completed" || s == "failed" }
-	if copied.Kind == model.ToolCall && !ended(copied.Status) && ended(replayed.Status) {
+	if copied.Kind == model.ToolCall && !callEnded(copied.Status) && callEnded(replayed.Status) {
 		if !copied.Ended.IsZero() { // its turn's end; without one, when it ended isn't known
 			replayed.Started, replayed.Ended = copied.Started, copied.Ended
 		}

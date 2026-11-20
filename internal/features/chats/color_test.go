@@ -12,9 +12,7 @@ import (
 
 func TestSetColor(t *testing.T) {
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude", Title: "Claude"}, Launch: (&fakeAgent{}).launch}}, Options{Scratch: t.TempDir()})
-	id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	saved := func() string {
 		t.Helper()
 		c.mu.Lock()

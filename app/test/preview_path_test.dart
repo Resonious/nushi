@@ -5,24 +5,19 @@ import 'dart:io';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/controls.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/files_bar.dart';
-import 'package:nushi/files_pane.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
-import 'package:nushi/main.dart';
 import 'package:nushi/preview_path.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
+import 'preview_fixture.dart';
 
 const _roadmap = '# Roadmap\n\n## Previews\n\nWhat a preview shows.\n';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 /// The daemon: a chat whose folder holds `docs/roadmap.md`; any file is
 /// its text.
@@ -62,24 +57,8 @@ FakeDaemon _fake() {
 }
 
 /// The app on the chat, [file] in the preview.
-Future<Daemon> _app(
-  WidgetTester tester, {
-  String file = 'docs/roadmap.md',
-}) async {
-  viewport(tester, const Size(1700, 900));
-  showDetails.value = false;
-  paneWidths.value = {};
-  final d = await _fake().connect(tester);
-  d.select('c');
-  await tester.pumpWidget(NushiApp(daemon: d));
-  await tester.pumpAndSettle();
-  d.chats['c']!.openInFiles(file);
-  await tester.pumpAndSettle();
-  return d;
-}
-
-Finder _inPane(Finder f) =>
-    find.descendant(of: find.byType(FilesPane), matching: f);
+Future<Daemon> _app(WidgetTester tester, {String file = 'docs/roadmap.md'}) =>
+    previewApp(tester, _fake(), file: file);
 
 void main() {
   setUpAll(loadFonts);
@@ -102,37 +81,28 @@ void main() {
   });
 
   testWidgets('a click on the path copies it and says so', (tester) async {
-    final copied = <String>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied.add((call.arguments as Map)['text'] as String);
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     final d = await _app(tester);
-    expect(_inPane(find.text('docs / roadmap.md')), findsOneWidget);
-    await tester.tap(_inPane(find.text('docs / roadmap.md')));
+    expect(inPane(find.text('docs / roadmap.md')), findsOneWidget);
+    await tester.tap(inPane(find.text('docs / roadmap.md')));
     await tester.pump();
     expect(copied, ['docs/roadmap.md']);
     expect(find.text('Copied'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the source button: View source, then lit, View preview', (
     tester,
   ) async {
     final d = await _app(tester);
-    final button = _inPane(find.byType(SourceButton));
-    expect(_inPane(find.byTooltip('View source')), findsOneWidget);
+    final button = inPane(find.byType(SourceButton));
+    expect(inPane(find.byTooltip('View source')), findsOneWidget);
     final at = tester.getRect(button);
     // In the Files pane's bar, right of the path.
-    final bar = tester.getRect(_inPane(find.byType(FilesBar)));
+    final bar = tester.getRect(inPane(find.byType(FilesBar)));
     expect(at.top, greaterThanOrEqualTo(bar.top));
     expect(at.bottom, lessThanOrEqualTo(bar.bottom));
-    final path = tester.getRect(_inPane(find.byType(PathLine)));
+    final path = tester.getRect(inPane(find.byType(PathLine)));
     expect(at.left, greaterThan(path.right - 1));
     expect(
       tester
@@ -144,7 +114,7 @@ void main() {
     );
     await tester.tap(button);
     await tester.pumpAndSettle();
-    expect(_inPane(find.byTooltip('View preview')), findsOneWidget);
+    expect(inPane(find.byTooltip('View preview')), findsOneWidget);
     expect(
       tester
           .widget<IconTap>(
@@ -154,24 +124,24 @@ void main() {
       isTrue,
     );
     expect(
-      _inPane(find.textContaining('## Previews', findRichText: true)),
+      inPane(find.textContaining('## Previews', findRichText: true)),
       findsOneWidget,
     );
     expect(tester.getRect(button), at);
     await tester.tap(button);
     await tester.pumpAndSettle();
-    expect(_inPane(find.byTooltip('View source')), findsOneWidget);
+    expect(inPane(find.byTooltip('View source')), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a file outside the folder shows its path from ~', (
     tester,
   ) async {
     final home = Platform.environment['HOME']!;
     final d = await _app(tester, file: '$home/elsewhere/todo.md');
-    expect(_inPane(find.text('~ / elsewhere / todo.md')), findsOneWidget);
+    expect(inPane(find.text('~ / elsewhere / todo.md')), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, brightness) in [
     ('dark', Brightness.dark),
@@ -220,6 +190,6 @@ void main() {
         find.byKey(const ValueKey('lines')),
         matchesGoldenFile('goldens/preview_path_line_$name.png'),
       );
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

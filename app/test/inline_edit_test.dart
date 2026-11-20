@@ -57,5 +57,5 @@ void main() {
     await tester.pump();
     expect(text.selection.isCollapsed, isFalse);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

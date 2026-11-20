@@ -3,13 +3,10 @@ package chats
 import (
 	"context"
 	"errors"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
 	"testing"
-
-	acp "github.com/afrase/acp-go/unstable"
 
 	"github.com/afrase/nushi/internal/model"
 	"github.com/afrase/nushi/internal/testcheck"
@@ -34,14 +31,9 @@ func (w *addingWorktrees) Add(_ context.Context, _, name, branch, from string) (
 // request's head, ADR 0023): refused, the agent never starts and the
 // worktree goes; let through, the chat starts in it.
 func TestAWorktreeCheckedBeforeTheAgentStarts(t *testing.T) {
-	launches := 0
 	agent := &fakeAgent{}
 	wts := &addingWorktrees{dir: t.TempDir()}
-	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: func(h acp.Client, _ *slog.Logger) (Agent, error) {
-		launches++
-		agent.h = h
-		return agent, nil
-	}}}, Options{Worktrees: wts})
+	svc := newService(t, []Kind{{Harness: testHarness{Name: "fake"}, Launch: agent.launch}}, Options{Worktrees: wts})
 	folder := t.TempDir()
 	untrusted := errors.New("untrusted")
 	var looked []string
@@ -52,13 +44,13 @@ func TestAWorktreeCheckedBeforeTheAgentStarts(t *testing.T) {
 	if _, err := svc.StartOn(t.Context(), "", folder, opts); !errors.Is(err, untrusted) {
 		t.Fatalf("StartOn = %v; want the check's error", err)
 	}
-	if launches != 0 || len(looked) != 1 || !slices.Equal(wts.removed, looked) {
-		t.Fatalf("%d agents started; looked at %v, removed %v", launches, looked, wts.removed)
+	if agent.launches != 0 || len(looked) != 1 || !slices.Equal(wts.removed, looked) {
+		t.Fatalf("%d agents started; looked at %v, removed %v", agent.launches, looked, wts.removed)
 	}
 	opts.Check = func(string) error { return nil }
 	id, err := svc.StartOn(t.Context(), "", folder, opts)
 	testcheck.NoErr(t, err)
-	if r := svc.chats[id].record; launches != 1 || r.Worktree == nil || r.Folder != r.Worktree.Path {
-		t.Errorf("%d agents started; the chat %+v", launches, r)
+	if r := svc.chats[id].record; agent.launches != 1 || r.Worktree == nil || r.Folder != r.Worktree.Path {
+		t.Errorf("%d agents started; the chat %+v", agent.launches, r)
 	}
 }

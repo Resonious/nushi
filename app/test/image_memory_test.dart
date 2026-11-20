@@ -156,9 +156,7 @@ void main() {
     final d = await fake.connect(tester)
       ..select('c');
     await tester.pumpWidget(NushiApp(daemon: d));
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
+    await frames(tester, 10, const Duration(milliseconds: 100));
     await _decode(tester);
     final opened = _held(d, 'c');
 
@@ -172,17 +170,13 @@ void main() {
     expect(list.maxScrollExtent, greaterThan(50000));
     for (var at = 0.0; at <= list.maxScrollExtent; at += 1000) {
       list.jumpTo(at);
-      for (var i = 0; i < 4; i++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
+      await frames(tester, 4, const Duration(milliseconds: 50));
       await _decode(tester);
     }
     final scrolled = _held(d, 'c');
 
     d.select('o');
-    for (var i = 0; i < 5; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
+    await frames(tester, 5, const Duration(milliseconds: 100));
     final left = _held(d, 'c');
 
     final said = [
@@ -201,5 +195,5 @@ void main() {
     }
     expect(left.rows, 0, reason: said);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

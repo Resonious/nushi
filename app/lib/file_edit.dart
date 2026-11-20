@@ -93,12 +93,6 @@ class FileEdit extends ChangeNotifier {
   /// The base: the disk's text the edits started from.
   String get baseText => _baseText;
 
-  /// What would be lost if the edits went now: unsaved edits that can't be
-  /// saved as they are (in conflict, deleted, read-only, or failed).
-  bool get stuck =>
-      _unsaved &&
-      (theirs != null || deleted || readOnly != null || error != null);
-
   /// Whether a save would write now.
   bool get canSave =>
       _unsaved && theirs == null && !deleted && readOnly == null;

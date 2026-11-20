@@ -183,9 +183,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(platform.at, 1);
     phone.opening.value = 'b';
-    for (var i = 0; i < 30; i++) {
-      await tester.pump(const Duration(milliseconds: 16));
-    }
+    await frames(tester, 30, const Duration(milliseconds: 16));
     await tester.pumpAndSettle();
     expect(find.text('Chats'), findsNothing);
     expect(find.text('Review the Noise channel'), findsWidgets);

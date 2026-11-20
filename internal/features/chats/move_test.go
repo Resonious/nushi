@@ -57,15 +57,13 @@ func TestMoveNamesTheItemsFilesFromTheNewFolder(t *testing.T) {
 		Publish: func(e model.Event) { mu.Lock(); events = append(events, e); mu.Unlock() }})
 	t.Cleanup(svc.Close)
 	from, to := t.TempDir(), t.TempDir()
-	id, err := svc.Start(context.Background(), "", from, false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, from)
 	c.kind.Moves = true
 	notes, main := filepath.Join(from, "notes.md"), filepath.Join(to, "main.go")
 	agent.updates = []acp.SessionUpdate{{SessionUpdate: "tool_call", ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "Write notes.md", Status: "completed",
 		Locations: []acp.ToolCallLocation{{Path: notes}, {Path: main}},
 		Content:   []acp.ToolCallContent{{Type: "diff", Diff: &acp.Diff{Path: notes, NewText: "hi"}}}}}}
-	testcheck.NoErr(t, svc.Prompt(t.Context(), id, model.Message{Text: "write it", Files: []string{"spec.md"}}, SendIdle))
+	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "write it", Files: []string{"spec.md"}}, SendIdle))
 	eventually(t, c, func() bool { return !c.busy })
 	tool := func(items []model.Item) (model.Item, int) {
 		n, at := 0, -1
@@ -83,7 +81,7 @@ func TestMoveNamesTheItemsFilesFromTheNewFolder(t *testing.T) {
 		t.Fatalf("before the move: %q", it.Paths)
 	}
 
-	testcheck.NoErr(t, svc.Move(context.Background(), id, to, false))
+	testcheck.NoErr(t, svc.Move(context.Background(), c.id, to, false))
 	want := []string{notes, "main.go"}
 	check := func(where string, items []model.Item) {
 		t.Helper()
@@ -95,7 +93,7 @@ func TestMoveNamesTheItemsFilesFromTheNewFolder(t *testing.T) {
 			t.Errorf("%s: the message's files %q", where, u.Files)
 		}
 	}
-	got, err := svc.Get(id)
+	got, err := svc.Get(c.id)
 	testcheck.NoErr(t, err)
 	check("the chat", got.Items)
 	mu.Lock()
@@ -111,11 +109,11 @@ func TestMoveNamesTheItemsFilesFromTheNewFolder(t *testing.T) {
 	}
 	mu.Unlock()
 	check("the events", sent)
-	kept, err := store.Read(id)
+	kept, err := store.Read(c.id)
 	testcheck.NoErr(t, err)
 	check("the copy", kept)
 
-	check("after a restart", reopened(t, restarted(t, agent, c, store), id).items)
+	check("after a restart", reopened(t, restarted(t, agent, c, store), c.id).items)
 }
 
 // A message queued before a move goes after it with the files it named:

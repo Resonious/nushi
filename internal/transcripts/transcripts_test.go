@@ -394,9 +394,9 @@ func TestFind(t *testing.T) {
 	}
 }
 
-// A daemon's start looks through every chat's copy (EndStalePrompts) and
-// writes the prompts it finds back cancelled: a long one costs what Find
-// picks of it, not its size. Before Find, that look read a 30 MB copy whole
+// Find looks through a chat's copy for what it picks, and an append writes
+// it back changed: a long copy costs what Find picks of it, not its size.
+// Before Find, such a look read a 30 MB copy whole
 // and decoded all of it, about 110 MB allocated, and the write read it
 // whole again to check its end; all of it held until the next collection.
 func TestFindReadsLittle(t *testing.T) {

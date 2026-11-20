@@ -81,6 +81,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Removed “Still here”'), findsOneWidget);
       d.dispose();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 }

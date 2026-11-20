@@ -2,9 +2,9 @@
 
 Everything Nushi writes outside its data folder, and why.
 
-## What Nushi changes outside its data folder (milestone Z)
+## What Nushi changes outside its data folder
 
-Everything else Nushi writes is in its data folder (`~/Library/Application Support/Nushi`; on Linux `$XDG_DATA_HOME/nushi`, else `~/.local/share/nushi`; or `NUSHI_DATA`): chats, settings (`app.json`), trust answers (`trusted.json`), remote keys, the log, scratch chats' folders, and the adapters (`agents/`). Outside it, each change is one you ask for, or the agent's own doing while you use it:
+Everything else Nushi writes is in its data folder (`~/Library/Application Support/Nushi`; on Linux `$XDG_DATA_HOME/nushi`, else `~/.local/share/nushi`; or `NUSHI_DATA`): chats, settings (`app.json`), trust answers (`trusted.json`), remote keys, the log, scratch chats' folders, and the adapters (`agents/`: Setting up runs `npm ci` there under a sandbox, `sandbox-exec` on the Mac and bubblewrap on Linux, that lets it write nowhere else, with a cache of its own removed after, no logs, no update check and no audit; ADR 0037). Outside it, each change is one you ask for, or the agent's own doing while you use it:
 
 | What | Where | Why |
 |---|---|---|
@@ -19,6 +19,7 @@ Everything else Nushi writes is in its data folder (`~/Library/Application Suppo
 | A deleted skill | its folder (or the link in its place), moved to the Trash; for a shared skill, the agents' links to it too | The Skills view's Delete… |
 | A worktree | `<repo>/.worktrees/<name>`, its branch, `.git/info/exclude` | A chat in a new worktree; Delete removes them when asked. The branch is renamed (`git branch -m`) after the chat between turns, unless pushed, or by Rename branch…; the folder keeps its name. The agent is told with the next prompt, which its history keeps. |
 | MCP servers started | whatever each server does | Opening the MCP view runs `claude mcp list`, which starts every server to check it, as in a terminal. |
+| Codex's PATH aliases | `$CODEX_HOME/tmp/arg0-macos/…` | Finding agents asks each CLI its version as a chat would run it, and `codex --version` writes them. |
 | A shell | your shell's own files (history) | A terminal you open; the daemon's start (`nushid -login`, ADR 0036); reading its environment for agents, at start and from Settings › Agents (`-l -i -c`, ADR 0048): your config runs as in a terminal. |
 | A login item | launchd's per-user list, Login Items; on Linux an autostart entry, `$XDG_CONFIG_HOME/autostart/com.nushihq.Nushi.daemon.desktop` (else `~/.config`), removed when turned off | Start at login (Settings). |
 | A Jira site's API token | the login keychain, service "Nushi Jira", account "<email> on <host>" | Settings › Jira (you added it); Remove deletes it. |
@@ -34,8 +35,4 @@ Everything else Nushi writes is in its data folder (`~/Library/Application Suppo
 | The Linux app, installed | `~/.local/opt/nushi`, `$XDG_DATA_HOME/applications/com.nushihq.Nushi.desktop` and `$XDG_DATA_HOME/icons/hicolor/*/apps/com.nushihq.Nushi.*` (else `~/.local/share`) | Its `install.sh` (or `make install`), which you run; `install.sh --uninstall` removes them. |
 | Files you open | macOS's open-panel state (`com.nushihq.Nushi` preferences) | The folder picker. |
 
-What changed in milestone Z:
-- **npx's cache** (`~/.npm/_npx/<hash>`, about 330 MB per adapter with its own Claude Code or Codex, 1.1 GB for omp with Bun): gone. Adapters are set up only when asked, into `agents/` (ADR 0037). Those left in your npx cache from before are yours to delete: `1f872328d1400346` (claude-agent-acp 0.94.0), `4a4ca55c38a52b9f` (codex-acp 2.2.2), `0bc28aba708345f9` (omp 18.12.6 and Bun 1.4.3), `72bcd8a8dc4e8361` (claude-agent-acp 0.91.0).
-- **Finding agents** asks each CLI its version, as a chat would run it: `codex --version` writes its PATH aliases (`$CODEX_HOME/tmp/arg0-macos/…`).
-- **Setting up** runs `npm ci` under macOS's sandbox (`sandbox-exec`), with writes allowed only in `agents/`; its cache is a folder of the install's own, removed after; no logs, no update check, no audit.
-- Starting an agent changes nothing beyond the agent's own: Claude and Codex run your own CLIs, not copies; nothing is written to their configs (Codex's trust of a chat's folder is an override codex-acp passes, never written; ADR 0029).
+Starting an agent changes nothing beyond the agent's own: Claude and Codex run your own CLIs, not copies; nothing is written to their configs (Codex's trust of a chat's folder is an override codex-acp passes, never written; ADR 0029).

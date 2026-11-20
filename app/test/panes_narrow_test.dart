@@ -21,8 +21,6 @@ import 'panes_app.dart';
 // alone holds down to a 400 window, the sidebar shown or not (it tucks
 // itself away there). Any overflow fails a test: none is let through.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// Each laid-out row whose children overflow it (a [RenderFlex] says so
 /// in its short description), by where it was made.
 List<String> _overflows(WidgetTester tester) => [
@@ -108,7 +106,7 @@ void main() {
         expect(_overflows(tester), isEmpty);
         expectTextInside(tester, width);
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 
@@ -132,7 +130,7 @@ void main() {
           await closeView(tester, d);
         }
         expect(found, isEmpty);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 
@@ -156,7 +154,7 @@ void main() {
       expect(filesTree.value, isTrue);
       expect(_overflows(tester), isEmpty);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets("squeezed between the viewer's least and both's, the tree "
@@ -188,7 +186,7 @@ void main() {
     expect(find.textContaining('Go to a file with ⌘P'), findsOneWidget);
     expect(_overflows(tester), isEmpty);
     await closeView(tester, e);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('squeezed out, the tree has no lit button: it says Show, '
       "it and Collapse can't be had, and the choice is kept", (tester) async {
@@ -242,5 +240,5 @@ void main() {
     await tester.tapAt(Offset.zero);
     await tester.pumpAndSettle();
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

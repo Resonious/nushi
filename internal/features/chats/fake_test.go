@@ -19,6 +19,7 @@ import (
 
 	"github.com/afrase/nushi/internal/claude"
 	"github.com/afrase/nushi/internal/model"
+	"github.com/afrase/nushi/internal/testcheck"
 )
 
 var claudeHarness claude.Harness
@@ -216,6 +217,13 @@ func (p *proc) end() {
 }
 
 func (p *proc) Done() <-chan struct{} { return p.done }
+
+// wired is what reached the agent: prompts, cancels and stops, in order.
+func (f *fakeAgent) wired() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return slices.Clone(f.wire)
+}
 
 // enter says a call has reached the gate named gate (entered).
 func (f *fakeAgent) enter(gate string) {
@@ -618,11 +626,27 @@ func (m *memModes) SetMode(agent, mode string) error {
 	return nil
 }
 
+// send has the agent send updates in the chat's session, s1, in order.
+func send(c *chat, updates ...acp.SessionUpdate) {
+	for _, u := range updates {
+		_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: u})
+	}
+}
+
 func chunk(id, text string) acp.SessionUpdate {
 	return acp.SessionUpdate{SessionUpdate: "agent_message_chunk", AgentMessageChunk: &acp.ContentChunk{
 		MessageID: acp.MessageID(id),
 		Content:   acp.ContentBlock{Text: &acp.TextContent{Text: text}},
 	}}
+}
+
+// startChat starts a chat of svc's default agent in folder (in a scratch
+// folder of its own for "") and returns it.
+func startChat(t *testing.T, svc *Service, folder string) *chat {
+	t.Helper()
+	id, err := svc.Start(t.Context(), "", folder, false)
+	testcheck.NoErr(t, err)
+	return svc.chats[id]
 }
 
 // Start opens a chat with agent ("" for the default) in folder, or in a new

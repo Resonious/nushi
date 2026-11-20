@@ -39,13 +39,13 @@ func TestAProjectsIcon(t *testing.T) {
 	testcheck.NoErr(t, os.Symlink(filepath.Join(with, ".github", "logo.png"), filepath.Join(linked, "logo.png")))
 	mac.start(&nushiv1.StartChatRequest{Folder: with})
 	for name, folder := range map[string]string{"a chat's folder": with, "a folder with no chat": added} {
-		if r, err := icon(mac, folder); err != nil || r.MimeType != "image/png" || !bytes.Equal(r.Data, logo.Bytes()) {
-			t.Errorf("%s: %q, %d bytes, %v", name, r.GetMimeType(), len(r.GetData()), err)
+		if r, err := icon(mac, folder); err != nil || !bytes.Equal(r.Data, logo.Bytes()) {
+			t.Errorf("%s: %d bytes, %v", name, len(r.GetData()), err)
 		}
 	}
 	for name, folder := range map[string]string{"no icon": without, "a link out of the folder": linked} {
-		if r, err := icon(mac, folder); err != nil || r.MimeType != "" || len(r.Data) != 0 {
-			t.Errorf("%s: %q, %d bytes, %v", name, r.GetMimeType(), len(r.GetData()), err)
+		if r, err := icon(mac, folder); err != nil || len(r.Data) != 0 {
+			t.Errorf("%s: %d bytes, %v", name, len(r.GetData()), err)
 		}
 	}
 	if _, err := icon(phone, with); connect.CodeOf(err) != connect.CodePermissionDenied {

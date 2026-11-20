@@ -83,8 +83,9 @@ func TestAPromptPendingAtShutdownEndsCancelled(t *testing.T) {
 	}
 }
 
-// A store a daemon before this fix left with pending prompts loads clean:
-// they are cancelled at start, and a chat that reopens shows them so.
+// A copy a daemon left with pending prompts loads clean: as the chat
+// reopens they are cancelled, with no pending card on the way, and the
+// chat doesn't need you.
 func TestAStuckStoreLoadsClean(t *testing.T) {
 	svc, agent, c, store, _ := newCopyingChat(t)
 	agent.updates = []acp.SessionUpdate{chunk("m1", "a")}
@@ -95,29 +96,14 @@ func TestAStuckStoreLoadsClean(t *testing.T) {
 		{ID: "item-9", Kind: model.Question, Status: "pending", Text: "Pick one"},
 	}, []string{"m1", "item-8"}))
 
-	svc2 := restarted(t, agent, c, store)
-	svc2.EndStalePrompts()
-	want := "permission:cancelled question:cancelled"
-	if got := mustCopy(t, store, c.id); got != want {
-		t.Errorf("copy after start: %s", got)
-	}
-	c2 := reopened(t, svc2, c.id)
-	if got := shownPrompts(c2); got != want || svc2.Status(model.ChatRecord{ID: c.id}).Waiting {
-		t.Errorf("reopened: %s, waiting %v", got, svc2.Status(model.ChatRecord{ID: c.id}).Waiting)
-	}
-
-	// A copy that still has one (written meanwhile) is cancelled as the
-	// chat reopens, with no pending card on the way.
-	svc2.Close()
-	testcheck.NoErr(t, store.Append(c.id, []model.Item{{ID: "item-8", Kind: model.Permission, Status: "pending"}}, []string{"m1"}))
 	var mu sync.Mutex
 	var events []model.Event
-	svc3 := newService(t, []Kind{{Harness: testHarness{Name: "claude", Title: "Claude"}, Launch: agent.launch}}, Options{Sessions: &memSessions{stored: []model.ChatRecord{c.record}}, Scratch: t.TempDir(), Copies: store, Publish: func(e model.Event) {
+	svc2 := newService(t, []Kind{{Harness: testHarness{Name: "claude", Title: "Claude"}, Launch: agent.launch}}, Options{Sessions: &memSessions{stored: []model.ChatRecord{c.record}}, Scratch: t.TempDir(), Copies: store, Publish: func(e model.Event) {
 		mu.Lock()
 		defer mu.Unlock()
 		events = append(events, e)
 	}})
-	c3 := reopened(t, svc3, c.id)
+	c2 := reopened(t, svc2, c.id)
 	mu.Lock()
 	defer mu.Unlock()
 	for _, e := range events {
@@ -125,8 +111,9 @@ func TestAStuckStoreLoadsClean(t *testing.T) {
 			t.Errorf("a pending card was sent: %+v", e.Item)
 		}
 	}
-	if got := shownPrompts(c3); got != want {
-		t.Errorf("reopened from the stuck copy: %s", got)
+	want := "permission:cancelled question:cancelled"
+	if got := shownPrompts(c2); got != want || svc2.Status(model.ChatRecord{ID: c.id}).Waiting {
+		t.Errorf("reopened: %s, waiting %v", got, svc2.Status(model.ChatRecord{ID: c.id}).Waiting)
 	}
 }
 

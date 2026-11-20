@@ -10,6 +10,7 @@ import 'package:nushi/settings.dart';
 import 'package:nushi/sidebar_arrange.dart';
 
 import 'fake_daemon.dart';
+import 'harness.dart';
 import 'sidebar_fixture.dart';
 
 final Finder _arrange = find.byTooltip(RegExp('^Arrange the sidebar'));
@@ -372,5 +373,5 @@ void main() {
     expect(sidebarGroupBy.value, GroupBy.date);
     expect(find.text('Worktree'), findsNothing); // closed
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

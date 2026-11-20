@@ -50,10 +50,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Write the release notes'), findsOneWidget);
     // ⌘⏎: the selected row's Start work, its folders.
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.enter);
     expect(
       find.textContaining('Choose folder', findRichText: true),
       findsOneWidget,
@@ -117,10 +114,7 @@ void main() {
       isTrue,
       reason: 'out of view',
     );
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.enter);
     await tester.tap(find.textContaining('nushi', findRichText: true).last);
     await tester.pumpAndSettle();
     expect(find.text('Chat on ACME-40 in nushi'), findsOneWidget);
@@ -583,13 +577,7 @@ void main() {
     await tester.tap(find.text('Save…'));
     await tester.pumpAndSettle();
     // The view goes under the dialog (a chat picked from the menu bar).
-    await tester.pumpWidget(
-      MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: const NushiTheme(Tokens.dark).toThemeData(),
-        home: const Scaffold(body: Text('A chat')),
-      ),
-    );
+    await tester.pumpWidget(themed(const Text('A chat'), banner: false));
     await tester.pump();
     expect(find.byType(JiraView), findsNothing);
     await tester.enterText(find.byType(TextField).last, 'ACME');
@@ -682,7 +670,7 @@ void main() {
         matchesGoldenFile('goldens/jira_window_1700_$name.png'),
       );
       await closeView(tester, d);
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
 
     // The window at both widths, the list and then an issue's page, to
     // look at (`make renders`).
@@ -704,7 +692,7 @@ void main() {
         expectTextInside(tester, w);
         await render(tester, app, 'jira_issue_${w.round()}_$name');
         await closeView(tester, d);
-      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      }, variant: onMac);
     }
   }
 }

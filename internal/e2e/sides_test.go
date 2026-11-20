@@ -118,7 +118,7 @@ func TestASideChatStartsInItsChatsMode(t *testing.T) {
 		t.Errorf("side chat in %q, chat in %q; want full access, read-only", side, chat)
 	}
 	next := must(a.c.StartChat(ctx, connect.NewRequest(&nushiv1.StartChatRequest{Agent: "codex", Folder: t.TempDir()})))
-	if mode := modeOf(next.Config); mode != "read-only" {
+	if mode := modeOf(a.get(next.ChatId).Config); mode != "read-only" {
 		t.Errorf("a new chat starts in %q: the side chat's mode was remembered", mode)
 	}
 }

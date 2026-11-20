@@ -42,12 +42,9 @@ func TestAFailedSteerTakesTheMessageOut(t *testing.T) {
 	agent.gate, agent.steerGate = make(chan struct{}), make(chan struct{})
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "one"}, SendIdle))
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "two"}, SendQueue))
-	_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: acp.SessionUpdate{SessionUpdate: "tool_call",
-		ToolCall: &acp.ToolCall{ToolCallID: "t1", Title: "ls", Status: "in_progress"}}})
-	_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: acp.SessionUpdate{SessionUpdate: "tool_call_update",
-		ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}}})
+	ranTool(c, "t1")
 	eventually(t, c, func() bool { return len(c.queue) == 0 })
-	_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: chunk("m1", "more")}) // after the steered item
+	send(c, chunk("m1", "more")) // after the steered item
 	agent.mu.Lock()
 	agent.steerErr = errors.New("Session not found")
 	agent.mu.Unlock()
@@ -82,7 +79,7 @@ func TestAPromptInTheAgentsOwnTurn(t *testing.T) {
 	if resp := <-answer; !resp.Outcome.Cancelled || svc.Status(model.ChatRecord{ID: c.id}).Waiting {
 		t.Errorf("after Stop: %+v, waiting %v", resp.Outcome, svc.Status(model.ChatRecord{ID: c.id}).Waiting)
 	}
-	if got := agent.onWire(); got[len(got)-1] != "cancel" {
+	if got := agent.wired(); got[len(got)-1] != "cancel" {
 		t.Errorf("the agent got %q", got)
 	}
 	// Item ids are never reused, cut or not.
@@ -138,13 +135,13 @@ func TestSendNowStopsOnlyTheTurnItCameFor(t *testing.T) {
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "held"}, SendQueue))
 	now := make(chan error)
 	go func() { now <- svc.Prompt(t.Context(), c.id, model.Message{Text: "now"}, SendNow) }()
-	eventually(t, c, func() bool { return slices.Contains(agent.onWire(), "cancel") })
+	eventually(t, c, func() bool { return slices.Contains(agent.wired(), "cancel") })
 	agent.release() // the turn ends on its own (end_turn), crossing the cancel
 	if err := <-now; err != nil {
 		t.Fatal(err)
 	}
-	eventually(t, c, func() bool { return len(agent.onWire()) == 3 })
-	if got := agent.onWire(); !slices.Equal(got, []string{"prompt one", "cancel", "prompt now"}) {
+	eventually(t, c, func() bool { return len(agent.wired()) == 3 })
+	if got := agent.wired(); !slices.Equal(got, []string{"prompt one", "cancel", "prompt now"}) {
 		t.Errorf("the agent got %q", got)
 	}
 	agent.release()
@@ -275,25 +272,25 @@ func TestTheAgentsOwnTurnIsMarked(t *testing.T) {
 		chunk("m1", "Building in the background."),
 	}
 	turn(t, svc, c, "build it")
-	update(c, acp.SessionUpdate{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}})
-	update(c, chunk("m2", "The build "))
-	update(c, chunk("m2", "passed."))
-	update(c, acp.SessionUpdate{SessionUpdate: "usage_update", UsageUpdate: &acp.UsageUpdate{Used: 1, Size: 2}}) // a model call's
+	send(c, acp.SessionUpdate{SessionUpdate: "tool_call_update", ToolCallUpdate: &acp.ToolCallUpdate{ToolCallID: "t1", Status: "completed"}})
+	send(c, chunk("m2", "The build "))
+	send(c, chunk("m2", "passed."))
+	send(c, acp.SessionUpdate{SessionUpdate: "usage_update", UsageUpdate: &acp.UsageUpdate{Used: 1, Size: 2}}) // a model call's
 	c.mu.Lock()
 	own := c.ownTurn
 	c.mu.Unlock()
 	if !own {
 		t.Error("a model call's usage ended the agent's own turn")
 	}
-	update(c, chunk("m2b", " Now the tests."))
-	update(c, acp.SessionUpdate{SessionUpdate: "usage_update", UsageUpdate: &acp.UsageUpdate{Used: 1, Size: 2, Cost: &acp.Cost{Amount: 0.1, Currency: "USD"}}})
+	send(c, chunk("m2b", " Now the tests."))
+	send(c, acp.SessionUpdate{SessionUpdate: "usage_update", UsageUpdate: &acp.UsageUpdate{Used: 1, Size: 2, Cost: &acp.Cost{Amount: 0.1, Currency: "USD"}}})
 	c.mu.Lock()
 	own = c.ownTurn
 	c.mu.Unlock()
 	if own {
 		t.Error("its result's usage didn't end it")
 	}
-	update(c, chunk("m3", "And the tests."))
+	send(c, chunk("m3", "And the tests."))
 	want := []string{"user:build it", ":", "agent:Building in the background.",
 		"notice:On its own, after a background task", "agent:The build passed.", "agent: Now the tests.",
 		"notice:On its own, after a background task", "agent:And the tests."}

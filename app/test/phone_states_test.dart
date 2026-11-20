@@ -89,9 +89,7 @@ Future<void> _end(WidgetTester tester, Phone phone) =>
 
 /// Lets a fling end while a spinner turns.
 Future<void> _settle(WidgetTester tester) async {
-  for (var i = 0; i < 40; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, 40, const Duration(milliseconds: 100));
 }
 
 /// Nothing of [f] under the status bar or the home indicator.
@@ -219,9 +217,7 @@ void main() {
               : null;
         final p = await _app(tester, fake, phone, b);
         await tester.tap(find.text('Fix the flaky relay test'));
-        for (var i = 0; i < 10; i++) {
-          await tester.pump(const Duration(milliseconds: 50));
-        }
+        await frames(tester, 10, const Duration(milliseconds: 50));
         expect(find.byType(TranscriptSkeleton), findsOneWidget);
         expect(find.text('Loading the chat…'), findsOneWidget);
         expect(
@@ -251,9 +247,7 @@ void main() {
         );
         // None after all: now it says so.
         list.complete(ListChatsResponse());
-        for (var i = 0; i < 8; i++) {
-          await tester.pump(const Duration(milliseconds: 50));
-        }
+        await frames(tester, 8, const Duration(milliseconds: 50));
         expect(find.text('No chats'), findsOneWidget);
         expect(find.byType(PhoneSpinner), findsNothing);
         await _end(tester, p);
@@ -277,9 +271,7 @@ void main() {
           };
         final p = await _app(tester, fake, phone, b);
         await tester.tap(find.text('Fix the flaky relay test'));
-        for (var i = 0; i < 10; i++) {
-          await tester.pump(const Duration(milliseconds: 50));
-        }
+        await frames(tester, 10, const Duration(milliseconds: 50));
         expect(
           find.text('Message 239: the wait ends when the relay restarts.'),
           findsOneWidget,
@@ -294,9 +286,7 @@ void main() {
         final seen = find.text('Step 162: look at the relay again');
         final before = tester.getTopLeft(seen);
         page.complete(GetChatItemsResponse(items: _items(80, 160), older: 80));
-        for (var i = 0; i < 4; i++) {
-          await tester.pump();
-        }
+        await frames(tester, 4);
         expect(tester.getTopLeft(seen).dy, closeTo(before.dy, 1));
         // Further up: the page before that is on its way.
         await tester.fling(scroll, const Offset(0, 8000), 8000);
@@ -346,9 +336,7 @@ void main() {
     expect(find.text('Reconnecting…'), findsOneWidget);
     held.complete();
     held = null;
-    for (var i = 0; i < 5; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 5);
     expect(p.daemon!.connected, isTrue);
     expect(find.byType(ConnectionBar), findsOneWidget);
     expect(find.text('Reconnecting…'), findsNothing);
@@ -358,9 +346,7 @@ void main() {
     await link.check();
     down = false;
     link.resume();
-    for (var i = 0; i < 5; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 5);
     expect(p.daemon!.connected, isTrue);
     expect(link.failures, 0);
     await _end(tester, p);

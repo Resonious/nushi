@@ -223,7 +223,7 @@ class _GitHubLinkChipState extends State<GitHubLinkChip> {
 
 /// A link to a pull request or an issue with words of its own: the words
 /// as a link, with the item's hover card.
-class GitHubLinkWords extends StatefulWidget {
+class GitHubLinkWords extends StatelessWidget {
   const new(
     this.address, {
     required this.text,
@@ -238,18 +238,13 @@ class GitHubLinkWords extends StatefulWidget {
   final VoidCallback onOpen;
 
   @override
-  State<GitHubLinkWords> createState() => _GitHubLinkWordsState();
-}
-
-class _GitHubLinkWordsState extends State<GitHubLinkWords> {
-  @override
   Widget build(BuildContext context) {
     final scope = GitHubLinks.of(context)!;
     final items = GitHubItems.of(scope.daemon);
-    final a = widget.address;
+    final a = address;
     return Menu(
       filter: false,
-      entries: githubLinkMenu(scope, a, items.look(a), widget.onOpen),
+      entries: githubLinkMenu(scope, a, items.look(a), onOpen),
       builder: (context, open) => HoverCard(
         onShow: () =>
             items.want(a, quiet: false, fresh: const Duration(minutes: 1)),
@@ -261,10 +256,10 @@ class _GitHubLinkWordsState extends State<GitHubLinkWords> {
           cursor: SystemMouseCursors.click,
           child: GestureDetector(
             onTap: scope.onTapChip == null
-                ? widget.onOpen
+                ? onOpen
                 : () => scope.onTapChip!(context, a),
             onSecondaryTapUp: (d) => open(d.localPosition),
-            child: Text(widget.text, style: widget.style),
+            child: Text(text, style: style),
           ),
         ),
       ),

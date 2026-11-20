@@ -26,5 +26,5 @@ func (s *server) GetProjectIcon(ctx context.Context, req *connect.Request[nushiv
 		return nil, err
 	}
 	icon, _ := projecticon.Find(req.Msg.Folder)
-	return connect.NewResponse(&nushiv1.GetProjectIconResponse{MimeType: icon.MimeType, Data: icon.Data}), nil
+	return connect.NewResponse(&nushiv1.GetProjectIconResponse{Data: icon.Data}), nil
 }

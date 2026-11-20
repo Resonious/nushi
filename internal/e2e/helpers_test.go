@@ -71,7 +71,7 @@ func questionPending(e *nushiv1.EventsResponse) bool {
 func newServers(chats servers.Chats, record string, publish func(model.Event)) *servers.Service {
 	return servers.New(servers.Options{Chats: chats, Procs: proctree.Tree{}, Env: shellenv.Off(os.Environ()), Publish: publish,
 		Listeners: listeners.List, Record: record,
-		Spawn: func(argv []string, dir string, env []string, exited func()) (servers.Process, error) {
-			return terminal.Start(argv, dir, env, 100, 30, exited)
+		Spawn: func(argv []string, dir string, env []string) (servers.Process, error) {
+			return terminal.Start(argv, dir, env, 100, 30, func() {})
 		}})
 }

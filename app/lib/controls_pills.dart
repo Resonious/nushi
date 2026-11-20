@@ -45,7 +45,7 @@ class PillButton extends StatelessWidget {
           height: small ? smallHeight : height,
           padding: EdgeInsets.symmetric(horizontal: small ? 10 : 12),
           decoration: BoxDecoration(
-            color: look.hover ? Color.alphaBlend(_tint(t, look), fill) : fill,
+            color: _over(t, look, fill),
             borderRadius: round,
           ),
           foregroundDecoration: focusRing(t, look, radius: round),
@@ -125,9 +125,7 @@ class RoundButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: look.pressed && kind == RoundKind.primary
                 ? t.accentPressed
-                : look.hover
-                ? Color.alphaBlend(_tint(t, look), fill)
-                : fill,
+                : _over(t, look, fill),
             borderRadius: round,
           ),
           foregroundDecoration: kind == RoundKind.primary
@@ -187,9 +185,7 @@ class NotePill extends StatelessWidget {
       height: height,
       padding: EdgeInsets.only(left: 9, right: trailing == null ? 9 : 5),
       decoration: BoxDecoration(
-        color: look != null && look.hover
-            ? Color.alphaBlend(_tint(t, look), fill)
-            : fill,
+        color: look == null ? fill : _over(t, look, fill),
         borderRadius: round,
       ),
       foregroundDecoration: look == null

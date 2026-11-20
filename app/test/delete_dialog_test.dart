@@ -79,7 +79,7 @@ void main() {
       [false, false],
     );
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('Cancel has the focus: Enter closes it and deletes nothing', (
     tester,
@@ -91,7 +91,7 @@ void main() {
     expect(find.text('Delete'), findsNothing);
     expect(fake.calls.whereType<DeleteChatRequest>(), isEmpty);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a worktree nobody else works in is removed by default', (
     tester,
@@ -102,7 +102,7 @@ void main() {
     expect(remove.value, isTrue);
     expect(remove.onChanged, isNotNull);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   for (final (name, brightness) in [
     ('dark', Brightness.dark),
@@ -119,6 +119,6 @@ void main() {
       expectTextInside(tester, 900);
       await render(tester, find.byType(NushiApp), 'delete_others_$name');
       await closeView(tester, d);
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 }

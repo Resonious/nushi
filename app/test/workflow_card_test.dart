@@ -1,4 +1,3 @@
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
@@ -15,9 +14,6 @@ import 'package:nushi/workflows.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-Int64 _ms(Duration ago) =>
-    Int64(fixtureNow.subtract(ago).millisecondsSinceEpoch);
-
 /// A workflow's call, its run in [state].
 Item workflowCall(String state, {bool stalled = false, String id = 'wf'}) {
   final ended = state != 'running' && state.isNotEmpty;
@@ -30,7 +26,6 @@ Item workflowCall(String state, {bool stalled = false, String id = 'wf'}) {
     text: 'Workflow launched in background. Task ID: w1',
     workflow: Workflow(
       runId: 'wf_769a004c-2aa',
-      taskId: 'w9u1xb6ik',
       name: 'review-changes',
       description: 'Review the diff from five angles, then verify',
       state: state,
@@ -42,9 +37,9 @@ Item workflowCall(String state, {bool stalled = false, String id = 'wf'}) {
         _ => '',
       },
       summary: state == 'failed' ? 'Error: the script threw' : '',
-      started: _ms(const Duration(minutes: 4, seconds: 12)),
-      ended: ended ? _ms(Duration.zero) : null,
-      active: stalled ? _ms(const Duration(hours: 1, minutes: 5)) : null,
+      started: msAgo(const Duration(minutes: 4, seconds: 12)),
+      ended: ended ? msAgo(Duration.zero) : null,
+      active: stalled ? msAgo(const Duration(hours: 1, minutes: 5)) : null,
       stalled: stalled,
       // While it runs, as workflow_pane_test's agents are: the pane's
       // tree and the card count alike.
@@ -119,7 +114,7 @@ void main() {
       'no activity for 1h · Review 4/7 · 3 running',
     );
     expect(
-      workflowState(Workflow(state: 'running', started: _ms(Duration.zero))),
+      workflowState(Workflow(state: 'running', started: msAgo(Duration.zero))),
       'starting · 0s',
     );
     expect(
@@ -127,10 +122,10 @@ void main() {
       'Map 2/2 · Review 4/7',
     );
     expect(
-      runningLine(
+      runningMore(
         Workflow(running: ['review:ui', 'review:perf'], runningCount: 3),
       ),
-      'review:ui, review:perf +1',
+      1,
     );
     expect(workflowEndWords(workflowCall('unknown').workflow), 'paused');
     expect(

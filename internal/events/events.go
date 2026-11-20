@@ -25,7 +25,7 @@ var ErrBehind = errors.New("fell too far behind the events")
 // queues rather than hold up publishers, up to MaxQueued events or
 // MaxBytes (a Hub's own limits, when set; one event waits alone whatever
 // its size): past that it's dropped, so a stuck client can't grow the
-// daemon without bound. The daemon's own subscribers are Unbounded.
+// daemon without bound. The daemon's own followers (Follow) never are.
 type Hub struct {
 	// MaxQueued and MaxBytes replace the package's limits when set.
 	MaxQueued, MaxBytes int
@@ -94,32 +94,24 @@ func size(e model.Event) int {
 	return n
 }
 
-// Option is how a subscription differs from the plain one.
-type Option func(*options)
-
-type options struct {
-	live      func() bool
-	unbounded bool
-}
-
-// OnLive calls live once the subscription is live, before any event; one
-// that returns false ends it.
-func OnLive(live func() bool) Option { return func(o *options) { o.live = live } }
-
-// Unbounded is a subscriber that is never dropped, however far behind: the
-// daemon's own followers (terminals, pushes), which are fast and have no
-// way to catch up on what they missed.
-func Unbounded() Option { return func(o *options) { o.unbounded = true } }
-
 // Subscribe calls fn with each event published from then on, until fn
 // returns false or ctx ends (nil), or the subscriber falls too far behind
-// (ErrBehind; never an Unbounded one).
-func (h *Hub) Subscribe(ctx context.Context, fn func(model.Event) bool, opts ...Option) error {
-	var o options
-	for _, opt := range opts {
-		opt(&o)
-	}
-	s := &sub{wake: make(chan struct{}, 1), unbounded: o.unbounded}
+// (ErrBehind). live, when not nil, is called once the subscription is
+// live, before any event; its false ends it.
+func (h *Hub) Subscribe(ctx context.Context, fn func(model.Event) bool, live func() bool) error {
+	return h.subscribe(ctx, fn, live, false)
+}
+
+// Follow calls fn with each event published from then on, until ctx ends.
+// It is never dropped, however far behind: it is the daemon's own
+// followers' (terminals, pushes), which are fast and have no way to catch
+// up on what they missed.
+func (h *Hub) Follow(ctx context.Context, fn func(model.Event)) {
+	_ = h.subscribe(ctx, func(e model.Event) bool { fn(e); return true }, nil, true) // never ErrBehind
+}
+
+func (h *Hub) subscribe(ctx context.Context, fn func(model.Event) bool, live func() bool, unbounded bool) error {
+	s := &sub{wake: make(chan struct{}, 1), unbounded: unbounded}
 	h.mu.Lock()
 	if h.subs == nil {
 		h.subs = map[*sub]struct{}{}
@@ -131,7 +123,7 @@ func (h *Hub) Subscribe(ctx context.Context, fn func(model.Event) bool, opts ...
 		delete(h.subs, s)
 		h.mu.Unlock()
 	}()
-	if o.live != nil && !o.live() {
+	if live != nil && !live() {
 		return nil
 	}
 	for {

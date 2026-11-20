@@ -11,7 +11,6 @@ void main() {
   /// drag told.
   Future<List<double?>> pane(WidgetTester tester, {double ratio = 1}) async {
     viewport(tester, const Size(1200, 600), ratio: ratio);
-    paneWidths.value = {};
     final told = <double?>[];
     await tester.pumpWidget(
       MaterialApp(

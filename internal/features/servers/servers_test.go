@@ -89,8 +89,8 @@ func setup(t *testing.T, configurations ...string) (*Service, *fakeChats, string
 	chats := &fakeChats{chats: map[string]model.ChatRecord{"c": {ID: "c", Folder: folder}}}
 	s := New(Options{Chats: chats, Procs: proctree.Tree{}, Env: plainEnv{}, Listeners: listeners.List,
 		Record: filepath.Join(t.TempDir(), "servers.json"),
-		Spawn: func(argv []string, dir string, env []string, exited func()) (Process, error) {
-			return terminal.Start(argv, dir, env, 100, 30, exited)
+		Spawn: func(argv []string, dir string, env []string) (Process, error) {
+			return terminal.Start(argv, dir, env, 100, 30, func() {})
 		}})
 	s.ReadyWithin = 5 * time.Second
 	t.Cleanup(s.CloseAll)
@@ -121,7 +121,7 @@ func freePort(t *testing.T) int {
 // the fake server could listen there.
 func free(t *testing.T, p int) bool {
 	t.Helper()
-	if taken(t.Context(), p) {
+	if dialLoopback(t.Context(), p) != "" {
 		return false
 	}
 	ln, err := net.Listen("tcp", "localhost:"+strconv.Itoa(p))
@@ -180,8 +180,8 @@ func TestAServerAnswersAndStops(t *testing.T) {
 	}
 	testcheck.NoErr(t, s.Stop("c", r.ServerID))
 	r = row(t, s, "web", Stopped)
-	if taken(t.Context(), p) || s.Busy() || r.Error != "" || r.ServerID != "" {
-		t.Errorf("stopped: %+v, port taken %v", r, taken(t.Context(), p))
+	if at := dialLoopback(t.Context(), p); at != "" || s.Busy() || r.Error != "" || r.ServerID != "" {
+		t.Errorf("stopped: %+v, port taken at %q", r, at)
 	}
 }
 

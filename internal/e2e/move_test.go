@@ -113,9 +113,7 @@ func TestMoveAChat(t *testing.T) {
 
 	// The moved chat reopens after a restart, its whole history replayed
 	// (the agent's: not Nushi's prompts and notices).
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	items = a.follow(id, a.get(id))
 	got := transcript(items)
 	if !strings.HasPrefix(got, "USER_MESSAGE:pwd:\nAGENT_MESSAGE:cwd: "+repo) || !strings.HasSuffix(got, "cwd: "+other+":") {

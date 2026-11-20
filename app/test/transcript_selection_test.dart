@@ -83,9 +83,6 @@ Future<String> _quoted(WidgetTester tester) async {
   return quote;
 }
 
-Item _agent(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
-
 void main() {
   setUpAll(loadFonts);
   final mac = TargetPlatformVariant.only(TargetPlatform.macOS);
@@ -95,7 +92,7 @@ void main() {
   ) async {
     final d = await _app(tester, {
       'a': longChat('a'),
-      'b': [...longChat('b'), _agent('z', 'The last words of the chat.')],
+      'b': [...longChat('b'), agentSays('z', 'The last words of the chat.')],
     });
     d.select('b');
     await tester.pump();
@@ -112,8 +109,8 @@ void main() {
     final wide = 'wide ' * 80;
     final d = await _app(tester, {
       'a': [
-        _agent('o', 'Old words.\n\n```\nblock start $wide\n```\n\nOld end.'),
-        _agent('n', 'First pick and second pick.'),
+        agentSays('o', 'Old words.\n\n```\nblock start $wide\n```\n\nOld end.'),
+        agentSays('n', 'First pick and second pick.'),
       ],
     });
     for (final (word, times) in [
@@ -136,9 +133,9 @@ void main() {
     const block = 'Fenced:\n\n```\nprose one\nprose two\n```';
     final d = await _app(tester, {
       'a': [
-        _agent('o', block),
+        agentSays('o', block),
         Item(id: 'u', kind: ItemKind.ITEM_KIND_USER_MESSAGE, text: block),
-        _agent('n', 'First pick.'),
+        agentSays('n', 'First pick.'),
       ],
     });
     final (from, to) = _ends(tester, 'First pick');
@@ -148,19 +145,10 @@ void main() {
   }, variant: mac);
 
   testWidgets('a selection keeps its lines', (tester) async {
-    String? copied;
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied = (call.arguments as Map)['text'] as String?;
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     final d = await _app(tester, {
       'a': [
-        _agent(
+        agentSays(
           'o',
           'Para one.\n\nPara two.\n\n- item one\n- item two\n\n'
               '| Head | Other |\n|---|---|\n| left | right |\n\nLast words.',
@@ -184,11 +172,8 @@ void main() {
       _ends(tester, 'Para one').$1,
       _ends(tester, 'Para two').$2,
     );
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
-    expect(copied, 'Para one.\n\nPara two');
+    await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
+    expect(copied.lastOrNull, 'Para one.\n\nPara two');
     await closeView(tester, d);
   }, variant: mac);
 
@@ -196,7 +181,7 @@ void main() {
     tester,
   ) async {
     final d = await _app(tester, {
-      'a': [...longChat('a'), _agent('c', '```\ncode\n```')],
+      'a': [...longChat('a'), agentSays('c', '```\ncode\n```')],
     });
     await tester.pumpAndSettle();
     final list = find.descendant(
@@ -215,7 +200,9 @@ void main() {
 
   testWidgets('a drag through a code block takes its text', (tester) async {
     final d = await _app(tester, {
-      'a': [_agent('o', 'Words before.\n\n```\nthe code\n```\n\nWords after.')],
+      'a': [
+        agentSays('o', 'Words before.\n\n```\nthe code\n```\n\nWords after.'),
+      ],
     });
     await _drag(tester, _ends(tester, 'before').$1, _ends(tester, 'after').$2);
     final quote = await _quoted(tester);
@@ -228,16 +215,7 @@ void main() {
   testWidgets('a file named in a line is quoted and copied in its place', (
     tester,
   ) async {
-    String? copied;
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied = (call.arguments as Map)['text'] as String?;
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     // Long enough to wrap: a link is cut after its slashes.
     final long = '${'folder/' * 40}deep.toml';
     // Each line, and the words a drag starts and ends on.
@@ -252,7 +230,7 @@ void main() {
       tester,
       {
         'a': [
-          for (final (i, (text, _, _)) in lines.indexed) _agent('m$i', text),
+          for (final (i, (text, _, _)) in lines.indexed) agentSays('m$i', text),
         ],
       },
       files: [
@@ -287,11 +265,8 @@ void main() {
       _ends(tester, 'pin it').$1,
       _ends(tester, 'golangci').$2,
     );
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
-    expect(copied, 'pin it in mise.toml like golangci');
+    await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
+    expect(copied.lastOrNull, 'pin it in mise.toml like golangci');
     await closeView(tester, d);
   }, variant: mac);
 
@@ -303,7 +278,7 @@ void main() {
     final d = await _app(
       tester,
       {
-        'a': [_agent('o', line)],
+        'a': [agentSays('o', line)],
       },
       files: ['mise.toml'],
     );
@@ -325,7 +300,7 @@ void main() {
       tester,
       {
         'b': [
-          _agent('o', line),
+          agentSays('o', line),
           Item(
             id: 'u',
             kind: ItemKind.ITEM_KIND_USER_MESSAGE,
