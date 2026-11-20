@@ -109,18 +109,23 @@ func (c *chat) copyLocked(all bool) {
 			continue
 		}
 		if c.unsaved[it.ID] && (all || settled(it, i == len(c.items)-1)) {
-			delete(c.unsaved, it.ID)
 			items, after, written = append(items, *it), append(after, prev), append(written, i)
 		}
 		prev = it.ID
 	}
-	if all {
-		clear(c.unsaved) // items gone meanwhile
-	}
+	// Items leave unsaved only once written: after a failed write (a full
+	// disk, say) the next one tries them again, or the copy would never
+	// have them.
 	if err := c.copies.Append(c.id, items, after); err != nil {
 		c.mirrored = false
 		c.logLocked().Warn("transcript copy not written", "items", len(items), "err", err)
 		return
+	}
+	if all {
+		clear(c.unsaved) // items gone meanwhile too
+	}
+	for _, it := range items {
+		delete(c.unsaved, it.ID)
 	}
 	for _, i := range written {
 		c.byRefLocked(i)

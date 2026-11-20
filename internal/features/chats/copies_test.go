@@ -3,6 +3,7 @@ package chats
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -155,6 +156,63 @@ func TestCopiesOff(t *testing.T) {
 	eventually(t, c, func() bool { return !c.busy })
 	if got := copied(t, store, c.id); got != "user:two agent:m2" {
 		t.Fatalf("on again: %s", got)
+	}
+}
+
+// failingCopies is a store of copies whose writes fail while failing says
+// so, as on a full disk.
+type failingCopies struct {
+	*transcripts.Store
+	failing atomic.Bool
+}
+
+func (f *failingCopies) Append(chat string, items []model.Item, after []string) error {
+	if f.failing.Load() {
+		return errors.New("disk full")
+	}
+	return f.Store.Append(chat, items, after)
+}
+
+func (f *failingCopies) Replace(chat string, items []model.Item) error {
+	if f.failing.Load() {
+		return errors.New("disk full")
+	}
+	return f.Store.Replace(chat, items)
+}
+
+// Items a failed write didn't save are tried again by the next one, from
+// a turn's writes and from a reopen's.
+func TestFailedCopyWriteIsTriedAgain(t *testing.T) {
+	agent := &fakeAgent{}
+	testcheck.NoErr(t, json.Unmarshal([]byte(claudeSession), &agent.session))
+	store, err := transcripts.Open(filepath.Join(t.TempDir(), "transcripts"))
+	testcheck.NoErr(t, err)
+	copies := &failingCopies{Store: store}
+	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude", Title: "Claude"}, Launch: agent.launch}}, Options{Scratch: t.TempDir(), Copies: copies, CopiesOn: func() bool { return true }})
+	t.Cleanup(svc.Close)
+	c := startChat(t, svc, t.TempDir())
+
+	copies.failing.Store(true)
+	agent.updates = []acp.SessionUpdate{chunk("m1", "ok")}
+	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "one"}, SendIdle))
+	eventually(t, c, func() bool { return !c.busy })
+	if store.Has(c.id) {
+		t.Fatal("written while failing")
+	}
+	copies.failing.Store(false)
+	agent.updates = []acp.SessionUpdate{chunk("m2", "ok")}
+	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "two"}, SendIdle))
+	eventually(t, c, func() bool { return !c.busy })
+	if got := copied(t, store, c.id); got != "user:one agent:m1 user:two agent:m2" {
+		t.Fatalf("after the failed write: %s", got)
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	copies.failing.Store(true)
+	c.saveCopyLocked(nil, c.items)
+	if len(c.unsaved) != 4 || c.mirrored {
+		t.Fatalf("after a reopen's failed write: unsaved %v, mirrored %v", c.unsaved, c.mirrored)
 	}
 }
 
