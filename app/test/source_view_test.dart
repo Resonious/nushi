@@ -111,4 +111,70 @@ void main() {
     await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
     expect(copied.last, '$long\n');
   }, variant: onMac);
+
+  // Issue 100: a line's text laid out anew (the highlighting landing, the
+  // file read again) dropped its selection under containers that still
+  // pointed at it, and the next full repaint threw in Flutter's
+  // selection code.
+  for (final wrap in [true, false]) {
+    for (final (from, to, change) in [
+      ('void', 'void', 'highlight'),
+      ('void', 'print', 'highlight'),
+      ('print', 'void', 'highlight'),
+      ('void', 'print', 'read'),
+    ]) {
+      testWidgets('a selection from "$from" to "$to" when the $change '
+          'lands, then a full repaint, wrap $wrap', (tester) async {
+        viewport(tester, const Size(800, 600));
+        await tester.pumpWidget(
+          themed(SourceView(code, path: 'a.dart', wrap: wrap)),
+        );
+        // A line's selectable joins its list's a frame later.
+        await tester.pump();
+        final plain = _spans(tester);
+        Offset at(String word, double dx) =>
+            tester.getTopLeft(
+              find.textContaining(word, findRichText: true).first,
+            ) +
+            Offset(dx, 6);
+        final drag = await tester.startGesture(
+          at(from, 2),
+          kind: PointerDeviceKind.mouse,
+        );
+        await tester.pump();
+        await drag.moveTo(at(to, 60));
+        await tester.pump();
+        await drag.up();
+        await tester.pump();
+        final copied = clipboardCopies(tester);
+        await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
+        expect(copied.last, isNotEmpty, reason: 'something was selected');
+        if (change == 'read') {
+          await tester.pumpWidget(
+            themed(SourceView('$code// more\n', path: 'a.dart', wrap: wrap)),
+          );
+        } else {
+          expect(_spans(tester), plain, reason: 'not highlighted yet');
+          await untilReal(
+            tester,
+            () => _spans(tester) > plain,
+            limit: const Duration(seconds: 5),
+          );
+          await tester.pump();
+        }
+        void again(RenderObject o) {
+          o
+            ..markNeedsPaint()
+            ..visitChildren(again);
+        }
+
+        tester.binding.renderViews.forEach(again);
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        // What it held is gone from sight, and from a copy.
+        await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
+        expect(copied.length, 1);
+      }, variant: onMac);
+    }
+  }
 }

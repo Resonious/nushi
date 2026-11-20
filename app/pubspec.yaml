@@ -16,6 +16,7 @@ dependencies:
   fixnum: ^1.1.1
   flutter:
     sdk: flutter
+  flutter_svg: ^2.5.0
   flutter_web_plugins:
     sdk: flutter
   markdown_view:
@@ -34,6 +35,7 @@ dependencies:
   web: ^1.1.1
   webview_flutter_platform_interface: ^2.15.1
   webview_flutter_wkwebview: ^3.27.2
+  xml: ^7.0.1
   xterm2: ^5.4.0
 
 dev_dependencies:

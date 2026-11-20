@@ -249,10 +249,10 @@ String worktreeName(RelatedWorktree w) {
       : head.substring(0, min(7, head.length));
 }
 
-/// "merged", or "removed" for one that's gone and that git doesn't show on
-/// the branch: a squash merge reads as this, git can't see it. '' for one
-/// still there and not merged.
-String worktreeEnd(RelatedWorktree w) => w.merged
+/// "merged", as git shows it on the branch or, for a squash merge git can't
+/// see, as GitHub has its pull request merged (asked once it's gone; issue
+/// 83); else "removed" for one that's gone, '' for one still there.
+String worktreeEnd(RelatedWorktree w) => w.merged || w.pullMerged
     ? 'merged'
     : w.state == 'present'
     ? ''

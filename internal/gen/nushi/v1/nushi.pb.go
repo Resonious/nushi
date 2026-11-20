@@ -9737,7 +9737,12 @@ type RelatedWorktree struct {
 	State string `protobuf:"bytes,6,opt,name=state,proto3" json:"state,omitempty"`
 	// last_head has commits of its own, and git shows it on the chat's
 	// branch or its base. Not a squash merge's: git can't see those (API 100).
-	Merged        bool `protobuf:"varint,7,opt,name=merged,proto3" json:"merged,omitempty"`
+	Merged bool `protobuf:"varint,7,opt,name=merged,proto3" json:"merged,omitempty"`
+	// GitHub has a merged pull request with branch as its head, opened in
+	// the chat's life: a squash merge, which merged can't say. Asked once,
+	// after it was removed with commits of its own that merged doesn't show
+	// (API 135).
+	PullMerged    bool `protobuf:"varint,8,opt,name=pull_merged,json=pullMerged,proto3" json:"pull_merged,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -9817,6 +9822,13 @@ func (x *RelatedWorktree) GetState() string {
 func (x *RelatedWorktree) GetMerged() bool {
 	if x != nil {
 		return x.Merged
+	}
+	return false
+}
+
+func (x *RelatedWorktree) GetPullMerged() bool {
+	if x != nil {
+		return x.PullMerged
 	}
 	return false
 }
@@ -28085,7 +28097,7 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\x1bGetRelatedWorktreesResponse\x127\n" +
 	"\tworktrees\x18\x01 \x03(\v2\x19.nushi.v1.RelatedWorktreeR\tworktrees\"O\n" +
 	"\x14ChatRelatedWorktrees\x127\n" +
-	"\tworktrees\x18\x01 \x03(\v2\x19.nushi.v1.RelatedWorktreeR\tworktrees\"\xc2\x01\n" +
+	"\tworktrees\x18\x01 \x03(\v2\x19.nushi.v1.RelatedWorktreeR\tworktrees\"\xe3\x01\n" +
 	"\x0fRelatedWorktree\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12\x16\n" +
 	"\x06branch\x18\x02 \x01(\tR\x06branch\x12\x1f\n" +
@@ -28094,7 +28106,9 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\tlast_head\x18\x04 \x01(\tR\blastHead\x12\x17\n" +
 	"\acall_id\x18\x05 \x01(\tR\x06callId\x12\x14\n" +
 	"\x05state\x18\x06 \x01(\tR\x05state\x12\x16\n" +
-	"\x06merged\x18\a \x01(\bR\x06merged\"O\n" +
+	"\x06merged\x18\a \x01(\bR\x06merged\x12\x1f\n" +
+	"\vpull_merged\x18\b \x01(\bR\n" +
+	"pullMerged\"O\n" +
 	"\x1eGetRelatedWorktreeStatsRequest\x12\x17\n" +
 	"\achat_id\x18\x01 \x01(\tR\x06chatId\x12\x14\n" +
 	"\x05paths\x18\x02 \x03(\tR\x05paths\"W\n" +

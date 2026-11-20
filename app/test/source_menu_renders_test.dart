@@ -18,6 +18,22 @@ import 'harness.dart';
 /// Lines ending both in CRLF and LF: shown read-only.
 final List<int> _mixed = utf8.encode('package main\r\n\nfunc main() {\n}\n');
 
+/// The spans the source views show: more once highlighted.
+int _spans(WidgetTester tester) {
+  var n = 0;
+  final texts = find.descendant(
+    of: find.byType(SourceView),
+    matching: find.byType(RichText),
+  );
+  for (final r in tester.widgetList<RichText>(texts)) {
+    r.text.visitChildren((_) {
+      n++;
+      return true;
+    });
+  }
+  return n;
+}
+
 void main() {
   setUpAll(loadFonts);
 
@@ -53,13 +69,28 @@ void main() {
           await tester.tapAt(editor.bottomLeft + const Offset(40, -20));
           await tester.pumpAndSettle();
 
+          final plain = _spans(tester);
           chatC(d).openInFiles('mixed.go');
           await tester.pumpAndSettle();
+          // Its highlighting lands first: a selection made before it is
+          // cleared as the lines' text changes (issue 100).
+          await untilReal(
+            tester,
+            () => _spans(tester) > plain,
+            limit: const Duration(seconds: 5),
+          );
+          await tester.pump();
           final view = tester.getRect(find.byType(SourceView));
-          // Nothing selected here: the first full repaint after a drag in a
-          // read-only source trips Flutter's selection painting
-          // (MultiSelectableSelectionContainerDelegate._calculateLocalRange),
-          // with or without this menu.
+          // Its first three lines selected.
+          final drag = await tester.startGesture(
+            Offset(view.left + 60, view.top + 12),
+            kind: PointerDeviceKind.mouse,
+          );
+          await tester.pump();
+          await drag.moveTo(Offset(view.left + 140, view.top + 48));
+          await tester.pump();
+          await drag.up();
+          await tester.pumpAndSettle();
           await tester.tapAt(
             Offset(view.left + 120, view.top + 50),
             buttons: kSecondaryButton,

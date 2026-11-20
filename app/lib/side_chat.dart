@@ -65,10 +65,17 @@ class SideChat extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Transcript(
-                chat: side,
-                daemon: daemon,
-                onReply: side.draft.addReply,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Transcript(
+                      chat: side,
+                      daemon: daemon,
+                      onReply: side.draft.addReply,
+                    ),
+                  ),
+                  if (side.items.isEmpty) const _Empty(),
+                ],
               ),
             ),
             // The update card stands above them where it's over this pane
@@ -335,6 +342,39 @@ class _Row extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+/// What an empty side chat says it's for (issue 61).
+const sideChatEmpty =
+    'Ask about this chat here: the side chat knows the conversation so far, '
+    'and nothing you say here is added to it.';
+
+/// [sideChatEmpty] where the side chat's messages will be, until the first
+/// is in.
+class _Empty extends StatelessWidget {
+  const new();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = NushiTheme.of(context);
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 320),
+              child: Text(
+                sideChatEmpty,
+                textAlign: TextAlign.center,
+                style: theme.ui(theme.t.textMuted),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
