@@ -8,7 +8,6 @@ import 'package:nushi/theme/theme.dart';
 import 'package:nushi/usage.dart';
 import 'package:nushi/usage_range.dart';
 import 'package:nushi/usage_rows.dart';
-import 'package:nushi/widgets.dart';
 
 /// The days' short names, Monday first, as `DateTime.weekday` counts.
 const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -21,9 +20,11 @@ String _short(DateTime d) => '${months[d.month - 1].substring(0, 3)} ${d.day}';
 /// day key; a day without a turn has none), on one scale from 0 with a
 /// few round lines across. Under the bars, each day's name, or, when
 /// they're too many to name, every so many days' date, today's always;
-/// the highest bar has its value over it; a day's figures show under the
-/// pointer. Drawn from the theme's tokens: no chart package.
-class UsageDayChart extends StatelessWidget {
+/// the highest bar has its value over it. Under the pointer, the day's
+/// column is lit and a card of its figures follows the pointer
+/// ([UsageDayCard]), in place of the highest bar's value. Drawn from the
+/// theme's tokens: no chart package.
+class UsageDayChart extends StatefulWidget {
   const new({
     required this.days,
     required this.first,
@@ -50,11 +51,24 @@ class UsageDayChart extends StatelessWidget {
   static const _labelRoom = 46.0;
 
   @override
+  State<UsageDayChart> createState() => _UsageDayChartState();
+}
+
+class _UsageDayChartState extends State<UsageDayChart> {
+  Offset? _pointer; // where the pointer is over the chart, if it is
+
+  static const double plotHeight = UsageDayChart.plotHeight;
+  static const double headroom = UsageDayChart.headroom;
+  static const double footRoom = UsageDayChart.footRoom;
+  static const double _labelRoom = UsageDayChart._labelRoom;
+
+  @override
   Widget build(BuildContext context) {
     final theme = NushiTheme.of(context);
     final t = theme.t;
-    final byKey = {for (final d in days) d.key: d.totals};
-    final all = daysBetween(first, today);
+    final measure = widget.measure;
+    final byKey = {for (final d in widget.days) d.key: d.totals};
+    final all = daysBetween(widget.first, widget.today);
     final values = [
       for (final d in all) measure.of(byKey[dayKey(d)] ?? UsageTotals()),
     ];
@@ -81,119 +95,220 @@ class UsageDayChart extends StatelessWidget {
           final every = named ? 1 : max(1, (_labelRoom / slot).ceil());
           double y(double v) =>
               headroom + plotHeight - (scale == 0 ? 0 : v / scale * plotHeight);
-          return Stack(
-            clipBehavior: Clip.none,
-            children: [
-              for (final v in lines) ...[
-                Positioned(
-                  left: axis,
-                  right: 0,
-                  top: y(v),
-                  child: Container(height: 1, color: t.line),
-                ),
-                Positioned(
-                  left: 0,
-                  width: axis - 10,
-                  top: y(v) - 8,
-                  child: Text(
-                    measure.write(v),
-                    textAlign: TextAlign.right,
-                    maxLines: 1,
-                    style: small,
-                  ),
-                ),
-              ],
-              for (final (i, d) in all.indexed) ...[
-                if (values[i] > 0)
+          // The day under the pointer: its column, whatever the height.
+          final at = switch (_pointer) {
+            final p? when p.dx >= axis && p.dx < box.maxWidth =>
+              ((p.dx - axis) / slot).floor().clamp(0, all.length - 1),
+            _ => null,
+          };
+          return MouseRegion(
+            onHover: (e) => setState(() => _pointer = e.localPosition),
+            onExit: (_) => setState(() => _pointer = null),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                if (at != null)
                   Positioned(
-                    left: axis + slot * i + (slot - bar) / 2,
-                    width: bar,
-                    top: y(values[i]),
-                    height: max(2, values[i] / scale * plotHeight),
+                    left: axis + slot * at,
+                    width: slot,
+                    top: 0,
+                    height: headroom + plotHeight,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: t.accent,
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(min(NushiTheme.tag, bar / 2)),
+                        color: t.hover,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(NushiTheme.tag),
                         ),
                       ),
                     ),
                   ),
-                if (i == highest)
+                for (final v in lines) ...[
                   Positioned(
-                    // Over its bar; near either end of the plot, from
-                    // the bar's edge inward, so it stays inside.
-                    left: _valueLeft(axis + slot * i, slot, axis, box.maxWidth),
-                    width: 100,
-                    top: y(values[i]) - 18,
+                    left: axis,
+                    right: 0,
+                    top: y(v),
+                    child: Container(height: 1, color: t.line),
+                  ),
+                  Positioned(
+                    left: 0,
+                    width: axis - 10,
+                    top: y(v) - 8,
                     child: Text(
-                      measure.write(values[i]),
-                      textAlign: _valueAlign(
+                      measure.write(v),
+                      textAlign: TextAlign.right,
+                      maxLines: 1,
+                      style: small,
+                    ),
+                  ),
+                ],
+                for (final (i, d) in all.indexed) ...[
+                  if (values[i] > 0)
+                    Positioned(
+                      left: axis + slot * i + (slot - bar) / 2,
+                      width: bar,
+                      top: y(values[i]),
+                      height: max(2, values[i] / scale * plotHeight),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: t.accent,
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(min(NushiTheme.tag, bar / 2)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (i == highest && at == null)
+                    Positioned(
+                      // Over its bar; near either end of the plot, from
+                      // the bar's edge inward, so it stays inside.
+                      left: _valueLeft(
                         axis + slot * i,
                         slot,
                         axis,
                         box.maxWidth,
                       ),
-                      maxLines: 1,
-                      style: tabular(
-                        theme.ui(t.text, size: 12, weight: FontWeight.w600),
+                      width: 100,
+                      top: y(values[i]) - 18,
+                      child: Text(
+                        measure.write(values[i]),
+                        textAlign: _valueAlign(
+                          axis + slot * i,
+                          slot,
+                          axis,
+                          box.maxWidth,
+                        ),
+                        maxLines: 1,
+                        style: tabular(
+                          theme.ui(t.text, size: 12, weight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  if ((all.length - 1 - i) % every == 0)
+                    Positioned(
+                      left: axis + slot * i + slot / 2 - _labelRoom,
+                      width: _labelRoom * 2,
+                      top: headroom + plotHeight + 6,
+                      child: Text(
+                        i == all.length - 1
+                            ? 'Today'
+                            : named
+                            ? _weekdays[d.weekday - 1]
+                            : _short(d),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: theme.ui(
+                          i == all.length - 1 ? t.text : t.textSecondary,
+                          size: 12,
+                          weight: i == all.length - 1 ? FontWeight.w600 : null,
+                        ),
+                      ),
+                    ),
+                ],
+                if (at != null)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: CustomSingleChildLayout(
+                        delegate: _BesidePointer(_pointer!),
+                        child: UsageDayCard(
+                          day: all[at],
+                          totals: byKey[dayKey(all[at])],
+                        ),
                       ),
                     ),
                   ),
-                if ((all.length - 1 - i) % every == 0)
-                  Positioned(
-                    left: axis + slot * i + slot / 2 - _labelRoom,
-                    width: _labelRoom * 2,
-                    top: headroom + plotHeight + 6,
-                    child: Text(
-                      i == all.length - 1
-                          ? 'Today'
-                          : named
-                          ? _weekdays[d.weekday - 1]
-                          : _short(d),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      style: theme.ui(
-                        i == all.length - 1 ? t.text : t.textSecondary,
-                        size: 12,
-                        weight: i == all.length - 1 ? FontWeight.w600 : null,
-                      ),
-                    ),
-                  ),
-                // The day's figures under the pointer, over its whole
-                // column so a thin or empty day has them too.
-                Positioned(
-                  left: axis + slot * i,
-                  width: slot,
-                  top: 0,
-                  height: headroom + plotHeight,
-                  child: tooltip(
-                    context,
-                    _dayWords(d, byKey[dayKey(d)]),
-                    const ColoredBox(color: Colors.transparent),
-                  ),
-                ),
               ],
-            ],
+            ),
           );
         },
       ),
     );
   }
+}
 
-  /// A day's figures, as its hover says them: "Tue, Oct 27: $42.10 ·
-  /// 3.3M tokens · 41 turns", or that nothing was used.
-  String _dayWords(DateTime d, UsageTotals? u) {
-    final name = '${_weekdays[d.weekday - 1]}, ${_short(d)}';
-    if (u == null || u.turns == 0 && tokensOf(u) == 0) {
-      return '$name: nothing used';
-    }
-    final turns = u.turns.toInt();
-    final spent = spendOf(u);
-    return '$name: ${spent.isEmpty ? '' : '$spent · '}'
-        '${tokens(tokensOf(u))} tokens · '
-        '$turns ${turns == 1 ? 'turn' : 'turns'}';
+/// A day's figures on the card that follows the pointer over
+/// [UsageDayChart]: the day ("Tue, Oct 27"), then its spend (when any
+/// was reported), tokens and turns, a line each, or that nothing was
+/// used.
+class UsageDayCard extends StatelessWidget {
+  const new({required this.day, required this.totals, super.key});
+
+  final DateTime day;
+
+  /// The day's usage; none when it had no turn.
+  final UsageTotals? totals;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = NushiTheme.of(context);
+    final t = theme.t;
+    final u = totals;
+    final none = u == null || u.turns == 0 && tokensOf(u) == 0;
+    final spent = none ? '' : spendOf(u);
+    final label = theme.ui(t.textSecondary, size: 12);
+    final value = tabular(theme.ui(t.text, size: 12, weight: FontWeight.w600));
+    Widget line(String name, String figure) => Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(width: 56, child: Text(name, style: label)),
+          Text(figure, maxLines: 1, style: value),
+        ],
+      ),
+    );
+    return Container(
+      decoration: floatBox(t, radius: NushiTheme.control),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 9),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${_weekdays[day.weekday - 1]}, ${_short(day)}',
+            style: theme.ui(t.text, size: 12.5, weight: FontWeight.w600),
+          ),
+          if (none)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text('Nothing used', style: label),
+            )
+          else ...[
+            if (spent.isNotEmpty) line('Spend', spent),
+            line('Tokens', tokens(tokensOf(u))),
+            line('Turns', '${u.turns.toInt()}'),
+          ],
+        ],
+      ),
+    );
   }
+}
+
+/// Puts the day's card beside the pointer at [at]: right of it, or left
+/// of it where that would leave the chart's width, and under it as far as
+/// the chart's foot lets it, where it stops; never over the pointer
+/// itself.
+class _BesidePointer extends SingleChildLayoutDelegate {
+  const new(this.at);
+
+  final Offset at;
+
+  /// Between the pointer and the card.
+  static const gap = 14.0;
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
+      constraints.loosen().copyWith(maxHeight: double.infinity);
+
+  @override
+  Offset getPositionForChild(Size size, Size child) => Offset(
+    at.dx + gap + child.width <= size.width
+        ? at.dx + gap
+        : max(0, at.dx - gap - child.width),
+    min(at.dy + gap, max(0, size.height - child.height)),
+  );
+
+  @override
+  bool shouldRelayout(_BesidePointer old) => old.at != at;
 }
 
 /// Where a bar's value label (100 wide) starts, for the bar in the slot

@@ -245,7 +245,8 @@ Settings has a Usage page: what your chats spent and the tokens they used, by da
 
 1. Open **Settings**, then **Usage**.
 2. Pick **7 days**, **30 days**, **90 days** or **All**. Nushi remembers your pick.
-3. Click a chat under **Costliest chats** to open it.
+3. Point at a day in the chart for its spend, tokens and turns.
+4. Click a chat under **Costliest chats** to open it.
 
 Spend is what the agent reports. On a subscription that's what the API would charge for the same tokens, not what you pay. Codex and Ante report no cost, so the page says so and counts their tokens. A limit shows as the agent last said it, and changes only while one of its chats runs. Usage counts from the first turn after you updated to a version that keeps it; workflows' agents and the Context widget's `/context` aren't counted. The phone doesn't have this page.
 

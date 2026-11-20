@@ -1,11 +1,13 @@
 import 'package:connectrpc/connect.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/theme/theme.dart';
+import 'package:nushi/usage_chart.dart';
 import 'package:nushi/usage_page.dart';
 import 'package:nushi/usage_range.dart';
 
@@ -71,6 +73,86 @@ void main() {
     expect(find.byKey(const ValueKey('usage-footnote')), findsOneWidget);
     // Asked once, for the last 7 days (the default), in the daemon's zone.
     expect(_asked(fake), [GetUsageRequest(from: _int(DateTime(2026, 10, 23)))]);
+    d.dispose();
+  });
+
+  for (final (tokens, theme) in [
+    (Tokens.dark, 'dark'),
+    (Tokens.light, 'light'),
+  ]) {
+    testWidgets('a day under the pointer: its column lit, its figures on a '
+        'card beside the pointer, $theme', (tester) async {
+      final (_, d) = await _open(tester, busyUsage(), tokens: tokens);
+      final chart = find.byType(UsageDayChart);
+      final card = find.byType(UsageDayCard);
+      expect(card, findsNothing);
+      final box = tester.getRect(chart);
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      addTearDown(mouse.removePointer);
+
+      // Tuesday's column, the fifth of seven, high in the plot.
+      final tuesday = Offset(box.right - box.width * 0.36, box.top + 40);
+      await mouse.moveTo(tuesday);
+      await tester.pump();
+      Finder on(String text) =>
+          find.descendant(of: card, matching: find.text(text));
+      expect(on('Tue, Oct 27'), findsOneWidget);
+      expect(on(r'$42.10'), findsOneWidget);
+      expect(on('1.4M'), findsOneWidget);
+      expect(on('101'), findsOneWidget);
+      // Right of and under the pointer, never over it.
+      expect(tester.getRect(card).left, greaterThan(tuesday.dx));
+      expect(tester.getRect(card).top, greaterThan(tuesday.dy));
+      // The highest bar's own value gives way to the card.
+      expect(
+        find.descendant(of: chart, matching: find.text(r'$42.10')),
+        findsOneWidget,
+      );
+      await render(tester, find.byType(MaterialApp), 'usage-hover-$theme');
+      await expectLater(
+        chart,
+        matchesGoldenFile('goldens/usage_chart_hover_$theme.png'),
+      );
+
+      // It follows the pointer along the same day.
+      final was = tester.getRect(card).topLeft;
+      await mouse.moveTo(tuesday + const Offset(6, 10));
+      await tester.pump();
+      expect(tester.getRect(card).topLeft, was + const Offset(6, 10));
+
+      // Today's, at the chart's edge and its foot: the card turns to the
+      // pointer's left and stops at the foot, inside the chart.
+      final today = Offset(box.right - 8, box.bottom - 30);
+      await mouse.moveTo(today);
+      await tester.pump();
+      expect(on('Thu, Oct 29'), findsOneWidget);
+      expect(tester.getRect(card).right, lessThan(today.dx));
+      expect(tester.getRect(card).bottom, box.bottom);
+
+      await mouse.moveTo(box.bottomRight + const Offset(0, 40));
+      await tester.pump();
+      expect(card, findsNothing);
+      d.dispose();
+    }, variant: onMac);
+  }
+
+  testWidgets('a day without a turn says nothing was used', (tester) async {
+    final (_, d) = await _open(tester, quarterUsage());
+    final box = tester.getRect(find.byType(UsageDayChart));
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    addTearDown(mouse.removePointer);
+    // The default span is a week: five days back had no turn.
+    await mouse.moveTo(Offset(box.right - box.width / 7 * 5.5, box.center.dy));
+    await tester.pump();
+    expect(
+      find.descendant(
+        of: find.byType(UsageDayCard),
+        matching: find.text('Nothing used'),
+      ),
+      findsOneWidget,
+    );
     d.dispose();
   });
 
