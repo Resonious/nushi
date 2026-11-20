@@ -301,3 +301,46 @@ func TestANewWorktreeSkipsANameAChatHasOnRecord(t *testing.T) {
 		t.Errorf("removed %q, want the one made at the name on record", wts.removed)
 	}
 }
+
+// goneWorktrees ends the request as soon as the worktree is looked at,
+// as when the app quits mid-removal, and keeps whether each removal's
+// context was still live.
+type goneWorktrees struct {
+	removingWorktrees
+	cancel   context.CancelFunc
+	liveAtRm []bool
+}
+
+func (w *goneWorktrees) Inspect(context.Context, model.Worktree) (model.WorktreeState, error) {
+	w.cancel()
+	return model.WorktreeState{}, nil
+}
+
+func (w *goneWorktrees) Remove(ctx context.Context, wt model.Worktree, force bool) error {
+	w.liveAtRm = append(w.liveAtRm, ctx.Err() == nil)
+	return w.removingWorktrees.Remove(ctx, wt, force)
+}
+
+// A worktree's removal, from Delete or RemoveWorktree, goes on when its
+// request is gone once the checks passed: git stopped partway would leave
+// a half-emptied folder.
+func TestAWorktreesRemovalOutlivesItsRequest(t *testing.T) {
+	for _, viaDelete := range []bool{false, true} {
+		svc, _, c := newChat(t, `{"sessionId":"s1"}`, &memModes{})
+		ctx, cancel := context.WithCancel(t.Context())
+		wts := &goneWorktrees{cancel: cancel}
+		svc.worktrees = wts
+		w := t.TempDir()
+		c.mu.Lock()
+		c.record.Worktree = &model.Worktree{Path: w}
+		c.mu.Unlock()
+		if viaDelete {
+			testcheck.NoErr(t, svc.Delete(ctx, c.id, DeleteOptions{w: {RemoveWorktree: true}}))
+		} else {
+			testcheck.NoErr(t, svc.RemoveWorktree(ctx, c.id, false))
+		}
+		if !slices.Equal(wts.removed, []string{w}) || !slices.Equal(wts.liveAtRm, []bool{true}) {
+			t.Errorf("delete %v: removed %q, its context live %v", viaDelete, wts.removed, wts.liveAtRm)
+		}
+	}
+}

@@ -115,7 +115,10 @@ func (s *Service) startDeleter(ctx context.Context, c *chat) (Agent, bool, error
 // (when it can), the chat's scratch folder goes, then Nushi's record of
 // it, then its transcript's copy. If the worktree, the agent's history or
 // the record can't go, the chat stays, its copy with it.
-// Removing a worktree another chat works in is refused.
+// Removing a worktree another chat works in is refused. Once checked, it
+// goes on when the request is gone (detached).
+//
+//nolint:contextcheck // a deletion shouldn't stop halfway because the app went away
 func (s *Service) Delete(ctx context.Context, chatID string, opts DeleteOptions) error {
 	p, err := s.PlanDelete(ctx, chatID)
 	if err != nil {
@@ -124,6 +127,8 @@ func (s *Service) Delete(ctx context.Context, chatID string, opts DeleteOptions)
 	if err := othersInWorktrees(p.Worktrees, opts); err != nil {
 		return err
 	}
+	ctx, ended := detached(ctx)
+	defer ended("deleting a chat")
 	c, err := s.halt(chatID)
 	if err != nil {
 		return err

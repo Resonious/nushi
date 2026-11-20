@@ -77,7 +77,10 @@ func (s *Service) othersIn(c *chat, folder string) ([]string, error) {
 // without asking) unless force, as Delete refuses them. The chat's agent stops first (it
 // sleeps, when it can reopen), and its terminals end. From the check that
 // the chat is quiet to the end, the chat takes no prompts and doesn't
-// reopen (removing), so no turn starts in a folder about to go.
+// reopen (removing), so no turn starts in a folder about to go. Once
+// checked, the removal goes on when the request is gone (detached).
+//
+//nolint:contextcheck // a removal shouldn't stop halfway because the app went away
 func (s *Service) RemoveWorktree(ctx context.Context, chatID string, force bool) error {
 	c, err := s.stored(chatID)
 	if err != nil {
@@ -124,6 +127,8 @@ func (s *Service) RemoveWorktree(ctx context.Context, chatID string, force bool)
 	case st.Ignored > 0 && !force:
 		return fmt.Errorf("the worktree has %d ignored files or folders", st.Ignored)
 	}
+	ctx, ended := detached(ctx)
+	defer ended("removing a chat's worktree")
 	c.mu.Lock()
 	running := c.agent != nil
 	if running {

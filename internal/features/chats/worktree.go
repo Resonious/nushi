@@ -12,6 +12,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/afrase/nushi/internal/model"
 )
@@ -171,6 +172,26 @@ func (s *Service) dropWorktree(wt *model.Worktree) bool {
 		slog.Info("worktree left", "worktree", wt.Path, "why", err)
 	}
 	return err == nil
+}
+
+// destroyLimit bounds what removes a worktree, its branch or a chat once
+// it has begun: git removing a large folder takes time.
+const destroyLimit = 5 * time.Minute
+
+// detached is ctx's values on a context its end doesn't cancel, bounded by
+// destroyLimit, for steps that destroy and shouldn't stop halfway because
+// the app quit or the phone's link dropped: a half-removed worktree leaves
+// a half-emptied folder and git's record of it (as dropWorktree, rewinds
+// and forks do). ended logs, as what it did is done, that the request had
+// gone by then.
+func detached(ctx context.Context) (dctx context.Context, ended func(what string)) {
+	dctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), destroyLimit)
+	return dctx, func(what string) {
+		cancel()
+		if ctx.Err() != nil {
+			slog.Info("finished after its request had gone", "what", what)
+		}
+	}
 }
 
 // deleteWorktree removes a deleted chat's worktree and deletes its branch,
