@@ -8,6 +8,7 @@ import 'package:markdown_view/markdown_view.dart';
 import 'package:nushi/bottom_follower.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/chat_column.dart';
+import 'package:nushi/chat_find.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/fork_chat.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -546,7 +547,7 @@ class _TranscriptState extends State<Transcript> {
     if (_follower.following || _restore != null) {
       _tail = Transcript.firstEntries;
     }
-    if (widget.items == null) widget.chat.find.addListener(_findChanged);
+    if (widget.items == null) _attachFind(widget.chat);
     _follower.scroll.addListener(_findPinAt);
     _marks.onFound = (marks) {
       final find = widget.chat.find;
@@ -593,8 +594,23 @@ class _TranscriptState extends State<Transcript> {
     }
     _shownAsk = -1;
     old.chat.find.removeListener(_findChanged);
-    if (widget.items == null) widget.chat.find.addListener(_findChanged);
+    if (widget.items == null) _attachFind(widget.chat);
   }
+
+  /// Follows [chat]'s find, and gives it the daemon's search of what isn't
+  /// loaded and the entries laid out (ChatFind).
+  void _attachFind(ChatState chat) {
+    final daemon = widget.daemon;
+    chat.find
+      ..addListener(_findChanged)
+      ..entryOf = ((id) => _entryOf[id])
+      ..ask = (r, signal) async => daemon.daemonApi >= findInChatApi
+          ? await daemon.client.findInChat(r, signal: signal)
+          : null;
+  }
+
+  // The key of each item's entry laid out, while a find is open.
+  var _entryOf = const <String, String>{};
 
   // Not in dispose: by then the list has let go of its scroll.
   @override
@@ -623,8 +639,10 @@ class _TranscriptState extends State<Transcript> {
   bool _roomAbove = false; // the list starts below the find bar
 
   /// What the find bar covers of the transcript's top: more with its line
-  /// saying it looks in what's loaded (FindBar.loadAll).
-  double get _findBarHeight => widget.chat.older > 0 || widget.chat.loadingOlder
+  /// saying it looks in what's loaded (FindBar.loadAll) or loads.
+  double get _findBarHeight =>
+      widget.chat.older > 0 && !widget.chat.find.whole ||
+          widget.chat.loadingOlder
       ? FindBar.withNote
       : FindBar.height;
 
@@ -632,14 +650,20 @@ class _TranscriptState extends State<Transcript> {
   /// brings it into view.
   void _showCurrent() {
     final find = widget.chat.find;
-    final marks = _marks.marks;
-    final mark = marks.isEmpty
-        ? null
-        : marks[find.at.clamp(0, marks.length - 1)];
+    final key = find.current;
+    final mark = _marks.marks.where((m) => m.key == key).firstOrNull;
     _marks.pick(mark);
     if (find.asked == _shownAsk) return;
     _shownAsk = find.asked;
-    if (mark != null) _reveal(mark);
+    if (mark != null) {
+      _reveal(mark);
+    } else if (ChatFind.farItem(key) case final id? when find.stepped) {
+      // A match above what's loaded: its part comes, and the find lands
+      // on it once it's laid out (ChatFind).
+      unawaited(
+        widget.daemon.loadOlder(widget.chat, through: [id], reach: true),
+      );
+    }
   }
 
   /// Takes the list to [mark], a third of the way down, unless it shows
@@ -861,6 +885,12 @@ class _TranscriptState extends State<Transcript> {
       _tail = null;
     }
     _laidOut = entries.sublist(from);
+    _entryOf = query.isEmpty
+        ? const {}
+        : {
+            for (final e in _laidOut)
+              for (final it in entryItems(e)) it.id: _key(e),
+          };
     _keepPlace(_laidOut, header: header != null);
     _planMoves();
     if (_goTo != null) {

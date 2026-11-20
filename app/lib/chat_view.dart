@@ -169,7 +169,9 @@ class _ChatViewState extends State<ChatView> {
                             ),
                             child: FindBar(
                               chat.find,
-                              loadAll: chat.older > 0
+                              // The daemon counts what isn't loaded
+                              // (ChatFind.whole); an older one doesn't.
+                              loadAll: chat.older > 0 && !chat.find.whole
                                   ? () => unawaited(
                                       widget.daemon.loadOlder(chat, all: true),
                                     )

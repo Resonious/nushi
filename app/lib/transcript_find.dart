@@ -88,11 +88,13 @@ class Find extends ChangeNotifier {
 
   /// Takes [hits], the one at [at] current, for a find that picks its
   /// own: a terminal's starts from its latest output, an editor's from its
-  /// caret.
+  /// caret, a chat's whole find (ChatFind) the match a step loaded, which
+  /// it [ask]s to show.
   @protected
-  void foundAt(List<String> hits, int at) {
+  void foundAt(List<String> hits, int at, {bool ask = false}) {
     _hits = hits;
     _at = hits.isEmpty ? 0 : at.clamp(0, hits.length - 1);
+    if (ask) _asked++;
     notifyListeners();
   }
 

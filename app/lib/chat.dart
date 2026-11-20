@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart'
 import 'package:nushi/agents.dart';
 import 'package:nushi/browser_tabs.dart';
 import 'package:nushi/chat_colors.dart';
+import 'package:nushi/chat_find.dart';
 import 'package:nushi/chat_look.dart';
 import 'package:nushi/chat_paths.dart';
 import 'package:nushi/clock.dart';
@@ -364,8 +365,8 @@ class ChatState extends ChangeNotifier {
   /// header shows it again. In the app's memory only.
   final sideHidden = ValueNotifier<bool>(false);
 
-  /// ⌘F in its transcript (the Mac's).
-  final find = Find();
+  /// ⌘F in its transcript (the Mac's), the whole chat.
+  late final find = ChatFind(this);
 
   /// ⌘F in its Changes view.
   final changesFind = ChangesFind();
@@ -666,6 +667,7 @@ class ChatState extends ChangeNotifier {
     _early.clear();
     early.forEach(_apply);
     notifyListeners();
+    find.reloaded();
   }
 
   /// Puts an older page before the items; an item the page has that came

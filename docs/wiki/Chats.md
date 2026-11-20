@@ -234,6 +234,17 @@ If Undo can't bring it back (the chat was deleted or archived, or has another si
 
 A worktree is a separate copy of your repository on its own branch. To keep a chat's work apart from your checkout, click **New worktree** under the box before the first message. It shows only when the chat's folder is a git repository. The chat gets its own worktree, on a new branch named after the chat. Review its work in the **Changes** tab: see [Reviewing changes](Reviewing-changes).
 
+## Find text in a chat
+
+Press ⌘F in a chat to find text in it, all of it, even the part of a long chat you haven't scrolled up to yet.
+
+1. Press **⌘F**. The find bar opens at the chat's top right.
+2. Type. The bar counts the matches in the whole chat ("2 of 9").
+3. Press ⏎ (or ↓) for the next match, ⇧⏎ (or ↑) for the one before. Past the last it goes round to the first.
+4. Press **Esc** to close it.
+
+A match further up than what's loaded takes a moment: Nushi loads that part of the chat and goes to it. It finds in what the chat shows (messages, thoughts, tool rows and their output), not in diffs, plans or images, and ignores case.
+
 ## Find an old chat
 
 - **⌘K** finds any chat by title.

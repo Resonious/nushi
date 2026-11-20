@@ -116,6 +116,9 @@ class FakeDaemon implements Transport {
   searches;
   final searched = <SearchAgentSessionsRequest>[];
   final cancelledSearches = <String>[];
+
+  /// The requests whose caller cancelled them, as each was.
+  final cancelled = <Object>[];
   // The fake's stream, which lives as long as the test.
   final _events = StreamController<EventsResponse>()..add(EventsResponse());
 
@@ -143,6 +146,9 @@ class FakeDaemon implements Transport {
         Code.unavailable,
         'daemon unavailable: dial failed',
       );
+    }
+    if (options?.signal case final signal?) {
+      unawaited(signal.future.then((_) => cancelled.add(input)));
     }
     if (input is ListAgentSessionsRequest) listed.add(input);
     if (input is OpenAgentSessionRequest) opened.add(input);
