@@ -242,7 +242,10 @@ jobs:
   withdraw:
     name: Withdraw the release to a draft
     needs: [tag, ci, app, linux, relay, publish]
-    if: (failure() || cancelled()) && github.event_name == 'release'
+    # A job GitHub itself cancels (no runner in time) fails nothing and cancels no run: its result says so.
+    if: >-
+      always() && github.event_name == 'release' &&
+      (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
