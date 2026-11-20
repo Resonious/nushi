@@ -324,6 +324,9 @@ class _RenderLineHits extends RenderProxyBox {
           // the transcript's marks are (TextMarks).
           final r = RRect.fromRectAndRadius(
             box.shift(at).inflate(1),
+            // The transcript's find box (TextMarks), as the markdown
+            // package draws it, without the app's theme.
+            // not a corner: a found word's box, the transcript's size
             const Radius.circular(3),
           );
           canvas.drawRRect(r, fill);
