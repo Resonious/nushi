@@ -18624,11 +18624,13 @@ class ItemEvent extends $pb.GeneratedMessage {
     Item? item,
     $core.bool? append,
     $core.int? index,
+    $core.bool? workflowEnded,
   }) {
     final result = ItemEvent._();
     if (item != null) result.item = item;
     if (append != null) result.append = append;
     if (index != null) result.index = index;
+    if (workflowEnded != null) result.workflowEnded = workflowEnded;
     return result;
   }
 
@@ -18649,6 +18651,7 @@ class ItemEvent extends $pb.GeneratedMessage {
         subBuilder: Item.$_createMessage)
     ..aOB(2, _omitFieldNames ? '' : 'append')
     ..aI(3, _omitFieldNames ? '' : 'index')
+    ..aOB(4, _omitFieldNames ? '' : 'workflowEnded')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -18703,6 +18706,18 @@ class ItemEvent extends $pb.GeneratedMessage {
   $core.bool hasIndex() => $_has(2);
   @$pb.TagNumber(3)
   void clearIndex() => $_clearField(3);
+
+  /// The item is a workflow its chat's agent ran, which the daemon saw end
+  /// just now (done, failed or stopped): only this one event says so, never
+  /// a replay or a reload, so a client notifies once. API 134.
+  @$pb.TagNumber(4)
+  $core.bool get workflowEnded => $_getBF(3);
+  @$pb.TagNumber(4)
+  set workflowEnded($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasWorkflowEnded() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearWorkflowEnded() => $_clearField(4);
 }
 
 class ChatStatus extends $pb.GeneratedMessage {

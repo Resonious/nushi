@@ -132,7 +132,10 @@ func (c *chat) followWorkflow(callID string, f *follow) {
 			return
 		}
 		next, wait := c.judgeWorkflow(*it.Workflow, got, err, f, gone, time.Now())
-		c.setWorkflowLocked(it, next)
+		// Its end, seen now, of a run this daemon's agent ran: said once
+		// (ADR 0141). A run found ended on a reopen or a replay isn't one.
+		ended := f.owner != nil && next != nil && next.Final() && !it.Workflow.Final()
+		c.setWorkflowLocked(it, next, ended)
 		final := next == nil || next.Final()
 		c.mu.Unlock()
 		if final {
@@ -205,7 +208,9 @@ func quit(w model.Workflow, now time.Time) *model.Workflow {
 // (its files' time aside, which changes with every write). A run once set
 // is never changed in place: copies of the item handed out (GetWorkflow's,
 // a published event's) share it and read it without the chat's lock.
-func (c *chat) setWorkflowLocked(it *model.Item, w *model.Workflow) {
+// ended marks its event as the run's end, seen as it came
+// (model.Event.WorkflowEnded).
+func (c *chat) setWorkflowLocked(it *model.Item, w *model.Workflow, ended bool) {
 	if w != nil && it.Workflow != nil {
 		was, now := *it.Workflow, *w
 		was.Active, now.Active = time.Time{}, time.Time{}
@@ -220,7 +225,8 @@ func (c *chat) setWorkflowLocked(it *model.Item, w *model.Workflow) {
 	if w == nil {
 		it.TaskID = ""
 	}
-	c.publishLocked(*it)
+	published := *it
+	c.emitLocked(model.Event{ChatID: c.id, Item: &published, WorkflowEnded: ended})
 	if w == nil || w.Final() {
 		c.copyLocked(false)
 	}

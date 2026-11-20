@@ -4307,13 +4307,15 @@ const ItemEvent$json = {
     {'1': 'item', '3': 1, '4': 1, '5': 11, '6': '.nushi.v1.Item', '10': 'item'},
     {'1': 'append', '3': 2, '4': 1, '5': 8, '10': 'append'},
     {'1': 'index', '3': 3, '4': 1, '5': 5, '10': 'index'},
+    {'1': 'workflow_ended', '3': 4, '4': 1, '5': 8, '10': 'workflowEnded'},
   ],
 };
 
 /// Descriptor for `ItemEvent`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List itemEventDescriptor = $convert.base64Decode(
     'CglJdGVtRXZlbnQSIgoEaXRlbRgBIAEoCzIOLm51c2hpLnYxLkl0ZW1SBGl0ZW0SFgoGYXBwZW'
-    '5kGAIgASgIUgZhcHBlbmQSFAoFaW5kZXgYAyABKAVSBWluZGV4');
+    '5kGAIgASgIUgZhcHBlbmQSFAoFaW5kZXgYAyABKAVSBWluZGV4EiUKDndvcmtmbG93X2VuZGVk'
+    'GAQgASgIUg13b3JrZmxvd0VuZGVk');
 
 @$core.Deprecated('Use chatStatusDescriptor instead')
 const ChatStatus$json = {

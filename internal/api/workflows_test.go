@@ -27,6 +27,10 @@ func TestWorkflowProto(t *testing.T) {
 		len(p.Planned) != 1 || p.Planned[0].Title != "Verify" || p.Planned[0].Detail != "y" {
 		t.Errorf("got %+v", p)
 	}
+	ev := toProto(model.Event{ChatID: "x", Item: &model.Item{ID: "c", Kind: model.ToolCall, Workflow: &w}, WorkflowEnded: true}, false)
+	if !ev.GetItem().GetWorkflowEnded() {
+		t.Error("a workflow's end isn't marked on its event")
+	}
 	if itemProto(&model.Item{ID: "c"}, false).Workflow != nil {
 		t.Error("a workflow on a plain item")
 	}

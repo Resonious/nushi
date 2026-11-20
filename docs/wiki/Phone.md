@@ -45,7 +45,7 @@ Don't scan the code with the iPhone's own Camera app. That opens Safari, and pai
 1. On your phone, tap **Settings** (the gear on the **Chats** screen).
 2. Turn on **Notifications**, and tap **Allow** when iOS asks.
 
-You get a notification when a chat finishes, when its turn fails, when the agent has a question, or when it needs your permission. It says only what happened, such as "Claude finished" or "Codex needs you". It never shows what's in the chat. Tap it to open that chat. You don't get one for the chat you have open.
+You get a notification when a chat finishes, when its turn fails, when the agent has a question, when it needs your permission, or when one of Claude's workflows finishes, fails or stops. It says only what happened, such as "Claude finished" or "Codex needs you". It never shows what's in the chat. Tap it to open that chat. You don't get one for the chat you have open.
 
 To check notifications work, click **Send a test notification** next to your phone in **Settings › Remote access** on your computer.
 

@@ -13,6 +13,11 @@ type Event struct {
 	Item   *Item
 	// Append means Item.Text continues the item's text rather than replacing it.
 	Append bool
+	// WorkflowEnded says Item is a workflow the chat's agent ran that the
+	// daemon saw end just now: done, failed or stopped. Only that one
+	// event says so, never a replay or a reload, so it notifies once
+	// (ADR 0141).
+	WorkflowEnded bool
 	// Index is the item's place in the chat (not with Append).
 	Index  int
 	Status *Status

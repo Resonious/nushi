@@ -278,6 +278,12 @@ func (s *Service) Follow(e model.Event) {
 				delete(n.finishing, chat)
 			}
 		}
+	case e.WorkflowEnded && e.Item != nil && e.Item.Workflow != nil:
+		// A workflow's end, once (ADR 0141): in a turn's end's slot, so
+		// the turn of Claude's own that follows a finished run replaces
+		// it, as a newer turn's end does.
+		kind, words := workflowEnd(e.Item.Workflow.State)
+		s.spawn(func() { s.notify(chat, kind, words) })
 	case e.Item != nil && (e.Item.Kind == model.Permission || e.Item.Kind == model.Question) && e.Item.Status == "pending":
 		if n.asked[chat] == nil {
 			n.asked[chat] = map[string]bool{}
@@ -290,7 +296,7 @@ func (s *Service) Follow(e model.Event) {
 		if e.Item.Kind == model.Permission {
 			kind = "permission"
 		}
-		s.spawn(func() { s.notify(chat, kind) }) // not under n.mu: queue takes it
+		s.spawn(func() { s.notify(chat, kind, "") }) // not under n.mu: queue takes it
 	}
 }
 
@@ -316,7 +322,7 @@ func (s *Service) finish(chatID, kind string, off <-chan struct{}) {
 	}
 	n.mu.Unlock()
 	if waited {
-		s.notify(chatID, kind)
+		s.notify(chatID, kind, "")
 	}
 }
 
@@ -329,9 +335,25 @@ func (n *notifier) unfinishLocked(chatID string) {
 	}
 }
 
+// workflowEnd is the push for a workflow that ended in state: its kind
+// (a turn's end's, "finished" or "failed", which the phone's service
+// worker knows) and the words after the agent's name.
+func workflowEnd(state string) (kind, words string) {
+	switch state {
+	case "done":
+		return "finished", "'s workflow finished"
+	case "failed":
+		return "failed", "'s workflow failed"
+	case "stopped":
+		return "failed", "'s workflow stopped"
+	}
+	return "failed", "'s workflow ended"
+}
+
 // notify pushes what happened in chatID to every device with notifications
-// on, but not one connected and showing that chat.
-func (s *Service) notify(chatID, kind string) {
+// on, but not one connected and showing that chat: kind's words after the
+// agent's name, or words when given.
+func (s *Service) notify(chatID, kind, words string) {
 	s.mu.Lock()
 	if s.push == nil {
 		s.mu.Unlock()
@@ -352,8 +374,10 @@ func (s *Service) notify(chatID, kind string) {
 	if !ok {
 		return // a side chat, or one that's gone
 	}
-	p := payload{Kind: kind, Agent: title, Chat: chatID, Title: title + map[string]string{
-		"finished": " finished", "failed": "'s turn failed", "question": " has a question", "permission": " needs you"}[kind]}
+	if words == "" {
+		words = map[string]string{"finished": " finished", "failed": "'s turn failed", "question": " has a question", "permission": " needs you"}[kind]
+	}
+	p := payload{Kind: kind, Agent: title, Chat: chatID, Title: title + words}
 	for _, d := range to {
 		s.queue(d, p)
 	}

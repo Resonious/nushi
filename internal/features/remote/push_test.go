@@ -456,3 +456,36 @@ func TestCloseEndsTheFinishedWait(t *testing.T) {
 		}
 	})
 }
+
+// A workflow's end is pushed once, as the daemon saw it end, in its
+// words and a turn's end's slot (ADR 0141); the same item again without
+// the mark (a replay, a reload, its later updates) isn't.
+func TestAWorkflowsEndPushesOnce(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		s, p, _, _ := pushing(t)
+		call := func(state string) *model.Item {
+			return &model.Item{ID: "w", Kind: model.ToolCall, Tool: "Workflow", Workflow: &model.Workflow{RunID: "wf_1", Name: "SECRET name", State: state}}
+		}
+		s.Follow(model.Event{ChatID: "c1", Item: call("running")})
+		s.Follow(model.Event{ChatID: "c1", Item: call("done"), WorkflowEnded: true})
+		s.Follow(model.Event{ChatID: "c1", Item: call("done")})
+		got := p.settle()
+		if want := (payload{Title: "Claude's workflow finished", Kind: "finished", Agent: "Claude", Chat: "c1"}); len(got) != 1 || got[0] != want {
+			t.Fatalf("pushed %+v, want %+v", got, want)
+		}
+		for state, title := range map[string]string{"failed": "Claude's workflow failed", "stopped": "Claude's workflow stopped", "unknown": "Claude's workflow ended"} {
+			s.Follow(model.Event{ChatID: "c1", Item: call(state), WorkflowEnded: true})
+			if got := p.settle(); len(got) != 1 || got[0].Title != title || got[0].Kind != "failed" {
+				t.Errorf("%s: pushed %+v", state, got)
+			}
+		}
+		s.Follow(model.Event{ChatID: "c1", Status: &model.Status{Busy: true, Started: time.Now()}})
+		s.Follow(model.Event{ChatID: "c1", Status: &model.Status{Ended: model.TurnDone}})
+		p.settle()
+		p.mu.Lock()
+		defer p.mu.Unlock()
+		if n := len(p.topics); n < 2 || p.topics[0] != p.topics[n-1] {
+			t.Errorf("topics %q: a workflow's end and the turn's after it share one", p.topics)
+		}
+	})
+}

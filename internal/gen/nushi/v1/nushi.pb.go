@@ -14418,7 +14418,11 @@ type ItemEvent struct {
 	// Where the item is in the chat, from 0 (not with append): a client that
 	// has only the recent part (GetChatRequest.recent) leaves out what is
 	// before it, and a new item before the end goes there.
-	Index         int32 `protobuf:"varint,3,opt,name=index,proto3" json:"index,omitempty"`
+	Index int32 `protobuf:"varint,3,opt,name=index,proto3" json:"index,omitempty"`
+	// The item is a workflow its chat's agent ran, which the daemon saw end
+	// just now (done, failed or stopped): only this one event says so, never
+	// a replay or a reload, so a client notifies once. API 134.
+	WorkflowEnded bool `protobuf:"varint,4,opt,name=workflow_ended,json=workflowEnded,proto3" json:"workflow_ended,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -14472,6 +14476,13 @@ func (x *ItemEvent) GetIndex() int32 {
 		return x.Index
 	}
 	return 0
+}
+
+func (x *ItemEvent) GetWorkflowEnded() bool {
+	if x != nil {
+		return x.WorkflowEnded
+	}
+	return false
 }
 
 type ChatStatus struct {
@@ -28428,11 +28439,12 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\aoptions\x18\x05 \x03(\v2\x10.nushi.v1.OptionR\aoptions\x12\x1a\n" +
 	"\brequired\x18\x06 \x01(\bR\brequired\x12\x16\n" +
 	"\x06values\x18\a \x03(\tR\x06values\x12\x1b\n" +
-	"\tother_for\x18\b \x01(\tR\botherFor\"]\n" +
+	"\tother_for\x18\b \x01(\tR\botherFor\"\x84\x01\n" +
 	"\tItemEvent\x12\"\n" +
 	"\x04item\x18\x01 \x01(\v2\x0e.nushi.v1.ItemR\x04item\x12\x16\n" +
 	"\x06append\x18\x02 \x01(\bR\x06append\x12\x14\n" +
-	"\x05index\x18\x03 \x01(\x05R\x05index\"\xbf\x04\n" +
+	"\x05index\x18\x03 \x01(\x05R\x05index\x12%\n" +
+	"\x0eworkflow_ended\x18\x04 \x01(\bR\rworkflowEnded\"\xbf\x04\n" +
 	"\n" +
 	"ChatStatus\x12(\n" +
 	"\x10can_write_commit\x18\x0f \x01(\bR\x0ecanWriteCommit\x12\x12\n" +
