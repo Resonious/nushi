@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'package:nushi/preview_find.dart';
+import 'package:nushi/run_state.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/transcript_find.dart';
 
@@ -44,7 +45,7 @@ abstract interface class PageFinder {
 
 /// The finds of the pages on screen, which ⌘F asks whether their web view
 /// has the keys ([focusedPageFind]): one is in it while its page shows.
-final Set<WebFind> pageFinds = {};
+final Set<WebFind> pageFinds = runSet();
 
 /// The find of the page whose web view has the keys, if any: ⌘F then comes
 /// from the menu bar, WebKit having taken the key.
