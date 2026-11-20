@@ -18,7 +18,7 @@ const itemsAnswer = `{"data":{
   "state":"OPEN","isDraft":false,"createdAt":"2026-11-01T10:00:00Z","updatedAt":"2026-11-02T10:00:00Z","author":{"login":"octo"},
   "additions":12,"deletions":3,"changedFiles":2,"mergeStateStatus":"BLOCKED","baseRefName":"main","headRefName":"fix",
   "reviewDecision":"CHANGES_REQUESTED","totalCommentsCount":4,
-  "commits":{"nodes":[{"commit":{"statusCheckRollup":{"state":"PENDING","contexts":{
+  "commits":{"nodes":[{"commit":{"oid":"c0ffee","statusCheckRollup":{"state":"PENDING","contexts":{
    "checkRunCountsByState":[{"state":"SUCCESS","count":2},{"state":"NEUTRAL","count":1},{"state":"IN_PROGRESS","count":1},{"state":"SKIPPED","count":3},{"state":"FAILURE","count":1}],
    "statusContextCountsByState":[{"state":"PENDING","count":1}]}}}}]},
   "reviewThreads":{"nodes":[{"isResolved":false},{"isResolved":true}]}},
@@ -57,7 +57,8 @@ func TestItems(t *testing.T) {
 	pr, is := items[0], items[1]
 	want := model.CheckCounts{Passed: 3, Failed: 1, Running: 2, Skipped: 3}
 	if pr.Title != "Fix the thing" || !pr.Pull || pr.Additions != 12 || pr.Deletions != 3 || pr.ChangedFiles != 2 || pr.CheckCounts != want ||
-		pr.MergeState != "blocked" || pr.Base != "main" || pr.Head != "fix" || pr.Unresolved != 1 || pr.Review != "changes_requested" || pr.Created.IsZero() {
+		pr.MergeState != "blocked" || pr.Base != "main" || pr.Head != "fix" || pr.Unresolved != 1 || pr.Review != "changes_requested" || pr.Created.IsZero() ||
+		pr.ChecksOID != "c0ffee" {
 		t.Fatalf("%+v", pr)
 	}
 	if is.Pull || is.State != "closed" || is.StateReason != "not_planned" || is.Comments != 5 || is.URL != "" || is.Author != "ghost" {

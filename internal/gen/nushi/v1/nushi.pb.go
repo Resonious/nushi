@@ -21622,7 +21622,8 @@ type GitHubItem struct {
 	Head string `protobuf:"bytes,22,opt,name=head,proto3" json:"head,omitempty"`
 	// The commit checks are of (its oid): the head's when they were read;
 	// empty with no checks. Told apart, a failure on a new commit is a new
-	// one (ADR 0138). API 129.
+	// one (ADR 0138). API 129; GetGitHubItems' items say it too from API
+	// 133.
 	ChecksOid     string `protobuf:"bytes,23,opt,name=checks_oid,json=checksOid,proto3" json:"checks_oid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

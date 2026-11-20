@@ -28313,7 +28313,8 @@ class GitHubItem extends $pb.GeneratedMessage {
 
   /// The commit checks are of (its oid): the head's when they were read;
   /// empty with no checks. Told apart, a failure on a new commit is a new
-  /// one (ADR 0138). API 129.
+  /// one (ADR 0138). API 129; GetGitHubItems' items say it too from API
+  /// 133.
   @$pb.TagNumber(23)
   $core.String get checksOid => $_getSZ(22);
   @$pb.TagNumber(23)
