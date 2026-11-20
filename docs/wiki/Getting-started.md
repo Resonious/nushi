@@ -63,7 +63,7 @@ Nushi runs your own copy of the agent, with your login, settings and history.
 
 If it says **Not installed**, Nushi couldn't find the command. Check that it runs in a new terminal window, then come back and click **Reload** (under **Shell environment** at the bottom). If it says **Not signed in**, sign in to the agent in a terminal.
 
-Codex needs one extra piece: click **Set up** next to it. That needs Node and npm. (A preview of Codex without Node is in [agent setup](https://github.com/afrase/nushi/blob/main/docs/agent-setup.md#codex): it's off unless you turn it on.)
+Codex needs one extra piece: click **Set up** next to it. That needs Node and npm. (Or try **Run Codex without Node**, under Codex in the same page: it needs no Node and no Set up. It's new, so it's off unless you turn it on.)
 
 ## Your first chat
 

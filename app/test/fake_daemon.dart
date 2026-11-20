@@ -31,6 +31,7 @@ List<Agent> readyAgents() => [
       path: '/bin/$name',
       ready: true,
       mcpUserOnly: name == 'ante',
+      goAgentSwitch: name == 'codex',
     ),
 ];
 
@@ -44,7 +45,9 @@ class FakeDaemon implements Transport {
   /// list or a chat its test shares with the next.
   final List<Chat> chats;
 
-  /// What ListAgents answers; the agents set up and removed.
+  /// What ListAgents answers (one with a Go agent switch without its
+  /// adapter while [settings] run it through the Go agent, as the daemon
+  /// does); the agents set up and removed.
   List<Agent> agents = readyAgents();
 
   /// How reading the shell's environment went, as ListAgents tells it
@@ -201,7 +204,7 @@ class FakeDaemon implements Transport {
             :final reloadEnvironment,
           ) =>
             ListAgentsResponse(
-              agents: agents,
+              agents: [for (final a in agents) _asRun(a)],
               environment: refreshEnvironment || reloadEnvironment
                   ? environment
                   : null,
@@ -312,6 +315,14 @@ class FakeDaemon implements Transport {
     }
     return items.isEmpty ? null : GetGitHubItemsResponse(items: items);
   }
+
+  /// [a] as the daemon lists it now: Codex through the Go agent needs no
+  /// adapter, so it's ready once found.
+  Agent _asRun(Agent a) => a.goAgentSwitch && settings.codexGoAgent
+      ? (a.deepCopy()
+          ..clearAdapter()
+          ..ready = a.path.isNotEmpty && a.problem.isEmpty)
+      : a;
 
   /// Pins [ids] as the daemon does: each at its place, every other chat
   /// unpinned, an archived one never; a chat whose pin changed comes as

@@ -1,10 +1,12 @@
 import 'package:fixnum/fixnum.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/agents_page.dart';
 import 'package:nushi/controls.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/settings_rows.dart';
 import 'package:nushi/settings_view.dart';
 import 'package:nushi/theme/theme.dart';
 
@@ -24,7 +26,8 @@ Adapter _codexAdapter(String installed) => Adapter(
 );
 
 /// Claude ready (through the Go agent: nothing to set up) but not signed
-/// in, Codex set up with a newer adapter pinned and a chat awake, Ante
+/// in, Codex set up with a newer adapter pinned and a chat awake (and the
+/// switch for its Go agent), Ante
 /// ready, oh-my-pi missing, PiG ready.
 final _found = [
   Agent(
@@ -43,6 +46,7 @@ final _found = [
     ready: true,
     awake: 1,
     adapter: _codexAdapter('2.2.1'),
+    goAgentSwitch: true,
   ),
   Agent(
     name: 'ante',
@@ -67,6 +71,7 @@ Future<(FakeDaemon, Daemon)> _settings(
   String? agent,
   ShellEnvironment? environment,
   bool codexSetUp = true,
+  bool? goAgent = false, // null: a daemon without the setting
   Size size = const Size(1000, 760),
 }) async {
   final fake = FakeDaemon([])
@@ -81,6 +86,7 @@ Future<(FakeDaemon, Daemon)> _settings(
           a,
     ]
     ..environment = environment;
+  if (goAgent != null) fake.settings.codexGoAgent = goAgent;
   final d = await fake.connect(tester);
   await pumpSettings(
     tester,
@@ -92,6 +98,15 @@ Future<(FakeDaemon, Daemon)> _settings(
   );
   return (fake, d);
 }
+
+/// Settings › Agents' switch for Codex's Go agent.
+Finder get _goSwitch => find.descendant(
+  of: find.ancestor(
+    of: find.text(goAgentLabel),
+    matching: find.byType(SettingsRow),
+  ),
+  matching: find.byType(SettingsSwitch),
+);
 
 void main() {
   setUpAll(loadFonts);
@@ -147,6 +162,50 @@ void main() {
     await tester.pumpAndSettle();
     expect(fake.removed, ['codex']);
     expect(fake.setUp, isEmpty);
+    d.dispose();
+  });
+
+  testWidgets("Codex's Go agent: the switch sets it, and Codex then needs "
+      'no adapter; off again, it does', (tester) async {
+    final (fake, d) = await _settings(tester, codexSetUp: false);
+    expect(find.text(goAgentDescription), findsOneWidget);
+    // In line with Codex's name, under Codex's row, above Ante's.
+    expect(
+      tester.getRect(find.text(goAgentLabel)).left,
+      tester.getRect(find.text('Codex')).left,
+    );
+    expect(
+      tester.getRect(find.text(goAgentLabel)).top,
+      greaterThan(tester.getRect(find.byType(AgentRow).at(1)).bottom - 1),
+    );
+    expect(
+      tester.getRect(find.text(goAgentLabel)).bottom,
+      lessThan(tester.getRect(find.text('Ante')).top),
+    );
+    expect(tester.widget<SettingsSwitch>(_goSwitch).value, isFalse);
+    expect(find.text('Set up'), findsOneWidget);
+    final at = tester.getRect(_goSwitch);
+    final listed = fake.calls.whereType<ListAgentsRequest>().length;
+    await tester.tap(_goSwitch);
+    await tester.pumpAndSettle();
+    expect(fake.setSettings.single.codexGoAgent, isTrue);
+    expect(fake.setSettings.single.sleepAfterMinutes, 30); // the rest kept
+    expect(fake.calls.whereType<ListAgentsRequest>().length, listed + 1);
+    expect(tester.widget<SettingsSwitch>(_goSwitch).value, isTrue);
+    expect(tester.getRect(_goSwitch), at); // the switch stays put
+    expect(find.text('Set up'), findsNothing);
+    expect(find.text('Ready'), findsNWidgets(4)); // Claude, Codex, Ante, PiG
+    await tester.tap(_goSwitch);
+    await tester.pumpAndSettle();
+    expect(fake.setSettings.last.codexGoAgent, isFalse);
+    expect(find.text('Set up'), findsOneWidget);
+    d.dispose();
+  });
+
+  testWidgets('no switch from a daemon without the setting', (tester) async {
+    final (_, d) = await _settings(tester, goAgent: null);
+    expect(find.text(goAgentLabel), findsNothing);
+    expect(find.text('Adapter 2.2.1'), findsOneWidget);
     d.dispose();
   });
 
@@ -228,6 +287,7 @@ void main() {
           tester.getRect(find.text('Update to 2.2.2')).right,
           lessThanOrEqualTo(claude.right - 14 + 0.5),
         );
+        expect(tester.getRect(_goSwitch).right, closeTo(claude.right - 14, 1));
         expectTextInside(tester, size.width);
         await render(
           tester,
@@ -237,6 +297,36 @@ void main() {
         await expectLater(
           find.byType(SettingsView),
           matchesGoldenFile('goldens/agents_${sizeName}_$name.png'),
+        );
+        d.dispose();
+      });
+    }
+
+    // Codex's Go agent on: no adapter or Set up under Codex, its switch
+    // on, at the row's edge, in a wide window and a narrow one. Rendered
+    // to look at, not kept as goldens.
+    for (final (size, sizeName) in [
+      (const Size(1700, 900), 'wide'),
+      (const Size(720, 760), 'narrow'),
+    ]) {
+      testWidgets('the page, the Go agent on, $sizeName ($name)', (
+        tester,
+      ) async {
+        final (_, d) = await _settings(
+          tester,
+          tokens: tokens,
+          goAgent: true,
+          size: size,
+        );
+        final row = tester.getRect(find.byType(SettingsRow).first);
+        expect(tester.getRect(_goSwitch).right, closeTo(row.right - 14, 1));
+        expect(tester.widget<SettingsSwitch>(_goSwitch).value, isTrue);
+        expect(find.text('Update to 2.2.2'), findsNothing);
+        expectTextInside(tester, size.width);
+        await render(
+          tester,
+          find.byType(SettingsView),
+          'agents_go_on_${sizeName}_$name',
         );
         d.dispose();
       });
