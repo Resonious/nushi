@@ -28,6 +28,19 @@ func (s *Service) Pull(ctx context.Context, ref model.GitHubRef, poll bool) (mod
 	return c.Pull(ctx, ref.Repo, ref.Number)
 }
 
+// Commits are a pull request's newest 100 commits, oldest first, and how
+// many it has.
+func (s *Service) Commits(ctx context.Context, ref model.GitHubRef, poll bool) ([]model.GitHubCommit, int, error) {
+	c, err := s.client(ctx, ref.Host)
+	if err != nil {
+		return nil, 0, err
+	}
+	if poll {
+		ctx = githubapi.Poll(ctx)
+	}
+	return c.Commits(ctx, ref.Repo, ref.Number)
+}
+
 // Issue is an issue whole.
 func (s *Service) Issue(ctx context.Context, ref model.GitHubRef, poll bool) (model.GitHubIssue, error) {
 	c, err := s.client(ctx, ref.Host)

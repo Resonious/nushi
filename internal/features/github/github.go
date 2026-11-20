@@ -30,6 +30,7 @@ type Client interface { //nolint:interfacebloat // the GitHub calls the feature 
 	Status(ctx context.Context, ids []string) (map[string]model.GitHubItem, error)
 	Items(ctx context.Context, refs []model.GitHubRef) ([]model.GitHubItem, []model.GitHubRef, error)
 	Pull(ctx context.Context, repo string, number int) (model.GitHubPull, error)
+	Commits(ctx context.Context, repo string, number int) ([]model.GitHubCommit, int, error)
 	Issue(ctx context.Context, repo string, number int) (model.GitHubIssue, error)
 	PullsByHead(ctx context.Context, repo, head string) ([]githubapi.HeadPull, time.Duration, error)
 	JobLog(ctx context.Context, repo string, job int64) (string, error)

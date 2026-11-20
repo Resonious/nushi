@@ -1279,6 +1279,16 @@ abstract final class NushiService {
     nushiv1nushi.GetGitHubIssueResponse.new,
   );
 
+  /// A pull request's newest 100 commits, oldest first, and how many it
+  /// has: asked when they show, not with each poll of GetGitHubPull.
+  /// API 127.
+  static const getGitHubCommits = connect.Spec(
+    '/$name/GetGitHubCommits',
+    connect.StreamType.unary,
+    nushiv1nushi.GetGitHubCommitsRequest.new,
+    nushiv1nushi.GetGitHubCommitsResponse.new,
+  );
+
   /// A pull request's files from its merge base to its head, both sides'
   /// texts, as GetDiff gives them.
   static const getGitHubFiles = connect.Spec(

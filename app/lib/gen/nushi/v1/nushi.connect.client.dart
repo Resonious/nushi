@@ -2617,6 +2617,26 @@ extension type NushiServiceClient(connect.Transport _transport) {
     );
   }
 
+  /// A pull request's newest 100 commits, oldest first, and how many it
+  /// has: asked when they show, not with each poll of GetGitHubPull.
+  /// API 127.
+  Future<nushiv1nushi.GetGitHubCommitsResponse> getGitHubCommits(
+    nushiv1nushi.GetGitHubCommitsRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.getGitHubCommits,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
   /// A pull request's files from its merge base to its head, both sides'
   /// texts, as GetDiff gives them.
   Future<nushiv1nushi.GetGitHubFilesResponse> getGitHubFiles(

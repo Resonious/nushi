@@ -399,6 +399,9 @@ const (
 	// NushiServiceGetGitHubIssueProcedure is the fully-qualified name of the NushiService's
 	// GetGitHubIssue RPC.
 	NushiServiceGetGitHubIssueProcedure = "/nushi.v1.NushiService/GetGitHubIssue"
+	// NushiServiceGetGitHubCommitsProcedure is the fully-qualified name of the NushiService's
+	// GetGitHubCommits RPC.
+	NushiServiceGetGitHubCommitsProcedure = "/nushi.v1.NushiService/GetGitHubCommits"
 	// NushiServiceGetGitHubFilesProcedure is the fully-qualified name of the NushiService's
 	// GetGitHubFiles RPC.
 	NushiServiceGetGitHubFilesProcedure = "/nushi.v1.NushiService/GetGitHubFiles"
@@ -930,6 +933,10 @@ type NushiServiceClient interface {
 	GetGitHubItems(context.Context, *connect.Request[v1.GetGitHubItemsRequest]) (*connect.Response[v1.GetGitHubItemsResponse], error)
 	GetGitHubPull(context.Context, *connect.Request[v1.GetGitHubPullRequest]) (*connect.Response[v1.GetGitHubPullResponse], error)
 	GetGitHubIssue(context.Context, *connect.Request[v1.GetGitHubIssueRequest]) (*connect.Response[v1.GetGitHubIssueResponse], error)
+	// A pull request's newest 100 commits, oldest first, and how many it
+	// has: asked when they show, not with each poll of GetGitHubPull.
+	// API 127.
+	GetGitHubCommits(context.Context, *connect.Request[v1.GetGitHubCommitsRequest]) (*connect.Response[v1.GetGitHubCommitsResponse], error)
 	// A pull request's files from its merge base to its head, both sides'
 	// texts, as GetDiff gives them.
 	GetGitHubFiles(context.Context, *connect.Request[v1.GetGitHubFilesRequest]) (*connect.Response[v1.GetGitHubFilesResponse], error)
@@ -1808,6 +1815,12 @@ func NewNushiServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(nushiServiceMethods.ByName("GetGitHubIssue")),
 			connect.WithClientOptions(opts...),
 		),
+		getGitHubCommits: connect.NewClient[v1.GetGitHubCommitsRequest, v1.GetGitHubCommitsResponse](
+			httpClient,
+			baseURL+NushiServiceGetGitHubCommitsProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("GetGitHubCommits")),
+			connect.WithClientOptions(opts...),
+		),
 		getGitHubFiles: connect.NewClient[v1.GetGitHubFilesRequest, v1.GetGitHubFilesResponse](
 			httpClient,
 			baseURL+NushiServiceGetGitHubFilesProcedure,
@@ -2079,6 +2092,7 @@ type nushiServiceClient struct {
 	getGitHubItems          *connect.Client[v1.GetGitHubItemsRequest, v1.GetGitHubItemsResponse]
 	getGitHubPull           *connect.Client[v1.GetGitHubPullRequest, v1.GetGitHubPullResponse]
 	getGitHubIssue          *connect.Client[v1.GetGitHubIssueRequest, v1.GetGitHubIssueResponse]
+	getGitHubCommits        *connect.Client[v1.GetGitHubCommitsRequest, v1.GetGitHubCommitsResponse]
 	getGitHubFiles          *connect.Client[v1.GetGitHubFilesRequest, v1.GetGitHubFilesResponse]
 	getGitHubJobLog         *connect.Client[v1.GetGitHubJobLogRequest, v1.GetGitHubJobLogResponse]
 	replyGitHubThread       *connect.Client[v1.ReplyGitHubThreadRequest, v1.ReplyGitHubThreadResponse]
@@ -2773,6 +2787,11 @@ func (c *nushiServiceClient) GetGitHubIssue(ctx context.Context, req *connect.Re
 	return c.getGitHubIssue.CallUnary(ctx, req)
 }
 
+// GetGitHubCommits calls nushi.v1.NushiService.GetGitHubCommits.
+func (c *nushiServiceClient) GetGitHubCommits(ctx context.Context, req *connect.Request[v1.GetGitHubCommitsRequest]) (*connect.Response[v1.GetGitHubCommitsResponse], error) {
+	return c.getGitHubCommits.CallUnary(ctx, req)
+}
+
 // GetGitHubFiles calls nushi.v1.NushiService.GetGitHubFiles.
 func (c *nushiServiceClient) GetGitHubFiles(ctx context.Context, req *connect.Request[v1.GetGitHubFilesRequest]) (*connect.Response[v1.GetGitHubFilesResponse], error) {
 	return c.getGitHubFiles.CallUnary(ctx, req)
@@ -3349,6 +3368,10 @@ type NushiServiceHandler interface {
 	GetGitHubItems(context.Context, *connect.Request[v1.GetGitHubItemsRequest]) (*connect.Response[v1.GetGitHubItemsResponse], error)
 	GetGitHubPull(context.Context, *connect.Request[v1.GetGitHubPullRequest]) (*connect.Response[v1.GetGitHubPullResponse], error)
 	GetGitHubIssue(context.Context, *connect.Request[v1.GetGitHubIssueRequest]) (*connect.Response[v1.GetGitHubIssueResponse], error)
+	// A pull request's newest 100 commits, oldest first, and how many it
+	// has: asked when they show, not with each poll of GetGitHubPull.
+	// API 127.
+	GetGitHubCommits(context.Context, *connect.Request[v1.GetGitHubCommitsRequest]) (*connect.Response[v1.GetGitHubCommitsResponse], error)
 	// A pull request's files from its merge base to its head, both sides'
 	// texts, as GetDiff gives them.
 	GetGitHubFiles(context.Context, *connect.Request[v1.GetGitHubFilesRequest]) (*connect.Response[v1.GetGitHubFilesResponse], error)
@@ -4223,6 +4246,12 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(nushiServiceMethods.ByName("GetGitHubIssue")),
 		connect.WithHandlerOptions(opts...),
 	)
+	nushiServiceGetGitHubCommitsHandler := connect.NewUnaryHandler(
+		NushiServiceGetGitHubCommitsProcedure,
+		svc.GetGitHubCommits,
+		connect.WithSchema(nushiServiceMethods.ByName("GetGitHubCommits")),
+		connect.WithHandlerOptions(opts...),
+	)
 	nushiServiceGetGitHubFilesHandler := connect.NewUnaryHandler(
 		NushiServiceGetGitHubFilesProcedure,
 		svc.GetGitHubFiles,
@@ -4625,6 +4654,8 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 			nushiServiceGetGitHubPullHandler.ServeHTTP(w, r)
 		case NushiServiceGetGitHubIssueProcedure:
 			nushiServiceGetGitHubIssueHandler.ServeHTTP(w, r)
+		case NushiServiceGetGitHubCommitsProcedure:
+			nushiServiceGetGitHubCommitsHandler.ServeHTTP(w, r)
 		case NushiServiceGetGitHubFilesProcedure:
 			nushiServiceGetGitHubFilesHandler.ServeHTTP(w, r)
 		case NushiServiceGetGitHubJobLogProcedure:
@@ -5212,6 +5243,10 @@ func (UnimplementedNushiServiceHandler) GetGitHubPull(context.Context, *connect.
 
 func (UnimplementedNushiServiceHandler) GetGitHubIssue(context.Context, *connect.Request[v1.GetGitHubIssueRequest]) (*connect.Response[v1.GetGitHubIssueResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.GetGitHubIssue is not implemented"))
+}
+
+func (UnimplementedNushiServiceHandler) GetGitHubCommits(context.Context, *connect.Request[v1.GetGitHubCommitsRequest]) (*connect.Response[v1.GetGitHubCommitsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.GetGitHubCommits is not implemented"))
 }
 
 func (UnimplementedNushiServiceHandler) GetGitHubFiles(context.Context, *connect.Request[v1.GetGitHubFilesRequest]) (*connect.Response[v1.GetGitHubFilesResponse], error) {

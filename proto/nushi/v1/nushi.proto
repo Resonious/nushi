@@ -470,6 +470,10 @@ service NushiService {
   rpc GetGitHubItems(GetGitHubItemsRequest) returns (GetGitHubItemsResponse);
   rpc GetGitHubPull(GetGitHubPullRequest) returns (GetGitHubPullResponse);
   rpc GetGitHubIssue(GetGitHubIssueRequest) returns (GetGitHubIssueResponse);
+  // A pull request's newest 100 commits, oldest first, and how many it
+  // has: asked when they show, not with each poll of GetGitHubPull.
+  // API 127.
+  rpc GetGitHubCommits(GetGitHubCommitsRequest) returns (GetGitHubCommitsResponse);
   // A pull request's files from its merge base to its head, both sides'
   // texts, as GetDiff gives them.
   rpc GetGitHubFiles(GetGitHubFilesRequest) returns (GetGitHubFilesResponse);
@@ -3689,6 +3693,9 @@ message GitHubComment {
   string review = 9;
   // The head commit a review was made on (its oid); empty for a comment.
   string commit = 10;
+  // The review a review thread's comment was made in (its id, as a
+  // review's own id here); empty for any other comment. API 127.
+  string review_id = 11;
 }
 
 // A review thread on line (from start_line) of path's side ("left", the
@@ -3709,6 +3716,12 @@ message GitHubThread {
   bool can_resolve = 12;
   bool can_unresolve = 13;
   repeated GitHubComment comments = 14;
+  // The diff above its first comment as GitHub keeps it (lines of the
+  // commit it was made on, so an outdated thread has its own): a unified
+  // diff hunk ending at the thread's line, its last 20 lines at most
+  // with its @@ header counted again for them, each line cut at 400
+  // bytes. Empty for a thread on the file. API 127.
+  string diff_hunk = 15;
 }
 
 message GitHubAnnotation {
@@ -3788,6 +3801,47 @@ message GitHubPull {
   int32 commits = 22;
   // What merging it may do. Unset from a daemon before API 96.
   GitHubMerge merge = 23;
+  // Its labels (the first 20) and assignees' logins (the first 10).
+  // When it was opened is item's created_ms. API 127.
+  repeated GitHubLabel labels = 24;
+  repeated string assignees = 25;
+  // Every review submitted (not one pending), oldest first, the latest
+  // 100: those that said nothing too, which conversation leaves out, so
+  // a thread's comments can sit under their review_id's. API 127.
+  repeated GitHubComment reviews = 26;
+}
+
+// A label: its name and color (six hex digits, no #, as GitHub gives it).
+message GitHubLabel {
+  string name = 1;
+  string color = 2;
+}
+
+// A pull request's commit.
+message GitHubCommit {
+  // Its full id; the app shortens it.
+  string oid = 1;
+  // Its message's first line.
+  string headline = 2;
+  // Its author's login when the commit's email is a GitHub account's,
+  // else empty; author_name is the name git has.
+  string author = 3;
+  string author_name = 4;
+  int64 committed_ms = 5;
+  // Its checks: "success", "failure", "pending", or "" for none.
+  string checks = 6;
+}
+
+message GetGitHubCommitsRequest {
+  GitHubRef ref = 1;
+  bool quiet = 2;
+}
+
+message GetGitHubCommitsResponse {
+  // The newest 100, oldest first.
+  repeated GitHubCommit commits = 1;
+  // How many it has (more than 100 aren't listed).
+  int32 total = 2;
 }
 
 // What merging an open pull request may do, as GitHub says for the viewer.

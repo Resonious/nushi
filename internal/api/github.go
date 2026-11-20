@@ -147,6 +147,21 @@ func (s *server) GetGitHubPull(ctx context.Context, req *connect.Request[nushiv1
 	return connect.NewResponse(&nushiv1.GetGitHubPullResponse{Pull: pullProto(p)}), nil
 }
 
+// GetGitHubCommits answers a pull request's newest 100 commits, asked when
+// they show rather than with each poll of the pull request.
+func (s *server) GetGitHubCommits(ctx context.Context, req *connect.Request[nushiv1.GetGitHubCommitsRequest]) (*connect.Response[nushiv1.GetGitHubCommitsResponse], error) {
+	cs, total, err := s.GitHub.Commits(ctx, ref(req.Msg.Ref), req.Msg.Quiet)
+	if err != nil {
+		return nil, githubErr(err)
+	}
+	out := &nushiv1.GetGitHubCommitsResponse{Total: int32(total)}
+	for _, c := range cs {
+		out.Commits = append(out.Commits, &nushiv1.GitHubCommit{Oid: c.OID, Headline: c.Headline, Author: c.Author, AuthorName: c.AuthorName,
+			CommittedMs: unixMs(c.Committed), Checks: c.Checks})
+	}
+	return connect.NewResponse(out), nil
+}
+
 func (s *server) GetGitHubIssue(ctx context.Context, req *connect.Request[nushiv1.GetGitHubIssueRequest]) (*connect.Response[nushiv1.GetGitHubIssueResponse], error) {
 	is, err := s.GitHub.Issue(ctx, ref(req.Msg.Ref), req.Msg.Quiet)
 	if err != nil {
@@ -232,7 +247,7 @@ func ghItemsProto(items []model.GitHubItem) []*nushiv1.GitHubItem {
 
 func ghCommentProto(c model.GitHubComment) *nushiv1.GitHubComment {
 	return &nushiv1.GitHubComment{Id: c.ID, Author: c.Author, Outside: github.Outside(c.Association),
-		Bot: c.Bot, Body: c.Body, Url: c.URL, CreatedMs: unixMs(c.Created), Review: c.Review, Commit: c.Commit}
+		Bot: c.Bot, Body: c.Body, Url: c.URL, CreatedMs: unixMs(c.Created), Review: c.Review, Commit: c.Commit, ReviewId: c.ReviewID}
 }
 
 func ghCommentsProto(cs []model.GitHubComment) []*nushiv1.GitHubComment {
@@ -248,14 +263,19 @@ func pullProto(p model.GitHubPull) *nushiv1.GitHubPull {
 		Base: p.Base, Head: p.Head, HeadRepo: p.HeadRepo, CrossRepo: p.CrossRepo, BaseOid: p.BaseOID, HeadOid: p.HeadOID,
 		Mergeable: p.Mergeable, MergeState: p.MergeState, Additions: int32(p.Additions), Deletions: int32(p.Deletions),
 		ChangedFiles: int32(p.ChangedFiles), Conversation: ghCommentsProto(p.Conversation), PendingReview: p.PendingReview,
-		PendingComments: int32(p.PendingComments), Commits: int32(p.Commits), Merge: mergeProto(p)}
+		PendingComments: int32(p.PendingComments), Commits: int32(p.Commits), Merge: mergeProto(p), Assignees: p.Assignees,
+		Reviews: ghCommentsProto(p.Reviews)}
+	for _, l := range p.Labels {
+		out.Labels = append(out.Labels, &nushiv1.GitHubLabel{Name: l.Name, Color: l.Color})
+	}
 	for _, r := range p.Reviewers {
 		out.Reviewers = append(out.Reviewers, &nushiv1.GitHubReviewer{Login: r.Login, State: r.State, Team: r.Team, CodeOwner: r.CodeOwner})
 	}
 	for _, t := range p.Threads {
 		out.Threads = append(out.Threads, &nushiv1.GitHubThread{Id: t.ID, Path: t.Path, Side: t.Side, Line: int32(t.Line), StartLine: int32(t.StartLine),
 			OriginalLine: int32(t.OriginalLine), OriginalStartLine: int32(t.OriginalStartLine), OnFile: t.OnFile, Outdated: t.Outdated,
-			Resolved: t.Resolved, CanReply: t.CanReply, CanResolve: t.CanResolve, CanUnresolve: t.CanUnresolve, Comments: ghCommentsProto(t.Comments)})
+			Resolved: t.Resolved, CanReply: t.CanReply, CanResolve: t.CanResolve, CanUnresolve: t.CanUnresolve, Comments: ghCommentsProto(t.Comments),
+			DiffHunk: t.DiffHunk})
 	}
 	for _, c := range p.Runs {
 		pc := &nushiv1.GitHubCheck{Id: c.ID, Name: c.Name, Workflow: c.Workflow, App: c.App, State: c.State, Failed: github.Failed(c), Url: c.URL,

@@ -29497,6 +29497,7 @@ class GitHubComment extends $pb.GeneratedMessage {
     $fixnum.Int64? createdMs,
     $core.String? review,
     $core.String? commit,
+    $core.String? reviewId,
   }) {
     final result = GitHubComment._();
     if (id != null) result.id = id;
@@ -29508,6 +29509,7 @@ class GitHubComment extends $pb.GeneratedMessage {
     if (createdMs != null) result.createdMs = createdMs;
     if (review != null) result.review = review;
     if (commit != null) result.commit = commit;
+    if (reviewId != null) result.reviewId = reviewId;
     return result;
   }
 
@@ -29533,6 +29535,7 @@ class GitHubComment extends $pb.GeneratedMessage {
     ..aInt64(8, _omitFieldNames ? '' : 'createdMs')
     ..aOS(9, _omitFieldNames ? '' : 'review')
     ..aOS(10, _omitFieldNames ? '' : 'commit')
+    ..aOS(11, _omitFieldNames ? '' : 'reviewId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -29641,6 +29644,17 @@ class GitHubComment extends $pb.GeneratedMessage {
   $core.bool hasCommit() => $_has(8);
   @$pb.TagNumber(10)
   void clearCommit() => $_clearField(10);
+
+  /// The review a review thread's comment was made in (its id, as a
+  /// review's own id here); empty for any other comment. API 127.
+  @$pb.TagNumber(11)
+  $core.String get reviewId => $_getSZ(9);
+  @$pb.TagNumber(11)
+  set reviewId($core.String value) => $_setString(9, value);
+  @$pb.TagNumber(11)
+  $core.bool hasReviewId() => $_has(9);
+  @$pb.TagNumber(11)
+  void clearReviewId() => $_clearField(11);
 }
 
 /// A review thread on line (from start_line) of path's side ("left", the
@@ -29662,6 +29676,7 @@ class GitHubThread extends $pb.GeneratedMessage {
     $core.bool? canResolve,
     $core.bool? canUnresolve,
     $core.Iterable<GitHubComment>? comments,
+    $core.String? diffHunk,
   }) {
     final result = GitHubThread._();
     if (id != null) result.id = id;
@@ -29678,6 +29693,7 @@ class GitHubThread extends $pb.GeneratedMessage {
     if (canResolve != null) result.canResolve = canResolve;
     if (canUnresolve != null) result.canUnresolve = canUnresolve;
     if (comments != null) result.comments.addAll(comments);
+    if (diffHunk != null) result.diffHunk = diffHunk;
     return result;
   }
 
@@ -29709,6 +29725,7 @@ class GitHubThread extends $pb.GeneratedMessage {
     ..aOB(13, _omitFieldNames ? '' : 'canUnresolve')
     ..pPM<GitHubComment>(14, _omitFieldNames ? '' : 'comments',
         subBuilder: GitHubComment.$_createMessage)
+    ..aOS(15, _omitFieldNames ? '' : 'diffHunk')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -29852,6 +29869,20 @@ class GitHubThread extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(14)
   $pb.PbList<GitHubComment> get comments => $_getList(13);
+
+  /// The diff above its first comment as GitHub keeps it (lines of the
+  /// commit it was made on, so an outdated thread has its own): a unified
+  /// diff hunk ending at the thread's line, its last 20 lines at most
+  /// with its @@ header counted again for them, each line cut at 400
+  /// bytes. Empty for a thread on the file. API 127.
+  @$pb.TagNumber(15)
+  $core.String get diffHunk => $_getSZ(14);
+  @$pb.TagNumber(15)
+  set diffHunk($core.String value) => $_setString(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasDiffHunk() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearDiffHunk() => $_clearField(15);
 }
 
 class GitHubAnnotation extends $pb.GeneratedMessage {
@@ -30280,6 +30311,9 @@ class GitHubPull extends $pb.GeneratedMessage {
     $core.int? pendingComments,
     $core.int? commits,
     GitHubMerge? merge,
+    $core.Iterable<GitHubLabel>? labels,
+    $core.Iterable<$core.String>? assignees,
+    $core.Iterable<GitHubComment>? reviews,
   }) {
     final result = GitHubPull._();
     if (item != null) result.item = item;
@@ -30304,6 +30338,9 @@ class GitHubPull extends $pb.GeneratedMessage {
     if (pendingComments != null) result.pendingComments = pendingComments;
     if (commits != null) result.commits = commits;
     if (merge != null) result.merge = merge;
+    if (labels != null) result.labels.addAll(labels);
+    if (assignees != null) result.assignees.addAll(assignees);
+    if (reviews != null) result.reviews.addAll(reviews);
     return result;
   }
 
@@ -30348,6 +30385,11 @@ class GitHubPull extends $pb.GeneratedMessage {
     ..aI(22, _omitFieldNames ? '' : 'commits')
     ..aOM<GitHubMerge>(23, _omitFieldNames ? '' : 'merge',
         subBuilder: GitHubMerge.$_createMessage)
+    ..pPM<GitHubLabel>(24, _omitFieldNames ? '' : 'labels',
+        subBuilder: GitHubLabel.$_createMessage)
+    ..pPS(25, _omitFieldNames ? '' : 'assignees')
+    ..pPM<GitHubComment>(26, _omitFieldNames ? '' : 'reviews',
+        subBuilder: GitHubComment.$_createMessage)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -30556,6 +30598,356 @@ class GitHubPull extends $pb.GeneratedMessage {
   void clearMerge() => $_clearField(23);
   @$pb.TagNumber(23)
   GitHubMerge ensureMerge() => $_ensure(21);
+
+  /// Its labels (the first 20) and assignees' logins (the first 10).
+  /// When it was opened is item's created_ms. API 127.
+  @$pb.TagNumber(24)
+  $pb.PbList<GitHubLabel> get labels => $_getList(22);
+
+  @$pb.TagNumber(25)
+  $pb.PbList<$core.String> get assignees => $_getList(23);
+
+  /// Every review submitted (not one pending), oldest first, the latest
+  /// 100: those that said nothing too, which conversation leaves out, so
+  /// a thread's comments can sit under their review_id's. API 127.
+  @$pb.TagNumber(26)
+  $pb.PbList<GitHubComment> get reviews => $_getList(24);
+}
+
+/// A label: its name and color (six hex digits, no #, as GitHub gives it).
+class GitHubLabel extends $pb.GeneratedMessage {
+  factory GitHubLabel({
+    $core.String? name,
+    $core.String? color,
+  }) {
+    final result = GitHubLabel._();
+    if (name != null) result.name = name;
+    if (color != null) result.color = color;
+    return result;
+  }
+
+  GitHubLabel._();
+
+  factory GitHubLabel.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GitHubLabel()..mergeFromBuffer(data, registry);
+  factory GitHubLabel.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GitHubLabel()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GitHubLabel',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: GitHubLabel.$_createMessage)
+    ..aOS(1, _omitFieldNames ? '' : 'name')
+    ..aOS(2, _omitFieldNames ? '' : 'color')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GitHubLabel clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GitHubLabel copyWith(void Function(GitHubLabel) updates) =>
+      super.copyWith((message) => updates(message as GitHubLabel))
+          as GitHubLabel;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use GitHubLabel() / GitHubLabel.new instead')
+  static GitHubLabel create() => GitHubLabel._();
+  static $pb.GeneratedMessage $_createMessage() => GitHubLabel._();
+  @$core.override
+  GitHubLabel createEmptyInstance() => GitHubLabel._();
+  @$core.pragma('dart2js:noInline')
+  static GitHubLabel getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GitHubLabel>(
+          GitHubLabel.$_createMessage);
+  static GitHubLabel? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get name => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set name($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasName() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearName() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get color => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set color($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasColor() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearColor() => $_clearField(2);
+}
+
+/// A pull request's commit.
+class GitHubCommit extends $pb.GeneratedMessage {
+  factory GitHubCommit({
+    $core.String? oid,
+    $core.String? headline,
+    $core.String? author,
+    $core.String? authorName,
+    $fixnum.Int64? committedMs,
+    $core.String? checks,
+  }) {
+    final result = GitHubCommit._();
+    if (oid != null) result.oid = oid;
+    if (headline != null) result.headline = headline;
+    if (author != null) result.author = author;
+    if (authorName != null) result.authorName = authorName;
+    if (committedMs != null) result.committedMs = committedMs;
+    if (checks != null) result.checks = checks;
+    return result;
+  }
+
+  GitHubCommit._();
+
+  factory GitHubCommit.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GitHubCommit()..mergeFromBuffer(data, registry);
+  factory GitHubCommit.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GitHubCommit()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GitHubCommit',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: GitHubCommit.$_createMessage)
+    ..aOS(1, _omitFieldNames ? '' : 'oid')
+    ..aOS(2, _omitFieldNames ? '' : 'headline')
+    ..aOS(3, _omitFieldNames ? '' : 'author')
+    ..aOS(4, _omitFieldNames ? '' : 'authorName')
+    ..aInt64(5, _omitFieldNames ? '' : 'committedMs')
+    ..aOS(6, _omitFieldNames ? '' : 'checks')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GitHubCommit clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GitHubCommit copyWith(void Function(GitHubCommit) updates) =>
+      super.copyWith((message) => updates(message as GitHubCommit))
+          as GitHubCommit;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use GitHubCommit() / GitHubCommit.new instead')
+  static GitHubCommit create() => GitHubCommit._();
+  static $pb.GeneratedMessage $_createMessage() => GitHubCommit._();
+  @$core.override
+  GitHubCommit createEmptyInstance() => GitHubCommit._();
+  @$core.pragma('dart2js:noInline')
+  static GitHubCommit getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GitHubCommit>(
+          GitHubCommit.$_createMessage);
+  static GitHubCommit? _defaultInstance;
+
+  /// Its full id; the app shortens it.
+  @$pb.TagNumber(1)
+  $core.String get oid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set oid($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasOid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearOid() => $_clearField(1);
+
+  /// Its message's first line.
+  @$pb.TagNumber(2)
+  $core.String get headline => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set headline($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasHeadline() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearHeadline() => $_clearField(2);
+
+  /// Its author's login when the commit's email is a GitHub account's,
+  /// else empty; author_name is the name git has.
+  @$pb.TagNumber(3)
+  $core.String get author => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set author($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAuthor() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAuthor() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get authorName => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set authorName($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAuthorName() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAuthorName() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get committedMs => $_getI64(4);
+  @$pb.TagNumber(5)
+  set committedMs($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasCommittedMs() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearCommittedMs() => $_clearField(5);
+
+  /// Its checks: "success", "failure", "pending", or "" for none.
+  @$pb.TagNumber(6)
+  $core.String get checks => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set checks($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasChecks() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearChecks() => $_clearField(6);
+}
+
+class GetGitHubCommitsRequest extends $pb.GeneratedMessage {
+  factory GetGitHubCommitsRequest({
+    GitHubRef? ref,
+    $core.bool? quiet,
+  }) {
+    final result = GetGitHubCommitsRequest._();
+    if (ref != null) result.ref = ref;
+    if (quiet != null) result.quiet = quiet;
+    return result;
+  }
+
+  GetGitHubCommitsRequest._();
+
+  factory GetGitHubCommitsRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetGitHubCommitsRequest()..mergeFromBuffer(data, registry);
+  factory GetGitHubCommitsRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetGitHubCommitsRequest()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetGitHubCommitsRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: GetGitHubCommitsRequest.$_createMessage)
+    ..aOM<GitHubRef>(1, _omitFieldNames ? '' : 'ref',
+        subBuilder: GitHubRef.$_createMessage)
+    ..aOB(2, _omitFieldNames ? '' : 'quiet')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetGitHubCommitsRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetGitHubCommitsRequest copyWith(
+          void Function(GetGitHubCommitsRequest) updates) =>
+      super.copyWith((message) => updates(message as GetGitHubCommitsRequest))
+          as GetGitHubCommitsRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated(
+      'Use GetGitHubCommitsRequest() / GetGitHubCommitsRequest.new instead')
+  static GetGitHubCommitsRequest create() => GetGitHubCommitsRequest._();
+  static $pb.GeneratedMessage $_createMessage() => GetGitHubCommitsRequest._();
+  @$core.override
+  GetGitHubCommitsRequest createEmptyInstance() => GetGitHubCommitsRequest._();
+  @$core.pragma('dart2js:noInline')
+  static GetGitHubCommitsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetGitHubCommitsRequest>(
+          GetGitHubCommitsRequest.$_createMessage);
+  static GetGitHubCommitsRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  GitHubRef get ref => $_getN(0);
+  @$pb.TagNumber(1)
+  set ref(GitHubRef value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRef() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRef() => $_clearField(1);
+  @$pb.TagNumber(1)
+  GitHubRef ensureRef() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $core.bool get quiet => $_getBF(1);
+  @$pb.TagNumber(2)
+  set quiet($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasQuiet() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearQuiet() => $_clearField(2);
+}
+
+class GetGitHubCommitsResponse extends $pb.GeneratedMessage {
+  factory GetGitHubCommitsResponse({
+    $core.Iterable<GitHubCommit>? commits,
+    $core.int? total,
+  }) {
+    final result = GetGitHubCommitsResponse._();
+    if (commits != null) result.commits.addAll(commits);
+    if (total != null) result.total = total;
+    return result;
+  }
+
+  GetGitHubCommitsResponse._();
+
+  factory GetGitHubCommitsResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetGitHubCommitsResponse()..mergeFromBuffer(data, registry);
+  factory GetGitHubCommitsResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetGitHubCommitsResponse()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetGitHubCommitsResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: GetGitHubCommitsResponse.$_createMessage)
+    ..pPM<GitHubCommit>(1, _omitFieldNames ? '' : 'commits',
+        subBuilder: GitHubCommit.$_createMessage)
+    ..aI(2, _omitFieldNames ? '' : 'total')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetGitHubCommitsResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetGitHubCommitsResponse copyWith(
+          void Function(GetGitHubCommitsResponse) updates) =>
+      super.copyWith((message) => updates(message as GetGitHubCommitsResponse))
+          as GetGitHubCommitsResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated(
+      'Use GetGitHubCommitsResponse() / GetGitHubCommitsResponse.new instead')
+  static GetGitHubCommitsResponse create() => GetGitHubCommitsResponse._();
+  static $pb.GeneratedMessage $_createMessage() => GetGitHubCommitsResponse._();
+  @$core.override
+  GetGitHubCommitsResponse createEmptyInstance() =>
+      GetGitHubCommitsResponse._();
+  @$core.pragma('dart2js:noInline')
+  static GetGitHubCommitsResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetGitHubCommitsResponse>(
+          GetGitHubCommitsResponse.$_createMessage);
+  static GetGitHubCommitsResponse? _defaultInstance;
+
+  /// The newest 100, oldest first.
+  @$pb.TagNumber(1)
+  $pb.PbList<GitHubCommit> get commits => $_getList(0);
+
+  /// How many it has (more than 100 aren't listed).
+  @$pb.TagNumber(2)
+  $core.int get total => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set total($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTotal() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTotal() => $_clearField(2);
 }
 
 /// What merging an open pull request may do, as GitHub says for the viewer.
@@ -35559,6 +35951,14 @@ class NushiServiceApi {
           $pb.ClientContext? ctx, GetGitHubIssueRequest request) =>
       _client.invoke<GetGitHubIssueResponse>(ctx, 'NushiService',
           'GetGitHubIssue', request, GetGitHubIssueResponse());
+
+  /// A pull request's newest 100 commits, oldest first, and how many it
+  /// has: asked when they show, not with each poll of GetGitHubPull.
+  /// API 127.
+  $async.Future<GetGitHubCommitsResponse> getGitHubCommits(
+          $pb.ClientContext? ctx, GetGitHubCommitsRequest request) =>
+      _client.invoke<GetGitHubCommitsResponse>(ctx, 'NushiService',
+          'GetGitHubCommits', request, GetGitHubCommitsResponse());
 
   /// A pull request's files from its merge base to its head, both sides'
   /// texts, as GetDiff gives them.

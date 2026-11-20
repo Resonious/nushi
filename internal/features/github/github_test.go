@@ -114,6 +114,11 @@ func (f *fakeClient) Pull(_ context.Context, _ string, n int) (model.GitHubPull,
 	return model.GitHubPull{ID: "PR_1", Head: "subtract"}, nil
 }
 
+func (f *fakeClient) Commits(_ context.Context, repo string, n int) ([]model.GitHubCommit, int, error) {
+	f.note(fmt.Sprint("commits ", repo, "#", n))
+	return []model.GitHubCommit{{OID: strings.Repeat("c", 40), Headline: "Subtract", Author: "mira"}}, 1, f.fail
+}
+
 func (f *fakeClient) PullsByHead(_ context.Context, repo, head string) ([]githubapi.HeadPull, time.Duration, error) {
 	f.note("heads " + repo + " " + head)
 	return f.heads[repo+" "+head], 0, f.fail
@@ -716,6 +721,9 @@ func TestUnknownHosts(t *testing.T) {
 		if _, err := w.s.Pull(ctx, model.GitHubRef{Host: h, Repo: "a/b", Number: 1}, false); err == nil {
 			t.Errorf("%q: asked", h)
 		}
+		if _, _, err := w.s.Commits(ctx, model.GitHubRef{Host: h, Repo: "a/b", Number: 1}, false); err == nil {
+			t.Errorf("%q: asked", h)
+		}
 		w.s.States(ctx, []model.ChatGitHub{{Host: h, ID: "PR_1"}}, false)
 	}
 	if len(w.asked) != 0 || len(w.clients) != 0 {
@@ -756,7 +764,7 @@ func TestCheckOut(t *testing.T) {
 }
 
 // TestOnlyAskedWrites: reading everything there is (the inbox, states, a
-// pull request, an issue, files, a log, a checkout) writes nothing to
+// pull request, its commits, an issue, files, a log, a checkout) writes nothing to
 // GitHub; only the user's writes do.
 func TestOnlyAskedWrites(t *testing.T) {
 	w := newWorld(t)
@@ -765,6 +773,9 @@ func TestOnlyAskedWrites(t *testing.T) {
 	_, _ = w.s.Inbox(ctx, "github.com", githubapi.InboxFilter{}, true)
 	w.s.States(ctx, []model.ChatGitHub{{Host: "github.com", ID: "PR_1"}}, true)
 	_, _ = w.s.Pull(ctx, ref, true)
+	if cs, total, err := w.s.Commits(ctx, ref, true); err != nil || total != 1 || cs[0].Author != "mira" {
+		t.Fatalf("commits %+v %d %v", cs, total, err)
+	}
 	_, _ = w.s.Issue(ctx, ref, true)
 	_, _ = w.s.Files(ctx, ref, strings.Repeat("a", 40), strings.Repeat("b", 40))
 	_, _ = w.s.JobTail(ctx, ref, 7)
