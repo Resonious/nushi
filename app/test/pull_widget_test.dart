@@ -235,15 +235,23 @@ void main() {
     fake.emit(EventsResponse(chatId: 'c', seq: Int64(3), status: ChatStatus()));
     await _later(tester, const Duration(seconds: 3));
     expect(_asks(fake), ++asked);
-    // The window to the front: asked, unless it just was (within 10 s).
-    void front() => tester.binding
+    // The window to the front: asked, unless it was within the minute
+    // (ADR 0140). Away, every 5 minutes.
+    final binding = tester.binding;
+    addTearDown(
+      () => binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed),
+    );
+    binding
       ..handleAppLifecycleStateChanged(AppLifecycleState.inactive)
       ..handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    front();
     await tester.pump();
     expect(_asks(fake), asked);
-    await _later(tester, const Duration(seconds: 11));
-    front();
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await _later(tester, const Duration(minutes: 1)); // the minute's ask
+    expect(_asks(fake), ++asked);
+    await _later(tester, const Duration(minutes: 2));
+    expect(_asks(fake), asked, reason: 'away: 5 minutes on');
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pump();
     expect(_asks(fake), ++asked);
     d.dispose();
@@ -290,7 +298,11 @@ void main() {
     final rows = fake.calls.whereType<GetGitHubItemsRequest>();
     expect(rows, isNotEmpty);
     expect(rows.every((r) => r.chatId == 'c'), isTrue);
-    expect(fake.calls.whereType<GetGitHubPullRequest>(), isNotEmpty);
+    expect(
+      fake.calls.whereType<GetGitHubPullRequest>(),
+      isEmpty,
+      reason: 'read whole only while its tab shows (ADR 0140)',
+    );
     d.dispose();
   }, variant: onMac);
 
@@ -378,7 +390,10 @@ void main() {
     d.dispose();
     final q = pull()..threads.clear();
     final (e, _) = await _app(tester, whole: q);
-    pullSeen.value = {'c': pullSeen.value['c']! - 1};
+    // One comment more than the chat has seen (ADR 0140: counted).
+    pullSeenComments.value = {
+      'c': {q.item.id: q.item.comments - 1},
+    };
     await tester.pump();
     expect(
       _inPull(find.textContaining('1 new comment', findRichText: true)),
@@ -412,8 +427,10 @@ void main() {
       'Start work; its comments seen', (tester) async {
     final (d, fake) = await _app(tester, whole: pull());
     // A comment came since the chat first saw it.
-    final unseen = pullSeen.value['c']! - 1;
-    pullSeen.value = {'c': unseen};
+    final whole = pull();
+    pullSeenComments.value = {
+      'c': {whole.item.id: whole.item.comments - 1},
+    };
     await tester.pump();
     expect(find.text('Pull request'), findsNWidgets(2)); // switch, widget
     await tester.tap(_inPull(find.text('Add Sub and Neg')));
@@ -438,7 +455,9 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('A first look.', findRichText: true), findsOneWidget);
-    expect(pullSeen.value['c'], unseen + 1); // the newest comment's time
+    expect(pullSeenComments.value['c'], {
+      whole.item.id: whole.item.comments,
+    }, reason: 'seen');
     await tester.tap(find.text('Checks  1 failing'));
     await tester.pumpAndSettle();
     expect(find.byType(GitHubChecks), findsOneWidget);

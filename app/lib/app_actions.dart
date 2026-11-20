@@ -491,6 +491,16 @@ Future<void> _quit() async {
   }
 }
 
+/// Clean up the worktree…: with the tab's pull request whole, for its
+/// branch on GitHub (read now unless the tab shows it; ADR 0140).
+Future<void> _cleanUp(BuildContext context, Daemon d, ChatState chat) async {
+  final cp = ChatPull.of(d, chat);
+  final l = cp.current;
+  final pull = l == null ? null : await cp.whole(context, l);
+  if (!context.mounted) return;
+  await showCleanUp(context, d, chat, pull: pull);
+}
+
 /// The spell check ⌘; goes through in [chat], while it runs: its prompt
 /// box's, or its side chat's if that one has the focus. The box must be in
 /// sight.
@@ -590,9 +600,7 @@ List<AppAction> chatActions(
           chat.worktree != null &&
           d.daemonApi >= cleanUpApi &&
           !CleanUpJob.of(chat).running,
-      run: () => unawaited(
-        showCleanUp(context, d, chat!, pull: ChatPull.of(d, chat).pull),
-      ),
+      run: () => unawaited(_cleanUp(context, d, chat!)),
     ),
     AppAction(
       .archive,

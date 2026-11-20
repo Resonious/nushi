@@ -1,6 +1,6 @@
 # 0138. A chat needs you when its pull request's checks fail
 
-Status: accepted, 2026-11-20.
+Status: accepted, 2026-11-20. Amended by [0140](0140-what-a-chats-pull-requests-ask-of-github.md): the states are the rows' items, every 5 minutes while the window isn't in front.
 
 ## Context
 A chat's pull request fails its checks after the agent's turn has ended, often while another chat shows. The sidebar's red dot says it, but nothing asks for the user. Claude's Auto-fix acts on a failure by itself; Nushi won't (issue #86): a fix costs money, and a failing log is others' text. Watching from the daemon would reach GitHub on its own, which ADR 0045 rules out.

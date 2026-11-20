@@ -12,6 +12,7 @@ import 'package:nushi/chat_colors.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/drafts.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/pull_link.dart' show rowItem;
 
 /// The seven agents, as the daemon lists them: installed, ready.
 List<Agent> readyAgents() => [
@@ -60,7 +61,8 @@ class FakeDaemon implements Transport {
 
   /// Answers calls the fake doesn't know (Jira's, git's): an answer (or a
   /// Future of one, to answer later), or null for the empty one; a thrown
-  /// error fails the call. Every such call is in [calls].
+  /// error fails the call. Every such call is in [calls]. GetGitHubItems
+  /// it leaves unanswered are its GetGitHubPull answers' rows.
   Object? Function(Object input)? answer;
   final calls = <Object>[];
 
@@ -178,6 +180,9 @@ class FakeDaemon implements Transport {
     }
     var other = answer?.call(input);
     if (other is Future) other = await other;
+    if (other == null && input is GetGitHubItemsRequest) {
+      other = await _itemsFromWhole(input);
+    }
     calls.add(input);
     if (input is DeleteChatRequest) _delete(input.chatId);
     final out =
@@ -277,6 +282,29 @@ class FakeDaemon implements Transport {
     );
     chats.add(fork);
     emit(EventsResponse(chatId: id, chat: fork));
+  }
+
+  /// GetGitHubItems answered as the daemon would from what [answer] says
+  /// of each pull request whole (its row, `rowItem`), for a test that
+  /// answers only GetGitHubPull; null when it says none.
+  Future<GetGitHubItemsResponse?> _itemsFromWhole(
+    GetGitHubItemsRequest input,
+  ) async {
+    final items = <GitHubItem>[];
+    for (final ref in input.refs) {
+      Object? whole;
+      try {
+        whole = answer?.call(GetGitHubPullRequest(ref: ref));
+        if (whole is Future) whole = await whole;
+      } on Object {
+        continue; // the whole one fails: the row isn't known
+      }
+      if (whole is GetGitHubPullResponse &&
+          whole.pull.item.ref.number == ref.number) {
+        items.add(rowItem(whole.pull));
+      }
+    }
+    return items.isEmpty ? null : GetGitHubItemsResponse(items: items);
   }
 
   /// Pins [ids] as the daemon does: each at its place, every other chat

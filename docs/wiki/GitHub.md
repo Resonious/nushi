@@ -156,6 +156,6 @@ After the merge, **Clean up…** offers to delete the worktree and branches and 
 - A chat's row in the sidebar gets a red dot while its checks fail, and an amber one while they run.
 - For a pull request from a fork, the chat's branch isn't linked to the fork, so a push from the chat doesn't reach the pull request.
 - A fine-grained token works, but sees only one owner's repositories and can't show checks.
-- While Nushi runs it checks your chats' pull requests' state once a minute. It reads a whole pull request only while the GitHub view or its chat is open, and only writes what you send.
+- While Nushi runs it checks your chats' pull requests' state once a minute, every 5 minutes while its window is in the background. It reads a whole pull request only while the GitHub view or its Pull request tab shows it, and only writes what you send.
 - Text you're writing in a reply or review stays if you switch to another chat. It's lost if you quit Nushi.
 - The [Phone](Phone) shows a one-line pull request summary in the chat (`+2` for the others) and the link chips, but has no Pull request tab.

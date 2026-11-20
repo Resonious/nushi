@@ -105,7 +105,7 @@ bool itemReady(GitHubItem it) =>
       return (
         words: it.base.isEmpty ? 'Merged' : 'Merged into ${it.base}',
         color: t.textMuted,
-        cleanUp: offer ? () => _cleanUp(context, cp, link) : null,
+        cleanUp: offer ? () => cleanUpPull(context, cp, link) : null,
       );
     case 'closed':
       return (
@@ -158,7 +158,8 @@ List<int> openOnBranch(ChatPull cp, GitHubLink link) {
   ];
 }
 
-Future<void> _cleanUp(
+/// Clean up… on [link]: read whole first, for its branch (ADR 0063).
+Future<void> cleanUpPull(
   BuildContext context,
   ChatPull cp,
   GitHubLink link,
@@ -237,7 +238,7 @@ List<MenuEntry> pullRowMenu(
         'Clean up…',
         onPick: CleanUpJob.of(cp.chat).running
             ? null
-            : () => unawaited(_cleanUp(context, cp, link)),
+            : () => unawaited(cleanUpPull(context, cp, link)),
       ),
     MenuEntry(
       'Unlink',

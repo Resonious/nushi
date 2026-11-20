@@ -10,12 +10,16 @@ import 'package:nushi/theme/theme.dart';
 /// phone's chat bar) shows it: its number in its state's color, then for
 /// an open one what's going on (failing or running checks, changes
 /// requested or a reviewer waiting, threads not resolved, new comments),
-/// or "Ready" once it can merge; "Draft", "Merged", "Closed" else.
+/// or "Ready" once it can merge; "Draft", "Merged", "Closed" else. From
+/// the pull request whole, else from its row's [item] (ADR 0140: the
+/// widget doesn't read it whole), where a reviewer waited on is a review
+/// still required.
 Widget pullSummary(
   BuildContext context,
   NushiTheme theme, {
   required int number,
   required GitHubPull? pull,
+  GitHubItem? item,
   int unread = 0,
   double size = 12,
   VoidCallback? onCleanUp,
@@ -34,16 +38,25 @@ Widget pullSummary(
       ],
     ),
   );
-  final it = p?.item;
+  final it = p?.item ?? item;
   final parts = <Widget>[];
-  if (p != null && it != null) {
-    final n = countChecks(p);
-    final open = p.threads.where((x) => !x.resolved).length;
-    final waiting = p.reviewers.any((r) => r.state == 'requested');
+  if (it != null) {
+    final counted = p == null ? null : countChecks(p);
+    final failing = counted?.failing ?? it.checkCounts.failed;
+    final running = counted?.running ?? it.checkCounts.running;
+    final open = p == null
+        ? it.unresolved
+        : p.threads.where((x) => !x.resolved).length;
+    final waiting = p == null
+        ? it.review == 'review_required'
+        : p.reviewers.any((r) => r.state == 'requested');
     // As the Merge control says it, from a daemon that has it (API 96).
-    final ready = p.hasMerge()
-        ? p.merge.blocks.isEmpty && !it.draft
-        : mergeStateReady(p);
+    final ready = switch (p) {
+      null =>
+        !it.draft && (it.mergeState == 'clean' || it.mergeState == 'has_hooks'),
+      _ when p.hasMerge() => p.merge.blocks.isEmpty && !it.draft,
+      _ => mergeStateReady(p),
+    };
     switch (it.state) {
       case 'merged' || 'closed':
         parts.add(
@@ -54,22 +67,22 @@ Widget pullSummary(
       case _ when ready:
         parts.add(count(Icons.merge_type, t.done, 'Ready', 'Ready to merge'));
       default:
-        if (n.failing > 0) {
+        if (failing > 0) {
           parts.add(
             count(
               Icons.cancel_outlined,
               t.crashed,
-              '${n.failing}',
-              'Checks: ${n.failing} failing',
+              '$failing',
+              'Checks: $failing failing',
             ),
           );
-        } else if (n.running > 0) {
+        } else if (running > 0) {
           parts.add(
             count(
               Icons.schedule,
               t.needs,
-              '${n.running}',
-              'Checks: ${n.running} running',
+              '$running',
+              'Checks: $running running',
             ),
           );
         }

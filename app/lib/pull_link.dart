@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 import 'package:nushi/chat.dart';
@@ -11,9 +10,12 @@ import 'package:nushi/github_pull.dart' show openPullAt;
 import 'package:nushi/pull_cache.dart';
 import 'package:nushi/pull_lights.dart' show PullSection;
 import 'package:nushi/pull_live_card.dart' show LivePull, livePullOf;
+import 'package:nushi/pull_polls.dart';
 import 'package:nushi/pull_states.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/widgets.dart';
+
+export 'package:nushi/pull_polls.dart';
 
 /// The daemon finds and links a chat's pull request (FindChatPull,
 /// LinkChatPull, Chat.pull).
@@ -26,34 +28,6 @@ const chatPullApi = 81;
 /// rows' ask names the chat (GetGitHubItemsRequest.chat_id).
 const branchPullApi = 119;
 
-/// How often a chat's pull request is asked for while the chat is open:
-/// an open one, or a branch without one yet, each minute; one merged or
-/// closed every 15 minutes (as Orca does).
-const pullWidgetPoll = Duration(minutes: 1);
-const pullDonePoll = Duration(minutes: 15);
-
-/// How long until [p] is asked for again: [pullDonePoll] once merged or
-/// closed, else [pullWidgetPoll] (also before it's known).
-Duration pullPoll(GitHubPull? p) {
-  final state = p?.item.state;
-  return state == 'merged' || state == 'closed' ? pullDonePoll : pullWidgetPoll;
-}
-
-/// When the chat's pull request was last looked for and how often it is,
-/// as the widget's tooltip says it: "Checked 20 s ago · every minute".
-String checkedWords(DateTime? checked, Duration every, DateTime now) {
-  final m = every.inMinutes;
-  final often = m == 1 ? 'every minute' : 'every $m minutes';
-  if (checked == null) return 'Not checked yet · $often';
-  final age = now.difference(checked);
-  final when = switch (age) {
-    _ when age.inSeconds < 60 => '${max(age.inSeconds, 0)} s',
-    _ when age.inMinutes < 60 => '${age.inMinutes} min',
-    _ => '${age.inHours} h',
-  };
-  return 'Checked $when ago · $often';
-}
-
 /// Whether a tool call may have pushed the chat's branch or opened its
 /// pull request: `git push`, `gh pr create`, or a GitHub MCP server's
 /// create_pull_request, once it completed.
@@ -65,29 +39,6 @@ bool pushedOrOpened(Item it) {
   return RegExp(r'\bgit\b[^\n|;&]*\spush\b').hasMatch(what) ||
       RegExp(r'\bgh\s+pr\s+create\b').hasMatch(what) ||
       what.contains('create_pull_request');
-}
-
-/// The times of a pull request's comments: its conversation's and its
-/// review threads'.
-Iterable<int> commentTimes(GitHubPull p) => [
-  for (final c in p.conversation) c.createdMs.toInt(),
-  for (final x in p.threads)
-    for (final c in x.comments) c.createdMs.toInt(),
-];
-
-/// The comments of [chat]'s pull request newer than those seen (when its
-/// tab last showed, or when the widget first saw it).
-int unreadComments(String chat, GitHubPull p) {
-  final times = commentTimes(p);
-  final seen = pullSeen.value[chat];
-  return seen == null ? 0 : times.where((ms) => ms > seen).length;
-}
-
-/// Marks [p]'s comments seen in [chat].
-void markPullSeen(String chat, GitHubPull p) {
-  final newest = commentTimes(p).fold(0, (a, b) => a > b ? a : b);
-  if ((pullSeen.value[chat] ?? -1) >= newest) return;
-  pullSeen.value = {...pullSeen.value, chat: newest};
 }
 
 /// [l] as the item store keys it.
@@ -187,14 +138,18 @@ List<GitHubLink> orderPulls(
 }
 
 /// A chat's pull request, as its widget and the header's tab show it: what
-/// the daemon found of its folder (repository, branch) and the pull
-/// request whole. It asks while the chat is open ([follow]), whether the
-/// details panel shows or not: at once, then on [pullWidgetPoll] (quietly),
-/// 3 s after a tool call pushed or opened one and after a turn ends, and
-/// when the window comes to the front. Each ask that finds one links it
-/// (the daemon's FindChatPull; from API 119 only for a branch a tool call
-/// of the chat pushed, and GitHub isn't asked for another); only Unlink
-/// keeps that one off.
+/// the daemon found of its folder (repository, branch), the rows' items
+/// and, while the Pull request tab shows it ([showTab]), the pull request
+/// whole. It asks while the chat is open ([follow]), whether the details
+/// panel shows or not: at once, 3 s after a tool call pushed or opened one
+/// and after a turn ends, when the window comes to the front, and on its
+/// timer (quietly; [every]). The timer's ask is only what nothing else
+/// asks (ADR 0140): the branch's pull request while the chat has none
+/// open, the rows the chats' states don't ask for, and the whole one only
+/// while the tab shows. Each ask that finds one links it (the daemon's
+/// FindChatPull; from API 119 only for a branch a tool call of the chat
+/// pushed, and GitHub isn't asked for another); only Unlink keeps that one
+/// off.
 class ChatPull extends ChangeNotifier {
   /// The one of [chat].
   factory of(Daemon daemon, ChatState chat) =>
@@ -236,6 +191,8 @@ class ChatPull extends ChangeNotifier {
   String? error;
 
   int _followers = 0;
+  int _tabs = 0;
+  DateTime? _wholeAt;
   Timer? _timer;
   Timer? _soon;
   AppLifecycleListener? _front;
@@ -294,8 +251,13 @@ class ChatPull extends ChangeNotifier {
     return rowItem(p);
   }
 
-  /// [link]'s new comments: known for the one read whole.
+  /// [link]'s new comments: those its row's item counts past what was
+  /// seen ([unreadCount]); the one read whole's, from a daemon before the
+  /// rows' items.
   int unreadOf(GitHubLink link) {
+    if (GitHubItems.of(daemon).look(addressOf(link)).item case final it?) {
+      return unreadCount(chat.id, it);
+    }
     final p = pull;
     final l = current;
     if (p == null || l == null || pullKey(l) != pullKey(link)) return 0;
@@ -303,11 +265,12 @@ class ChatPull extends ChangeNotifier {
   }
 
   /// [link]'s pull request whole, for Fix checks, Merge…, Clean up…: the
-  /// tab's when it's that one, else asked of GitHub now; null, said under
-  /// [context], when it can't be.
+  /// tab's when it shows that one (read on its timer), else asked of
+  /// GitHub now; null, said under [context], when it can't be.
   Future<GitHubPull?> whole(BuildContext context, GitHubLink link) async {
     final l = current;
-    if (pull case final p? when l != null && pullKey(l) == pullKey(link)) {
+    if (pull case final p?
+        when _readsWhole && l != null && pullKey(l) == pullKey(link)) {
       return p;
     }
     try {
@@ -344,12 +307,89 @@ class ChatPull extends ChangeNotifier {
   }
 
   /// When it was last looked for and how often, as the widget's tooltip
-  /// says it: "Checked 20 s ago · every minute".
-  String get checkedText => checkedWords(_asked, every, clock());
+  /// says it: "Checked 20 s ago · every minute". Its rows' items are the
+  /// chats' states' when those ask for them.
+  String get checkedText {
+    final states = PullStates.of(daemon);
+    final rows = _statesAsk ? states.asked : null;
+    final asked = [
+      ?_asked,
+      ?rows,
+    ].fold<DateTime?>(null, (a, b) => a == null || b.isAfter(a) ? b : a);
+    return checkedWords(asked, _statesAsk ? states.every : every, clock());
+  }
 
-  /// How long until the next ask on the timer: a minute, or 15 for a
-  /// pull request merged or closed.
-  Duration get every => pullPoll(pull);
+  /// How long until the next ask on the timer: a minute, or 15 once every
+  /// pull request of the chat is merged or closed; 5 at least while the
+  /// window isn't in front (ADR 0140).
+  Duration get every {
+    final items = [for (final l in chat.pulls) itemOf(l)];
+    final done =
+        items.isNotEmpty && items.every((it) => itemPoll(it) == pullDonePoll);
+    return polledEvery(
+      _readsWhole && pull != null
+          ? pullPoll(pull)
+          : done
+          ? pullDonePoll
+          : pullWidgetPoll,
+    );
+  }
+
+  /// The pull request is read whole: while the tab shows it, or from a
+  /// daemon before the rows' items, which the widget then reads from it.
+  bool get _readsWhole => _tabs > 0 || daemon.daemonApi < githubItemsApi;
+
+  /// Whether the chats' states ask for the rows' items each minute (from
+  /// the daemon whose items say their checks' commit; ADR 0140): the
+  /// timer then leaves them be.
+  bool get _statesAsk =>
+      daemon.daemonApi >= statesFromItemsApi && PullStates.of(daemon).watching;
+
+  /// The Pull request tab shows the pull request: it's read whole from now
+  /// on, at once unless read a moment ago.
+  void showTab() {
+    _tabs++;
+    unawaited(_showWhole());
+  }
+
+  bool get _wholeFresh {
+    final at = _wholeAt;
+    return pull != null &&
+        keptAt == null &&
+        at != null &&
+        clock().difference(at) < const Duration(seconds: 10);
+  }
+
+  /// The tab's pull request whole, read now unless a moment ago: after the
+  /// ask under way, or alone when the rest was asked a moment ago.
+  Future<void> _showWhole() async {
+    if (_asking case final a?) await a;
+    if (_wholeFresh || _tabs == 0) return;
+    final asked = _asked;
+    if (asked == null ||
+        clock().difference(asked) >= const Duration(seconds: 10)) {
+      await refresh();
+      return;
+    }
+    _asking = () async {
+      try {
+        await _readWhole(false);
+      } on Object catch (e) {
+        error = errorText(e);
+        _back.failed(e);
+      }
+    }();
+    await _asking!.whenComplete(() {
+      _asking = null;
+      notifyListeners();
+    });
+  }
+
+  /// The tab no longer shows it.
+  void hideTab() {
+    if (_tabs > 0) _tabs--;
+    if (_tabs == 0) _schedule(); // the whole one's pace no longer applies
+  }
 
   /// Follows the chat (its pane shows): asks now, on [pullWidgetPoll], after
   /// a tool call that pushed or opened a pull request, when a turn ends
@@ -363,9 +403,9 @@ class ChatPull extends ChangeNotifier {
           if (i.status == 'completed') i.id,
       ]);
       chat.addListener(_chatChanged);
-      _front = AppLifecycleListener(
-        onResume: () => unawaited(refresh(again: false)),
-      );
+      // Back in front: what the slower timer away would have asked, if
+      // it's due by the minute's pace (ADR 0140).
+      _front = AppLifecycleListener(onResume: _resumed);
     }
     unawaited(refresh(again: false));
     if (_asking == null) _schedule(); // asked within 10 s: none now
@@ -381,6 +421,15 @@ class ChatPull extends ChangeNotifier {
     _soon?.cancel();
     _timer?.cancel();
     _back.cancel();
+  }
+
+  void _resumed() {
+    final asked = _asked;
+    if (asked == null || clock().difference(asked) >= pullWidgetPoll) {
+      unawaited(refresh(quiet: true, polled: true));
+    } else {
+      _schedule();
+    }
   }
 
   // An ask the daemon was gone for, made again once it is back rather than
@@ -421,14 +470,20 @@ class ChatPull extends ChangeNotifier {
     final due = (_asked ?? at).add(every).difference(at);
     _timer = Timer(
       due.isNegative ? Duration.zero : due,
-      () => unawaited(refresh(quiet: true)),
+      () => unawaited(refresh(quiet: true, polled: true)),
     );
   }
 
   /// Asks the daemon for the chat's pull request (it looks on GitHub and
-  /// links what it finds), then for the linked one whole; one ask at a
-  /// time, and with [again] false none within 10 s of the last.
-  Future<void> refresh({bool quiet = false, bool again = true}) {
+  /// links what it finds), its rows' items, then for the one the tab shows
+  /// whole while it does; one ask at a time, and with [again] false none
+  /// within 10 s of the last. [polled] (the timer's) asks only what nothing
+  /// else does (ADR 0140).
+  Future<void> refresh({
+    bool quiet = false,
+    bool again = true,
+    bool polled = false,
+  }) {
     final asked = _asked;
     if (_asking case final a?) return a;
     if (!again &&
@@ -436,7 +491,7 @@ class ChatPull extends ChangeNotifier {
         clock().difference(asked) < const Duration(seconds: 10)) {
       return Future.value();
     }
-    return _asking = _ask(quiet).whenComplete(() {
+    return _asking = _ask(quiet, polled: polled).whenComplete(() {
       _asking = null;
       _asked = clock();
       _schedule();
@@ -451,13 +506,19 @@ class ChatPull extends ChangeNotifier {
     await refresh();
   }
 
-  Future<void> _ask(bool quiet) async {
+  Future<void> _ask(bool quiet, {bool polled = false}) async {
     if (daemon.daemonApi < chatPullApi) return;
     _back.cancel();
     try {
       // An archived chat finds nothing new (ADR 0059's amendment): its
-      // rows are asked all the same.
-      if (!chat.archived || daemon.daemonApi < branchPullApi) {
+      // rows are asked all the same. The timer looks for the branch's
+      // pull request only while the chat has none open: a push from the
+      // chat, a turn's end and the window to the front still look.
+      final open =
+          daemon.daemonApi >= githubItemsApi &&
+          chat.pulls.any((l) => itemOf(l)?.state == 'open');
+      if ((!chat.archived || daemon.daemonApi < branchPullApi) &&
+          !(polled && open)) {
         final f = await daemon.client.findChatPull(
           FindChatPullRequest(chatId: chat.id, quiet: quiet),
         );
@@ -469,39 +530,61 @@ class ChatPull extends ChangeNotifier {
         );
         error = f.error.isEmpty ? null : f.error;
       }
-      await _rows(quiet);
+      await _rows(quiet, polled: polled);
       final l = current;
       if (l == null) {
         pull = null;
         keptAt = null;
-      } else {
-        final ref = l.asRef;
-        final r = await daemon.client.getGitHubPull(
-          GetGitHubPullRequest(ref: ref, quiet: quiet),
-        );
-        pull = r.pull;
-        keptAt = null;
-        keepPull(ref, r.pull);
-        PullStates.of(daemon).put(r.pull.item);
-        _recheck(r.pull);
-        // The comments there when the chat first saw it aren't new.
-        if (!pullSeen.value.containsKey(chat.id)) markPullSeen(chat.id, r.pull);
+      } else if (_readsWhole) {
+        await _readWhole(quiet);
       }
+      _seenFirst();
     } on Object catch (e) {
       error = errorText(e);
       _back.failed(e);
     }
   }
 
-  /// The rows' items, all in one call a host (GetGitHubItems), from a
-  /// daemon that has it.
-  Future<void> _rows(bool quiet) async {
-    if (daemon.daemonApi < githubItemsApi || chat.pulls.isEmpty) return;
-    await GitHubItems.of(daemon).ask(
-      [for (final l in chat.pulls) addressOf(l)],
-      quiet: quiet,
-      chat: chat.id,
+  /// Reads the tab's pull request whole.
+  Future<void> _readWhole(bool quiet) async {
+    final l = current;
+    if (l == null) return;
+    final ref = l.asRef;
+    final r = await daemon.client.getGitHubPull(
+      GetGitHubPullRequest(ref: ref, quiet: quiet),
     );
+    pull = r.pull;
+    keptAt = null;
+    _wholeAt = clock();
+    keepPull(ref, r.pull);
+    PullStates.of(daemon).put(r.pull.item);
+    _recheck(r.pull);
+    // The comments there when the chat first saw it aren't new.
+    if (!pullSeen.value.containsKey(chat.id)) markPullSeen(chat.id, r.pull);
+  }
+
+  /// The rows' items, all in one call a host (GetGitHubItems), from a
+  /// daemon that has it; on the timer ([polled]) only those the chats'
+  /// states don't ask for.
+  Future<void> _rows(bool quiet, {bool polled = false}) async {
+    if (daemon.daemonApi < githubItemsApi || chat.pulls.isEmpty) return;
+    final skip = polled && _statesAsk;
+    final ask = [
+      for (final l in chat.pulls)
+        if (!skip || l.id.isEmpty) addressOf(l),
+    ];
+    if (ask.isEmpty) return;
+    await GitHubItems.of(daemon).ask(ask, quiet: quiet, chat: chat.id);
+  }
+
+  /// The comments the chat's pull requests have when it first knows them
+  /// aren't new.
+  void _seenFirst() {
+    for (final l in chat.pulls) {
+      if (GitHubItems.of(daemon).look(addressOf(l)).item case final it?) {
+        seenComments(chat.id, it);
+      }
+    }
   }
 
   /// GitHub works out whether a pull request merges when it's asked, so

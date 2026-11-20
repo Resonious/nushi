@@ -1,6 +1,6 @@
 # 0117. GitHub links are chips with a hover card; a chat has several pull requests, each a row of the PR widget
 
-Status: accepted, 2026-11-14. Amends [0059](0059-a-chats-pull-request.md) (one pull request a chat) and [0092](0092-the-details-panel-is-claude-codes-rail.md) (the PR widget). Amended 2026-11-16: how they join (below).
+Status: accepted, 2026-11-14. Amends [0059](0059-a-chats-pull-request.md) (one pull request a chat) and [0092](0092-the-details-panel-is-claude-codes-rail.md) (the PR widget). Amended 2026-11-16: how they join (below). Amended by [0140](0140-what-a-chats-pull-requests-ask-of-github.md): fetching.
 
 ## Context
 The owner liked three things in Claude's desktop app: a pull request or issue link in a message is an inline chip (its icon, `owner/repo#N · title`) with a hover card (state, author, age, size); its rail lists a session's pull requests, one row each (icon in the state's color, title, `#N +adds −dels`, a CI badge `● 1/2` with a popover, a ⋯ menu); and a session has several. In Nushi such a link is underlined text, a chat has one pull request (`ChatRecord.Pull`: found by its branch's head or linked by hand), and the PR widget is a tall summary of it (checks bar, reviewers, threads with Address, the Merge control, comments). An agent that opens two pull requests, or a stack, leaves all but one outside the chat. Claude's Auto-fix is out of scope (the roadmap's "Fixing CI from the chat").

@@ -42,7 +42,8 @@ Future<(Daemon, FakeDaemon)> _open(
   )..pull = fixtureLink;
   final fake = FakeDaemon([c])
     ..answer = (input) => switch (input) {
-      GetGitHubStatesRequest() => GetGitHubStatesResponse(items: [now()]),
+      // The chats' states: their rows (API 133).
+      GetGitHubItemsRequest() => GetGitHubItemsResponse(items: [now()]),
       FindChatPullRequest() => FindChatPullResponse(
         host: 'github.com',
         repo: fixtureRepo,
@@ -129,7 +130,7 @@ void main() {
     );
     expect(chat.phase, ChatPhase.waiting);
     expect(find.byTooltip('needs you'), findsOneWidget, reason: 'the row');
-    final asked = fake.calls.whereType<GetGitHubStatesRequest>().length;
+    final asked = fake.calls.whereType<GetGitHubItemsRequest>().length;
     final pulls = fake.calls.whereType<GetGitHubPullRequest>().length;
 
     await tester.tap(find.text('Ask to fix'));
@@ -143,14 +144,16 @@ void main() {
     expect(chat.needsYou, isFalse);
     expect(checksSeen.value['c'], ['PR_412@b2']);
     expect(
-      fake.calls.whereType<GetGitHubStatesRequest>().length,
+      fake.calls.whereType<GetGitHubItemsRequest>().length,
       asked,
       reason: 'no ask of its own',
     );
     expect(
       fake.calls.whereType<GetGitHubPullRequest>().length,
-      pulls,
-      reason: "the tab's pull request, already read",
+      pulls + 1,
+      reason:
+          'read whole for its failed checks: the tab, which would '
+          'have it, shows the chat',
     );
 
     // Each ask after: the same failure stays quiet.

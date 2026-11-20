@@ -59,7 +59,8 @@ Future<Future<void> Function()> _open(
   viewport(tester, const Size(1700, 1000));
   final fake = FakeDaemon(chats)
     ..answer = (input) => switch (input) {
-      GetGitHubStatesRequest() => GetGitHubStatesResponse(
+      // The chats' states: their rows (API 133).
+      GetGitHubItemsRequest() => GetGitHubItemsResponse(
         items: [item(412, 'Speed up CI', checks: 'pending')],
       ),
       _ => null,

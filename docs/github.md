@@ -71,7 +71,7 @@ A chat finds its pull request by itself once it pushed its branch: the one whose
 
 It looks:
 
-- when the chat opens, and each minute while it's open (the details panel shown or not), unless it's archived;
+- when the chat opens, and each minute while it's open (the details panel shown or not) and has no open pull request, unless it's archived;
 - a few seconds after the agent pushes or runs `gh pr create`, and after each turn;
 - when Nushi's window comes to the front.
 
@@ -91,7 +91,7 @@ A click opens the Pull request tab on it. The checks, the reviewers, the threads
 
 While the chat shows, a tool call of its that opens a pull request (`gh pr create`, a `create_pull_request` tool) or merges one of its own (`gh pr merge`, a `merge_pull_request` tool) gets a card after its turn group: a filled card with the state pill, `owner/repo #n · author · age`, the title, the files and `+adds −dels` as tags, and under a hairline the checks in words or the row's cue. A click opens the tab on it; right-click is the row's ⋯. It lives in the app's memory only: leaving the chat, or quitting, drops it (ADR 0117).
 
-The rows are asked each minute while the chat is open, in one `GetGitHubItems` call a host; the tab's pull request is read whole as before. The widget's ⋯ links one by hand; without one it says "No pull request linked for `branch`", with Link…, whose dialog offers the branch's pull request first when there is one.
+The rows come with the chats' states, asked each minute for every chat in one `GetGitHubItems` call a host; the pull request is read whole only while its Pull request tab shows it, or as Fix checks, Merge… or Clean up… starts ([ADR 0140](adr/0140-what-a-chats-pull-requests-ask-of-github.md)). New comments are those its count has past what the chat last saw. The widget's ⋯ links one by hand; without one it says "No pull request linked for `branch`", with Link…, whose dialog offers the branch's pull request first when there is one.
 
 The header's chip is the chat's pull requests: the primary's icon, number and badges (a narrow header drops the badges first), then `+2`; its hover is the card for one, the rows for several; a click opens the tab, which with several starts with a menu field of the rows (its pick remembered for the chat).
 
@@ -170,6 +170,6 @@ The widget then shows each part as it goes and what it kept, with Restore branch
 
 ### Elsewhere
 
-- A chat's row in the sidebar gets a red dot while any of its open pull requests' checks fail, amber while they run. The chats' states are asked each minute while the app runs (`GetGitHubStates`, one query a host).
+- A chat's row in the sidebar gets a red dot while any of its open pull requests' checks fail, amber while they run. The chats' states are asked each minute while the app runs (their rows, one query a host; `GetGitHubStates` from a daemon before API 133): every 15 minutes once all are merged or closed, every 5 while Nushi's window isn't in front ([ADR 0140](adr/0140-what-a-chats-pull-requests-ask-of-github.md)).
 - A failure on a commit the user hasn't acted on makes the chat need you, once the agent is done: a bar over the composer, "Checks failed on #n", with Ask to fix (Fix checks' cards into the box, nothing sent) and ✕. Acted on, the same failure stays quiet; a later commit's flags it again; one there when the chat was first seen doesn't ([ADR 0138](adr/0138-a-chat-needs-you-when-its-checks-fail.md)).
 - The phone shows the widget's one-line summary in the chat's bar (the number in its state's color, failing or running checks, changes requested or a reviewer waited on, open threads; or Ready, Draft, Merged, Closed), asked each minute while the chat shows, then `+2` for its other pull requests (ADR 0117). A tap opens it on GitHub; with several, a sheet of their rows, each opening GitHub. A message's link chips are there too; a tap opens the card as a sheet, with Open on GitHub. No linking or unlinking on the phone. The phone has no Pull request tab, so no Merge control; the daemon lets a paired phone merge as it lets it post a review ([ADR 0069](adr/0069-merging-a-pull-request.md)).
