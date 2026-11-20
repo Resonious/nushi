@@ -95,7 +95,7 @@ void main() {
     );
     expect(
       workflowState(workflowCall('done').workflow),
-      'done · 12 agents · 4m 12s',
+      '12 agents · 4m 12s', // its check says done
     );
     expect(
       workflowState(workflowCall('failed').workflow),
@@ -179,20 +179,16 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('long labels and phases are cut, never how many more run', (
+  testWidgets('it says each thing once: its phase only in its state', (
     tester,
   ) async {
-    final call = workflowCall('running');
-    call.workflow
-      ..phases.add(WorkflowPhase(title: 'Verify-${'x' * 60}', started: 1))
-      ..running.clear()
-      ..running.addAll([for (var i = 0; i < 8; i++) 'review:${'long' * 14}'])
-      ..runningCount = 12;
-    await _pump(tester, call);
-    final card = tester.getRect(find.byType(WorkflowCard));
-    final more = tester.getRect(find.text(' +4'));
-    expect(more.right, lessThanOrEqualTo(card.right - 12));
-    expect(tester.takeException(), isNull);
+    await _pump(tester, workflowCall('running'));
+    expect(find.textContaining('Review 4/7'), findsOne);
+    expect(find.textContaining('Map 2/2'), findsNothing);
+    expect(find.textContaining('review:ui'), findsNothing);
+    expect(find.textContaining('five angles'), findsNothing);
+    // One line, as a subagent's row.
+    expect(tester.getSize(find.byType(WorkflowCard)).height, 36);
   });
 
   testWidgets('a click opens its pane, which lights it', (tester) async {

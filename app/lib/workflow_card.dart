@@ -14,14 +14,15 @@ import 'package:nushi/widgets.dart';
 import 'package:nushi/workflows.dart';
 
 /// A workflow where its call is in the transcript (ADR 0127): a row on the
-/// subagents' soft tint, as a subagent's, no outline, of three lines: its
-/// name and its state at the end, live ("Review 5/7 · 3 running · 4m
-/// 12s"); its description; its phases and who runs. Narrow, the state
-/// takes the second line and the phases' line goes. A click opens its pane
-/// (the accent's soft fill while open; the failures' soft red once it
-/// failed); under the pointer, a running one's mark becomes its Stop. On
-/// the phone ([Daemon.remote]) it opens nothing and has no Stop: the chat's
-/// sheet stops it.
+/// subagents' soft tint, as a subagent's, no outline, that says each
+/// thing once (#103): its name, then where it is and how long, live
+/// ("Review 5/7 · 3 running · 4m 12s"), in a subagent row's order, at the
+/// line's end. Narrow, the state takes a line of its own. How a run that
+/// didn't end well ended has a line under it. A click opens its pane (the
+/// accent's soft fill while open; the failures' soft red once it failed);
+/// under the pointer, a running one's mark becomes its Stop, in the same
+/// room. On the phone ([Daemon.remote]) it opens nothing and has no Stop:
+/// the chat's sheet stops it.
 class WorkflowCard extends StatelessWidget {
   const new(this.call, this.chat, {super.key, this.daemon, this.still = false});
 
@@ -38,6 +39,9 @@ class WorkflowCard extends StatelessWidget {
   /// transcript).
   static const narrow = 480.0;
 
+  /// Where the lines under the name start: past the icon.
+  static const double indent = 15 + 8;
+
   @override
   Widget build(BuildContext context) {
     final theme = NushiTheme.of(context);
@@ -46,7 +50,6 @@ class WorkflowCard extends StatelessWidget {
     final phone = daemon?.remote ?? false;
     final failed = w.state == 'failed';
     final live = workflowLive(w);
-    final muted = theme.ui(t.textMuted, size: 12);
     final ended = workflowEndWords(w);
     return Hover(
       builder: (context, {required hover}) => ValueListenableBuilder(
@@ -60,12 +63,7 @@ class WorkflowCard extends StatelessWidget {
               : open == call.id && !phone
               ? t.accentSoft
               : t.subagentTint,
-          padding: const EdgeInsets.fromLTRB(
-            Collapsible.side,
-            8,
-            Collapsible.side,
-            8,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: Collapsible.side),
           child: LayoutBuilder(
             builder: (context, box) {
               final narrow = box.maxWidth < WorkflowCard.narrow;
@@ -81,78 +79,100 @@ class WorkflowCard extends StatelessWidget {
                   size: 12,
                 ),
               );
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: 2,
+              final name = Row(
+                spacing: 8,
                 children: [
-                  SizedBox(
-                    height: 20,
-                    child: Row(
-                      spacing: 8,
-                      children: [
-                        Icon(
-                          Icons.account_tree_outlined,
-                          size: 15,
-                          color: failed ? t.crashed : t.subagentAccent,
-                        ),
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Shine(
-                              on: live && !w.stalled && !still,
-                              child: workflowName(context, call),
-                            ),
-                          ),
-                        ),
-                        // The name takes the room; the state ends the line,
-                        // half of it at most. Where the row is narrow (a
-                        // phone's) the state has a line of its own.
-                        if (!narrow)
-                          ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: math.min(320, box.maxWidth / 2),
-                            ),
-                            child: state,
-                          ),
-                        if (hover && !phone && live && daemon != null)
-                          stopButton(context, daemon!, chat, call.id, size: 13)
-                        else
-                          TaskMark(w.state),
-                        if (!phone)
-                          Icon(
-                            Icons.chevron_right,
-                            size: 15,
-                            color: t.textSecondary,
-                          ),
-                      ],
+                  Icon(
+                    Icons.account_tree_outlined,
+                    size: 15,
+                    color: failed ? t.crashed : t.subagentAccent,
+                  ),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Shine(
+                        on: live && !w.stalled && !still,
+                        child: workflowName(context, call),
+                      ),
                     ),
                   ),
-                  if (narrow)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 15 + 8),
+                  // The name takes the room; the state ends its line,
+                  // half of the card at most.
+                  if (!narrow)
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: math.min(360, box.maxWidth / 2),
+                      ),
                       child: state,
                     ),
-                  if (w.description.isNotEmpty) _line(w.description, muted),
-                  // Narrow, the state says the phase it's in: the line of
-                  // phases would only be cut.
-                  if (!narrow && (w.phases.isNotEmpty || w.running.isNotEmpty))
-                    _line(
-                      [
-                        if (w.phases.isNotEmpty) phasesLine(w),
-                        if (live && w.running.isNotEmpty) w.running.join(', '),
-                      ].join('  ·  '),
-                      theme.ui(t.textSecondary, size: 12),
-                      // Long labels are cut, never how many more run.
-                      more: live && runningMore(w) > 0
-                          ? '+${runningMore(w)}'
-                          : null,
-                    ),
-                  if (ended.isNotEmpty)
-                    _line(
-                      ended,
-                      muted.copyWith(color: failed ? t.crashed : null),
-                    ),
                 ],
+              );
+              final under = [
+                if (narrow) state,
+                if (ended.isNotEmpty)
+                  Text(
+                    ended,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.ui(failed ? t.crashed : t.textMuted, size: 12),
+                  ),
+              ];
+              // One line as a subagent's row; with more, its mark and
+              // chevron stay at the middle of its end.
+              return ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minHeight: Collapsible.height,
+                ),
+                child: Row(
+                  spacing: 8,
+                  children: [
+                    Expanded(
+                      child: under.isEmpty
+                          ? SizedBox(height: Collapsible.height, child: name)
+                          : Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                spacing: 2,
+                                children: [
+                                  SizedBox(height: 20, child: name),
+                                  for (final line in under)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        left: WorkflowCard.indent,
+                                      ),
+                                      child: line,
+                                    ),
+                                ],
+                              ),
+                            ),
+                    ),
+                    // The mark and its Stop share one room, so neither
+                    // moves the state as the pointer comes and goes.
+                    SizedBox(
+                      width: _markRoom,
+                      height: _markRoom,
+                      child: Center(
+                        child: hover && !phone && live && daemon != null
+                            ? stopButton(
+                                context,
+                                daemon!,
+                                chat,
+                                call.id,
+                                size: 13,
+                              )
+                            : TaskMark(w.state),
+                      ),
+                    ),
+                    if (!phone)
+                      Icon(
+                        Icons.chevron_right,
+                        size: 15,
+                        color: t.textSecondary,
+                      ),
+                  ],
+                ),
               );
             },
           ),
@@ -160,26 +180,10 @@ class WorkflowCard extends StatelessWidget {
       ),
     );
   }
-
-  /// One line, cut at its end, then [more] whole; its indent lines up
-  /// with the name's.
-  Widget _line(String text, TextStyle style, {String? more}) => Padding(
-    padding: const EdgeInsets.only(left: 15 + 8),
-    child: Row(
-      children: [
-        Flexible(
-          child: Text(
-            text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: style,
-          ),
-        ),
-        if (more != null) Text(' $more', maxLines: 1, style: style),
-      ],
-    ),
-  );
 }
+
+/// The room of a card's mark, its Stop's size: Stop's 13 and its padding.
+const double _markRoom = 13 + 5 * 2;
 
 /// "Workflow: review-changes", the kind in bold and the subagents'
 /// accent, on one line: the card's and its pane's head, as [subagentName]

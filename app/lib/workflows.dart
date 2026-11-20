@@ -35,9 +35,10 @@ WorkflowPhase? currentPhase(Workflow w) {
 String phaseProgress(WorkflowPhase p) =>
     '${p.title} ${p.done + p.failed}/${p.started}';
 
-/// Its state line: while it runs "Review 5/7 · 3 running · 4m 12s"; at its
-/// end "done · 100 agents · 14m 05s" ("failed", "stopped", "ended" when the
-/// agent didn't say how); stalled "no activity for 1h · Review 5/7 · 3
+/// Its state line, in a subagent row's order (#103, #106): while it runs
+/// "Review 5/7 · 3 running · 4m 12s"; at its end "100 agents · 14m 05s"
+/// (done says no word: its check does; "failed", "stopped", "ended" when
+/// the agent didn't say how); stalled "no activity for 1h · Review 5/7 · 3
 /// running", without its time, which no longer ticks and would be cut
 /// first where the line is short (a phone's).
 String workflowState(Workflow w) {
@@ -58,8 +59,8 @@ String workflowState(Workflow w) {
     ].join(' · ');
   }
   return [
-    switch (w.state) {
-      'done' => 'done',
+    ?switch (w.state) {
+      'done' => null,
       'failed' => 'failed',
       'stopped' => 'stopped',
       _ => 'ended',
