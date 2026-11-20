@@ -250,7 +250,8 @@ func ghItemProto(it model.GitHubItem) *nushiv1.GitHubItem {
 		Title: it.Title, Url: it.URL, State: it.State, Draft: it.Draft, Author: it.Author, UpdatedMs: unixMs(it.Updated), Checks: it.Checks,
 		Review: it.Review, Unresolved: int32(it.Unresolved), Comments: int32(it.Comments),
 		Additions: int32(it.Additions), Deletions: int32(it.Deletions), ChangedFiles: int32(it.ChangedFiles), CreatedMs: unixMs(it.Created),
-		MergeState: it.MergeState, StateReason: it.StateReason, Base: it.Base, Head: it.Head, CheckCounts: checkCountsProto(it.CheckCounts)}
+		MergeState: it.MergeState, StateReason: it.StateReason, Base: it.Base, Head: it.Head, CheckCounts: checkCountsProto(it.CheckCounts),
+		ChecksOid: it.ChecksOID}
 }
 
 // checkCountsProto is nil for no checks.

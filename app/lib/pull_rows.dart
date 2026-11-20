@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nushi/checks_watch.dart';
 import 'package:nushi/cleanup_dialog.dart';
 import 'package:nushi/cleanup_job.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -364,6 +365,8 @@ class ChecksBadge extends StatelessWidget {
       chat: cp.chat,
       replies: () => checkReplies(cp.daemon, item.ref, p),
     );
+    // Acted on: the chat no longer needs you for it (ADR 0138).
+    ChecksWatch.of(cp.daemon).seen(cp.chat);
   }
 }
 

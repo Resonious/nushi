@@ -6488,6 +6488,7 @@ const GitHubItem$json = {
     {'1': 'state_reason', '3': 20, '4': 1, '5': 9, '10': 'stateReason'},
     {'1': 'base', '3': 21, '4': 1, '5': 9, '10': 'base'},
     {'1': 'head', '3': 22, '4': 1, '5': 9, '10': 'head'},
+    {'1': 'checks_oid', '3': 23, '4': 1, '5': 9, '10': 'checksOid'},
   ],
 };
 
@@ -6504,7 +6505,7 @@ final $typed_data.Uint8List gitHubItemDescriptor = $convert.base64Decode(
     'cxgRIAEoA1IJY3JlYXRlZE1zEj4KDGNoZWNrX2NvdW50cxgSIAEoCzIbLm51c2hpLnYxLkdpdE'
     'h1YkNoZWNrQ291bnRzUgtjaGVja0NvdW50cxIfCgttZXJnZV9zdGF0ZRgTIAEoCVIKbWVyZ2VT'
     'dGF0ZRIhCgxzdGF0ZV9yZWFzb24YFCABKAlSC3N0YXRlUmVhc29uEhIKBGJhc2UYFSABKAlSBG'
-    'Jhc2USEgoEaGVhZBgWIAEoCVIEaGVhZA==');
+    'Jhc2USEgoEaGVhZBgWIAEoCVIEaGVhZBIdCgpjaGVja3Nfb2lkGBcgASgJUgljaGVja3NPaWQ=');
 
 @$core.Deprecated('Use gitHubCheckCountsDescriptor instead')
 const GitHubCheckCounts$json = {

@@ -27,7 +27,7 @@ Nushi's words, defined once. The UI, the code and the docs use them; a new user-
 | **Notice** | A quiet line in the transcript: how a turn ended when it didn't end well, or a note of the agent's own ("Stopped by safeguards", "Compacted here"). | `Notice`, `AgentNotice` | |
 | **Permission prompt** | The agent asking to run a tool call, with its options (Allow, Deny…). You answer; Nushi never does. | `Permission` item, `PermissionCard`, `AnswerPermission` | 0007 |
 | **Question** | A form the agent asks you to fill in (Claude's AskUserQuestion), as a question card. | `Question` item, `Field`, `QuestionCard`, `AnswerQuestion` | 0009 |
-| **Needs you** | The chat waits on you: a permission prompt or a question. Amber dot, Dock badge, "Needs you ↓". | `waiting` (`ChatStatus`, `ChatPhase`), `WaitingCard` | |
+| **Needs you** | The chat waits on you: a permission prompt or a question, or its pull request's checks failed (Ask to fix). Amber dot, Dock badge, "Needs you ↓" (a prompt or question only). | `waiting` (`ChatStatus`, `ChatPhase`), `needsYou`, `WaitingCard` | 0138 |
 | **Chat states** | A chat's dot and word: needs you, working (a turn, a running workflow, or the agent on its own after a background task), in background, done, asleep, idle, new, expired, couldn't start, archived. | `ChatPhase`, `phaseWord` | |
 | **Done** | A turn ended, done or failed, while nothing showed the chat; showing it clears it. | `ChatRecord.Done`, proto `Chat.done`, `ChatState.done`, `ChatPhase.done` | |
 | **Subagent** | A helper the agent starts for a task ("Explore: find the scroll handling"). Its steps show in its row and its pane; it can be stopped alone, if its agent has a way (Ante's stops only with the turn). Its time is the time it worked, its waits left out, with its tokens once its agent reports them. | `Subagent` (`worked`, `working_since`, `tokens`), `Item.Agent`, `SubagentPane` | 0044 |
@@ -144,6 +144,7 @@ Nushi's words, defined once. The UI, the code and the docs use them; a new user-
 |---|---|---|---|
 | **Review comment** | A comment you write on a line in Changes, for the agent: Add to review, then Send review comments to agent. Once sent and its lines changed, it leaves the code for the diff's "2 sent" pill. | `ReviewComment`, `SentComments` | |
 | **Send to agent** | Put a GitHub comment, thread or failed check into the box as a reply card, to send when you're ready; Send N to agent puts what blocks the merge. Never sends by itself. | `SendToAgent`, `toAgent` | 0059 |
+| **Ask to fix** | The bar over the composer when a chat's pull request's checks newly fail ("Checks failed on #n"): puts Fix checks' cards in the box, nothing sent; its ✕ dismisses. | `ChecksFailedBar`, `ChecksWatch`, `askToFix`, `checksSeen` | 0138 |
 | **Fix checks**, **Address** | Put the failed checks, or the review threads, into the box as reply cards: the Checks tab's and the PR widget's buttons, in the send look. | `checkReplies`, `threadReplies` | 0059 |
 | **Re-run failed** | Ask GitHub to re-run the failed jobs of a pull request's failed checks' workflow runs. | `RerunGitHubChecks` | |
 | **Overview** | The Pull request tab's first tab, after GitHub's page: the merge status card, the description, Comments and the commit trail, the side column beside them (under them when narrow). | `PullOverview` | 0137 |

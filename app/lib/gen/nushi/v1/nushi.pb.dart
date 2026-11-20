@@ -27984,6 +27984,7 @@ class GitHubItem extends $pb.GeneratedMessage {
     $core.String? stateReason,
     $core.String? base,
     $core.String? head,
+    $core.String? checksOid,
   }) {
     final result = GitHubItem._();
     if (ref != null) result.ref = ref;
@@ -28008,6 +28009,7 @@ class GitHubItem extends $pb.GeneratedMessage {
     if (stateReason != null) result.stateReason = stateReason;
     if (base != null) result.base = base;
     if (head != null) result.head = head;
+    if (checksOid != null) result.checksOid = checksOid;
     return result;
   }
 
@@ -28048,6 +28050,7 @@ class GitHubItem extends $pb.GeneratedMessage {
     ..aOS(20, _omitFieldNames ? '' : 'stateReason')
     ..aOS(21, _omitFieldNames ? '' : 'base')
     ..aOS(22, _omitFieldNames ? '' : 'head')
+    ..aOS(23, _omitFieldNames ? '' : 'checksOid')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -28282,6 +28285,18 @@ class GitHubItem extends $pb.GeneratedMessage {
   $core.bool hasHead() => $_has(21);
   @$pb.TagNumber(22)
   void clearHead() => $_clearField(22);
+
+  /// The commit checks are of (its oid): the head's when they were read;
+  /// empty with no checks. Told apart, a failure on a new commit is a new
+  /// one (ADR 0138). API 129.
+  @$pb.TagNumber(23)
+  $core.String get checksOid => $_getSZ(22);
+  @$pb.TagNumber(23)
+  set checksOid($core.String value) => $_setString(22, value);
+  @$pb.TagNumber(23)
+  $core.bool hasChecksOid() => $_has(22);
+  @$pb.TagNumber(23)
+  void clearChecksOid() => $_clearField(23);
 }
 
 /// A pull request's checks at its head, by state: a neutral one is passed;

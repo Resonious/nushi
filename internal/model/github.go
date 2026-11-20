@@ -29,8 +29,12 @@ type GitHubItem struct {
 	// none), its review decision ("approved", "changes_requested",
 	// "review_required" or ""), and its review threads not resolved.
 	Checks, Review string
-	Unresolved     int
-	Comments       int
+	// The commit Checks are of (the head's, as the rollup was read), so a
+	// failure can be told from an earlier one on another commit; "" with
+	// no checks.
+	ChecksOID  string
+	Unresolved int
+	Comments   int
 	// What GetGitHubItems adds (ADR 0117; the inbox leaves them unset): a
 	// pull request's size, its checks counted, its merge state ("clean",
 	// "blocked", …, as GitHubPull's), its base and head branches; an

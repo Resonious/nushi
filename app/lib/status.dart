@@ -107,7 +107,7 @@ class ChatDot extends StatefulWidget {
 
 class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
   late bool _busy = widget.chat.busy;
-  late bool _waiting = widget.chat.waiting;
+  late bool _waiting = widget.chat.needsYou;
   late bool _stopped = widget.chat.stopping; // the user stopped the turn
   late ChatPhase _phase = widget.chat.phase;
   AnimationController? _hop; // once, as the chat starts waiting
@@ -132,7 +132,7 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
     old.chat.removeListener(_changed);
     widget.chat.addListener(_changed);
     _busy = widget.chat.busy;
-    _waiting = widget.chat.waiting;
+    _waiting = widget.chat.needsYou;
     _phase = widget.chat.phase;
     _ran = widget.chat.started != null;
     _hop?.value = 1;
@@ -162,7 +162,7 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
     if (c.busy) _since = c.started ?? _since ?? clock();
     if (c.busy && c.started != null) _ran = true;
     if (c.stopping) _stopped = true;
-    if (c.waiting && !_waiting && !reduceMotion(context)) {
+    if (c.needsYou && !_waiting && !reduceMotion(context)) {
       (_hop ??= _once(hopFor)).forward(from: 0).ignore();
     }
     final end = _busy && !c.busy
@@ -170,18 +170,18 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
         : null;
     // A done turn's check only: a check reads as success, wrong for a
     // failure (its alert and notice say so) and a stop.
-    if (end == TurnEnd.TURN_END_DONE && !c.waiting) {
+    if (end == TurnEnd.TURN_END_DONE && !c.needsYou) {
       final lasted = clock().difference(_since ?? clock());
       _sparks = widget.sparks && sparksFor(lasted);
       (_check ??= _once(_checkFor)).forward(from: 0).ignore();
     }
     if (!c.busy) _since = null;
     // Every streamed chunk notifies: only a change of state rebuilds.
-    if (c.busy == _busy && c.waiting == _waiting && c.phase == _phase) {
+    if (c.busy == _busy && c.needsYou == _waiting && c.phase == _phase) {
       return;
     }
     _busy = c.busy;
-    _waiting = c.waiting;
+    _waiting = c.needsYou;
     _phase = c.phase;
     setState(() {});
   }
@@ -216,7 +216,7 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
         break;
     }
     final doneDot = _dot(fill: t.done);
-    if (_check case final check? when check.isAnimating && !chat.waiting) {
+    if (_check case final check? when check.isAnimating && !chat.needsYou) {
       return AnimatedBuilder(
         animation: check,
         builder: (context, _) {
@@ -249,9 +249,9 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
       );
     }
     if (isDone) return doneDot;
-    final dot = chat.waiting ? _waitingDot(t) : _dot(ring: t.idle);
+    final dot = chat.needsYou ? _waitingDot(t) : _dot(ring: t.idle);
     final hop = _hop;
-    if (hop == null || !chat.waiting) return dot;
+    if (hop == null || !chat.needsYou) return dot;
     return AnimatedBuilder(
       animation: hop,
       builder: (context, child) => Transform.translate(

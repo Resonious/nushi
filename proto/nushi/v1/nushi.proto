@@ -3529,6 +3529,10 @@ message GitHubItem {
   // A pull request's base and head branches.
   string base = 21;
   string head = 22;
+  // The commit checks are of (its oid): the head's when they were read;
+  // empty with no checks. Told apart, a failure on a new commit is a new
+  // one (ADR 0138). API 129.
+  string checks_oid = 23;
 }
 
 // A pull request's checks at its head, by state: a neutral one is passed;

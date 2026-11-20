@@ -177,6 +177,10 @@ func TestIssueAndStatus(t *testing.T) {
 			t.Fatalf("%s: %+v", id, it)
 		}
 	}
+	// A pull request's checks say which commit they're of (ADR 0138).
+	if pr := st["PR_kwDOVXdqNc8AAAABKrwJXQ"]; pr.Checks != "failure" || pr.ChecksOID != "4f1c2e9a7b3d5c6e8f0a1b2c3d4e5f6a7b8c9d0e" {
+		t.Fatalf("%+v", pr)
+	}
 	if _, err := c.Issue(t.Context(), "not a repo", 2); err == nil {
 		t.Fatal("a bad repository's name")
 	}

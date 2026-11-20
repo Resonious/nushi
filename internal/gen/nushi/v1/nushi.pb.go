@@ -21596,8 +21596,12 @@ type GitHubItem struct {
 	// A closed issue's reason: "completed", "not_planned" or "".
 	StateReason string `protobuf:"bytes,20,opt,name=state_reason,json=stateReason,proto3" json:"state_reason,omitempty"`
 	// A pull request's base and head branches.
-	Base          string `protobuf:"bytes,21,opt,name=base,proto3" json:"base,omitempty"`
-	Head          string `protobuf:"bytes,22,opt,name=head,proto3" json:"head,omitempty"`
+	Base string `protobuf:"bytes,21,opt,name=base,proto3" json:"base,omitempty"`
+	Head string `protobuf:"bytes,22,opt,name=head,proto3" json:"head,omitempty"`
+	// The commit checks are of (its oid): the head's when they were read;
+	// empty with no checks. Told apart, a failure on a new commit is a new
+	// one (ADR 0138). API 129.
+	ChecksOid     string `protobuf:"bytes,23,opt,name=checks_oid,json=checksOid,proto3" json:"checks_oid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -21782,6 +21786,13 @@ func (x *GitHubItem) GetBase() string {
 func (x *GitHubItem) GetHead() string {
 	if x != nil {
 		return x.Head
+	}
+	return ""
+}
+
+func (x *GitHubItem) GetChecksOid() string {
+	if x != nil {
+		return x.ChecksOid
 	}
 	return ""
 }
@@ -28452,7 +28463,7 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\tGitHubRef\x12\x12\n" +
 	"\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n" +
 	"\x04repo\x18\x02 \x01(\tR\x04repo\x12\x16\n" +
-	"\x06number\x18\x03 \x01(\x05R\x06number\"\xfa\x04\n" +
+	"\x06number\x18\x03 \x01(\x05R\x06number\"\x99\x05\n" +
 	"\n" +
 	"GitHubItem\x12%\n" +
 	"\x03ref\x18\x01 \x01(\v2\x13.nushi.v1.GitHubRefR\x03ref\x12\x0e\n" +
@@ -28482,7 +28493,9 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"mergeState\x12!\n" +
 	"\fstate_reason\x18\x14 \x01(\tR\vstateReason\x12\x12\n" +
 	"\x04base\x18\x15 \x01(\tR\x04base\x12\x12\n" +
-	"\x04head\x18\x16 \x01(\tR\x04head\"w\n" +
+	"\x04head\x18\x16 \x01(\tR\x04head\x12\x1d\n" +
+	"\n" +
+	"checks_oid\x18\x17 \x01(\tR\tchecksOid\"w\n" +
 	"\x11GitHubCheckCounts\x12\x16\n" +
 	"\x06passed\x18\x01 \x01(\x05R\x06passed\x12\x16\n" +
 	"\x06failed\x18\x02 \x01(\x05R\x06failed\x12\x18\n" +
