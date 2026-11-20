@@ -2081,6 +2081,230 @@ class GetChatImageResponse extends $pb.GeneratedMessage {
   void clearData() => $_clearField(2);
 }
 
+class FindInChatRequest extends $pb.GeneratedMessage {
+  factory FindInChatRequest({
+    $core.String? chatId,
+    $core.String? text,
+    $core.String? before,
+  }) {
+    final result = FindInChatRequest._();
+    if (chatId != null) result.chatId = chatId;
+    if (text != null) result.text = text;
+    if (before != null) result.before = before;
+    return result;
+  }
+
+  FindInChatRequest._();
+
+  factory FindInChatRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      FindInChatRequest()..mergeFromBuffer(data, registry);
+  factory FindInChatRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      FindInChatRequest()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FindInChatRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: FindInChatRequest.$_createMessage)
+    ..aOS(1, _omitFieldNames ? '' : 'chatId')
+    ..aOS(2, _omitFieldNames ? '' : 'text')
+    ..aOS(3, _omitFieldNames ? '' : 'before')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FindInChatRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FindInChatRequest copyWith(void Function(FindInChatRequest) updates) =>
+      super.copyWith((message) => updates(message as FindInChatRequest))
+          as FindInChatRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use FindInChatRequest() / FindInChatRequest.new instead')
+  static FindInChatRequest create() => FindInChatRequest._();
+  static $pb.GeneratedMessage $_createMessage() => FindInChatRequest._();
+  @$core.override
+  FindInChatRequest createEmptyInstance() => FindInChatRequest._();
+  @$core.pragma('dart2js:noInline')
+  static FindInChatRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FindInChatRequest>(
+          FindInChatRequest.$_createMessage);
+  static FindInChatRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get chatId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set chatId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasChatId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearChatId() => $_clearField(1);
+
+  /// What to find, matched as written, case aside, as the app's find
+  /// matches what's loaded: a message's, thought's, notice's or question's
+  /// text, a tool call's or permission's title, a call's output (its input
+  /// and raw output when its content says nothing). Not diffs, plans,
+  /// forms, files or images.
+  @$pb.TagNumber(2)
+  $core.String get text => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set text($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasText() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearText() => $_clearField(2);
+
+  /// The item the search stops before (the first the client has loaded,
+  /// which it searches itself); "" for the whole chat. not_found when the
+  /// chat has no such item (it changed since the client's snapshot).
+  @$pb.TagNumber(3)
+  $core.String get before => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set before($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasBefore() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearBefore() => $_clearField(3);
+}
+
+class FindInChatResponse extends $pb.GeneratedMessage {
+  factory FindInChatResponse({
+    $core.Iterable<ChatMatch>? matches,
+    $core.bool? more,
+  }) {
+    final result = FindInChatResponse._();
+    if (matches != null) result.matches.addAll(matches);
+    if (more != null) result.more = more;
+    return result;
+  }
+
+  FindInChatResponse._();
+
+  factory FindInChatResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      FindInChatResponse()..mergeFromBuffer(data, registry);
+  factory FindInChatResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      FindInChatResponse()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FindInChatResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: FindInChatResponse.$_createMessage)
+    ..pPM<ChatMatch>(1, _omitFieldNames ? '' : 'matches',
+        subBuilder: ChatMatch.$_createMessage)
+    ..aOB(2, _omitFieldNames ? '' : 'more')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FindInChatResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FindInChatResponse copyWith(void Function(FindInChatResponse) updates) =>
+      super.copyWith((message) => updates(message as FindInChatResponse))
+          as FindInChatResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use FindInChatResponse() / FindInChatResponse.new instead')
+  static FindInChatResponse create() => FindInChatResponse._();
+  static $pb.GeneratedMessage $_createMessage() => FindInChatResponse._();
+  @$core.override
+  FindInChatResponse createEmptyInstance() => FindInChatResponse._();
+  @$core.pragma('dart2js:noInline')
+  static FindInChatResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FindInChatResponse>(
+          FindInChatResponse.$_createMessage);
+  static FindInChatResponse? _defaultInstance;
+
+  /// The items with matches, in the transcript's order.
+  @$pb.TagNumber(1)
+  $pb.PbList<ChatMatch> get matches => $_getList(0);
+
+  /// The search stopped at its bound (5000 items with matches): the rest
+  /// aren't counted.
+  @$pb.TagNumber(2)
+  $core.bool get more => $_getBF(1);
+  @$pb.TagNumber(2)
+  set more($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMore() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMore() => $_clearField(2);
+}
+
+/// An item with matches of a find, and how many.
+class ChatMatch extends $pb.GeneratedMessage {
+  factory ChatMatch({
+    $core.String? itemId,
+    $core.int? count,
+  }) {
+    final result = ChatMatch._();
+    if (itemId != null) result.itemId = itemId;
+    if (count != null) result.count = count;
+    return result;
+  }
+
+  ChatMatch._();
+
+  factory ChatMatch.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      ChatMatch()..mergeFromBuffer(data, registry);
+  factory ChatMatch.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      ChatMatch()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ChatMatch',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: ChatMatch.$_createMessage)
+    ..aOS(1, _omitFieldNames ? '' : 'itemId')
+    ..aI(2, _omitFieldNames ? '' : 'count')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatMatch clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatMatch copyWith(void Function(ChatMatch) updates) =>
+      super.copyWith((message) => updates(message as ChatMatch)) as ChatMatch;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use ChatMatch() / ChatMatch.new instead')
+  static ChatMatch create() => ChatMatch._();
+  static $pb.GeneratedMessage $_createMessage() => ChatMatch._();
+  @$core.override
+  ChatMatch createEmptyInstance() => ChatMatch._();
+  @$core.pragma('dart2js:noInline')
+  static ChatMatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ChatMatch>(ChatMatch.$_createMessage);
+  static ChatMatch? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get itemId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set itemId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasItemId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearItemId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get count => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set count($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCount() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCount() => $_clearField(2);
+}
+
 class GetChatItemsResponse extends $pb.GeneratedMessage {
   factory GetChatItemsResponse({
     $core.Iterable<Item>? items,
@@ -35796,6 +36020,16 @@ class NushiServiceApi {
           $pb.ClientContext? ctx, GetChatItemsRequest request) =>
       _client.invoke<GetChatItemsResponse>(
           ctx, 'NushiService', 'GetChatItems', request, GetChatItemsResponse());
+
+  /// Counts a query's matches in each of a chat's items, its whole
+  /// transcript as the daemon holds it (what GetChat and GetChatItems
+  /// give), for ⌘F in a long chat: the app counts the matches in what it
+  /// hasn't loaded and loads the part a step goes to (ADR 0144). Not on a
+  /// device's channel: the phone has no find. API 136.
+  $async.Future<FindInChatResponse> findInChat(
+          $pb.ClientContext? ctx, FindInChatRequest request) =>
+      _client.invoke<FindInChatResponse>(
+          ctx, 'NushiService', 'FindInChat', request, FindInChatResponse());
 
   /// One of a chat's images, by its hash: for a client that took the chat's
   /// items with image_refs, as each image is about to show. Only an image

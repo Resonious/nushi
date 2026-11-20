@@ -31,7 +31,7 @@ import (
 )
 
 // Version is the API version reported by Ping. Bump it when methods are added.
-const Version = 135
+const Version = 136
 
 // Release is the version a release build stamps in (make package's
 // VERSION, through -ldflags -X), "" in a build that isn't packaged
@@ -161,6 +161,8 @@ var macOnly = map[string]bool{
 	// chats' titles (ADR 0136); the call checks for the Mac's socket too
 	// (onMac).
 	nushiv1connect.NushiServiceGetUsageProcedure: true,
+	// The phone has no find in a chat.
+	nushiv1connect.NushiServiceFindInChatProcedure: true,
 }
 
 // ForDevices is the API a paired device's channel gets, which the

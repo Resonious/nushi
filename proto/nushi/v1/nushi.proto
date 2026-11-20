@@ -36,6 +36,12 @@ service NushiService {
   // A chat's items before one of them, a page at a time: for a client that
   // took only the recent part (GetChatRequest.recent), as it scrolls up.
   rpc GetChatItems(GetChatItemsRequest) returns (GetChatItemsResponse);
+  // Counts a query's matches in each of a chat's items, its whole
+  // transcript as the daemon holds it (what GetChat and GetChatItems
+  // give), for ⌘F in a long chat: the app counts the matches in what it
+  // hasn't loaded and loads the part a step goes to (ADR 0144). Not on a
+  // device's channel: the phone has no find. API 136.
+  rpc FindInChat(FindInChatRequest) returns (FindInChatResponse);
   // One of a chat's images, by its hash: for a client that took the chat's
   // items with image_refs, as each image is about to show. Only an image
   // of that chat's own items. API 110.
@@ -807,6 +813,34 @@ message GetChatImageResponse {
   reserved 1;
   reserved "mime_type";
   bytes data = 2;
+}
+
+message FindInChatRequest {
+  string chat_id = 1;
+  // What to find, matched as written, case aside, as the app's find
+  // matches what's loaded: a message's, thought's, notice's or question's
+  // text, a tool call's or permission's title, a call's output (its input
+  // and raw output when its content says nothing). Not diffs, plans,
+  // forms, files or images.
+  string text = 2;
+  // The item the search stops before (the first the client has loaded,
+  // which it searches itself); "" for the whole chat. not_found when the
+  // chat has no such item (it changed since the client's snapshot).
+  string before = 3;
+}
+
+message FindInChatResponse {
+  // The items with matches, in the transcript's order.
+  repeated ChatMatch matches = 1;
+  // The search stopped at its bound (5000 items with matches): the rest
+  // aren't counted.
+  bool more = 2;
+}
+
+// An item with matches of a find, and how many.
+message ChatMatch {
+  string item_id = 1;
+  int32 count = 2;
 }
 
 message GetChatItemsResponse {

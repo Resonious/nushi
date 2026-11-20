@@ -162,3 +162,31 @@ func TestEach(t *testing.T) {
 		t.Error("none")
 	}
 }
+
+// A literal query counts its matches as the app's find does: case aside,
+// its whitespace as written, one after another; the anchor's quick test
+// passes text that can't hold it.
+func TestCount(t *testing.T) {
+	for _, c := range []struct {
+		query, text string
+		want        int
+	}{
+		{"tree", "Tree, TREE and a treetop", 3},
+		{"aa", "aaaaa", 2}, // one after another, as Dart's allMatches
+		{"work tree", "a work\ntree", 0},
+		{"work tree", "a Work Tree", 1},
+		{"  ", "a  b   c", 2},
+		{"école", "Une ÉCOLE, une école", 2},
+		{`say "hi"`, `then SAY "Hi" twice`, 1},
+		{"zzz", "nothing here", 0},
+		{"", "anything", 0},
+	} {
+		if got := Literal(c.query).Count(c.text); got != c.want {
+			t.Errorf("%q in %q: %d, want %d", c.query, c.text, got, c.want)
+		}
+	}
+	// New's query matches whitespace loosely, as its Find does.
+	if got := New("work tree").Count("a work\n tree, work tree"); got != 2 {
+		t.Errorf("New's count: %d, want 2", got)
+	}
+}

@@ -51,6 +51,8 @@ const (
 	// NushiServiceGetChatItemsProcedure is the fully-qualified name of the NushiService's GetChatItems
 	// RPC.
 	NushiServiceGetChatItemsProcedure = "/nushi.v1.NushiService/GetChatItems"
+	// NushiServiceFindInChatProcedure is the fully-qualified name of the NushiService's FindInChat RPC.
+	NushiServiceFindInChatProcedure = "/nushi.v1.NushiService/FindInChat"
 	// NushiServiceGetChatImageProcedure is the fully-qualified name of the NushiService's GetChatImage
 	// RPC.
 	NushiServiceGetChatImageProcedure = "/nushi.v1.NushiService/GetChatImage"
@@ -512,6 +514,12 @@ type NushiServiceClient interface {
 	// A chat's items before one of them, a page at a time: for a client that
 	// took only the recent part (GetChatRequest.recent), as it scrolls up.
 	GetChatItems(context.Context, *connect.Request[v1.GetChatItemsRequest]) (*connect.Response[v1.GetChatItemsResponse], error)
+	// Counts a query's matches in each of a chat's items, its whole
+	// transcript as the daemon holds it (what GetChat and GetChatItems
+	// give), for ⌘F in a long chat: the app counts the matches in what it
+	// hasn't loaded and loads the part a step goes to (ADR 0144). Not on a
+	// device's channel: the phone has no find. API 136.
+	FindInChat(context.Context, *connect.Request[v1.FindInChatRequest]) (*connect.Response[v1.FindInChatResponse], error)
 	// One of a chat's images, by its hash: for a client that took the chat's
 	// items with image_refs, as each image is about to show. Only an image
 	// of that chat's own items. API 110.
@@ -1075,6 +1083,12 @@ func NewNushiServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			httpClient,
 			baseURL+NushiServiceGetChatItemsProcedure,
 			connect.WithSchema(nushiServiceMethods.ByName("GetChatItems")),
+			connect.WithClientOptions(opts...),
+		),
+		findInChat: connect.NewClient[v1.FindInChatRequest, v1.FindInChatResponse](
+			httpClient,
+			baseURL+NushiServiceFindInChatProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("FindInChat")),
 			connect.WithClientOptions(opts...),
 		),
 		getChatImage: connect.NewClient[v1.GetChatImageRequest, v1.GetChatImageResponse](
@@ -2013,6 +2027,7 @@ type nushiServiceClient struct {
 	listChats               *connect.Client[v1.ListChatsRequest, v1.ListChatsResponse]
 	getChat                 *connect.Client[v1.GetChatRequest, v1.GetChatResponse]
 	getChatItems            *connect.Client[v1.GetChatItemsRequest, v1.GetChatItemsResponse]
+	findInChat              *connect.Client[v1.FindInChatRequest, v1.FindInChatResponse]
 	getChatImage            *connect.Client[v1.GetChatImageRequest, v1.GetChatImageResponse]
 	startChat               *connect.Client[v1.StartChatRequest, v1.StartChatResponse]
 	listAgents              *connect.Client[v1.ListAgentsRequest, v1.ListAgentsResponse]
@@ -2202,6 +2217,11 @@ func (c *nushiServiceClient) GetChat(ctx context.Context, req *connect.Request[v
 // GetChatItems calls nushi.v1.NushiService.GetChatItems.
 func (c *nushiServiceClient) GetChatItems(ctx context.Context, req *connect.Request[v1.GetChatItemsRequest]) (*connect.Response[v1.GetChatItemsResponse], error) {
 	return c.getChatItems.CallUnary(ctx, req)
+}
+
+// FindInChat calls nushi.v1.NushiService.FindInChat.
+func (c *nushiServiceClient) FindInChat(ctx context.Context, req *connect.Request[v1.FindInChatRequest]) (*connect.Response[v1.FindInChatResponse], error) {
+	return c.findInChat.CallUnary(ctx, req)
 }
 
 // GetChatImage calls nushi.v1.NushiService.GetChatImage.
@@ -3007,6 +3027,12 @@ type NushiServiceHandler interface {
 	// A chat's items before one of them, a page at a time: for a client that
 	// took only the recent part (GetChatRequest.recent), as it scrolls up.
 	GetChatItems(context.Context, *connect.Request[v1.GetChatItemsRequest]) (*connect.Response[v1.GetChatItemsResponse], error)
+	// Counts a query's matches in each of a chat's items, its whole
+	// transcript as the daemon holds it (what GetChat and GetChatItems
+	// give), for ⌘F in a long chat: the app counts the matches in what it
+	// hasn't loaded and loads the part a step goes to (ADR 0144). Not on a
+	// device's channel: the phone has no find. API 136.
+	FindInChat(context.Context, *connect.Request[v1.FindInChatRequest]) (*connect.Response[v1.FindInChatResponse], error)
 	// One of a chat's images, by its hash: for a client that took the chat's
 	// items with image_refs, as each image is about to show. Only an image
 	// of that chat's own items. API 110.
@@ -3566,6 +3592,12 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 		NushiServiceGetChatItemsProcedure,
 		svc.GetChatItems,
 		connect.WithSchema(nushiServiceMethods.ByName("GetChatItems")),
+		connect.WithHandlerOptions(opts...),
+	)
+	nushiServiceFindInChatHandler := connect.NewUnaryHandler(
+		NushiServiceFindInChatProcedure,
+		svc.FindInChat,
+		connect.WithSchema(nushiServiceMethods.ByName("FindInChat")),
 		connect.WithHandlerOptions(opts...),
 	)
 	nushiServiceGetChatImageHandler := connect.NewUnaryHandler(
@@ -4508,6 +4540,8 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 			nushiServiceGetChatHandler.ServeHTTP(w, r)
 		case NushiServiceGetChatItemsProcedure:
 			nushiServiceGetChatItemsHandler.ServeHTTP(w, r)
+		case NushiServiceFindInChatProcedure:
+			nushiServiceFindInChatHandler.ServeHTTP(w, r)
 		case NushiServiceGetChatImageProcedure:
 			nushiServiceGetChatImageHandler.ServeHTTP(w, r)
 		case NushiServiceStartChatProcedure:
@@ -4851,6 +4885,10 @@ func (UnimplementedNushiServiceHandler) GetChat(context.Context, *connect.Reques
 
 func (UnimplementedNushiServiceHandler) GetChatItems(context.Context, *connect.Request[v1.GetChatItemsRequest]) (*connect.Response[v1.GetChatItemsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.GetChatItems is not implemented"))
+}
+
+func (UnimplementedNushiServiceHandler) FindInChat(context.Context, *connect.Request[v1.FindInChatRequest]) (*connect.Response[v1.FindInChatResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.FindInChat is not implemented"))
 }
 
 func (UnimplementedNushiServiceHandler) GetChatImage(context.Context, *connect.Request[v1.GetChatImageRequest]) (*connect.Response[v1.GetChatImageResponse], error) {

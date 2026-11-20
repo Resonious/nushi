@@ -61,6 +61,22 @@ func (s *server) GetChatItems(_ context.Context, req *connect.Request[nushiv1.Ge
 	return connect.NewResponse(&nushiv1.GetChatItemsResponse{Older: int32(start), Items: s.itemsProto(req.Msg.ChatId, items, req.Msg.ImageRefs)}), nil
 }
 
+// FindInChat counts a query's matches in a chat's items (ADR 0144).
+func (s *server) FindInChat(ctx context.Context, req *connect.Request[nushiv1.FindInChatRequest]) (*connect.Response[nushiv1.FindInChatResponse], error) {
+	found, more, err := s.Chats.FindText(ctx, req.Msg.ChatId, req.Msg.Text, req.Msg.Before)
+	if err != nil {
+		if ctx.Err() != nil {
+			return nil, err
+		}
+		return nil, notFound(err)
+	}
+	resp := &nushiv1.FindInChatResponse{More: more, Matches: make([]*nushiv1.ChatMatch, len(found))}
+	for i, m := range found {
+		resp.Matches[i] = &nushiv1.ChatMatch{ItemId: m.ID, Count: int32(m.Count)}
+	}
+	return connect.NewResponse(resp), nil
+}
+
 func (s *server) StartChat(ctx context.Context, req *connect.Request[nushiv1.StartChatRequest]) (*connect.Response[nushiv1.StartChatResponse], error) {
 	var issue *model.ChatIssue
 	if m := req.Msg; m.JiraKey != "" {

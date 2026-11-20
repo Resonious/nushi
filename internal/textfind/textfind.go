@@ -22,29 +22,46 @@ type Query struct {
 	// without it can't hold the query. pivot is its rarest byte's place.
 	anchor []byte
 	pivot  int
+	// literal says text is the query as written, matched so (Literal).
+	literal bool
 }
 
 // New is the query q.
 func New(q string) Query {
 	squashed := squash(q)
 	out := Query{text: []rune(squashed)}
+	out.anchor, out.pivot = anchorOf(squashed)
+	return out
+}
+
+// Literal is the query q as written: case aside, its whitespace as it is,
+// as the app's find in a chat's transcript matches the text laid out.
+func Literal(q string) Query {
+	out := Query{text: []rune(q), literal: true}
+	out.anchor, out.pivot = anchorOf(q)
+	return out
+}
+
+// anchorOf is q's longest run of the ASCII that JSON writes as it is,
+// lowered, and its rarest byte's place (Query's anchor and pivot).
+func anchorOf(q string) (anchor []byte, pivot int) {
 	run := 0
-	for i := 0; i <= len(squashed); i++ {
-		if i < len(squashed) && verbatim(squashed[i]) {
+	for i := 0; i <= len(q); i++ {
+		if i < len(q) && verbatim(q[i]) {
 			run++
 			continue
 		}
-		if run > len(out.anchor) {
-			out.anchor = bytes.ToLower([]byte(squashed[i-run : i]))
+		if run > len(anchor) {
+			anchor = bytes.ToLower([]byte(q[i-run : i]))
 		}
 		run = 0
 	}
-	for i, b := range out.anchor {
-		if rank(b) < rank(out.anchor[out.pivot]) {
-			out.pivot = i
+	for i, b := range anchor {
+		if rank(b) < rank(anchor[pivot]) {
+			pivot = i
 		}
 	}
-	return out
+	return anchor, pivot
 }
 
 // Empty says there's nothing to find.
@@ -87,17 +104,33 @@ func upper(b byte) byte {
 // Kelvin sign as a k, the long s as an s): a line saying the query only so
 // is passed over.
 func (q Query) MayHold(line []byte) bool {
+	return mayHold(q, line, func(from int, b byte) int {
+		if i := bytes.IndexByte(line[from:], b); i >= 0 {
+			return from + i
+		}
+		return -1
+	})
+}
+
+// mayHoldText is MayHold for plain text.
+func (q Query) mayHoldText(text string) bool {
+	return mayHold(q, text, func(from int, b byte) int {
+		if i := strings.IndexByte(text[from:], b); i >= 0 {
+			return from + i
+		}
+		return -1
+	})
+}
+
+// mayHold says line may hold the query: it has the anchor, ASCII's case
+// aside. next(at, b) is the place of the first b in line at or after at,
+// or -1.
+func mayHold[T string | []byte](q Query, line T, next func(from int, b byte) int) bool {
 	a := q.anchor
 	if len(a) == 0 {
 		return true
 	}
 	lo, up := a[q.pivot], upper(a[q.pivot])
-	next := func(from int, b byte) int {
-		if i := bytes.IndexByte(line[from:], b); i >= 0 {
-			return from + i
-		}
-		return -1
-	}
 	nl, nu := next(0, lo), -1
 	if up != lo {
 		nu = next(0, up)
@@ -107,7 +140,7 @@ func (q Query) MayHold(line []byte) bool {
 		if c < 0 || nu >= 0 && nu < c {
 			c = nu
 		}
-		if s := c - q.pivot; s >= 0 && s+len(a) <= len(line) && asciiFold(line[s:s+len(a)], a) {
+		if s := c - q.pivot; s >= 0 && s+len(a) <= len(line) && asciiFold(line, s, a) {
 			return true
 		}
 		if c == nl {
@@ -119,10 +152,10 @@ func (q Query) MayHold(line []byte) bool {
 	return false
 }
 
-// asciiFold says b is a, ASCII's case aside (a is lower case).
-func asciiFold(b, a []byte) bool {
+// asciiFold says b holds a at at, ASCII's case aside (a is lower case).
+func asciiFold[T string | []byte](b T, at int, a []byte) bool {
 	for i := range a {
-		if lower(b[i]) != a[i] {
+		if lower(b[at+i]) != a[i] {
 			return false
 		}
 	}
@@ -169,6 +202,29 @@ func (q Query) Find(text string) (int, Excerpt) {
 		return 0, Excerpt{}
 	}
 	return n, Excerpt{Before: cutBefore(s[:first]), Match: s[first:end], After: cutAfter(s[end:])}
+}
+
+// Count is how many times the query is in text, case aside, each match
+// after the one before it ends; a quick test of the anchor first, so text
+// that can't hold it isn't walked.
+func (q Query) Count(text string) int {
+	if q.Empty() || !q.mayHoldText(text) {
+		return 0
+	}
+	if !q.literal {
+		text = squash(text)
+	}
+	n := 0
+	for i := 0; i < len(text); {
+		if j, ok := q.prefixOf(text[i:]); ok {
+			n++
+			i += j
+			continue
+		}
+		_, size := utf8.DecodeRuneInString(text[i:])
+		i += size
+	}
+	return n
 }
 
 // prefixOf says whether s starts with the query, case aside, and how many

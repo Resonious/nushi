@@ -84,6 +84,18 @@ abstract final class NushiService {
     nushiv1nushi.GetChatItemsResponse.new,
   );
 
+  /// Counts a query's matches in each of a chat's items, its whole
+  /// transcript as the daemon holds it (what GetChat and GetChatItems
+  /// give), for ⌘F in a long chat: the app counts the matches in what it
+  /// hasn't loaded and loads the part a step goes to (ADR 0144). Not on a
+  /// device's channel: the phone has no find. API 136.
+  static const findInChat = connect.Spec(
+    '/$name/FindInChat',
+    connect.StreamType.unary,
+    nushiv1nushi.FindInChatRequest.new,
+    nushiv1nushi.FindInChatResponse.new,
+  );
+
   /// One of a chat's images, by its hash: for a client that took the chat's
   /// items with image_refs, as each image is about to show. Only an image
   /// of that chat's own items. API 110.
