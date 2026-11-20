@@ -38,8 +38,12 @@ final _markLine = RegExp(
 /// the sent message would read back as other cards than were sent.
 bool hasReplyMarks(String text) => _markLine.hasMatch(text);
 
-/// A message's text: each reply as `<!-- reply n -->`, its quote as `> `
-/// lines and its text (its lines as written) after a blank line, then
+/// A message's text: each reply as `<!-- reply n -->` (n its place in the
+/// message, from 1: the number the agent answers by, which the cards show
+/// when there are two or more, [ReplyNumber]; the comment is the only
+/// structure added, so nothing reads as words the user didn't write), its
+/// quote as `> ` lines and its text (its lines as written) after a blank
+/// line, then
 /// [text]. `<!-- end of replies -->` says where the replies end whenever
 /// [text] follows them (an agent read the user's own message as more of
 /// the last comment, about that comment's file), and when the last
@@ -69,6 +73,7 @@ String withReplies(List<Reply> replies, String text) => [
 /// The replies [message] starts with, and the rest of it ([withReplies]
 /// backwards). Without `<!-- end of replies -->`, the last reply's text
 /// ends at its first blank line. A group's lead goes to its first reply.
+/// The number in each mark isn't kept: a card's is its place in the list.
 (List<Reply>, String) splitReplies(String message) {
   // The leads out, each kept for the reply after it (by its number).
   final leads = <int, String>{};
@@ -145,8 +150,50 @@ class QuoteBlock extends StatelessWidget {
   }
 }
 
-/// A user message: its replies, each a quote with the reply under it, then
-/// the rest of its text.
+/// A reply card's number, [n] from 1, at the card's start, when its message
+/// carries two or more ([numbered]): the agent answers "#1 … #2 …" by the
+/// marks [withReplies] writes, and the user reads the same numbers here.
+/// A small numeral on the quotes' fill, round; on a user message's band,
+/// in its colors when [band].
+class ReplyNumber extends StatelessWidget {
+  const new(this.n, {super.key, this.band = false});
+
+  final int n;
+  final bool band;
+
+  /// Whether [count] cards are numbered: one alone isn't.
+  static bool numbered(int count) => count > 1;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = NushiTheme.of(context);
+    final t = theme.t;
+    return Container(
+      key: ValueKey('reply-number-$n'),
+      constraints: const BoxConstraints(minWidth: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 5),
+      decoration: BoxDecoration(
+        color: t.quote,
+        borderRadius: BorderRadius.circular(NushiTheme.pill),
+      ),
+      child: Text(
+        '$n',
+        textAlign: TextAlign.center,
+        style: theme
+            .ui(
+              band ? t.userBandMuted : t.textMuted,
+              size: 11.5,
+              weight: FontWeight.w600,
+            )
+            .copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+      ),
+    );
+  }
+}
+
+/// A user message: its replies, each a quote with the reply under it (and
+/// its number before them when there are two or more), then the rest of
+/// its text.
 class UserMessageText extends StatelessWidget {
   const new(this.message, {super.key});
 
@@ -159,7 +206,7 @@ class UserMessageText extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 8,
       children: [
-        for (final r in replies)
+        for (final (i, r) in replies.indexed)
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: 3,
@@ -170,19 +217,29 @@ class UserMessageText extends StatelessWidget {
                   style: NushiTheme.of(context)
                       .ui(NushiTheme.of(context).t.userBandMuted, size: 12),
                 ),
-              if (r.quote.isNotEmpty)
-                QuoteBlock(
-                  r.quote,
-                  size: TouchTargets.of(context) ? 13 : 14,
-                  band: true,
+              _numbered(
+                context,
+                ReplyNumber.numbered(replies.length) ? i + 1 : null,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 3,
+                  children: [
+                    if (r.quote.isNotEmpty)
+                      QuoteBlock(
+                        r.quote,
+                        size: TouchTargets.of(context) ? 13 : 14,
+                        band: true,
+                      ),
+                    if (r.text.isNotEmpty)
+                      AgentMarkdown(
+                        r.text,
+                        typed: true,
+                        transcript: true,
+                        chips: true,
+                      ),
+                  ],
                 ),
-              if (r.text.isNotEmpty)
-                AgentMarkdown(
-                  r.text,
-                  typed: true,
-                  transcript: true,
-                  chips: true,
-                ),
+              ),
             ],
           ),
         // Where the cards end and the typed message begins, for the reader
@@ -203,6 +260,24 @@ class UserMessageText extends StatelessWidget {
     );
   }
 }
+
+/// A card's [body], after its number [n] when it has one; as wide as the
+/// body, not the bubble (a full-width row would widen it).
+Widget _numbered(BuildContext context, int? n, Widget body) => n == null
+    ? body
+    : Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 8,
+        children: [
+          Padding(
+            // Level with the quote's first line.
+            padding: const EdgeInsets.only(top: 3),
+            child: ReplyNumber(n, band: true),
+          ),
+          Flexible(child: body),
+        ],
+      );
 
 /// The dark pill over a selection: "Side chat | Reply".
 class SelectionToolbar extends StatelessWidget {

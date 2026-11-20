@@ -5,9 +5,10 @@ import 'package:nushi/replies.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 
-/// The replies waiting in the composer, as small cards: a click opens one
-/// to edit its text, and hovering one shows a button that removes it.
-/// [onDone] runs when the editing ends (the composer takes the focus back).
+/// The replies waiting in the composer, as small cards, numbered when
+/// there are two or more ([ReplyNumber]): a click opens one to edit its
+/// text, and hovering one shows a button that removes it. [onDone] runs
+/// when the editing ends (the composer takes the focus back).
 class ReplyCards extends StatelessWidget {
   const new(this.replies, {required this.onDone, super.key});
 
@@ -37,6 +38,9 @@ class ReplyCards extends StatelessWidget {
       for (final (i, r) in replies.value.indexed)
         _ReplyCard(
           r,
+          // Its place now: the box renumbers as cards come and go, as the
+          // message will be written ([withReplies]).
+          number: ReplyNumber.numbered(replies.value.length) ? i + 1 : null,
           onTap: () => _edit(context, i),
           onRemove: () => replies.value = [...replies.value]..removeAt(i),
         ),
@@ -45,9 +49,17 @@ class ReplyCards extends StatelessWidget {
 }
 
 class _ReplyCard extends StatelessWidget {
-  const new(this.reply, {required this.onTap, required this.onRemove});
+  const new(
+    this.reply, {
+    required this.onTap,
+    required this.onRemove,
+    this.number,
+  });
 
   final Reply reply;
+
+  /// Its number in the message, when there are two or more ([ReplyNumber]).
+  final int? number;
   final VoidCallback onTap;
   final VoidCallback onRemove;
 
@@ -74,23 +86,37 @@ class _ReplyCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (r.quote.isNotEmpty)
-                    QuoteBlock(
-                      r.quote,
-                      maxLines: r.text.isEmpty ? 2 : 1,
-                      size: 11.5,
-                    ),
-                  if (r.text.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      // Its lines run on, as many as fit.
-                      child: Text(
-                        r.text.replaceAll(RegExp(r'\s+'), ' '),
-                        maxLines: r.quote.isEmpty ? 2 : 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.ui(t.text, size: 11.5),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 5,
+                    children: [
+                      if (number case final n?) ReplyNumber(n),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (r.quote.isNotEmpty)
+                              QuoteBlock(
+                                r.quote,
+                                maxLines: r.text.isEmpty ? 2 : 1,
+                                size: 11.5,
+                              ),
+                            if (r.text.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                // Its lines run on, as many as fit.
+                                child: Text(
+                                  r.text.replaceAll(RegExp(r'\s+'), ' '),
+                                  maxLines: r.quote.isEmpty ? 2 : 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.ui(t.text, size: 11.5),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
+                  ),
                   const Spacer(),
                   Text('Reply', style: theme.ui(t.textMuted, size: 11)),
                 ],

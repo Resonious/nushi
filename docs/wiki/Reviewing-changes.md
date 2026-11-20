@@ -45,6 +45,8 @@ The tab shows how many comments you haven't sent yet (**Changes 2**). To edit a 
 
 Once the agent changes the lines you commented on, your sent comments leave the diff. A small **2 sent** pill above the file says they were there. Click it to read them, or click ✕ to remove one. They go by themselves when the agent's turn ends.
 
+When a message has two or more cards, each shows a number (1, 2, 3) in the box and in the sent message. The agent sees the same numbers, so its "#2" is your second card.
+
 If you go back to the chat before you send them, a line above the message box reminds you that the comments aren't sent yet. It has **Send to agent** and **Show** links.
 
 ## Commit
