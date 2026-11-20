@@ -49,6 +49,22 @@ func TestReplyResolveComment(t *testing.T) {
 	}
 }
 
+func TestReact(t *testing.T) {
+	f := newFake(t)
+	add := f.vars("AddReaction", `{"data":{"addReaction":{"clientMutationId":null}}}`)
+	remove := f.vars("RemoveReaction", `{"data":{"removeReaction":{"clientMutationId":null}}}`)
+	c := f.client()
+	if err := c.React(t.Context(), "IC_1", "thumbs_up", true); err != nil || (*add)[0]["subject"] != "IC_1" || (*add)[0]["content"] != "THUMBS_UP" {
+		t.Fatal(err, *add)
+	}
+	if err := c.React(t.Context(), "IC_1", "eyes", false); err != nil || (*remove)[0]["content"] != "EYES" {
+		t.Fatal(err, *remove)
+	}
+	if err := c.React(t.Context(), "IC_1", "sparkles", true); err == nil {
+		t.Fatal("not one of GitHub's eight")
+	}
+}
+
 func TestEditPull(t *testing.T) {
 	f := newFake(t)
 	edit := f.vars("EditPull", `{"data":{"updatePullRequest":{"pullRequest":{"id":"PR_218"}}}}`)

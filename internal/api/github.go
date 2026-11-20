@@ -184,6 +184,24 @@ func (s *server) GetGitHubFiles(ctx context.Context, req *connect.Request[nushiv
 	return connect.NewResponse(out), nil
 }
 
+func (s *server) GetGitHubViewed(ctx context.Context, req *connect.Request[nushiv1.GetGitHubViewedRequest]) (*connect.Response[nushiv1.GetGitHubViewedResponse], error) {
+	viewed, changed, err := s.GitHub.Viewed(ctx, ref(req.Msg.Ref), req.Msg.Quiet)
+	if err != nil {
+		return nil, githubErr(err)
+	}
+	return connect.NewResponse(&nushiv1.GetGitHubViewedResponse{Viewed: viewed, Changed: changed}), nil
+}
+
+func (s *server) SetGitHubViewed(ctx context.Context, req *connect.Request[nushiv1.SetGitHubViewedRequest]) (*connect.Response[nushiv1.SetGitHubViewedResponse], error) {
+	m := req.Msg
+	return done[nushiv1.SetGitHubViewedResponse](s.GitHub.SetViewed(ctx, m.Host, m.Pull, m.Path, m.Viewed), githubErr)
+}
+
+func (s *server) ReactGitHub(ctx context.Context, req *connect.Request[nushiv1.ReactGitHubRequest]) (*connect.Response[nushiv1.ReactGitHubResponse], error) {
+	m := req.Msg
+	return done[nushiv1.ReactGitHubResponse](s.GitHub.React(ctx, m.Host, m.Subject, m.Content, !m.Remove), githubErr)
+}
+
 func (s *server) GetGitHubJobLog(ctx context.Context, req *connect.Request[nushiv1.GetGitHubJobLogRequest]) (*connect.Response[nushiv1.GetGitHubJobLogResponse], error) {
 	tail, err := s.GitHub.JobTail(ctx, ref(req.Msg.Ref), req.Msg.Job)
 	if err != nil {
@@ -250,7 +268,8 @@ func ghItemProto(it model.GitHubItem) *nushiv1.GitHubItem {
 		Title: it.Title, Url: it.URL, State: it.State, Draft: it.Draft, Author: it.Author, UpdatedMs: unixMs(it.Updated), Checks: it.Checks,
 		Review: it.Review, Unresolved: int32(it.Unresolved), Comments: int32(it.Comments),
 		Additions: int32(it.Additions), Deletions: int32(it.Deletions), ChangedFiles: int32(it.ChangedFiles), CreatedMs: unixMs(it.Created),
-		MergeState: it.MergeState, StateReason: it.StateReason, Base: it.Base, Head: it.Head, CheckCounts: checkCountsProto(it.CheckCounts)}
+		MergeState: it.MergeState, StateReason: it.StateReason, Base: it.Base, Head: it.Head, CheckCounts: checkCountsProto(it.CheckCounts),
+		ChecksOid: it.ChecksOID}
 }
 
 // checkCountsProto is nil for no checks.
@@ -271,7 +290,16 @@ func ghItemsProto(items []model.GitHubItem) []*nushiv1.GitHubItem {
 
 func ghCommentProto(c model.GitHubComment) *nushiv1.GitHubComment {
 	return &nushiv1.GitHubComment{Id: c.ID, Author: c.Author, Outside: github.Outside(c.Association),
-		Bot: c.Bot, Body: c.Body, Url: c.URL, CreatedMs: unixMs(c.Created), Review: c.Review, Commit: c.Commit, ReviewId: c.ReviewID}
+		Bot: c.Bot, Body: c.Body, Url: c.URL, CreatedMs: unixMs(c.Created), Review: c.Review, Commit: c.Commit, ReviewId: c.ReviewID,
+		Reactions: reactionsProto(c.Reactions)}
+}
+
+func reactionsProto(rs []model.GitHubReaction) []*nushiv1.GitHubReaction {
+	out := make([]*nushiv1.GitHubReaction, 0, len(rs))
+	for _, r := range rs {
+		out = append(out, &nushiv1.GitHubReaction{Content: r.Content, Count: int32(r.Count), Mine: r.Mine})
+	}
+	return out
 }
 
 func ghCommentsProto(cs []model.GitHubComment) []*nushiv1.GitHubComment {
@@ -288,7 +316,8 @@ func pullProto(p model.GitHubPull) *nushiv1.GitHubPull {
 		Mergeable: p.Mergeable, MergeState: p.MergeState, Additions: int32(p.Additions), Deletions: int32(p.Deletions),
 		ChangedFiles: int32(p.ChangedFiles), Conversation: ghCommentsProto(p.Conversation), PendingReview: p.PendingReview,
 		PendingComments: int32(p.PendingComments), Commits: int32(p.Commits), Merge: mergeProto(p), Assignees: p.Assignees,
-		Reviews: ghCommentsProto(p.Reviews), BodySource: p.BodySource, CanEdit: p.CanEdit}
+		Reviews: ghCommentsProto(p.Reviews), BodySource: p.BodySource, CanEdit: p.CanEdit,
+		Reactions: reactionsProto(p.Reactions)}
 	for _, l := range p.Labels {
 		out.Labels = append(out.Labels, &nushiv1.GitHubLabel{Name: l.Name, Color: l.Color})
 	}

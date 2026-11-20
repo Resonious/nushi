@@ -2656,6 +2656,61 @@ extension type NushiServiceClient(connect.Transport _transport) {
     );
   }
 
+  /// Which of a pull request's files the user marked viewed (GitHub's
+  /// viewerViewedState), and marking one viewed or not. API 130.
+  Future<nushiv1nushi.GetGitHubViewedResponse> getGitHubViewed(
+    nushiv1nushi.GetGitHubViewedRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.getGitHubViewed,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
+  Future<nushiv1nushi.SetGitHubViewedResponse> setGitHubViewed(
+    nushiv1nushi.SetGitHubViewedRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.setGitHubViewed,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
+  /// Adds the user's emoji reaction to a comment, a review or a pull
+  /// request's description, or takes it away. API 131.
+  Future<nushiv1nushi.ReactGitHubResponse> reactGitHub(
+    nushiv1nushi.ReactGitHubRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.reactGitHub,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
   /// The end of a failed Actions job's log (16 KB).
   Future<nushiv1nushi.GetGitHubJobLogResponse> getGitHubJobLog(
     nushiv1nushi.GetGitHubJobLogRequest input, {

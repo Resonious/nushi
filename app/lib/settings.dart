@@ -42,6 +42,7 @@ import 'package:nushi/usage_range.dart';
 /// browser tab and which sites there may reach the local network, whether a
 /// preview's source wraps its lines and shows its whitespace,
 /// what reply cards ask the agent, the pull request each chat's tab shows,
+/// the failed checks each chat's user acted on,
 /// the range Settings › Usage shows, and the newer release whose toast
 /// was dismissed. Each is a [Pref].
 /// Not whether new chats get a worktree, nor whether a subagent's pane
@@ -397,6 +398,16 @@ final Pref<Map<String, int>> pullSeen = _byChat(
   (v) => v is num ? v.toInt() : null,
 );
 
+/// The failures of each chat's pull requests' checks the user has acted
+/// on (Ask to fix, Dismiss), by chat id, each as `<node id>@<commit>`
+/// (ADR 0138): one of those doesn't need you again; a failure on another
+/// commit does. A chat's entry starts with the failures there when it was
+/// first seen.
+final Pref<Map<String, List<String>>> checksSeen = _byChat(
+  'checksSeen',
+  _strings,
+);
+
 /// The pull request each chat's Pull request tab shows, picked among its
 /// several (ADR 0117), as host/owner/repo#n.
 final Pref<Map<String, String>> pickedPulls = _byChat(
@@ -530,6 +541,7 @@ List<Pref<Object?>> get _chatPrefs => [
   chatOpened,
   pinnedFiles,
   pullSeen,
+  checksSeen,
   pickedPulls,
   cleanUpLater,
 ];

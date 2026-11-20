@@ -115,7 +115,9 @@ It follows GitHub's own pull request page ([ADR 0137](adr/0137-the-pull-request-
 
 **Checks**: failing first, each opening to its annotations and log, with **Re-run failed** (it asks GitHub to re-run the failed jobs of their workflow runs) and Fix checks; then the passed in two columns, then the skipped.
 
-**Files changed**: those with review threads not resolved first, the side-by-side diff with the threads at their lines.
+**Reactions** sit under the description, each comment and review, and each thread comment, as on GitHub: a smiley that opens GitHub's eight (👍 👎 😄 🎉 😕 ❤️ 🚀 👀), then a pill per kind used with its count, yours filled in the accent with its ring. A click on a pill or in the picker adds yours or takes it away on GitHub at once (put back with GitHub's words if it refuses), then the pull request is read again. They come with the pull request (`reactionGroups`), no call of their own (API 131).
+
+**Files changed**: those with review threads not resolved first, the side-by-side diff with the threads at their lines. Over the picked file's diff, its head: a chevron that folds it, its path and size, "Changed since last view" when it changed after you marked it, and GitHub's **Viewed** checkbox, which marks it viewed on GitHub for you (`markFileAsViewed`, `unmarkFileAsViewed`) and folds it; the list's top counts them ("1 / 4 files viewed", of all the pull request's files), and a viewed file has a green tick in the list. What's viewed is read from GitHub (`viewerViewedState`, the first 300 files) when the tab shows and when the head moves, never on a timer (API 130).
 
 A finding is a guess at the common shapes of a review bot's comment (Settings › GitHub › Review bots): a review it can't read shows only in Comments, and a finding on a thread's lines joins it (one item, two voices).
 
@@ -168,5 +170,6 @@ The widget then shows each part as it goes and what it kept, with Restore branch
 
 ### Elsewhere
 
-- A chat's row in the sidebar gets a red dot while any of its open pull requests' checks fail, amber while they run.
+- A chat's row in the sidebar gets a red dot while any of its open pull requests' checks fail, amber while they run. The chats' states are asked each minute while the app runs (`GetGitHubStates`, one query a host).
+- A failure on a commit the user hasn't acted on makes the chat need you, once the agent is done: a bar over the composer, "Checks failed on #n", with Ask to fix (Fix checks' cards into the box, nothing sent) and ✕. Acted on, the same failure stays quiet; a later commit's flags it again; one there when the chat was first seen doesn't ([ADR 0138](adr/0138-a-chat-needs-you-when-its-checks-fail.md)).
 - The phone shows the widget's one-line summary in the chat's bar (the number in its state's color, failing or running checks, changes requested or a reviewer waited on, open threads; or Ready, Draft, Merged, Closed), asked each minute while the chat shows, then `+2` for its other pull requests (ADR 0117). A tap opens it on GitHub; with several, a sheet of their rows, each opening GitHub. A message's link chips are there too; a tap opens the card as a sheet, with Open on GitHub. No linking or unlinking on the phone. The phone has no Pull request tab, so no Merge control; the daemon lets a paired phone merge as it lets it post a review ([ADR 0069](adr/0069-merging-a-pull-request.md)).

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:diff_view/diff_view.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:nushi/github_parts.dart';
 import 'package:nushi/github_review.dart';
 import 'package:nushi/github_thread.dart';
 import 'package:nushi/markdown.dart';
+import 'package:nushi/pull_viewed.dart';
 import 'package:nushi/run_state.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
@@ -19,7 +21,9 @@ import 'package:nushi/widgets.dart';
 /// threads' counts, the one picked side by side, its threads under their
 /// lines (an outdated one, or one on the whole file, above it; a resolved
 /// one folded). Selecting lines writes an inline comment of my review,
-/// kept until Review… sends it.
+/// kept until Review… sends it. Each file has GitHub's Viewed checkbox
+/// over its diff, the count viewed over the list; a viewed file folds
+/// (`pull_viewed.dart`).
 class GitHubFiles extends StatefulWidget {
   const new({
     required this.daemon,
@@ -60,6 +64,14 @@ class _GitHubFilesState extends State<GitHubFiles> {
   /// The lines a new comment is being written for.
   LineSelection? _writing;
 
+  /// What the user marked viewed, from GitHub.
+  late final _viewed = PullViewed(widget.daemon, widget.pull);
+
+  /// The viewed files opened again (their chevron), and those folded by
+  /// hand though not viewed, while the tab shows.
+  final _opened = <String>{};
+  final _folded = <String>{};
+
   GitHubRef get _ref => widget.pull.item.ref;
   String get _pullKey => '${_ref.host} ${_ref.repo} ${_ref.number}';
   String get _key => '$_pullKey ${widget.pull.headOid}';
@@ -72,20 +84,52 @@ class _GitHubFilesState extends State<GitHubFiles> {
       _writing = writing;
     }
     draftsChanged.addListener(_redraw);
+    _viewed.addListener(_redraw);
     unawaited(_load());
+    unawaited(_viewed.load());
   }
 
   @override
   void didUpdateWidget(GitHubFiles old) {
     super.didUpdateWidget(old);
-    if (old.pull.headOid != widget.pull.headOid) unawaited(_load());
+    _viewed.pull = widget.pull;
+    if (old.pull.headOid != widget.pull.headOid) {
+      unawaited(_load());
+      unawaited(_viewed.load()); // a push may have changed a viewed one
+    }
   }
 
   @override
   void dispose() {
     _left[_pullKey] = (_path, _writing);
     draftsChanged.removeListener(_redraw);
+    _viewed.dispose();
     super.dispose();
+  }
+
+  bool _isViewed(FileChange f) => _viewed.viewed?.contains(f.path) ?? false;
+
+  /// Whether [f]'s diff shows: folded once viewed, unless opened again.
+  bool _isOpen(FileChange f) =>
+      _isViewed(f) ? _opened.contains(f.path) : !_folded.contains(f.path);
+
+  /// Folds [f]'s diff or opens it: a viewed one's opening is remembered,
+  /// another's folding.
+  void _fold(FileChange f) => setState(() {
+    final hand = _isViewed(f) ? _opened : _folded;
+    if (!hand.remove(f.path)) hand.add(f.path);
+  });
+
+  Future<void> _setViewed(FileChange f, bool on) async {
+    setState(() {
+      _opened.remove(f.path);
+      _folded.remove(f.path);
+    });
+    try {
+      await _viewed.set(f.path, on: on);
+    } on Object catch (e) {
+      if (mounted) showError(context, e);
+    }
   }
 
   void _redraw() => setState(() {});
@@ -165,6 +209,12 @@ class _GitHubFilesState extends State<GitHubFiles> {
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 6),
               children: [
+                if (_viewed.viewed != null)
+                  ViewedCount(
+                    viewed: files.where(_isViewed).length,
+                    // All of them, as GitHub counts, past the 300 listed.
+                    total: max(files.length, widget.pull.changedFiles),
+                  ),
                 for (final (i, f) in files.indexed) ...[
                   if (i == 0 && withThreads > 0)
                     _group(theme, 'With unresolved threads · $withThreads'),
@@ -186,7 +236,30 @@ class _GitHubFilesState extends State<GitHubFiles> {
           ),
           // The list is on the pane itself and the diff a sunk block
           // beside it, as in Changes (ADR 0111): no line between them.
-          Expanded(child: file == null ? const SizedBox() : _diff(theme, file)),
+          Expanded(
+            child: file == null
+                ? const SizedBox()
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      FileHead(
+                        key: ValueKey('head ${file.path}'),
+                        file: file,
+                        viewed: _isViewed(file),
+                        changed: _viewed.changed.contains(file.path),
+                        open: _isOpen(file),
+                        onFold: () => _fold(file),
+                        onViewed: _viewed.viewed == null
+                            ? null
+                            : (on) => unawaited(_setViewed(file, on)),
+                      ),
+                      if (_isOpen(file))
+                        Expanded(child: _diff(theme, file))
+                      else
+                        FoldedDiff(viewed: _isViewed(file)),
+                    ],
+                  ),
+          ),
         ],
       ),
     );
@@ -204,6 +277,7 @@ class _GitHubFilesState extends State<GitHubFiles> {
     final t = theme.t;
     final threads = _threadsOf(f.path).where((x) => !x.resolved).length;
     final drafts = reviewDrafts(_ref).where((d) => d.path == f.path).length;
+    final viewed = _isViewed(f);
     // Its fill is set in from the pane's edges, as a row's in the sidebar
     // and the Changes tree; the name stays where the group's label is.
     return Padding(
@@ -219,13 +293,21 @@ class _GitHubFilesState extends State<GitHubFiles> {
         padding: const EdgeInsets.all(4),
         child: Row(
           children: [
+            // Viewed: a green tick before its name, which goes muted; the
+            // same room kept empty otherwise, so nothing moves.
+            SizedBox(
+              width: 16,
+              child: viewed
+                  ? Icon(Icons.check_circle, size: 12, color: t.done)
+                  : null,
+            ),
             Expanded(
               child: Text(
                 f.path.split('/').last,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.ui(
-                  f.status == 'deleted' ? t.textMuted : t.text,
+                  f.status == 'deleted' || viewed ? t.textMuted : t.text,
                   size: 12,
                   weight: f.path == _path ? FontWeight.w600 : null,
                 ),

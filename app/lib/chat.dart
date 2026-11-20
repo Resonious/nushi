@@ -176,6 +176,20 @@ class ChatState extends ChangeNotifier {
   /// daemon before API 118 says only the primary).
   List<GitHubLink> pulls = const [];
 
+  /// Its pull requests whose checks failed since the user last acted on
+  /// them (`checks_watch.dart`, ADR 0138): it needs you until Ask to fix or
+  /// Dismiss, or until they no longer fail. The app's judgment, not the
+  /// daemon's.
+  List<GitHubLink> checksFailed = const [];
+
+  /// Sets [checksFailed]; whether that changed it.
+  bool failChecks(List<GitHubLink> links) {
+    if (listEquals(links, checksFailed)) return false;
+    checksFailed = links;
+    notifyListeners();
+    return true;
+  }
+
   /// Sets [pull] (and [pulls], when [all] is given) as the daemon just said
   /// it, ahead of the chat's event.
   void linkPull(GitHubLink? link, {List<GitHubLink>? all}) {
@@ -314,6 +328,9 @@ class ChatState extends ChangeNotifier {
       ? .working
       : background > 0
       ? .background
+      // Its pull request's checks failed (ADR 0138): once the agent is done.
+      : checksFailed.isNotEmpty
+      ? .waiting
       : sessionGone
       ? .expired
       : reopenFailed
@@ -325,6 +342,10 @@ class ChatState extends ChangeNotifier {
       : fresh
       ? .fresh
       : .idle;
+
+  /// Whether it needs you: a permission prompt or a question ([waiting]),
+  /// or its pull request's checks failed once the agent is done.
+  bool get needsYou => phase == ChatPhase.waiting;
 
   /// What the user is writing to it.
   final draft = Draft();

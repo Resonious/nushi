@@ -279,6 +279,19 @@ func (s *Service) Comment(ctx context.Context, name, subject, body string) error
 	return err
 }
 
+// React adds the user's reaction of kind (githubapi.Reactions) to a
+// comment, a review or a pull request (subject is its node id), or takes
+// it away.
+func (s *Service) React(ctx context.Context, name, subject, kind string, on bool) error {
+	c, err := s.writer(ctx, name)
+	if err != nil {
+		return err
+	}
+	err = c.React(ctx, subject, kind, on)
+	s.wrote(name, map[bool]string{true: "react", false: "unreact"}[on], err)
+	return err
+}
+
 // Review submits the user's review with its inline comments.
 func (s *Service) Review(ctx context.Context, name string, r githubapi.Review) error {
 	c, err := s.writer(ctx, name)

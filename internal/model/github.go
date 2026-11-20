@@ -29,8 +29,12 @@ type GitHubItem struct {
 	// none), its review decision ("approved", "changes_requested",
 	// "review_required" or ""), and its review threads not resolved.
 	Checks, Review string
-	Unresolved     int
-	Comments       int
+	// The commit Checks are of (the head's, as the rollup was read), so a
+	// failure can be told from an earlier one on another commit; "" with
+	// no checks.
+	ChecksOID  string
+	Unresolved int
+	Comments   int
 	// What GetGitHubItems adds (ADR 0117; the inbox leaves them unset): a
 	// pull request's size, its checks counted, its merge state ("clean",
 	// "blocked", …, as GitHubPull's), its base and head branches; an
@@ -40,6 +44,16 @@ type GitHubItem struct {
 	CheckCounts                        CheckCounts
 	MergeState, StateReason            string
 	Base, Head                         string
+}
+
+// GitHubReaction is one kind of emoji reaction on a comment, a review or
+// a pull request's description: GitHub's content in lower case
+// ("thumbs_up", "heart", …), how many reacted so, and whether the user
+// is one of them.
+type GitHubReaction struct {
+	Content string
+	Count   int
+	Mine    bool
 }
 
 // CheckCounts are a pull request's checks by state, at its head: a
@@ -66,6 +80,8 @@ type GitHubComment struct {
 	// ReviewID is the review a review thread's comment was made in (its
 	// node id, as a review's ID); "" for any other comment.
 	ReviewID string
+	// Reactions are the kinds someone reacted with, in GitHub's order.
+	Reactions []GitHubReaction
 }
 
 // GitHubThread is a review thread on a pull request's diff: on Line (from
@@ -119,7 +135,9 @@ type GitHubPull struct {
 	// Body is the one shown and sent.
 	BodySource string
 	// CanEdit is GitHub letting the user edit its title and description.
-	CanEdit    bool
+	CanEdit bool
+	// Reactions are those on its description.
+	Reactions  []GitHubReaction
 	Base, Head string // branches
 	// HeadRepo is the head's repository (owner/name): another one than
 	// Repo for a fork's pull request (CrossRepo).

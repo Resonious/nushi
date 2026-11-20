@@ -9,6 +9,7 @@ import 'package:nushi/github_comment.dart';
 import 'package:nushi/github_parts.dart';
 import 'package:nushi/github_thread.dart';
 import 'package:nushi/markdown.dart';
+import 'package:nushi/pull_reactions.dart';
 import 'package:nushi/pull_side.dart';
 import 'package:nushi/pull_todo_items.dart';
 import 'package:nushi/review_findings.dart';
@@ -154,7 +155,15 @@ class PullThreadState extends State<PullThread> {
               children: [
                 SizedBox(height: ControlSize.regular.height, child: head),
                 if (lines.isNotEmpty) HunkLines(lines),
-                for (final c in x.comments) ThreadComment(c),
+                for (final c in x.comments)
+                  ThreadComment(
+                    c,
+                    reacting: (
+                      daemon: widget.daemon,
+                      host: widget.item.ref.host,
+                      onChanged: widget.onChanged,
+                    ),
+                  ),
                 if (_replying)
                   ThreadReplyBox(
                     daemon: widget.daemon,
@@ -237,11 +246,13 @@ class _ReplyField extends StatelessWidget {
   }
 }
 
-/// A thread's comment: its author's mark, name and age, its text.
+/// A thread's comment: its author's mark, name and age, its text; with
+/// [reacting], its reactions under it.
 class ThreadComment extends StatelessWidget {
-  const new(this.comment, {super.key});
+  const new(this.comment, {super.key, this.reacting});
 
   final GitHubComment comment;
+  final Reacting? reacting;
 
   @override
   Widget build(BuildContext context) {
@@ -271,6 +282,11 @@ class ThreadComment extends StatelessWidget {
                 ],
               ),
               AgentMarkdown(githubText(c.body), images: githubImage),
+              if (reacting case final r?)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Reactions(c.id, c.reactions, reacting: r),
+                ),
             ],
           ),
         ),

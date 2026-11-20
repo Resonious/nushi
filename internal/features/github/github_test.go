@@ -163,6 +163,21 @@ func (f *fakeClient) Resolve(context.Context, string, bool) error {
 	return nil
 }
 
+func (f *fakeClient) Viewed(context.Context, string, int) (viewed, changed []string, err error) {
+	f.note("viewed")
+	return []string{"a.go"}, []string{"b.go"}, f.fail
+}
+
+func (f *fakeClient) SetViewed(_ context.Context, _, path string, viewed bool) error {
+	f.written = append(f.written, fmt.Sprintf("viewed %s %v", path, viewed))
+	return nil
+}
+
+func (f *fakeClient) React(_ context.Context, subject, kind string, on bool) error {
+	f.written = append(f.written, fmt.Sprintf("react %s %s %v", subject, kind, on))
+	return nil
+}
+
 func (f *fakeClient) Comment(context.Context, string, string) error {
 	f.written = append(f.written, "comment")
 	return nil
@@ -543,6 +558,35 @@ func TestStates(t *testing.T) {
 	}
 	if err := w.s.Comment(ctx, "github.com", "PR_1", " "); err == nil {
 		t.Fatal("an empty comment")
+	}
+}
+
+func TestViewed(t *testing.T) {
+	w := newWorld(t)
+	ctx := t.Context()
+	_, _ = w.s.Inbox(ctx, "github.com", githubapi.InboxFilter{}, false)
+	ref := model.GitHubRef{Host: "github.com", Repo: "acme/lumen", Number: 218}
+	viewed, changed, err := w.s.Viewed(ctx, ref, true)
+	if err != nil || !slices.Equal(viewed, []string{"a.go"}) || !slices.Equal(changed, []string{"b.go"}) {
+		t.Fatalf("%v %v %v", viewed, changed, err)
+	}
+	if err := w.s.SetViewed(ctx, "github.com", "PR_218", "a.go", false); err != nil {
+		t.Fatal(err)
+	}
+	if c := w.clients["gho_gh"]; !slices.Contains(c.written, "viewed a.go false") {
+		t.Fatalf("%v", c.written)
+	}
+}
+
+func TestReact(t *testing.T) {
+	w := newWorld(t)
+	ctx := t.Context()
+	_, _ = w.s.Inbox(ctx, "github.com", githubapi.InboxFilter{}, false)
+	if err := w.s.React(ctx, "github.com", "IC_1", "heart", true); err != nil {
+		t.Fatal(err)
+	}
+	if c := w.clients["gho_gh"]; !slices.Contains(c.written, "react IC_1 heart true") {
+		t.Fatalf("%v", c.written)
 	}
 }
 

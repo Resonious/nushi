@@ -15,7 +15,7 @@ const threadFields = `
 fragment Thread on PullRequestReviewThread {
   id path line startLine originalLine originalStartLine diffSide subjectType
   isOutdated isResolved viewerCanReply viewerCanResolve viewerCanUnresolve
-  comments(first: 50) { nodes { id url author { login __typename } authorAssociation body createdAt pullRequestReview { id } } }
+  comments(first: 50) { nodes { id url author { login __typename } authorAssociation body createdAt pullRequestReview { id } ` + reactionFields + ` } }
   hunk: comments(first: 1) { nodes { diffHunk } }
 }`
 
@@ -24,6 +24,7 @@ const pullQuery = `query PullRequest($owner: String!, $name: String!, $number: I
     pullRequest(number: $number) {
       ...PullRow
       createdAt body viewerCanUpdate authorAssociation baseRefName headRefName baseRefOid headRefOid isCrossRepository
+      ` + reactionFields + `
       headRepository { nameWithOwner }
       mergeable mergeStateStatus additions deletions changedFiles
       ` + mergeFields + `
@@ -33,7 +34,7 @@ const pullQuery = `query PullRequest($owner: String!, $name: String!, $number: I
       reviewRequests(first: 30) { nodes { asCodeOwner requestedReviewer { __typename ... on User { login } ... on Bot { login } ... on Mannequin { login } ... on Team { slug } } } }
       latestReviews(first: 30) { nodes { author { login } state } }
       comments(last: 100) { nodes ` + saidFields + ` }
-      reviews(last: 100) { nodes { id url author { login __typename } authorAssociation body state submittedAt commit { oid } } }
+      reviews(last: 100) { nodes { id url author { login __typename } authorAssociation body state submittedAt commit { oid } ` + reactionFields + ` } }
       pending: reviews(first: 1, states: PENDING) { nodes { id comments { totalCount } } }
       threads: reviewThreads(first: 100) { pageInfo { hasNextPage endCursor } nodes { ...Thread } }
       last: commits(last: 1) { nodes { commit { statusCheckRollup { contexts(first: 100) { nodes {
@@ -55,7 +56,7 @@ const threadsQuery = `query Threads($id: ID!, $after: String!) {
 }` + threadFields
 
 // saidFields is what a query asks of a comment (a review's are written out: no createdAt).
-const saidFields = `{ id url author { login __typename } authorAssociation body createdAt }`
+const saidFields = `{ id url author { login __typename } authorAssociation body createdAt ` + reactionFields + ` }`
 
 // said decodes a comment (saidFields), or a review.
 type said struct {
@@ -73,12 +74,13 @@ type said struct {
 	PullRequestReview *struct {
 		ID string `json:"id"`
 	} `json:"pullRequestReview"`
+	ReactionGroups []reactionGroup `json:"reactionGroups"`
 }
 
 func (s said) comment() model.GitHubComment {
 	return model.GitHubComment{ID: s.ID, Author: s.Author.name(), Association: s.AuthorAssociation, Body: Markdown(s.Body),
 		URL: webURL(s.URL), Bot: s.Author != nil && s.Author.Typename == "Bot", Created: cmp.Or(s.SubmittedAt, s.CreatedAt),
-		Review: strings.ToLower(s.State), Commit: s.commit(), ReviewID: s.reviewID()}
+		Review: strings.ToLower(s.State), Commit: s.commit(), ReviewID: s.reviewID(), Reactions: reactions(s.ReactionGroups)}
 }
 
 func (s said) reviewID() string {
@@ -241,15 +243,16 @@ func (c *Client) Pull(ctx context.Context, repo string, number int) (model.GitHu
 		Repository *struct {
 			PullRequest *struct {
 				row
-				CreatedAt         time.Time `json:"createdAt"`
-				Body              string    `json:"body"`
-				ViewerCanUpdate   bool      `json:"viewerCanUpdate"`
-				AuthorAssociation string    `json:"authorAssociation"`
-				BaseRefName       string    `json:"baseRefName"`
-				HeadRefName       string    `json:"headRefName"`
-				BaseRefOid        string    `json:"baseRefOid"`
-				HeadRefOid        string    `json:"headRefOid"`
-				IsCrossRepository bool      `json:"isCrossRepository"`
+				CreatedAt         time.Time       `json:"createdAt"`
+				Body              string          `json:"body"`
+				ViewerCanUpdate   bool            `json:"viewerCanUpdate"`
+				AuthorAssociation string          `json:"authorAssociation"`
+				BaseRefName       string          `json:"baseRefName"`
+				HeadRefName       string          `json:"headRefName"`
+				BaseRefOid        string          `json:"baseRefOid"`
+				HeadRefOid        string          `json:"headRefOid"`
+				IsCrossRepository bool            `json:"isCrossRepository"`
+				ReactionGroups    []reactionGroup `json:"reactionGroups"`
 				HeadRepository    *struct {
 					NameWithOwner string `json:"nameWithOwner"`
 				} `json:"headRepository"`
@@ -320,7 +323,7 @@ func (c *Client) Pull(ctx context.Context, repo string, number int) (model.GitHu
 		Base: p.BaseRefName, Head: p.HeadRefName, BaseOID: p.BaseRefOid, HeadOID: p.HeadRefOid, CrossRepo: p.IsCrossRepository,
 		Mergeable: strings.ToLower(p.Mergeable), MergeState: strings.ToLower(p.MergeStateStatus), Additions: p.Additions,
 		Deletions: p.Deletions, ChangedFiles: p.ChangedFiles, Commits: p.CommitCount.TotalCount, Merge: p.merge(),
-		Labels: p.Labels.labels()}
+		Labels: p.Labels.labels(), Reactions: reactions(p.ReactionGroups)}
 	out.Created = p.CreatedAt
 	for _, a := range p.Assignees.Nodes {
 		out.Assignees = append(out.Assignees, a.Login)

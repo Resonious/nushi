@@ -76,9 +76,10 @@ class ProjectRail extends StatelessWidget {
   final List<MenuEntry> Function(BuildContext context, String folder) entries;
 
   /// How many of [folder]'s chats need the user: those waiting on an
-  /// answer, pinned or in a section too, archived ones aside.
+  /// answer or with failed checks, pinned or in a section too, archived
+  /// ones aside.
   int _needs(String folder) => daemon.chats.values
-      .where((c) => !c.archived && !c.scratch && c.home == folder && c.waiting)
+      .where((c) => !c.archived && !c.scratch && c.home == folder && c.needsYou)
       .length;
 
   /// [folder]'s tile: a click narrows the sidebar to it, a right-click

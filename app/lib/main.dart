@@ -10,6 +10,7 @@ import 'package:nushi/app_log.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/chat_area.dart';
 import 'package:nushi/chat_keys.dart';
+import 'package:nushi/checks_watch.dart';
 import 'package:nushi/comment_drafts_mac.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/daemon_banner.dart';
@@ -93,6 +94,8 @@ class _NushiAppState extends State<NushiApp> {
     super.initState();
     watchPairings(_navigator, widget.daemon.client);
     _alerts = ChatAlerts(widget.daemon);
+    // A chat whose pull request's checks newly fail needs you (ADR 0138).
+    ChecksWatch.of(widget.daemon).start();
     widget.daemon.addListener(_pinChanged);
     _followTab();
     sidebarHidden.addListener(_sidebarChanged);
@@ -227,6 +230,8 @@ class _NushiAppState extends State<NushiApp> {
     if (widget.daemon != old.daemon) {
       old.daemon.removeListener(_pinChanged);
       widget.daemon.addListener(_pinChanged);
+      ChecksWatch.of(old.daemon).stop();
+      ChecksWatch.of(widget.daemon).start();
       _window = _makeWindow();
     }
   }
@@ -242,6 +247,7 @@ class _NushiAppState extends State<NushiApp> {
     widget.daemon.removeListener(_pinChanged);
     _tabOf?.tab.removeListener(_pinChanged);
     _alerts.dispose();
+    ChecksWatch.of(widget.daemon).stop();
     _lifecycle.dispose();
     super.dispose();
   }

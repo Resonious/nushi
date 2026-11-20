@@ -293,6 +293,12 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
       $pb.ServerContext ctx, $0.GetGitHubCommitsRequest request);
   $async.Future<$0.GetGitHubFilesResponse> getGitHubFiles(
       $pb.ServerContext ctx, $0.GetGitHubFilesRequest request);
+  $async.Future<$0.GetGitHubViewedResponse> getGitHubViewed(
+      $pb.ServerContext ctx, $0.GetGitHubViewedRequest request);
+  $async.Future<$0.SetGitHubViewedResponse> setGitHubViewed(
+      $pb.ServerContext ctx, $0.SetGitHubViewedRequest request);
+  $async.Future<$0.ReactGitHubResponse> reactGitHub(
+      $pb.ServerContext ctx, $0.ReactGitHubRequest request);
   $async.Future<$0.GetGitHubJobLogResponse> getGitHubJobLog(
       $pb.ServerContext ctx, $0.GetGitHubJobLogRequest request);
   $async.Future<$0.ReplyGitHubThreadResponse> replyGitHubThread(
@@ -612,6 +618,12 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return $0.GetGitHubCommitsRequest();
       case 'GetGitHubFiles':
         return $0.GetGitHubFilesRequest();
+      case 'GetGitHubViewed':
+        return $0.GetGitHubViewedRequest();
+      case 'SetGitHubViewed':
+        return $0.SetGitHubViewedRequest();
+      case 'ReactGitHub':
+        return $0.ReactGitHubRequest();
       case 'GetGitHubJobLog':
         return $0.GetGitHubJobLogRequest();
       case 'ReplyGitHubThread':
@@ -943,6 +955,12 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return getGitHubCommits(ctx, request as $0.GetGitHubCommitsRequest);
       case 'GetGitHubFiles':
         return getGitHubFiles(ctx, request as $0.GetGitHubFilesRequest);
+      case 'GetGitHubViewed':
+        return getGitHubViewed(ctx, request as $0.GetGitHubViewedRequest);
+      case 'SetGitHubViewed':
+        return setGitHubViewed(ctx, request as $0.SetGitHubViewedRequest);
+      case 'ReactGitHub':
+        return reactGitHub(ctx, request as $0.ReactGitHubRequest);
       case 'GetGitHubJobLog':
         return getGitHubJobLog(ctx, request as $0.GetGitHubJobLogRequest);
       case 'ReplyGitHubThread':

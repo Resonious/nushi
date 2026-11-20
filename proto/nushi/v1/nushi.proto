@@ -477,6 +477,13 @@ service NushiService {
   // A pull request's files from its merge base to its head, both sides'
   // texts, as GetDiff gives them.
   rpc GetGitHubFiles(GetGitHubFilesRequest) returns (GetGitHubFilesResponse);
+  // Which of a pull request's files the user marked viewed (GitHub's
+  // viewerViewedState), and marking one viewed or not. API 130.
+  rpc GetGitHubViewed(GetGitHubViewedRequest) returns (GetGitHubViewedResponse);
+  rpc SetGitHubViewed(SetGitHubViewedRequest) returns (SetGitHubViewedResponse);
+  // Adds the user's emoji reaction to a comment, a review or a pull
+  // request's description, or takes it away. API 131.
+  rpc ReactGitHub(ReactGitHubRequest) returns (ReactGitHubResponse);
   // The end of a failed Actions job's log (16 KB).
   rpc GetGitHubJobLog(GetGitHubJobLogRequest) returns (GetGitHubJobLogResponse);
   // The user's writes.
@@ -3529,6 +3536,10 @@ message GitHubItem {
   // A pull request's base and head branches.
   string base = 21;
   string head = 22;
+  // The commit checks are of (its oid): the head's when they were read;
+  // empty with no checks. Told apart, a failure on a new commit is a new
+  // one (ADR 0138). API 129.
+  string checks_oid = 23;
 }
 
 // A pull request's checks at its head, by state: a neutral one is passed;
@@ -3701,7 +3712,30 @@ message GitHubComment {
   // The review a review thread's comment was made in (its id, as a
   // review's own id here); empty for any other comment. API 127.
   string review_id = 11;
+  // The kinds someone reacted with, in GitHub's order. API 131.
+  repeated GitHubReaction reactions = 12;
 }
+
+// One kind of emoji reaction: GitHub's content in lower case
+// ("thumbs_up", "thumbs_down", "laugh", "hooray", "confused", "heart",
+// "rocket", "eyes"), how many reacted so, and whether the user did.
+message GitHubReaction {
+  string content = 1;
+  int32 count = 2;
+  bool mine = 3;
+}
+
+message ReactGitHubRequest {
+  string host = 1;
+  // The comment's, review's or pull request's node id.
+  string subject = 2;
+  // One of GitHubReaction's contents.
+  string content = 3;
+  // Takes the user's reaction away instead.
+  bool remove = 4;
+}
+
+message ReactGitHubResponse {}
 
 // A review thread on line (from start_line) of path's side ("left", the
 // base; "right", the head), or on the file. An outdated one's lines are
@@ -3821,6 +3855,8 @@ message GitHubPull {
   // GitHub lets the user edit its title and description (viewerCanUpdate:
   // its author, or someone with write access). API 128.
   bool can_edit = 28;
+  // The reactions on its description. API 131.
+  repeated GitHubReaction reactions = 29;
 }
 
 // A label: its name and color (six hex digits, no #, as GitHub gives it).
@@ -3947,6 +3983,29 @@ message GetGitHubFilesRequest {
 message GetGitHubFilesResponse {
   repeated FileChange files = 1;
 }
+
+message GetGitHubViewedRequest {
+  GitHubRef ref = 1;
+  bool quiet = 2;
+}
+
+// Of the first 300 files: the paths the user marked viewed, and those
+// marked before a change since (GitHub's "Changed since last view",
+// shown unticked).
+message GetGitHubViewedResponse {
+  repeated string viewed = 1;
+  repeated string changed = 2;
+}
+
+message SetGitHubViewedRequest {
+  string host = 1;
+  // The pull request's node id.
+  string pull = 2;
+  string path = 3;
+  bool viewed = 4;
+}
+
+message SetGitHubViewedResponse {}
 
 message GetGitHubJobLogRequest {
   GitHubRef ref = 1;
