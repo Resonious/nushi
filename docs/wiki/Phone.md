@@ -45,7 +45,7 @@ Don't scan the code with the iPhone's own Camera app. That opens Safari, and pai
 1. On your phone, tap **Settings** (the gear on the **Chats** screen).
 2. Turn on **Notifications**, and tap **Allow** when iOS asks.
 
-You get a notification when a chat finishes, when its turn fails, when the agent has a question, or when it needs your permission. It says only what happened, such as "Claude finished" or "Codex needs you". It never shows what's in the chat. Tap it to open that chat. You don't get one for the chat you have open.
+You get a notification when a chat finishes, when its turn fails, when the agent has a question, when it needs your permission, or when one of Claude's workflows finishes, fails or stops. It says only what happened, such as "Claude finished" or "Codex needs you". It never shows what's in the chat. Tap it to open that chat. You don't get one for the chat you have open.
 
 To check notifications work, click **Send a test notification** next to your phone in **Settings › Remote access** on your computer.
 
@@ -55,7 +55,7 @@ The **Chats** screen lists your chats. Chats waiting on you come first, under **
 
 Tap a chat to see its transcript. When the agent asks a question or asks for permission, answer it with a tap.
 
-A chat running one of Claude's workflows says **working**, and the workflow's card shows its phase, progress, tokens and time, as on the Mac. Tap the card to open it in place: what it does, then each phase with the subagents running in it. Tap it again to close it. To stop it, open the chat's **⋯** menu and tap **Stop Workflow: …**. If other tasks are running too, the item says **Stop N background tasks**.
+A chat running one of Claude's workflows says **working**, and the workflow's card shows its phase, progress, tokens and time, as on the Mac. Tap the card to open it in place: what it does, then each phase with the subagents running in it, and the phases still **planned**. Tap it again to close it. To stop it, open the chat's **⋯** menu and tap **Stop Workflow: …**. If other tasks are running too, the item says **Stop N background tasks**.
 
 ## Send a message or stop the agent
 

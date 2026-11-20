@@ -62,6 +62,9 @@ func workflowProto(w model.Workflow) *nushiv1.Workflow {
 	for _, p := range w.Phases {
 		out.Phases = append(out.Phases, &nushiv1.WorkflowPhase{Title: p.Title, Detail: p.Detail, Started: int32(p.Started), Done: int32(p.Done), Failed: int32(p.Failed)})
 	}
+	for _, p := range w.Planned {
+		out.Planned = append(out.Planned, &nushiv1.WorkflowPhase{Title: p.Title, Detail: p.Detail})
+	}
 	return out
 }
 

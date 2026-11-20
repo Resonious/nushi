@@ -21,13 +21,19 @@ List<Item> workflowsOf(List<Item> items) => items.where(isWorkflow).toList();
 bool workflowLive(Workflow w) => w.state == 'running';
 
 /// The phase it's in now: the last one reached that hasn't ended, else
-/// the last; null when it has none.
+/// the last reached; null when it reached none. One with no agent started
+/// (the snapshot's list, at the end) isn't reached.
 WorkflowPhase? currentPhase(Workflow w) {
-  for (final p in w.phases.reversed) {
+  final reached = w.phases.where((p) => p.started > 0);
+  for (final p in reached.toList().reversed) {
     if (p.done + p.failed < p.started) return p;
   }
-  return w.phases.isEmpty ? null : w.phases.last;
+  return reached.lastOrNull;
 }
+
+/// What a phase not reached says where a reached one has its count (ADR
+/// 0141): "planned" while the run goes, "not reached" once it ended.
+String plannedWords({required bool live}) => live ? 'planned' : 'not reached';
 
 /// A phase's progress: "Review 5/7" (its agents ended of those started).
 String phaseProgress(WorkflowPhase p) =>

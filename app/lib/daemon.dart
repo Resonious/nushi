@@ -56,7 +56,7 @@ final String dataDir = Platform.environment.containsKey('FLUTTER_TEST')
     : Platform.environment['NUSHI_DATA'] ?? native.install.dataFolder;
 
 /// The API version this app was built with (`internal/api.Version`).
-const apiVersion = 133;
+const apiVersion = 134;
 
 /// The API from which GetDiff answers one file (GetDiffRequest.path), what
 /// a file preview's change marks are drawn from.

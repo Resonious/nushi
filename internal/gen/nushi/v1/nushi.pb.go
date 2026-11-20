@@ -13189,6 +13189,10 @@ type Workflow struct {
 	// For each of running, the index in phases of the phase it runs in; -1
 	// for none. API 132.
 	RunningPhases []int32 `protobuf:"varint,19,rep,packed,name=running_phases,json=runningPhases,proto3" json:"running_phases,omitempty"`
+	// The phases its script plans and it hasn't reached, in the script's
+	// order (Claude's meta.phases), with phases 32 at most; their counts are
+	// 0. A phase leaves it for phases once reached. API 134.
+	Planned       []*WorkflowPhase `protobuf:"bytes,20,rep,name=planned,proto3" json:"planned,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -13345,6 +13349,13 @@ func (x *Workflow) GetTokens() int64 {
 func (x *Workflow) GetRunningPhases() []int32 {
 	if x != nil {
 		return x.RunningPhases
+	}
+	return nil
+}
+
+func (x *Workflow) GetPlanned() []*WorkflowPhase {
+	if x != nil {
+		return x.Planned
 	}
 	return nil
 }
@@ -14407,7 +14418,11 @@ type ItemEvent struct {
 	// Where the item is in the chat, from 0 (not with append): a client that
 	// has only the recent part (GetChatRequest.recent) leaves out what is
 	// before it, and a new item before the end goes there.
-	Index         int32 `protobuf:"varint,3,opt,name=index,proto3" json:"index,omitempty"`
+	Index int32 `protobuf:"varint,3,opt,name=index,proto3" json:"index,omitempty"`
+	// The item is a workflow its chat's agent ran, which the daemon saw end
+	// just now (done, failed or stopped): only this one event says so, never
+	// a replay or a reload, so a client notifies once. API 134.
+	WorkflowEnded bool `protobuf:"varint,4,opt,name=workflow_ended,json=workflowEnded,proto3" json:"workflow_ended,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -14461,6 +14476,13 @@ func (x *ItemEvent) GetIndex() int32 {
 		return x.Index
 	}
 	return 0
+}
+
+func (x *ItemEvent) GetWorkflowEnded() bool {
+	if x != nil {
+		return x.WorkflowEnded
+	}
+	return false
 }
 
 type ChatStatus struct {
@@ -28316,7 +28338,7 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\x0eserver_command\x18' \x01(\tR\rserverCommand\x12.\n" +
 	"\bworkflow\x18( \x01(\v2\x12.nushi.v1.WorkflowR\bworkflow\x12\x18\n" +
 	"\astarted\x18) \x01(\x03R\astarted\x12\x14\n" +
-	"\x05ended\x18* \x01(\x03R\x05endedJ\x04\b\x11\x10\x12J\x04\b\x1e\x10\x1fR\afork_atR\fpassed_on_by\"\xfd\x03\n" +
+	"\x05ended\x18* \x01(\x03R\x05endedJ\x04\b\x11\x10\x12J\x04\b\x1e\x10\x1fR\afork_atR\fpassed_on_by\"\xb0\x04\n" +
 	"\bWorkflow\x12\x15\n" +
 	"\x06run_id\x18\x01 \x01(\tR\x05runId\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12 \n" +
@@ -28336,7 +28358,8 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\asummary\x18\x10 \x01(\tR\asummary\x12\x18\n" +
 	"\astalled\x18\x11 \x01(\bR\astalled\x12\x16\n" +
 	"\x06tokens\x18\x12 \x01(\x03R\x06tokens\x12%\n" +
-	"\x0erunning_phases\x18\x13 \x03(\x05R\rrunningPhasesJ\x04\b\x02\x10\x03R\atask_id\"\x83\x01\n" +
+	"\x0erunning_phases\x18\x13 \x03(\x05R\rrunningPhases\x121\n" +
+	"\aplanned\x18\x14 \x03(\v2\x17.nushi.v1.WorkflowPhaseR\aplannedJ\x04\b\x02\x10\x03R\atask_id\"\x83\x01\n" +
 	"\rWorkflowPhase\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12\x16\n" +
 	"\x06detail\x18\x02 \x01(\tR\x06detail\x12\x18\n" +
@@ -28417,11 +28440,12 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\aoptions\x18\x05 \x03(\v2\x10.nushi.v1.OptionR\aoptions\x12\x1a\n" +
 	"\brequired\x18\x06 \x01(\bR\brequired\x12\x16\n" +
 	"\x06values\x18\a \x03(\tR\x06values\x12\x1b\n" +
-	"\tother_for\x18\b \x01(\tR\botherFor\"]\n" +
+	"\tother_for\x18\b \x01(\tR\botherFor\"\x84\x01\n" +
 	"\tItemEvent\x12\"\n" +
 	"\x04item\x18\x01 \x01(\v2\x0e.nushi.v1.ItemR\x04item\x12\x16\n" +
 	"\x06append\x18\x02 \x01(\bR\x06append\x12\x14\n" +
-	"\x05index\x18\x03 \x01(\x05R\x05index\"\xbf\x04\n" +
+	"\x05index\x18\x03 \x01(\x05R\x05index\x12%\n" +
+	"\x0eworkflow_ended\x18\x04 \x01(\bR\rworkflowEnded\"\xbf\x04\n" +
 	"\n" +
 	"ChatStatus\x12(\n" +
 	"\x10can_write_commit\x18\x0f \x01(\bR\x0ecanWriteCommit\x12\x12\n" +
@@ -30082,446 +30106,447 @@ var file_nushi_v1_nushi_proto_depIdxs = []int32{
 	213, // 87: nushi.v1.Item.findings:type_name -> nushi.v1.Findings
 	206, // 88: nushi.v1.Item.workflow:type_name -> nushi.v1.Workflow
 	207, // 89: nushi.v1.Workflow.phases:type_name -> nushi.v1.WorkflowPhase
-	206, // 90: nushi.v1.GetWorkflowResponse.workflow:type_name -> nushi.v1.Workflow
-	208, // 91: nushi.v1.GetWorkflowResponse.agents:type_name -> nushi.v1.WorkflowAgent
-	205, // 92: nushi.v1.GetWorkflowAgentResponse.items:type_name -> nushi.v1.Item
-	208, // 93: nushi.v1.GetWorkflowAgentResponse.agent:type_name -> nushi.v1.WorkflowAgent
-	214, // 94: nushi.v1.Findings.items:type_name -> nushi.v1.Finding
-	1,   // 95: nushi.v1.Field.type:type_name -> nushi.v1.FieldType
-	218, // 96: nushi.v1.Field.options:type_name -> nushi.v1.Option
-	205, // 97: nushi.v1.ItemEvent.item:type_name -> nushi.v1.Item
-	2,   // 98: nushi.v1.ChatStatus.ended:type_name -> nushi.v1.TurnEnd
-	222, // 99: nushi.v1.ChatTerminals.terminals:type_name -> nushi.v1.Terminal
-	222, // 100: nushi.v1.OpenTerminalResponse.terminal:type_name -> nushi.v1.Terminal
-	222, // 101: nushi.v1.ListTerminalsResponse.terminals:type_name -> nushi.v1.Terminal
-	245, // 102: nushi.v1.ListServersResponse.servers:type_name -> nushi.v1.DevServer
-	244, // 103: nushi.v1.ListServersResponse.files:type_name -> nushi.v1.LaunchFile
-	434, // 104: nushi.v1.DevServer.env:type_name -> nushi.v1.DevServer.EnvEntry
-	3,   // 105: nushi.v1.DevServer.state:type_name -> nushi.v1.DevServerState
-	245, // 106: nushi.v1.StartServerResponse.server:type_name -> nushi.v1.DevServer
-	256, // 107: nushi.v1.CheckFolderResponse.runs:type_name -> nushi.v1.FolderRun
-	260, // 108: nushi.v1.Remote.devices:type_name -> nushi.v1.Device
-	261, // 109: nushi.v1.Remote.pairing:type_name -> nushi.v1.Pairing
-	259, // 110: nushi.v1.GetRemoteResponse.remote:type_name -> nushi.v1.Remote
-	435, // 111: nushi.v1.LogRequest.attrs:type_name -> nushi.v1.LogRequest.AttrsEntry
-	285, // 112: nushi.v1.JiraSite.searches:type_name -> nushi.v1.JiraSearch
-	286, // 113: nushi.v1.JiraIssue.parent:type_name -> nushi.v1.JiraIssueRef
-	286, // 114: nushi.v1.JiraIssue.subtasks:type_name -> nushi.v1.JiraIssueRef
-	288, // 115: nushi.v1.JiraIssue.links:type_name -> nushi.v1.JiraLink
-	289, // 116: nushi.v1.JiraIssue.attachments:type_name -> nushi.v1.JiraAttachment
-	290, // 117: nushi.v1.JiraIssue.comments:type_name -> nushi.v1.JiraComment
-	291, // 118: nushi.v1.JiraIssue.remote_links:type_name -> nushi.v1.JiraRemoteLink
-	286, // 119: nushi.v1.JiraLink.issue:type_name -> nushi.v1.JiraIssueRef
-	293, // 120: nushi.v1.JiraTransition.fields:type_name -> nushi.v1.JiraField
-	294, // 121: nushi.v1.JiraField.options:type_name -> nushi.v1.JiraOption
-	284, // 122: nushi.v1.ListJiraSitesResponse.sites:type_name -> nushi.v1.JiraSite
-	284, // 123: nushi.v1.AddJiraSiteResponse.site:type_name -> nushi.v1.JiraSite
-	295, // 124: nushi.v1.ListJiraBoardsResponse.boards:type_name -> nushi.v1.JiraBoard
-	295, // 125: nushi.v1.SetJiraBoardRequest.board:type_name -> nushi.v1.JiraBoard
-	285, // 126: nushi.v1.SetJiraSearchesRequest.searches:type_name -> nushi.v1.JiraSearch
-	287, // 127: nushi.v1.ListJiraIssuesResponse.issues:type_name -> nushi.v1.JiraIssue
-	316, // 128: nushi.v1.GetJiraJqlResponse.fields:type_name -> nushi.v1.JiraJqlField
-	294, // 129: nushi.v1.SuggestJiraJqlResponse.values:type_name -> nushi.v1.JiraOption
-	287, // 130: nushi.v1.GetJiraIssueResponse.issue:type_name -> nushi.v1.JiraIssue
-	321, // 131: nushi.v1.GetJiraIssueResponse.agent_writes:type_name -> nushi.v1.JiraWrite
-	292, // 132: nushi.v1.ListJiraTransitionsResponse.transitions:type_name -> nushi.v1.JiraTransition
-	436, // 133: nushi.v1.TransitionJiraIssueRequest.values:type_name -> nushi.v1.TransitionJiraIssueRequest.ValuesEntry
-	332, // 134: nushi.v1.FindJiraIssuesResponse.issues:type_name -> nushi.v1.FoundJiraIssue
-	287, // 135: nushi.v1.FoundJiraIssue.issue:type_name -> nushi.v1.JiraIssue
-	333, // 136: nushi.v1.GitHubHost.budget:type_name -> nushi.v1.GitHubBucket
-	334, // 137: nushi.v1.ListGitHubHostsResponse.hosts:type_name -> nushi.v1.GitHubHost
-	343, // 138: nushi.v1.ListGitHubReposResponse.repos:type_name -> nushi.v1.GitHubRepo
-	346, // 139: nushi.v1.GitHubItem.ref:type_name -> nushi.v1.GitHubRef
-	348, // 140: nushi.v1.GitHubItem.check_counts:type_name -> nushi.v1.GitHubCheckCounts
-	347, // 141: nushi.v1.ListGitHubInboxResponse.review:type_name -> nushi.v1.GitHubItem
-	347, // 142: nushi.v1.ListGitHubInboxResponse.mine:type_name -> nushi.v1.GitHubItem
-	347, // 143: nushi.v1.ListGitHubInboxResponse.assigned:type_name -> nushi.v1.GitHubItem
-	351, // 144: nushi.v1.FindChatPullResponse.pull:type_name -> nushi.v1.GitHubLink
-	351, // 145: nushi.v1.FindChatPullResponse.pulls:type_name -> nushi.v1.GitHubLink
-	351, // 146: nushi.v1.FindChatPullResponse.branch_pull:type_name -> nushi.v1.GitHubLink
-	351, // 147: nushi.v1.LinkChatPullRequest.pull:type_name -> nushi.v1.GitHubLink
-	351, // 148: nushi.v1.LinkChatPullRequest.unlink:type_name -> nushi.v1.GitHubLink
-	346, // 149: nushi.v1.GetGitHubItemsRequest.refs:type_name -> nushi.v1.GitHubRef
-	347, // 150: nushi.v1.GetGitHubItemsResponse.items:type_name -> nushi.v1.GitHubItem
-	346, // 151: nushi.v1.GetGitHubItemsResponse.unseen:type_name -> nushi.v1.GitHubRef
-	351, // 152: nushi.v1.GetGitHubStatesRequest.items:type_name -> nushi.v1.GitHubLink
-	347, // 153: nushi.v1.GetGitHubStatesResponse.items:type_name -> nushi.v1.GitHubItem
-	361, // 154: nushi.v1.GitHubComment.reactions:type_name -> nushi.v1.GitHubReaction
-	360, // 155: nushi.v1.GitHubThread.comments:type_name -> nushi.v1.GitHubComment
-	365, // 156: nushi.v1.GitHubCheck.annotations:type_name -> nushi.v1.GitHubAnnotation
-	347, // 157: nushi.v1.GitHubPull.item:type_name -> nushi.v1.GitHubItem
-	367, // 158: nushi.v1.GitHubPull.reviewers:type_name -> nushi.v1.GitHubReviewer
-	360, // 159: nushi.v1.GitHubPull.conversation:type_name -> nushi.v1.GitHubComment
-	364, // 160: nushi.v1.GitHubPull.threads:type_name -> nushi.v1.GitHubThread
-	366, // 161: nushi.v1.GitHubPull.checks:type_name -> nushi.v1.GitHubCheck
-	373, // 162: nushi.v1.GitHubPull.merge:type_name -> nushi.v1.GitHubMerge
-	369, // 163: nushi.v1.GitHubPull.labels:type_name -> nushi.v1.GitHubLabel
-	360, // 164: nushi.v1.GitHubPull.reviews:type_name -> nushi.v1.GitHubComment
-	361, // 165: nushi.v1.GitHubPull.reactions:type_name -> nushi.v1.GitHubReaction
-	346, // 166: nushi.v1.GetGitHubCommitsRequest.ref:type_name -> nushi.v1.GitHubRef
-	370, // 167: nushi.v1.GetGitHubCommitsResponse.commits:type_name -> nushi.v1.GitHubCommit
-	374, // 168: nushi.v1.GitHubMerge.auto:type_name -> nushi.v1.GitHubAutoMerge
-	375, // 169: nushi.v1.GitHubMerge.entry:type_name -> nushi.v1.GitHubQueueEntry
-	346, // 170: nushi.v1.GetGitHubPullRequest.ref:type_name -> nushi.v1.GitHubRef
-	368, // 171: nushi.v1.GetGitHubPullResponse.pull:type_name -> nushi.v1.GitHubPull
-	347, // 172: nushi.v1.GitHubIssue.item:type_name -> nushi.v1.GitHubItem
-	360, // 173: nushi.v1.GitHubIssue.conversation:type_name -> nushi.v1.GitHubComment
-	346, // 174: nushi.v1.GetGitHubIssueRequest.ref:type_name -> nushi.v1.GitHubRef
-	378, // 175: nushi.v1.GetGitHubIssueResponse.issue:type_name -> nushi.v1.GitHubIssue
-	346, // 176: nushi.v1.GetGitHubFilesRequest.ref:type_name -> nushi.v1.GitHubRef
-	196, // 177: nushi.v1.GetGitHubFilesResponse.files:type_name -> nushi.v1.FileChange
-	346, // 178: nushi.v1.GetGitHubViewedRequest.ref:type_name -> nushi.v1.GitHubRef
-	346, // 179: nushi.v1.GetGitHubJobLogRequest.ref:type_name -> nushi.v1.GitHubRef
-	346, // 180: nushi.v1.RerunGitHubChecksRequest.ref:type_name -> nushi.v1.GitHubRef
-	346, // 181: nushi.v1.GetGitHubMergeTextRequest.ref:type_name -> nushi.v1.GitHubRef
-	346, // 182: nushi.v1.MergeGitHubPullRequest.ref:type_name -> nushi.v1.GitHubRef
-	346, // 183: nushi.v1.EnableGitHubAutoMergeRequest.ref:type_name -> nushi.v1.GitHubRef
-	346, // 184: nushi.v1.DisableGitHubAutoMergeRequest.ref:type_name -> nushi.v1.GitHubRef
-	346, // 185: nushi.v1.EnqueueGitHubPullRequest.ref:type_name -> nushi.v1.GitHubRef
-	346, // 186: nushi.v1.DequeueGitHubPullRequest.ref:type_name -> nushi.v1.GitHubRef
-	22,  // 187: nushi.v1.GetCleanUpResponse.worktree:type_name -> nushi.v1.Worktree
-	114, // 188: nushi.v1.GetCleanUpResponse.state:type_name -> nushi.v1.WorktreeState
-	346, // 189: nushi.v1.DeleteGitHubBranchRequest.ref:type_name -> nushi.v1.GitHubRef
-	346, // 190: nushi.v1.RestoreGitHubBranchRequest.ref:type_name -> nushi.v1.GitHubRef
-	346, // 191: nushi.v1.EditGitHubPullRequest.ref:type_name -> nushi.v1.GitHubRef
-	421, // 192: nushi.v1.SubmitGitHubReviewRequest.drafts:type_name -> nushi.v1.GitHubDraft
-	426, // 193: nushi.v1.GetUsageResponse.totals:type_name -> nushi.v1.UsageTotals
-	428, // 194: nushi.v1.GetUsageResponse.days:type_name -> nushi.v1.UsageGroup
-	428, // 195: nushi.v1.GetUsageResponse.agents:type_name -> nushi.v1.UsageGroup
-	428, // 196: nushi.v1.GetUsageResponse.models:type_name -> nushi.v1.UsageGroup
-	428, // 197: nushi.v1.GetUsageResponse.folders:type_name -> nushi.v1.UsageGroup
-	429, // 198: nushi.v1.GetUsageResponse.chats:type_name -> nushi.v1.UsageChat
-	430, // 199: nushi.v1.GetUsageResponse.limits:type_name -> nushi.v1.UsageLimit
-	427, // 200: nushi.v1.UsageTotals.cost:type_name -> nushi.v1.UsageCost
-	426, // 201: nushi.v1.UsageGroup.totals:type_name -> nushi.v1.UsageTotals
-	426, // 202: nushi.v1.UsageChat.totals:type_name -> nushi.v1.UsageTotals
-	4,   // 203: nushi.v1.NushiService.Ping:input_type -> nushi.v1.PingRequest
-	11,  // 204: nushi.v1.NushiService.RestartWhenIdle:input_type -> nushi.v1.RestartWhenIdleRequest
-	7,   // 205: nushi.v1.NushiService.CheckForUpdates:input_type -> nushi.v1.CheckForUpdatesRequest
-	8,   // 206: nushi.v1.NushiService.InstallUpdate:input_type -> nushi.v1.InstallUpdateRequest
-	14,  // 207: nushi.v1.NushiService.ListChats:input_type -> nushi.v1.ListChatsRequest
-	23,  // 208: nushi.v1.NushiService.GetChat:input_type -> nushi.v1.GetChatRequest
-	25,  // 209: nushi.v1.NushiService.GetChatItems:input_type -> nushi.v1.GetChatItemsRequest
-	26,  // 210: nushi.v1.NushiService.GetChatImage:input_type -> nushi.v1.GetChatImageRequest
-	41,  // 211: nushi.v1.NushiService.StartChat:input_type -> nushi.v1.StartChatRequest
-	32,  // 212: nushi.v1.NushiService.ListAgents:input_type -> nushi.v1.ListAgentsRequest
-	37,  // 213: nushi.v1.NushiService.SetUpAgent:input_type -> nushi.v1.SetUpAgentRequest
-	39,  // 214: nushi.v1.NushiService.RemoveAgent:input_type -> nushi.v1.RemoveAgentRequest
-	42,  // 215: nushi.v1.NushiService.ListAgentSessions:input_type -> nushi.v1.ListAgentSessionsRequest
-	48,  // 216: nushi.v1.NushiService.OpenAgentSession:input_type -> nushi.v1.OpenAgentSessionRequest
-	45,  // 217: nushi.v1.NushiService.SearchAgentSessions:input_type -> nushi.v1.SearchAgentSessionsRequest
-	50,  // 218: nushi.v1.NushiService.MoveChat:input_type -> nushi.v1.MoveChatRequest
-	53,  // 219: nushi.v1.NushiService.SendPrompt:input_type -> nushi.v1.SendPromptRequest
-	57,  // 220: nushi.v1.NushiService.RewindChat:input_type -> nushi.v1.RewindChatRequest
-	59,  // 221: nushi.v1.NushiService.Unqueue:input_type -> nushi.v1.UnqueueRequest
-	65,  // 222: nushi.v1.NushiService.CancelTurn:input_type -> nushi.v1.CancelTurnRequest
-	66,  // 223: nushi.v1.NushiService.StopTask:input_type -> nushi.v1.StopTaskRequest
-	209, // 224: nushi.v1.NushiService.GetWorkflow:input_type -> nushi.v1.GetWorkflowRequest
-	211, // 225: nushi.v1.NushiService.GetWorkflowAgent:input_type -> nushi.v1.GetWorkflowAgentRequest
-	69,  // 226: nushi.v1.NushiService.ForkChat:input_type -> nushi.v1.ForkChatRequest
-	75,  // 227: nushi.v1.NushiService.CloseSideChat:input_type -> nushi.v1.CloseSideChatRequest
-	71,  // 228: nushi.v1.NushiService.ForkAsChat:input_type -> nushi.v1.ForkAsChatRequest
-	73,  // 229: nushi.v1.NushiService.KeepSideChat:input_type -> nushi.v1.KeepSideChatRequest
-	77,  // 230: nushi.v1.NushiService.ArchiveSideChat:input_type -> nushi.v1.ArchiveSideChatRequest
-	79,  // 231: nushi.v1.NushiService.RestoreSideChat:input_type -> nushi.v1.RestoreSideChatRequest
-	81,  // 232: nushi.v1.NushiService.RenameChat:input_type -> nushi.v1.RenameChatRequest
-	87,  // 233: nushi.v1.NushiService.PinChats:input_type -> nushi.v1.PinChatsRequest
-	89,  // 234: nushi.v1.NushiService.SetChatColor:input_type -> nushi.v1.SetChatColorRequest
-	91,  // 235: nushi.v1.NushiService.PinMessage:input_type -> nushi.v1.PinMessageRequest
-	83,  // 236: nushi.v1.NushiService.RenameBranch:input_type -> nushi.v1.RenameBranchRequest
-	85,  // 237: nushi.v1.NushiService.SwitchBranch:input_type -> nushi.v1.SwitchBranchRequest
-	93,  // 238: nushi.v1.NushiService.ArchiveChat:input_type -> nushi.v1.ArchiveChatRequest
-	95,  // 239: nushi.v1.NushiService.SleepChat:input_type -> nushi.v1.SleepChatRequest
-	97,  // 240: nushi.v1.NushiService.ReopenChat:input_type -> nushi.v1.ReopenChatRequest
-	99,  // 241: nushi.v1.NushiService.GetMemory:input_type -> nushi.v1.GetMemoryRequest
-	101, // 242: nushi.v1.NushiService.GetSettings:input_type -> nushi.v1.GetSettingsRequest
-	109, // 243: nushi.v1.NushiService.SetSettings:input_type -> nushi.v1.SetSettingsRequest
-	103, // 244: nushi.v1.NushiService.ListTranscripts:input_type -> nushi.v1.ListTranscriptsRequest
-	106, // 245: nushi.v1.NushiService.ClearTranscripts:input_type -> nushi.v1.ClearTranscriptsRequest
-	111, // 246: nushi.v1.NushiService.PlanDeleteChat:input_type -> nushi.v1.PlanDeleteChatRequest
-	116, // 247: nushi.v1.NushiService.DeleteChat:input_type -> nushi.v1.DeleteChatRequest
-	18,  // 248: nushi.v1.NushiService.DismissRemovedChats:input_type -> nushi.v1.DismissRemovedChatsRequest
-	119, // 249: nushi.v1.NushiService.AnswerPermission:input_type -> nushi.v1.AnswerPermissionRequest
-	121, // 250: nushi.v1.NushiService.AnswerQuestion:input_type -> nushi.v1.AnswerQuestionRequest
-	124, // 251: nushi.v1.NushiService.SetConfigOption:input_type -> nushi.v1.SetConfigOptionRequest
-	176, // 252: nushi.v1.NushiService.GetDiff:input_type -> nushi.v1.GetDiffRequest
-	177, // 253: nushi.v1.NushiService.StageFiles:input_type -> nushi.v1.StageFilesRequest
-	179, // 254: nushi.v1.NushiService.WriteCommitMessage:input_type -> nushi.v1.WriteCommitMessageRequest
-	181, // 255: nushi.v1.NushiService.CommitStaged:input_type -> nushi.v1.CommitStagedRequest
-	183, // 256: nushi.v1.NushiService.GetFile:input_type -> nushi.v1.GetFileRequest
-	184, // 257: nushi.v1.NushiService.WatchChatFile:input_type -> nushi.v1.WatchChatFileRequest
-	185, // 258: nushi.v1.NushiService.FindChatFiles:input_type -> nushi.v1.FindChatFilesRequest
-	192, // 259: nushi.v1.NushiService.WriteChatFile:input_type -> nushi.v1.WriteChatFileRequest
-	187, // 260: nushi.v1.NushiService.WatchChatFolder:input_type -> nushi.v1.WatchChatFolderRequest
-	197, // 261: nushi.v1.NushiService.ListCommits:input_type -> nushi.v1.ListCommitsRequest
-	170, // 262: nushi.v1.NushiService.GetFolderStatus:input_type -> nushi.v1.GetFolderStatusRequest
-	168, // 263: nushi.v1.NushiService.GetProjectIcon:input_type -> nushi.v1.GetProjectIconRequest
-	161, // 264: nushi.v1.NushiService.GetRelatedWorktrees:input_type -> nushi.v1.GetRelatedWorktreesRequest
-	165, // 265: nushi.v1.NushiService.GetRelatedWorktreeStats:input_type -> nushi.v1.GetRelatedWorktreeStatsRequest
-	172, // 266: nushi.v1.NushiService.ListBranches:input_type -> nushi.v1.ListBranchesRequest
-	62,  // 267: nushi.v1.NushiService.ListFiles:input_type -> nushi.v1.ListFilesRequest
-	126, // 268: nushi.v1.NushiService.GetContextUsage:input_type -> nushi.v1.GetContextUsageRequest
-	128, // 269: nushi.v1.NushiService.ListMcpServers:input_type -> nushi.v1.ListMcpServersRequest
-	131, // 270: nushi.v1.NushiService.AddMcpServer:input_type -> nushi.v1.AddMcpServerRequest
-	133, // 271: nushi.v1.NushiService.EditMcpServer:input_type -> nushi.v1.EditMcpServerRequest
-	135, // 272: nushi.v1.NushiService.RemoveMcpServer:input_type -> nushi.v1.RemoveMcpServerRequest
-	137, // 273: nushi.v1.NushiService.SetMcpServerOn:input_type -> nushi.v1.SetMcpServerOnRequest
-	139, // 274: nushi.v1.NushiService.LoginMcpServer:input_type -> nushi.v1.LoginMcpServerRequest
-	141, // 275: nushi.v1.NushiService.LogoutMcpServer:input_type -> nushi.v1.LogoutMcpServerRequest
-	143, // 276: nushi.v1.NushiService.ListSkills:input_type -> nushi.v1.ListSkillsRequest
-	148, // 277: nushi.v1.NushiService.SetSkillOn:input_type -> nushi.v1.SetSkillOnRequest
-	150, // 278: nushi.v1.NushiService.SetPluginOn:input_type -> nushi.v1.SetPluginOnRequest
-	152, // 279: nushi.v1.NushiService.UninstallPlugin:input_type -> nushi.v1.UninstallPluginRequest
-	154, // 280: nushi.v1.NushiService.TrashSkill:input_type -> nushi.v1.TrashSkillRequest
-	156, // 281: nushi.v1.NushiService.LinkSkill:input_type -> nushi.v1.LinkSkillRequest
-	158, // 282: nushi.v1.NushiService.ReloadChat:input_type -> nushi.v1.ReloadChatRequest
-	224, // 283: nushi.v1.NushiService.OpenTerminal:input_type -> nushi.v1.OpenTerminalRequest
-	226, // 284: nushi.v1.NushiService.ListTerminals:input_type -> nushi.v1.ListTerminalsRequest
-	228, // 285: nushi.v1.NushiService.AttachTerminal:input_type -> nushi.v1.AttachTerminalRequest
-	230, // 286: nushi.v1.NushiService.WriteTerminal:input_type -> nushi.v1.WriteTerminalRequest
-	232, // 287: nushi.v1.NushiService.ResizeTerminal:input_type -> nushi.v1.ResizeTerminalRequest
-	234, // 288: nushi.v1.NushiService.RenameTerminal:input_type -> nushi.v1.RenameTerminalRequest
-	236, // 289: nushi.v1.NushiService.ArrangeTerminals:input_type -> nushi.v1.ArrangeTerminalsRequest
-	238, // 290: nushi.v1.NushiService.RestartTerminal:input_type -> nushi.v1.RestartTerminalRequest
-	240, // 291: nushi.v1.NushiService.CloseTerminal:input_type -> nushi.v1.CloseTerminalRequest
-	242, // 292: nushi.v1.NushiService.ListServers:input_type -> nushi.v1.ListServersRequest
-	246, // 293: nushi.v1.NushiService.StartServer:input_type -> nushi.v1.StartServerRequest
-	248, // 294: nushi.v1.NushiService.StopServer:input_type -> nushi.v1.StopServerRequest
-	250, // 295: nushi.v1.NushiService.StopAllServers:input_type -> nushi.v1.StopAllServersRequest
-	252, // 296: nushi.v1.NushiService.WatchServerLog:input_type -> nushi.v1.WatchServerLogRequest
-	254, // 297: nushi.v1.NushiService.CheckFolder:input_type -> nushi.v1.CheckFolderRequest
-	257, // 298: nushi.v1.NushiService.TrustFolder:input_type -> nushi.v1.TrustFolderRequest
-	262, // 299: nushi.v1.NushiService.GetRemote:input_type -> nushi.v1.GetRemoteRequest
-	264, // 300: nushi.v1.NushiService.SetRemote:input_type -> nushi.v1.SetRemoteRequest
-	266, // 301: nushi.v1.NushiService.StartPairing:input_type -> nushi.v1.StartPairingRequest
-	268, // 302: nushi.v1.NushiService.ConfirmPairing:input_type -> nushi.v1.ConfirmPairingRequest
-	270, // 303: nushi.v1.NushiService.RevokeDevice:input_type -> nushi.v1.RevokeDeviceRequest
-	272, // 304: nushi.v1.NushiService.GetPushKey:input_type -> nushi.v1.GetPushKeyRequest
-	274, // 305: nushi.v1.NushiService.SetPushSubscription:input_type -> nushi.v1.SetPushSubscriptionRequest
-	276, // 306: nushi.v1.NushiService.SetDeviceView:input_type -> nushi.v1.SetDeviceViewRequest
-	278, // 307: nushi.v1.NushiService.SendTestPush:input_type -> nushi.v1.SendTestPushRequest
-	280, // 308: nushi.v1.NushiService.UnpairThisDevice:input_type -> nushi.v1.UnpairThisDeviceRequest
-	282, // 309: nushi.v1.NushiService.Log:input_type -> nushi.v1.LogRequest
-	296, // 310: nushi.v1.NushiService.ListJiraSites:input_type -> nushi.v1.ListJiraSitesRequest
-	298, // 311: nushi.v1.NushiService.AddJiraSite:input_type -> nushi.v1.AddJiraSiteRequest
-	300, // 312: nushi.v1.NushiService.RemoveJiraSite:input_type -> nushi.v1.RemoveJiraSiteRequest
-	302, // 313: nushi.v1.NushiService.CheckJiraSite:input_type -> nushi.v1.CheckJiraSiteRequest
-	304, // 314: nushi.v1.NushiService.AllowJiraToken:input_type -> nushi.v1.AllowJiraTokenRequest
-	306, // 315: nushi.v1.NushiService.ListJiraBoards:input_type -> nushi.v1.ListJiraBoardsRequest
-	308, // 316: nushi.v1.NushiService.SetJiraBoard:input_type -> nushi.v1.SetJiraBoardRequest
-	310, // 317: nushi.v1.NushiService.SetJiraSearches:input_type -> nushi.v1.SetJiraSearchesRequest
-	312, // 318: nushi.v1.NushiService.ListJiraIssues:input_type -> nushi.v1.ListJiraIssuesRequest
-	314, // 319: nushi.v1.NushiService.GetJiraJql:input_type -> nushi.v1.GetJiraJqlRequest
-	317, // 320: nushi.v1.NushiService.SuggestJiraJql:input_type -> nushi.v1.SuggestJiraJqlRequest
-	319, // 321: nushi.v1.NushiService.GetJiraIssue:input_type -> nushi.v1.GetJiraIssueRequest
-	322, // 322: nushi.v1.NushiService.ListJiraTransitions:input_type -> nushi.v1.ListJiraTransitionsRequest
-	324, // 323: nushi.v1.NushiService.TransitionJiraIssue:input_type -> nushi.v1.TransitionJiraIssueRequest
-	326, // 324: nushi.v1.NushiService.AddJiraComment:input_type -> nushi.v1.AddJiraCommentRequest
-	330, // 325: nushi.v1.NushiService.FindJiraIssues:input_type -> nushi.v1.FindJiraIssuesRequest
-	328, // 326: nushi.v1.NushiService.GetJiraAttachment:input_type -> nushi.v1.GetJiraAttachmentRequest
-	335, // 327: nushi.v1.NushiService.ListGitHubHosts:input_type -> nushi.v1.ListGitHubHostsRequest
-	337, // 328: nushi.v1.NushiService.AddGitHubToken:input_type -> nushi.v1.AddGitHubTokenRequest
-	339, // 329: nushi.v1.NushiService.RemoveGitHubToken:input_type -> nushi.v1.RemoveGitHubTokenRequest
-	341, // 330: nushi.v1.NushiService.AllowGitHubToken:input_type -> nushi.v1.AllowGitHubTokenRequest
-	344, // 331: nushi.v1.NushiService.ListGitHubRepos:input_type -> nushi.v1.ListGitHubReposRequest
-	349, // 332: nushi.v1.NushiService.ListGitHubInbox:input_type -> nushi.v1.ListGitHubInboxRequest
-	358, // 333: nushi.v1.NushiService.GetGitHubStates:input_type -> nushi.v1.GetGitHubStatesRequest
-	356, // 334: nushi.v1.NushiService.GetGitHubItems:input_type -> nushi.v1.GetGitHubItemsRequest
-	376, // 335: nushi.v1.NushiService.GetGitHubPull:input_type -> nushi.v1.GetGitHubPullRequest
-	379, // 336: nushi.v1.NushiService.GetGitHubIssue:input_type -> nushi.v1.GetGitHubIssueRequest
-	371, // 337: nushi.v1.NushiService.GetGitHubCommits:input_type -> nushi.v1.GetGitHubCommitsRequest
-	381, // 338: nushi.v1.NushiService.GetGitHubFiles:input_type -> nushi.v1.GetGitHubFilesRequest
-	383, // 339: nushi.v1.NushiService.GetGitHubViewed:input_type -> nushi.v1.GetGitHubViewedRequest
-	385, // 340: nushi.v1.NushiService.SetGitHubViewed:input_type -> nushi.v1.SetGitHubViewedRequest
-	362, // 341: nushi.v1.NushiService.ReactGitHub:input_type -> nushi.v1.ReactGitHubRequest
-	387, // 342: nushi.v1.NushiService.GetGitHubJobLog:input_type -> nushi.v1.GetGitHubJobLogRequest
-	389, // 343: nushi.v1.NushiService.ReplyGitHubThread:input_type -> nushi.v1.ReplyGitHubThreadRequest
-	391, // 344: nushi.v1.NushiService.ResolveGitHubThread:input_type -> nushi.v1.ResolveGitHubThreadRequest
-	417, // 345: nushi.v1.NushiService.AddGitHubComment:input_type -> nushi.v1.AddGitHubCommentRequest
-	422, // 346: nushi.v1.NushiService.SubmitGitHubReview:input_type -> nushi.v1.SubmitGitHubReviewRequest
-	418, // 347: nushi.v1.NushiService.EditGitHubPull:input_type -> nushi.v1.EditGitHubPullRequest
-	393, // 348: nushi.v1.NushiService.RerunGitHubChecks:input_type -> nushi.v1.RerunGitHubChecksRequest
-	394, // 349: nushi.v1.NushiService.GetGitHubMergeText:input_type -> nushi.v1.GetGitHubMergeTextRequest
-	396, // 350: nushi.v1.NushiService.MergeGitHubPull:input_type -> nushi.v1.MergeGitHubPullRequest
-	398, // 351: nushi.v1.NushiService.EnableGitHubAutoMerge:input_type -> nushi.v1.EnableGitHubAutoMergeRequest
-	400, // 352: nushi.v1.NushiService.DisableGitHubAutoMerge:input_type -> nushi.v1.DisableGitHubAutoMergeRequest
-	402, // 353: nushi.v1.NushiService.EnqueueGitHubPull:input_type -> nushi.v1.EnqueueGitHubPullRequest
-	404, // 354: nushi.v1.NushiService.DequeueGitHubPull:input_type -> nushi.v1.DequeueGitHubPullRequest
-	406, // 355: nushi.v1.NushiService.GetCleanUp:input_type -> nushi.v1.GetCleanUpRequest
-	408, // 356: nushi.v1.NushiService.RemoveChatWorktree:input_type -> nushi.v1.RemoveChatWorktreeRequest
-	410, // 357: nushi.v1.NushiService.DeleteChatBranch:input_type -> nushi.v1.DeleteChatBranchRequest
-	412, // 358: nushi.v1.NushiService.DeleteGitHubBranch:input_type -> nushi.v1.DeleteGitHubBranchRequest
-	414, // 359: nushi.v1.NushiService.RestoreGitHubBranch:input_type -> nushi.v1.RestoreGitHubBranchRequest
-	352, // 360: nushi.v1.NushiService.FindChatPull:input_type -> nushi.v1.FindChatPullRequest
-	354, // 361: nushi.v1.NushiService.LinkChatPull:input_type -> nushi.v1.LinkChatPullRequest
-	424, // 362: nushi.v1.NushiService.GetUsage:input_type -> nushi.v1.GetUsageRequest
-	200, // 363: nushi.v1.NushiService.Events:input_type -> nushi.v1.EventsRequest
-	5,   // 364: nushi.v1.NushiService.Ping:output_type -> nushi.v1.PingResponse
-	12,  // 365: nushi.v1.NushiService.RestartWhenIdle:output_type -> nushi.v1.RestartWhenIdleResponse
-	10,  // 366: nushi.v1.NushiService.CheckForUpdates:output_type -> nushi.v1.CheckForUpdatesResponse
-	9,   // 367: nushi.v1.NushiService.InstallUpdate:output_type -> nushi.v1.InstallUpdateResponse
-	15,  // 368: nushi.v1.NushiService.ListChats:output_type -> nushi.v1.ListChatsResponse
-	24,  // 369: nushi.v1.NushiService.GetChat:output_type -> nushi.v1.GetChatResponse
-	28,  // 370: nushi.v1.NushiService.GetChatItems:output_type -> nushi.v1.GetChatItemsResponse
-	27,  // 371: nushi.v1.NushiService.GetChatImage:output_type -> nushi.v1.GetChatImageResponse
-	52,  // 372: nushi.v1.NushiService.StartChat:output_type -> nushi.v1.StartChatResponse
-	33,  // 373: nushi.v1.NushiService.ListAgents:output_type -> nushi.v1.ListAgentsResponse
-	38,  // 374: nushi.v1.NushiService.SetUpAgent:output_type -> nushi.v1.SetUpAgentResponse
-	40,  // 375: nushi.v1.NushiService.RemoveAgent:output_type -> nushi.v1.RemoveAgentResponse
-	43,  // 376: nushi.v1.NushiService.ListAgentSessions:output_type -> nushi.v1.ListAgentSessionsResponse
-	49,  // 377: nushi.v1.NushiService.OpenAgentSession:output_type -> nushi.v1.OpenAgentSessionResponse
-	46,  // 378: nushi.v1.NushiService.SearchAgentSessions:output_type -> nushi.v1.SearchAgentSessionsResponse
-	51,  // 379: nushi.v1.NushiService.MoveChat:output_type -> nushi.v1.MoveChatResponse
-	64,  // 380: nushi.v1.NushiService.SendPrompt:output_type -> nushi.v1.SendPromptResponse
-	58,  // 381: nushi.v1.NushiService.RewindChat:output_type -> nushi.v1.RewindChatResponse
-	60,  // 382: nushi.v1.NushiService.Unqueue:output_type -> nushi.v1.UnqueueResponse
-	68,  // 383: nushi.v1.NushiService.CancelTurn:output_type -> nushi.v1.CancelTurnResponse
-	67,  // 384: nushi.v1.NushiService.StopTask:output_type -> nushi.v1.StopTaskResponse
-	210, // 385: nushi.v1.NushiService.GetWorkflow:output_type -> nushi.v1.GetWorkflowResponse
-	212, // 386: nushi.v1.NushiService.GetWorkflowAgent:output_type -> nushi.v1.GetWorkflowAgentResponse
-	70,  // 387: nushi.v1.NushiService.ForkChat:output_type -> nushi.v1.ForkChatResponse
-	76,  // 388: nushi.v1.NushiService.CloseSideChat:output_type -> nushi.v1.CloseSideChatResponse
-	72,  // 389: nushi.v1.NushiService.ForkAsChat:output_type -> nushi.v1.ForkAsChatResponse
-	74,  // 390: nushi.v1.NushiService.KeepSideChat:output_type -> nushi.v1.KeepSideChatResponse
-	78,  // 391: nushi.v1.NushiService.ArchiveSideChat:output_type -> nushi.v1.ArchiveSideChatResponse
-	80,  // 392: nushi.v1.NushiService.RestoreSideChat:output_type -> nushi.v1.RestoreSideChatResponse
-	82,  // 393: nushi.v1.NushiService.RenameChat:output_type -> nushi.v1.RenameChatResponse
-	88,  // 394: nushi.v1.NushiService.PinChats:output_type -> nushi.v1.PinChatsResponse
-	90,  // 395: nushi.v1.NushiService.SetChatColor:output_type -> nushi.v1.SetChatColorResponse
-	92,  // 396: nushi.v1.NushiService.PinMessage:output_type -> nushi.v1.PinMessageResponse
-	84,  // 397: nushi.v1.NushiService.RenameBranch:output_type -> nushi.v1.RenameBranchResponse
-	86,  // 398: nushi.v1.NushiService.SwitchBranch:output_type -> nushi.v1.SwitchBranchResponse
-	94,  // 399: nushi.v1.NushiService.ArchiveChat:output_type -> nushi.v1.ArchiveChatResponse
-	96,  // 400: nushi.v1.NushiService.SleepChat:output_type -> nushi.v1.SleepChatResponse
-	98,  // 401: nushi.v1.NushiService.ReopenChat:output_type -> nushi.v1.ReopenChatResponse
-	100, // 402: nushi.v1.NushiService.GetMemory:output_type -> nushi.v1.GetMemoryResponse
-	108, // 403: nushi.v1.NushiService.GetSettings:output_type -> nushi.v1.GetSettingsResponse
-	110, // 404: nushi.v1.NushiService.SetSettings:output_type -> nushi.v1.SetSettingsResponse
-	104, // 405: nushi.v1.NushiService.ListTranscripts:output_type -> nushi.v1.ListTranscriptsResponse
-	107, // 406: nushi.v1.NushiService.ClearTranscripts:output_type -> nushi.v1.ClearTranscriptsResponse
-	112, // 407: nushi.v1.NushiService.PlanDeleteChat:output_type -> nushi.v1.PlanDeleteChatResponse
-	118, // 408: nushi.v1.NushiService.DeleteChat:output_type -> nushi.v1.DeleteChatResponse
-	19,  // 409: nushi.v1.NushiService.DismissRemovedChats:output_type -> nushi.v1.DismissRemovedChatsResponse
-	120, // 410: nushi.v1.NushiService.AnswerPermission:output_type -> nushi.v1.AnswerPermissionResponse
-	123, // 411: nushi.v1.NushiService.AnswerQuestion:output_type -> nushi.v1.AnswerQuestionResponse
-	125, // 412: nushi.v1.NushiService.SetConfigOption:output_type -> nushi.v1.SetConfigOptionResponse
-	195, // 413: nushi.v1.NushiService.GetDiff:output_type -> nushi.v1.GetDiffResponse
-	178, // 414: nushi.v1.NushiService.StageFiles:output_type -> nushi.v1.StageFilesResponse
-	180, // 415: nushi.v1.NushiService.WriteCommitMessage:output_type -> nushi.v1.WriteCommitMessageResponse
-	182, // 416: nushi.v1.NushiService.CommitStaged:output_type -> nushi.v1.CommitStagedResponse
-	194, // 417: nushi.v1.NushiService.GetFile:output_type -> nushi.v1.GetFileResponse
-	191, // 418: nushi.v1.NushiService.WatchChatFile:output_type -> nushi.v1.WatchChatFileResponse
-	186, // 419: nushi.v1.NushiService.FindChatFiles:output_type -> nushi.v1.FindChatFilesResponse
-	193, // 420: nushi.v1.NushiService.WriteChatFile:output_type -> nushi.v1.WriteChatFileResponse
-	188, // 421: nushi.v1.NushiService.WatchChatFolder:output_type -> nushi.v1.WatchChatFolderResponse
-	198, // 422: nushi.v1.NushiService.ListCommits:output_type -> nushi.v1.ListCommitsResponse
-	171, // 423: nushi.v1.NushiService.GetFolderStatus:output_type -> nushi.v1.GetFolderStatusResponse
-	169, // 424: nushi.v1.NushiService.GetProjectIcon:output_type -> nushi.v1.GetProjectIconResponse
-	162, // 425: nushi.v1.NushiService.GetRelatedWorktrees:output_type -> nushi.v1.GetRelatedWorktreesResponse
-	166, // 426: nushi.v1.NushiService.GetRelatedWorktreeStats:output_type -> nushi.v1.GetRelatedWorktreeStatsResponse
-	173, // 427: nushi.v1.NushiService.ListBranches:output_type -> nushi.v1.ListBranchesResponse
-	63,  // 428: nushi.v1.NushiService.ListFiles:output_type -> nushi.v1.ListFilesResponse
-	127, // 429: nushi.v1.NushiService.GetContextUsage:output_type -> nushi.v1.GetContextUsageResponse
-	129, // 430: nushi.v1.NushiService.ListMcpServers:output_type -> nushi.v1.ListMcpServersResponse
-	132, // 431: nushi.v1.NushiService.AddMcpServer:output_type -> nushi.v1.AddMcpServerResponse
-	134, // 432: nushi.v1.NushiService.EditMcpServer:output_type -> nushi.v1.EditMcpServerResponse
-	136, // 433: nushi.v1.NushiService.RemoveMcpServer:output_type -> nushi.v1.RemoveMcpServerResponse
-	138, // 434: nushi.v1.NushiService.SetMcpServerOn:output_type -> nushi.v1.SetMcpServerOnResponse
-	140, // 435: nushi.v1.NushiService.LoginMcpServer:output_type -> nushi.v1.LoginMcpServerResponse
-	142, // 436: nushi.v1.NushiService.LogoutMcpServer:output_type -> nushi.v1.LogoutMcpServerResponse
-	144, // 437: nushi.v1.NushiService.ListSkills:output_type -> nushi.v1.ListSkillsResponse
-	149, // 438: nushi.v1.NushiService.SetSkillOn:output_type -> nushi.v1.SetSkillOnResponse
-	151, // 439: nushi.v1.NushiService.SetPluginOn:output_type -> nushi.v1.SetPluginOnResponse
-	153, // 440: nushi.v1.NushiService.UninstallPlugin:output_type -> nushi.v1.UninstallPluginResponse
-	155, // 441: nushi.v1.NushiService.TrashSkill:output_type -> nushi.v1.TrashSkillResponse
-	157, // 442: nushi.v1.NushiService.LinkSkill:output_type -> nushi.v1.LinkSkillResponse
-	159, // 443: nushi.v1.NushiService.ReloadChat:output_type -> nushi.v1.ReloadChatResponse
-	225, // 444: nushi.v1.NushiService.OpenTerminal:output_type -> nushi.v1.OpenTerminalResponse
-	227, // 445: nushi.v1.NushiService.ListTerminals:output_type -> nushi.v1.ListTerminalsResponse
-	229, // 446: nushi.v1.NushiService.AttachTerminal:output_type -> nushi.v1.AttachTerminalResponse
-	231, // 447: nushi.v1.NushiService.WriteTerminal:output_type -> nushi.v1.WriteTerminalResponse
-	233, // 448: nushi.v1.NushiService.ResizeTerminal:output_type -> nushi.v1.ResizeTerminalResponse
-	235, // 449: nushi.v1.NushiService.RenameTerminal:output_type -> nushi.v1.RenameTerminalResponse
-	237, // 450: nushi.v1.NushiService.ArrangeTerminals:output_type -> nushi.v1.ArrangeTerminalsResponse
-	239, // 451: nushi.v1.NushiService.RestartTerminal:output_type -> nushi.v1.RestartTerminalResponse
-	241, // 452: nushi.v1.NushiService.CloseTerminal:output_type -> nushi.v1.CloseTerminalResponse
-	243, // 453: nushi.v1.NushiService.ListServers:output_type -> nushi.v1.ListServersResponse
-	247, // 454: nushi.v1.NushiService.StartServer:output_type -> nushi.v1.StartServerResponse
-	249, // 455: nushi.v1.NushiService.StopServer:output_type -> nushi.v1.StopServerResponse
-	251, // 456: nushi.v1.NushiService.StopAllServers:output_type -> nushi.v1.StopAllServersResponse
-	253, // 457: nushi.v1.NushiService.WatchServerLog:output_type -> nushi.v1.WatchServerLogResponse
-	255, // 458: nushi.v1.NushiService.CheckFolder:output_type -> nushi.v1.CheckFolderResponse
-	258, // 459: nushi.v1.NushiService.TrustFolder:output_type -> nushi.v1.TrustFolderResponse
-	263, // 460: nushi.v1.NushiService.GetRemote:output_type -> nushi.v1.GetRemoteResponse
-	265, // 461: nushi.v1.NushiService.SetRemote:output_type -> nushi.v1.SetRemoteResponse
-	267, // 462: nushi.v1.NushiService.StartPairing:output_type -> nushi.v1.StartPairingResponse
-	269, // 463: nushi.v1.NushiService.ConfirmPairing:output_type -> nushi.v1.ConfirmPairingResponse
-	271, // 464: nushi.v1.NushiService.RevokeDevice:output_type -> nushi.v1.RevokeDeviceResponse
-	273, // 465: nushi.v1.NushiService.GetPushKey:output_type -> nushi.v1.GetPushKeyResponse
-	275, // 466: nushi.v1.NushiService.SetPushSubscription:output_type -> nushi.v1.SetPushSubscriptionResponse
-	277, // 467: nushi.v1.NushiService.SetDeviceView:output_type -> nushi.v1.SetDeviceViewResponse
-	279, // 468: nushi.v1.NushiService.SendTestPush:output_type -> nushi.v1.SendTestPushResponse
-	281, // 469: nushi.v1.NushiService.UnpairThisDevice:output_type -> nushi.v1.UnpairThisDeviceResponse
-	283, // 470: nushi.v1.NushiService.Log:output_type -> nushi.v1.LogResponse
-	297, // 471: nushi.v1.NushiService.ListJiraSites:output_type -> nushi.v1.ListJiraSitesResponse
-	299, // 472: nushi.v1.NushiService.AddJiraSite:output_type -> nushi.v1.AddJiraSiteResponse
-	301, // 473: nushi.v1.NushiService.RemoveJiraSite:output_type -> nushi.v1.RemoveJiraSiteResponse
-	303, // 474: nushi.v1.NushiService.CheckJiraSite:output_type -> nushi.v1.CheckJiraSiteResponse
-	305, // 475: nushi.v1.NushiService.AllowJiraToken:output_type -> nushi.v1.AllowJiraTokenResponse
-	307, // 476: nushi.v1.NushiService.ListJiraBoards:output_type -> nushi.v1.ListJiraBoardsResponse
-	309, // 477: nushi.v1.NushiService.SetJiraBoard:output_type -> nushi.v1.SetJiraBoardResponse
-	311, // 478: nushi.v1.NushiService.SetJiraSearches:output_type -> nushi.v1.SetJiraSearchesResponse
-	313, // 479: nushi.v1.NushiService.ListJiraIssues:output_type -> nushi.v1.ListJiraIssuesResponse
-	315, // 480: nushi.v1.NushiService.GetJiraJql:output_type -> nushi.v1.GetJiraJqlResponse
-	318, // 481: nushi.v1.NushiService.SuggestJiraJql:output_type -> nushi.v1.SuggestJiraJqlResponse
-	320, // 482: nushi.v1.NushiService.GetJiraIssue:output_type -> nushi.v1.GetJiraIssueResponse
-	323, // 483: nushi.v1.NushiService.ListJiraTransitions:output_type -> nushi.v1.ListJiraTransitionsResponse
-	325, // 484: nushi.v1.NushiService.TransitionJiraIssue:output_type -> nushi.v1.TransitionJiraIssueResponse
-	327, // 485: nushi.v1.NushiService.AddJiraComment:output_type -> nushi.v1.AddJiraCommentResponse
-	331, // 486: nushi.v1.NushiService.FindJiraIssues:output_type -> nushi.v1.FindJiraIssuesResponse
-	329, // 487: nushi.v1.NushiService.GetJiraAttachment:output_type -> nushi.v1.GetJiraAttachmentResponse
-	336, // 488: nushi.v1.NushiService.ListGitHubHosts:output_type -> nushi.v1.ListGitHubHostsResponse
-	338, // 489: nushi.v1.NushiService.AddGitHubToken:output_type -> nushi.v1.AddGitHubTokenResponse
-	340, // 490: nushi.v1.NushiService.RemoveGitHubToken:output_type -> nushi.v1.RemoveGitHubTokenResponse
-	342, // 491: nushi.v1.NushiService.AllowGitHubToken:output_type -> nushi.v1.AllowGitHubTokenResponse
-	345, // 492: nushi.v1.NushiService.ListGitHubRepos:output_type -> nushi.v1.ListGitHubReposResponse
-	350, // 493: nushi.v1.NushiService.ListGitHubInbox:output_type -> nushi.v1.ListGitHubInboxResponse
-	359, // 494: nushi.v1.NushiService.GetGitHubStates:output_type -> nushi.v1.GetGitHubStatesResponse
-	357, // 495: nushi.v1.NushiService.GetGitHubItems:output_type -> nushi.v1.GetGitHubItemsResponse
-	377, // 496: nushi.v1.NushiService.GetGitHubPull:output_type -> nushi.v1.GetGitHubPullResponse
-	380, // 497: nushi.v1.NushiService.GetGitHubIssue:output_type -> nushi.v1.GetGitHubIssueResponse
-	372, // 498: nushi.v1.NushiService.GetGitHubCommits:output_type -> nushi.v1.GetGitHubCommitsResponse
-	382, // 499: nushi.v1.NushiService.GetGitHubFiles:output_type -> nushi.v1.GetGitHubFilesResponse
-	384, // 500: nushi.v1.NushiService.GetGitHubViewed:output_type -> nushi.v1.GetGitHubViewedResponse
-	386, // 501: nushi.v1.NushiService.SetGitHubViewed:output_type -> nushi.v1.SetGitHubViewedResponse
-	363, // 502: nushi.v1.NushiService.ReactGitHub:output_type -> nushi.v1.ReactGitHubResponse
-	388, // 503: nushi.v1.NushiService.GetGitHubJobLog:output_type -> nushi.v1.GetGitHubJobLogResponse
-	390, // 504: nushi.v1.NushiService.ReplyGitHubThread:output_type -> nushi.v1.ReplyGitHubThreadResponse
-	392, // 505: nushi.v1.NushiService.ResolveGitHubThread:output_type -> nushi.v1.ResolveGitHubThreadResponse
-	420, // 506: nushi.v1.NushiService.AddGitHubComment:output_type -> nushi.v1.AddGitHubCommentResponse
-	423, // 507: nushi.v1.NushiService.SubmitGitHubReview:output_type -> nushi.v1.SubmitGitHubReviewResponse
-	419, // 508: nushi.v1.NushiService.EditGitHubPull:output_type -> nushi.v1.EditGitHubPullResponse
-	416, // 509: nushi.v1.NushiService.RerunGitHubChecks:output_type -> nushi.v1.RerunGitHubChecksResponse
-	395, // 510: nushi.v1.NushiService.GetGitHubMergeText:output_type -> nushi.v1.GetGitHubMergeTextResponse
-	397, // 511: nushi.v1.NushiService.MergeGitHubPull:output_type -> nushi.v1.MergeGitHubPullResponse
-	399, // 512: nushi.v1.NushiService.EnableGitHubAutoMerge:output_type -> nushi.v1.EnableGitHubAutoMergeResponse
-	401, // 513: nushi.v1.NushiService.DisableGitHubAutoMerge:output_type -> nushi.v1.DisableGitHubAutoMergeResponse
-	403, // 514: nushi.v1.NushiService.EnqueueGitHubPull:output_type -> nushi.v1.EnqueueGitHubPullResponse
-	405, // 515: nushi.v1.NushiService.DequeueGitHubPull:output_type -> nushi.v1.DequeueGitHubPullResponse
-	407, // 516: nushi.v1.NushiService.GetCleanUp:output_type -> nushi.v1.GetCleanUpResponse
-	409, // 517: nushi.v1.NushiService.RemoveChatWorktree:output_type -> nushi.v1.RemoveChatWorktreeResponse
-	411, // 518: nushi.v1.NushiService.DeleteChatBranch:output_type -> nushi.v1.DeleteChatBranchResponse
-	413, // 519: nushi.v1.NushiService.DeleteGitHubBranch:output_type -> nushi.v1.DeleteGitHubBranchResponse
-	415, // 520: nushi.v1.NushiService.RestoreGitHubBranch:output_type -> nushi.v1.RestoreGitHubBranchResponse
-	353, // 521: nushi.v1.NushiService.FindChatPull:output_type -> nushi.v1.FindChatPullResponse
-	355, // 522: nushi.v1.NushiService.LinkChatPull:output_type -> nushi.v1.LinkChatPullResponse
-	425, // 523: nushi.v1.NushiService.GetUsage:output_type -> nushi.v1.GetUsageResponse
-	201, // 524: nushi.v1.NushiService.Events:output_type -> nushi.v1.EventsResponse
-	364, // [364:525] is the sub-list for method output_type
-	203, // [203:364] is the sub-list for method input_type
-	203, // [203:203] is the sub-list for extension type_name
-	203, // [203:203] is the sub-list for extension extendee
-	0,   // [0:203] is the sub-list for field type_name
+	207, // 90: nushi.v1.Workflow.planned:type_name -> nushi.v1.WorkflowPhase
+	206, // 91: nushi.v1.GetWorkflowResponse.workflow:type_name -> nushi.v1.Workflow
+	208, // 92: nushi.v1.GetWorkflowResponse.agents:type_name -> nushi.v1.WorkflowAgent
+	205, // 93: nushi.v1.GetWorkflowAgentResponse.items:type_name -> nushi.v1.Item
+	208, // 94: nushi.v1.GetWorkflowAgentResponse.agent:type_name -> nushi.v1.WorkflowAgent
+	214, // 95: nushi.v1.Findings.items:type_name -> nushi.v1.Finding
+	1,   // 96: nushi.v1.Field.type:type_name -> nushi.v1.FieldType
+	218, // 97: nushi.v1.Field.options:type_name -> nushi.v1.Option
+	205, // 98: nushi.v1.ItemEvent.item:type_name -> nushi.v1.Item
+	2,   // 99: nushi.v1.ChatStatus.ended:type_name -> nushi.v1.TurnEnd
+	222, // 100: nushi.v1.ChatTerminals.terminals:type_name -> nushi.v1.Terminal
+	222, // 101: nushi.v1.OpenTerminalResponse.terminal:type_name -> nushi.v1.Terminal
+	222, // 102: nushi.v1.ListTerminalsResponse.terminals:type_name -> nushi.v1.Terminal
+	245, // 103: nushi.v1.ListServersResponse.servers:type_name -> nushi.v1.DevServer
+	244, // 104: nushi.v1.ListServersResponse.files:type_name -> nushi.v1.LaunchFile
+	434, // 105: nushi.v1.DevServer.env:type_name -> nushi.v1.DevServer.EnvEntry
+	3,   // 106: nushi.v1.DevServer.state:type_name -> nushi.v1.DevServerState
+	245, // 107: nushi.v1.StartServerResponse.server:type_name -> nushi.v1.DevServer
+	256, // 108: nushi.v1.CheckFolderResponse.runs:type_name -> nushi.v1.FolderRun
+	260, // 109: nushi.v1.Remote.devices:type_name -> nushi.v1.Device
+	261, // 110: nushi.v1.Remote.pairing:type_name -> nushi.v1.Pairing
+	259, // 111: nushi.v1.GetRemoteResponse.remote:type_name -> nushi.v1.Remote
+	435, // 112: nushi.v1.LogRequest.attrs:type_name -> nushi.v1.LogRequest.AttrsEntry
+	285, // 113: nushi.v1.JiraSite.searches:type_name -> nushi.v1.JiraSearch
+	286, // 114: nushi.v1.JiraIssue.parent:type_name -> nushi.v1.JiraIssueRef
+	286, // 115: nushi.v1.JiraIssue.subtasks:type_name -> nushi.v1.JiraIssueRef
+	288, // 116: nushi.v1.JiraIssue.links:type_name -> nushi.v1.JiraLink
+	289, // 117: nushi.v1.JiraIssue.attachments:type_name -> nushi.v1.JiraAttachment
+	290, // 118: nushi.v1.JiraIssue.comments:type_name -> nushi.v1.JiraComment
+	291, // 119: nushi.v1.JiraIssue.remote_links:type_name -> nushi.v1.JiraRemoteLink
+	286, // 120: nushi.v1.JiraLink.issue:type_name -> nushi.v1.JiraIssueRef
+	293, // 121: nushi.v1.JiraTransition.fields:type_name -> nushi.v1.JiraField
+	294, // 122: nushi.v1.JiraField.options:type_name -> nushi.v1.JiraOption
+	284, // 123: nushi.v1.ListJiraSitesResponse.sites:type_name -> nushi.v1.JiraSite
+	284, // 124: nushi.v1.AddJiraSiteResponse.site:type_name -> nushi.v1.JiraSite
+	295, // 125: nushi.v1.ListJiraBoardsResponse.boards:type_name -> nushi.v1.JiraBoard
+	295, // 126: nushi.v1.SetJiraBoardRequest.board:type_name -> nushi.v1.JiraBoard
+	285, // 127: nushi.v1.SetJiraSearchesRequest.searches:type_name -> nushi.v1.JiraSearch
+	287, // 128: nushi.v1.ListJiraIssuesResponse.issues:type_name -> nushi.v1.JiraIssue
+	316, // 129: nushi.v1.GetJiraJqlResponse.fields:type_name -> nushi.v1.JiraJqlField
+	294, // 130: nushi.v1.SuggestJiraJqlResponse.values:type_name -> nushi.v1.JiraOption
+	287, // 131: nushi.v1.GetJiraIssueResponse.issue:type_name -> nushi.v1.JiraIssue
+	321, // 132: nushi.v1.GetJiraIssueResponse.agent_writes:type_name -> nushi.v1.JiraWrite
+	292, // 133: nushi.v1.ListJiraTransitionsResponse.transitions:type_name -> nushi.v1.JiraTransition
+	436, // 134: nushi.v1.TransitionJiraIssueRequest.values:type_name -> nushi.v1.TransitionJiraIssueRequest.ValuesEntry
+	332, // 135: nushi.v1.FindJiraIssuesResponse.issues:type_name -> nushi.v1.FoundJiraIssue
+	287, // 136: nushi.v1.FoundJiraIssue.issue:type_name -> nushi.v1.JiraIssue
+	333, // 137: nushi.v1.GitHubHost.budget:type_name -> nushi.v1.GitHubBucket
+	334, // 138: nushi.v1.ListGitHubHostsResponse.hosts:type_name -> nushi.v1.GitHubHost
+	343, // 139: nushi.v1.ListGitHubReposResponse.repos:type_name -> nushi.v1.GitHubRepo
+	346, // 140: nushi.v1.GitHubItem.ref:type_name -> nushi.v1.GitHubRef
+	348, // 141: nushi.v1.GitHubItem.check_counts:type_name -> nushi.v1.GitHubCheckCounts
+	347, // 142: nushi.v1.ListGitHubInboxResponse.review:type_name -> nushi.v1.GitHubItem
+	347, // 143: nushi.v1.ListGitHubInboxResponse.mine:type_name -> nushi.v1.GitHubItem
+	347, // 144: nushi.v1.ListGitHubInboxResponse.assigned:type_name -> nushi.v1.GitHubItem
+	351, // 145: nushi.v1.FindChatPullResponse.pull:type_name -> nushi.v1.GitHubLink
+	351, // 146: nushi.v1.FindChatPullResponse.pulls:type_name -> nushi.v1.GitHubLink
+	351, // 147: nushi.v1.FindChatPullResponse.branch_pull:type_name -> nushi.v1.GitHubLink
+	351, // 148: nushi.v1.LinkChatPullRequest.pull:type_name -> nushi.v1.GitHubLink
+	351, // 149: nushi.v1.LinkChatPullRequest.unlink:type_name -> nushi.v1.GitHubLink
+	346, // 150: nushi.v1.GetGitHubItemsRequest.refs:type_name -> nushi.v1.GitHubRef
+	347, // 151: nushi.v1.GetGitHubItemsResponse.items:type_name -> nushi.v1.GitHubItem
+	346, // 152: nushi.v1.GetGitHubItemsResponse.unseen:type_name -> nushi.v1.GitHubRef
+	351, // 153: nushi.v1.GetGitHubStatesRequest.items:type_name -> nushi.v1.GitHubLink
+	347, // 154: nushi.v1.GetGitHubStatesResponse.items:type_name -> nushi.v1.GitHubItem
+	361, // 155: nushi.v1.GitHubComment.reactions:type_name -> nushi.v1.GitHubReaction
+	360, // 156: nushi.v1.GitHubThread.comments:type_name -> nushi.v1.GitHubComment
+	365, // 157: nushi.v1.GitHubCheck.annotations:type_name -> nushi.v1.GitHubAnnotation
+	347, // 158: nushi.v1.GitHubPull.item:type_name -> nushi.v1.GitHubItem
+	367, // 159: nushi.v1.GitHubPull.reviewers:type_name -> nushi.v1.GitHubReviewer
+	360, // 160: nushi.v1.GitHubPull.conversation:type_name -> nushi.v1.GitHubComment
+	364, // 161: nushi.v1.GitHubPull.threads:type_name -> nushi.v1.GitHubThread
+	366, // 162: nushi.v1.GitHubPull.checks:type_name -> nushi.v1.GitHubCheck
+	373, // 163: nushi.v1.GitHubPull.merge:type_name -> nushi.v1.GitHubMerge
+	369, // 164: nushi.v1.GitHubPull.labels:type_name -> nushi.v1.GitHubLabel
+	360, // 165: nushi.v1.GitHubPull.reviews:type_name -> nushi.v1.GitHubComment
+	361, // 166: nushi.v1.GitHubPull.reactions:type_name -> nushi.v1.GitHubReaction
+	346, // 167: nushi.v1.GetGitHubCommitsRequest.ref:type_name -> nushi.v1.GitHubRef
+	370, // 168: nushi.v1.GetGitHubCommitsResponse.commits:type_name -> nushi.v1.GitHubCommit
+	374, // 169: nushi.v1.GitHubMerge.auto:type_name -> nushi.v1.GitHubAutoMerge
+	375, // 170: nushi.v1.GitHubMerge.entry:type_name -> nushi.v1.GitHubQueueEntry
+	346, // 171: nushi.v1.GetGitHubPullRequest.ref:type_name -> nushi.v1.GitHubRef
+	368, // 172: nushi.v1.GetGitHubPullResponse.pull:type_name -> nushi.v1.GitHubPull
+	347, // 173: nushi.v1.GitHubIssue.item:type_name -> nushi.v1.GitHubItem
+	360, // 174: nushi.v1.GitHubIssue.conversation:type_name -> nushi.v1.GitHubComment
+	346, // 175: nushi.v1.GetGitHubIssueRequest.ref:type_name -> nushi.v1.GitHubRef
+	378, // 176: nushi.v1.GetGitHubIssueResponse.issue:type_name -> nushi.v1.GitHubIssue
+	346, // 177: nushi.v1.GetGitHubFilesRequest.ref:type_name -> nushi.v1.GitHubRef
+	196, // 178: nushi.v1.GetGitHubFilesResponse.files:type_name -> nushi.v1.FileChange
+	346, // 179: nushi.v1.GetGitHubViewedRequest.ref:type_name -> nushi.v1.GitHubRef
+	346, // 180: nushi.v1.GetGitHubJobLogRequest.ref:type_name -> nushi.v1.GitHubRef
+	346, // 181: nushi.v1.RerunGitHubChecksRequest.ref:type_name -> nushi.v1.GitHubRef
+	346, // 182: nushi.v1.GetGitHubMergeTextRequest.ref:type_name -> nushi.v1.GitHubRef
+	346, // 183: nushi.v1.MergeGitHubPullRequest.ref:type_name -> nushi.v1.GitHubRef
+	346, // 184: nushi.v1.EnableGitHubAutoMergeRequest.ref:type_name -> nushi.v1.GitHubRef
+	346, // 185: nushi.v1.DisableGitHubAutoMergeRequest.ref:type_name -> nushi.v1.GitHubRef
+	346, // 186: nushi.v1.EnqueueGitHubPullRequest.ref:type_name -> nushi.v1.GitHubRef
+	346, // 187: nushi.v1.DequeueGitHubPullRequest.ref:type_name -> nushi.v1.GitHubRef
+	22,  // 188: nushi.v1.GetCleanUpResponse.worktree:type_name -> nushi.v1.Worktree
+	114, // 189: nushi.v1.GetCleanUpResponse.state:type_name -> nushi.v1.WorktreeState
+	346, // 190: nushi.v1.DeleteGitHubBranchRequest.ref:type_name -> nushi.v1.GitHubRef
+	346, // 191: nushi.v1.RestoreGitHubBranchRequest.ref:type_name -> nushi.v1.GitHubRef
+	346, // 192: nushi.v1.EditGitHubPullRequest.ref:type_name -> nushi.v1.GitHubRef
+	421, // 193: nushi.v1.SubmitGitHubReviewRequest.drafts:type_name -> nushi.v1.GitHubDraft
+	426, // 194: nushi.v1.GetUsageResponse.totals:type_name -> nushi.v1.UsageTotals
+	428, // 195: nushi.v1.GetUsageResponse.days:type_name -> nushi.v1.UsageGroup
+	428, // 196: nushi.v1.GetUsageResponse.agents:type_name -> nushi.v1.UsageGroup
+	428, // 197: nushi.v1.GetUsageResponse.models:type_name -> nushi.v1.UsageGroup
+	428, // 198: nushi.v1.GetUsageResponse.folders:type_name -> nushi.v1.UsageGroup
+	429, // 199: nushi.v1.GetUsageResponse.chats:type_name -> nushi.v1.UsageChat
+	430, // 200: nushi.v1.GetUsageResponse.limits:type_name -> nushi.v1.UsageLimit
+	427, // 201: nushi.v1.UsageTotals.cost:type_name -> nushi.v1.UsageCost
+	426, // 202: nushi.v1.UsageGroup.totals:type_name -> nushi.v1.UsageTotals
+	426, // 203: nushi.v1.UsageChat.totals:type_name -> nushi.v1.UsageTotals
+	4,   // 204: nushi.v1.NushiService.Ping:input_type -> nushi.v1.PingRequest
+	11,  // 205: nushi.v1.NushiService.RestartWhenIdle:input_type -> nushi.v1.RestartWhenIdleRequest
+	7,   // 206: nushi.v1.NushiService.CheckForUpdates:input_type -> nushi.v1.CheckForUpdatesRequest
+	8,   // 207: nushi.v1.NushiService.InstallUpdate:input_type -> nushi.v1.InstallUpdateRequest
+	14,  // 208: nushi.v1.NushiService.ListChats:input_type -> nushi.v1.ListChatsRequest
+	23,  // 209: nushi.v1.NushiService.GetChat:input_type -> nushi.v1.GetChatRequest
+	25,  // 210: nushi.v1.NushiService.GetChatItems:input_type -> nushi.v1.GetChatItemsRequest
+	26,  // 211: nushi.v1.NushiService.GetChatImage:input_type -> nushi.v1.GetChatImageRequest
+	41,  // 212: nushi.v1.NushiService.StartChat:input_type -> nushi.v1.StartChatRequest
+	32,  // 213: nushi.v1.NushiService.ListAgents:input_type -> nushi.v1.ListAgentsRequest
+	37,  // 214: nushi.v1.NushiService.SetUpAgent:input_type -> nushi.v1.SetUpAgentRequest
+	39,  // 215: nushi.v1.NushiService.RemoveAgent:input_type -> nushi.v1.RemoveAgentRequest
+	42,  // 216: nushi.v1.NushiService.ListAgentSessions:input_type -> nushi.v1.ListAgentSessionsRequest
+	48,  // 217: nushi.v1.NushiService.OpenAgentSession:input_type -> nushi.v1.OpenAgentSessionRequest
+	45,  // 218: nushi.v1.NushiService.SearchAgentSessions:input_type -> nushi.v1.SearchAgentSessionsRequest
+	50,  // 219: nushi.v1.NushiService.MoveChat:input_type -> nushi.v1.MoveChatRequest
+	53,  // 220: nushi.v1.NushiService.SendPrompt:input_type -> nushi.v1.SendPromptRequest
+	57,  // 221: nushi.v1.NushiService.RewindChat:input_type -> nushi.v1.RewindChatRequest
+	59,  // 222: nushi.v1.NushiService.Unqueue:input_type -> nushi.v1.UnqueueRequest
+	65,  // 223: nushi.v1.NushiService.CancelTurn:input_type -> nushi.v1.CancelTurnRequest
+	66,  // 224: nushi.v1.NushiService.StopTask:input_type -> nushi.v1.StopTaskRequest
+	209, // 225: nushi.v1.NushiService.GetWorkflow:input_type -> nushi.v1.GetWorkflowRequest
+	211, // 226: nushi.v1.NushiService.GetWorkflowAgent:input_type -> nushi.v1.GetWorkflowAgentRequest
+	69,  // 227: nushi.v1.NushiService.ForkChat:input_type -> nushi.v1.ForkChatRequest
+	75,  // 228: nushi.v1.NushiService.CloseSideChat:input_type -> nushi.v1.CloseSideChatRequest
+	71,  // 229: nushi.v1.NushiService.ForkAsChat:input_type -> nushi.v1.ForkAsChatRequest
+	73,  // 230: nushi.v1.NushiService.KeepSideChat:input_type -> nushi.v1.KeepSideChatRequest
+	77,  // 231: nushi.v1.NushiService.ArchiveSideChat:input_type -> nushi.v1.ArchiveSideChatRequest
+	79,  // 232: nushi.v1.NushiService.RestoreSideChat:input_type -> nushi.v1.RestoreSideChatRequest
+	81,  // 233: nushi.v1.NushiService.RenameChat:input_type -> nushi.v1.RenameChatRequest
+	87,  // 234: nushi.v1.NushiService.PinChats:input_type -> nushi.v1.PinChatsRequest
+	89,  // 235: nushi.v1.NushiService.SetChatColor:input_type -> nushi.v1.SetChatColorRequest
+	91,  // 236: nushi.v1.NushiService.PinMessage:input_type -> nushi.v1.PinMessageRequest
+	83,  // 237: nushi.v1.NushiService.RenameBranch:input_type -> nushi.v1.RenameBranchRequest
+	85,  // 238: nushi.v1.NushiService.SwitchBranch:input_type -> nushi.v1.SwitchBranchRequest
+	93,  // 239: nushi.v1.NushiService.ArchiveChat:input_type -> nushi.v1.ArchiveChatRequest
+	95,  // 240: nushi.v1.NushiService.SleepChat:input_type -> nushi.v1.SleepChatRequest
+	97,  // 241: nushi.v1.NushiService.ReopenChat:input_type -> nushi.v1.ReopenChatRequest
+	99,  // 242: nushi.v1.NushiService.GetMemory:input_type -> nushi.v1.GetMemoryRequest
+	101, // 243: nushi.v1.NushiService.GetSettings:input_type -> nushi.v1.GetSettingsRequest
+	109, // 244: nushi.v1.NushiService.SetSettings:input_type -> nushi.v1.SetSettingsRequest
+	103, // 245: nushi.v1.NushiService.ListTranscripts:input_type -> nushi.v1.ListTranscriptsRequest
+	106, // 246: nushi.v1.NushiService.ClearTranscripts:input_type -> nushi.v1.ClearTranscriptsRequest
+	111, // 247: nushi.v1.NushiService.PlanDeleteChat:input_type -> nushi.v1.PlanDeleteChatRequest
+	116, // 248: nushi.v1.NushiService.DeleteChat:input_type -> nushi.v1.DeleteChatRequest
+	18,  // 249: nushi.v1.NushiService.DismissRemovedChats:input_type -> nushi.v1.DismissRemovedChatsRequest
+	119, // 250: nushi.v1.NushiService.AnswerPermission:input_type -> nushi.v1.AnswerPermissionRequest
+	121, // 251: nushi.v1.NushiService.AnswerQuestion:input_type -> nushi.v1.AnswerQuestionRequest
+	124, // 252: nushi.v1.NushiService.SetConfigOption:input_type -> nushi.v1.SetConfigOptionRequest
+	176, // 253: nushi.v1.NushiService.GetDiff:input_type -> nushi.v1.GetDiffRequest
+	177, // 254: nushi.v1.NushiService.StageFiles:input_type -> nushi.v1.StageFilesRequest
+	179, // 255: nushi.v1.NushiService.WriteCommitMessage:input_type -> nushi.v1.WriteCommitMessageRequest
+	181, // 256: nushi.v1.NushiService.CommitStaged:input_type -> nushi.v1.CommitStagedRequest
+	183, // 257: nushi.v1.NushiService.GetFile:input_type -> nushi.v1.GetFileRequest
+	184, // 258: nushi.v1.NushiService.WatchChatFile:input_type -> nushi.v1.WatchChatFileRequest
+	185, // 259: nushi.v1.NushiService.FindChatFiles:input_type -> nushi.v1.FindChatFilesRequest
+	192, // 260: nushi.v1.NushiService.WriteChatFile:input_type -> nushi.v1.WriteChatFileRequest
+	187, // 261: nushi.v1.NushiService.WatchChatFolder:input_type -> nushi.v1.WatchChatFolderRequest
+	197, // 262: nushi.v1.NushiService.ListCommits:input_type -> nushi.v1.ListCommitsRequest
+	170, // 263: nushi.v1.NushiService.GetFolderStatus:input_type -> nushi.v1.GetFolderStatusRequest
+	168, // 264: nushi.v1.NushiService.GetProjectIcon:input_type -> nushi.v1.GetProjectIconRequest
+	161, // 265: nushi.v1.NushiService.GetRelatedWorktrees:input_type -> nushi.v1.GetRelatedWorktreesRequest
+	165, // 266: nushi.v1.NushiService.GetRelatedWorktreeStats:input_type -> nushi.v1.GetRelatedWorktreeStatsRequest
+	172, // 267: nushi.v1.NushiService.ListBranches:input_type -> nushi.v1.ListBranchesRequest
+	62,  // 268: nushi.v1.NushiService.ListFiles:input_type -> nushi.v1.ListFilesRequest
+	126, // 269: nushi.v1.NushiService.GetContextUsage:input_type -> nushi.v1.GetContextUsageRequest
+	128, // 270: nushi.v1.NushiService.ListMcpServers:input_type -> nushi.v1.ListMcpServersRequest
+	131, // 271: nushi.v1.NushiService.AddMcpServer:input_type -> nushi.v1.AddMcpServerRequest
+	133, // 272: nushi.v1.NushiService.EditMcpServer:input_type -> nushi.v1.EditMcpServerRequest
+	135, // 273: nushi.v1.NushiService.RemoveMcpServer:input_type -> nushi.v1.RemoveMcpServerRequest
+	137, // 274: nushi.v1.NushiService.SetMcpServerOn:input_type -> nushi.v1.SetMcpServerOnRequest
+	139, // 275: nushi.v1.NushiService.LoginMcpServer:input_type -> nushi.v1.LoginMcpServerRequest
+	141, // 276: nushi.v1.NushiService.LogoutMcpServer:input_type -> nushi.v1.LogoutMcpServerRequest
+	143, // 277: nushi.v1.NushiService.ListSkills:input_type -> nushi.v1.ListSkillsRequest
+	148, // 278: nushi.v1.NushiService.SetSkillOn:input_type -> nushi.v1.SetSkillOnRequest
+	150, // 279: nushi.v1.NushiService.SetPluginOn:input_type -> nushi.v1.SetPluginOnRequest
+	152, // 280: nushi.v1.NushiService.UninstallPlugin:input_type -> nushi.v1.UninstallPluginRequest
+	154, // 281: nushi.v1.NushiService.TrashSkill:input_type -> nushi.v1.TrashSkillRequest
+	156, // 282: nushi.v1.NushiService.LinkSkill:input_type -> nushi.v1.LinkSkillRequest
+	158, // 283: nushi.v1.NushiService.ReloadChat:input_type -> nushi.v1.ReloadChatRequest
+	224, // 284: nushi.v1.NushiService.OpenTerminal:input_type -> nushi.v1.OpenTerminalRequest
+	226, // 285: nushi.v1.NushiService.ListTerminals:input_type -> nushi.v1.ListTerminalsRequest
+	228, // 286: nushi.v1.NushiService.AttachTerminal:input_type -> nushi.v1.AttachTerminalRequest
+	230, // 287: nushi.v1.NushiService.WriteTerminal:input_type -> nushi.v1.WriteTerminalRequest
+	232, // 288: nushi.v1.NushiService.ResizeTerminal:input_type -> nushi.v1.ResizeTerminalRequest
+	234, // 289: nushi.v1.NushiService.RenameTerminal:input_type -> nushi.v1.RenameTerminalRequest
+	236, // 290: nushi.v1.NushiService.ArrangeTerminals:input_type -> nushi.v1.ArrangeTerminalsRequest
+	238, // 291: nushi.v1.NushiService.RestartTerminal:input_type -> nushi.v1.RestartTerminalRequest
+	240, // 292: nushi.v1.NushiService.CloseTerminal:input_type -> nushi.v1.CloseTerminalRequest
+	242, // 293: nushi.v1.NushiService.ListServers:input_type -> nushi.v1.ListServersRequest
+	246, // 294: nushi.v1.NushiService.StartServer:input_type -> nushi.v1.StartServerRequest
+	248, // 295: nushi.v1.NushiService.StopServer:input_type -> nushi.v1.StopServerRequest
+	250, // 296: nushi.v1.NushiService.StopAllServers:input_type -> nushi.v1.StopAllServersRequest
+	252, // 297: nushi.v1.NushiService.WatchServerLog:input_type -> nushi.v1.WatchServerLogRequest
+	254, // 298: nushi.v1.NushiService.CheckFolder:input_type -> nushi.v1.CheckFolderRequest
+	257, // 299: nushi.v1.NushiService.TrustFolder:input_type -> nushi.v1.TrustFolderRequest
+	262, // 300: nushi.v1.NushiService.GetRemote:input_type -> nushi.v1.GetRemoteRequest
+	264, // 301: nushi.v1.NushiService.SetRemote:input_type -> nushi.v1.SetRemoteRequest
+	266, // 302: nushi.v1.NushiService.StartPairing:input_type -> nushi.v1.StartPairingRequest
+	268, // 303: nushi.v1.NushiService.ConfirmPairing:input_type -> nushi.v1.ConfirmPairingRequest
+	270, // 304: nushi.v1.NushiService.RevokeDevice:input_type -> nushi.v1.RevokeDeviceRequest
+	272, // 305: nushi.v1.NushiService.GetPushKey:input_type -> nushi.v1.GetPushKeyRequest
+	274, // 306: nushi.v1.NushiService.SetPushSubscription:input_type -> nushi.v1.SetPushSubscriptionRequest
+	276, // 307: nushi.v1.NushiService.SetDeviceView:input_type -> nushi.v1.SetDeviceViewRequest
+	278, // 308: nushi.v1.NushiService.SendTestPush:input_type -> nushi.v1.SendTestPushRequest
+	280, // 309: nushi.v1.NushiService.UnpairThisDevice:input_type -> nushi.v1.UnpairThisDeviceRequest
+	282, // 310: nushi.v1.NushiService.Log:input_type -> nushi.v1.LogRequest
+	296, // 311: nushi.v1.NushiService.ListJiraSites:input_type -> nushi.v1.ListJiraSitesRequest
+	298, // 312: nushi.v1.NushiService.AddJiraSite:input_type -> nushi.v1.AddJiraSiteRequest
+	300, // 313: nushi.v1.NushiService.RemoveJiraSite:input_type -> nushi.v1.RemoveJiraSiteRequest
+	302, // 314: nushi.v1.NushiService.CheckJiraSite:input_type -> nushi.v1.CheckJiraSiteRequest
+	304, // 315: nushi.v1.NushiService.AllowJiraToken:input_type -> nushi.v1.AllowJiraTokenRequest
+	306, // 316: nushi.v1.NushiService.ListJiraBoards:input_type -> nushi.v1.ListJiraBoardsRequest
+	308, // 317: nushi.v1.NushiService.SetJiraBoard:input_type -> nushi.v1.SetJiraBoardRequest
+	310, // 318: nushi.v1.NushiService.SetJiraSearches:input_type -> nushi.v1.SetJiraSearchesRequest
+	312, // 319: nushi.v1.NushiService.ListJiraIssues:input_type -> nushi.v1.ListJiraIssuesRequest
+	314, // 320: nushi.v1.NushiService.GetJiraJql:input_type -> nushi.v1.GetJiraJqlRequest
+	317, // 321: nushi.v1.NushiService.SuggestJiraJql:input_type -> nushi.v1.SuggestJiraJqlRequest
+	319, // 322: nushi.v1.NushiService.GetJiraIssue:input_type -> nushi.v1.GetJiraIssueRequest
+	322, // 323: nushi.v1.NushiService.ListJiraTransitions:input_type -> nushi.v1.ListJiraTransitionsRequest
+	324, // 324: nushi.v1.NushiService.TransitionJiraIssue:input_type -> nushi.v1.TransitionJiraIssueRequest
+	326, // 325: nushi.v1.NushiService.AddJiraComment:input_type -> nushi.v1.AddJiraCommentRequest
+	330, // 326: nushi.v1.NushiService.FindJiraIssues:input_type -> nushi.v1.FindJiraIssuesRequest
+	328, // 327: nushi.v1.NushiService.GetJiraAttachment:input_type -> nushi.v1.GetJiraAttachmentRequest
+	335, // 328: nushi.v1.NushiService.ListGitHubHosts:input_type -> nushi.v1.ListGitHubHostsRequest
+	337, // 329: nushi.v1.NushiService.AddGitHubToken:input_type -> nushi.v1.AddGitHubTokenRequest
+	339, // 330: nushi.v1.NushiService.RemoveGitHubToken:input_type -> nushi.v1.RemoveGitHubTokenRequest
+	341, // 331: nushi.v1.NushiService.AllowGitHubToken:input_type -> nushi.v1.AllowGitHubTokenRequest
+	344, // 332: nushi.v1.NushiService.ListGitHubRepos:input_type -> nushi.v1.ListGitHubReposRequest
+	349, // 333: nushi.v1.NushiService.ListGitHubInbox:input_type -> nushi.v1.ListGitHubInboxRequest
+	358, // 334: nushi.v1.NushiService.GetGitHubStates:input_type -> nushi.v1.GetGitHubStatesRequest
+	356, // 335: nushi.v1.NushiService.GetGitHubItems:input_type -> nushi.v1.GetGitHubItemsRequest
+	376, // 336: nushi.v1.NushiService.GetGitHubPull:input_type -> nushi.v1.GetGitHubPullRequest
+	379, // 337: nushi.v1.NushiService.GetGitHubIssue:input_type -> nushi.v1.GetGitHubIssueRequest
+	371, // 338: nushi.v1.NushiService.GetGitHubCommits:input_type -> nushi.v1.GetGitHubCommitsRequest
+	381, // 339: nushi.v1.NushiService.GetGitHubFiles:input_type -> nushi.v1.GetGitHubFilesRequest
+	383, // 340: nushi.v1.NushiService.GetGitHubViewed:input_type -> nushi.v1.GetGitHubViewedRequest
+	385, // 341: nushi.v1.NushiService.SetGitHubViewed:input_type -> nushi.v1.SetGitHubViewedRequest
+	362, // 342: nushi.v1.NushiService.ReactGitHub:input_type -> nushi.v1.ReactGitHubRequest
+	387, // 343: nushi.v1.NushiService.GetGitHubJobLog:input_type -> nushi.v1.GetGitHubJobLogRequest
+	389, // 344: nushi.v1.NushiService.ReplyGitHubThread:input_type -> nushi.v1.ReplyGitHubThreadRequest
+	391, // 345: nushi.v1.NushiService.ResolveGitHubThread:input_type -> nushi.v1.ResolveGitHubThreadRequest
+	417, // 346: nushi.v1.NushiService.AddGitHubComment:input_type -> nushi.v1.AddGitHubCommentRequest
+	422, // 347: nushi.v1.NushiService.SubmitGitHubReview:input_type -> nushi.v1.SubmitGitHubReviewRequest
+	418, // 348: nushi.v1.NushiService.EditGitHubPull:input_type -> nushi.v1.EditGitHubPullRequest
+	393, // 349: nushi.v1.NushiService.RerunGitHubChecks:input_type -> nushi.v1.RerunGitHubChecksRequest
+	394, // 350: nushi.v1.NushiService.GetGitHubMergeText:input_type -> nushi.v1.GetGitHubMergeTextRequest
+	396, // 351: nushi.v1.NushiService.MergeGitHubPull:input_type -> nushi.v1.MergeGitHubPullRequest
+	398, // 352: nushi.v1.NushiService.EnableGitHubAutoMerge:input_type -> nushi.v1.EnableGitHubAutoMergeRequest
+	400, // 353: nushi.v1.NushiService.DisableGitHubAutoMerge:input_type -> nushi.v1.DisableGitHubAutoMergeRequest
+	402, // 354: nushi.v1.NushiService.EnqueueGitHubPull:input_type -> nushi.v1.EnqueueGitHubPullRequest
+	404, // 355: nushi.v1.NushiService.DequeueGitHubPull:input_type -> nushi.v1.DequeueGitHubPullRequest
+	406, // 356: nushi.v1.NushiService.GetCleanUp:input_type -> nushi.v1.GetCleanUpRequest
+	408, // 357: nushi.v1.NushiService.RemoveChatWorktree:input_type -> nushi.v1.RemoveChatWorktreeRequest
+	410, // 358: nushi.v1.NushiService.DeleteChatBranch:input_type -> nushi.v1.DeleteChatBranchRequest
+	412, // 359: nushi.v1.NushiService.DeleteGitHubBranch:input_type -> nushi.v1.DeleteGitHubBranchRequest
+	414, // 360: nushi.v1.NushiService.RestoreGitHubBranch:input_type -> nushi.v1.RestoreGitHubBranchRequest
+	352, // 361: nushi.v1.NushiService.FindChatPull:input_type -> nushi.v1.FindChatPullRequest
+	354, // 362: nushi.v1.NushiService.LinkChatPull:input_type -> nushi.v1.LinkChatPullRequest
+	424, // 363: nushi.v1.NushiService.GetUsage:input_type -> nushi.v1.GetUsageRequest
+	200, // 364: nushi.v1.NushiService.Events:input_type -> nushi.v1.EventsRequest
+	5,   // 365: nushi.v1.NushiService.Ping:output_type -> nushi.v1.PingResponse
+	12,  // 366: nushi.v1.NushiService.RestartWhenIdle:output_type -> nushi.v1.RestartWhenIdleResponse
+	10,  // 367: nushi.v1.NushiService.CheckForUpdates:output_type -> nushi.v1.CheckForUpdatesResponse
+	9,   // 368: nushi.v1.NushiService.InstallUpdate:output_type -> nushi.v1.InstallUpdateResponse
+	15,  // 369: nushi.v1.NushiService.ListChats:output_type -> nushi.v1.ListChatsResponse
+	24,  // 370: nushi.v1.NushiService.GetChat:output_type -> nushi.v1.GetChatResponse
+	28,  // 371: nushi.v1.NushiService.GetChatItems:output_type -> nushi.v1.GetChatItemsResponse
+	27,  // 372: nushi.v1.NushiService.GetChatImage:output_type -> nushi.v1.GetChatImageResponse
+	52,  // 373: nushi.v1.NushiService.StartChat:output_type -> nushi.v1.StartChatResponse
+	33,  // 374: nushi.v1.NushiService.ListAgents:output_type -> nushi.v1.ListAgentsResponse
+	38,  // 375: nushi.v1.NushiService.SetUpAgent:output_type -> nushi.v1.SetUpAgentResponse
+	40,  // 376: nushi.v1.NushiService.RemoveAgent:output_type -> nushi.v1.RemoveAgentResponse
+	43,  // 377: nushi.v1.NushiService.ListAgentSessions:output_type -> nushi.v1.ListAgentSessionsResponse
+	49,  // 378: nushi.v1.NushiService.OpenAgentSession:output_type -> nushi.v1.OpenAgentSessionResponse
+	46,  // 379: nushi.v1.NushiService.SearchAgentSessions:output_type -> nushi.v1.SearchAgentSessionsResponse
+	51,  // 380: nushi.v1.NushiService.MoveChat:output_type -> nushi.v1.MoveChatResponse
+	64,  // 381: nushi.v1.NushiService.SendPrompt:output_type -> nushi.v1.SendPromptResponse
+	58,  // 382: nushi.v1.NushiService.RewindChat:output_type -> nushi.v1.RewindChatResponse
+	60,  // 383: nushi.v1.NushiService.Unqueue:output_type -> nushi.v1.UnqueueResponse
+	68,  // 384: nushi.v1.NushiService.CancelTurn:output_type -> nushi.v1.CancelTurnResponse
+	67,  // 385: nushi.v1.NushiService.StopTask:output_type -> nushi.v1.StopTaskResponse
+	210, // 386: nushi.v1.NushiService.GetWorkflow:output_type -> nushi.v1.GetWorkflowResponse
+	212, // 387: nushi.v1.NushiService.GetWorkflowAgent:output_type -> nushi.v1.GetWorkflowAgentResponse
+	70,  // 388: nushi.v1.NushiService.ForkChat:output_type -> nushi.v1.ForkChatResponse
+	76,  // 389: nushi.v1.NushiService.CloseSideChat:output_type -> nushi.v1.CloseSideChatResponse
+	72,  // 390: nushi.v1.NushiService.ForkAsChat:output_type -> nushi.v1.ForkAsChatResponse
+	74,  // 391: nushi.v1.NushiService.KeepSideChat:output_type -> nushi.v1.KeepSideChatResponse
+	78,  // 392: nushi.v1.NushiService.ArchiveSideChat:output_type -> nushi.v1.ArchiveSideChatResponse
+	80,  // 393: nushi.v1.NushiService.RestoreSideChat:output_type -> nushi.v1.RestoreSideChatResponse
+	82,  // 394: nushi.v1.NushiService.RenameChat:output_type -> nushi.v1.RenameChatResponse
+	88,  // 395: nushi.v1.NushiService.PinChats:output_type -> nushi.v1.PinChatsResponse
+	90,  // 396: nushi.v1.NushiService.SetChatColor:output_type -> nushi.v1.SetChatColorResponse
+	92,  // 397: nushi.v1.NushiService.PinMessage:output_type -> nushi.v1.PinMessageResponse
+	84,  // 398: nushi.v1.NushiService.RenameBranch:output_type -> nushi.v1.RenameBranchResponse
+	86,  // 399: nushi.v1.NushiService.SwitchBranch:output_type -> nushi.v1.SwitchBranchResponse
+	94,  // 400: nushi.v1.NushiService.ArchiveChat:output_type -> nushi.v1.ArchiveChatResponse
+	96,  // 401: nushi.v1.NushiService.SleepChat:output_type -> nushi.v1.SleepChatResponse
+	98,  // 402: nushi.v1.NushiService.ReopenChat:output_type -> nushi.v1.ReopenChatResponse
+	100, // 403: nushi.v1.NushiService.GetMemory:output_type -> nushi.v1.GetMemoryResponse
+	108, // 404: nushi.v1.NushiService.GetSettings:output_type -> nushi.v1.GetSettingsResponse
+	110, // 405: nushi.v1.NushiService.SetSettings:output_type -> nushi.v1.SetSettingsResponse
+	104, // 406: nushi.v1.NushiService.ListTranscripts:output_type -> nushi.v1.ListTranscriptsResponse
+	107, // 407: nushi.v1.NushiService.ClearTranscripts:output_type -> nushi.v1.ClearTranscriptsResponse
+	112, // 408: nushi.v1.NushiService.PlanDeleteChat:output_type -> nushi.v1.PlanDeleteChatResponse
+	118, // 409: nushi.v1.NushiService.DeleteChat:output_type -> nushi.v1.DeleteChatResponse
+	19,  // 410: nushi.v1.NushiService.DismissRemovedChats:output_type -> nushi.v1.DismissRemovedChatsResponse
+	120, // 411: nushi.v1.NushiService.AnswerPermission:output_type -> nushi.v1.AnswerPermissionResponse
+	123, // 412: nushi.v1.NushiService.AnswerQuestion:output_type -> nushi.v1.AnswerQuestionResponse
+	125, // 413: nushi.v1.NushiService.SetConfigOption:output_type -> nushi.v1.SetConfigOptionResponse
+	195, // 414: nushi.v1.NushiService.GetDiff:output_type -> nushi.v1.GetDiffResponse
+	178, // 415: nushi.v1.NushiService.StageFiles:output_type -> nushi.v1.StageFilesResponse
+	180, // 416: nushi.v1.NushiService.WriteCommitMessage:output_type -> nushi.v1.WriteCommitMessageResponse
+	182, // 417: nushi.v1.NushiService.CommitStaged:output_type -> nushi.v1.CommitStagedResponse
+	194, // 418: nushi.v1.NushiService.GetFile:output_type -> nushi.v1.GetFileResponse
+	191, // 419: nushi.v1.NushiService.WatchChatFile:output_type -> nushi.v1.WatchChatFileResponse
+	186, // 420: nushi.v1.NushiService.FindChatFiles:output_type -> nushi.v1.FindChatFilesResponse
+	193, // 421: nushi.v1.NushiService.WriteChatFile:output_type -> nushi.v1.WriteChatFileResponse
+	188, // 422: nushi.v1.NushiService.WatchChatFolder:output_type -> nushi.v1.WatchChatFolderResponse
+	198, // 423: nushi.v1.NushiService.ListCommits:output_type -> nushi.v1.ListCommitsResponse
+	171, // 424: nushi.v1.NushiService.GetFolderStatus:output_type -> nushi.v1.GetFolderStatusResponse
+	169, // 425: nushi.v1.NushiService.GetProjectIcon:output_type -> nushi.v1.GetProjectIconResponse
+	162, // 426: nushi.v1.NushiService.GetRelatedWorktrees:output_type -> nushi.v1.GetRelatedWorktreesResponse
+	166, // 427: nushi.v1.NushiService.GetRelatedWorktreeStats:output_type -> nushi.v1.GetRelatedWorktreeStatsResponse
+	173, // 428: nushi.v1.NushiService.ListBranches:output_type -> nushi.v1.ListBranchesResponse
+	63,  // 429: nushi.v1.NushiService.ListFiles:output_type -> nushi.v1.ListFilesResponse
+	127, // 430: nushi.v1.NushiService.GetContextUsage:output_type -> nushi.v1.GetContextUsageResponse
+	129, // 431: nushi.v1.NushiService.ListMcpServers:output_type -> nushi.v1.ListMcpServersResponse
+	132, // 432: nushi.v1.NushiService.AddMcpServer:output_type -> nushi.v1.AddMcpServerResponse
+	134, // 433: nushi.v1.NushiService.EditMcpServer:output_type -> nushi.v1.EditMcpServerResponse
+	136, // 434: nushi.v1.NushiService.RemoveMcpServer:output_type -> nushi.v1.RemoveMcpServerResponse
+	138, // 435: nushi.v1.NushiService.SetMcpServerOn:output_type -> nushi.v1.SetMcpServerOnResponse
+	140, // 436: nushi.v1.NushiService.LoginMcpServer:output_type -> nushi.v1.LoginMcpServerResponse
+	142, // 437: nushi.v1.NushiService.LogoutMcpServer:output_type -> nushi.v1.LogoutMcpServerResponse
+	144, // 438: nushi.v1.NushiService.ListSkills:output_type -> nushi.v1.ListSkillsResponse
+	149, // 439: nushi.v1.NushiService.SetSkillOn:output_type -> nushi.v1.SetSkillOnResponse
+	151, // 440: nushi.v1.NushiService.SetPluginOn:output_type -> nushi.v1.SetPluginOnResponse
+	153, // 441: nushi.v1.NushiService.UninstallPlugin:output_type -> nushi.v1.UninstallPluginResponse
+	155, // 442: nushi.v1.NushiService.TrashSkill:output_type -> nushi.v1.TrashSkillResponse
+	157, // 443: nushi.v1.NushiService.LinkSkill:output_type -> nushi.v1.LinkSkillResponse
+	159, // 444: nushi.v1.NushiService.ReloadChat:output_type -> nushi.v1.ReloadChatResponse
+	225, // 445: nushi.v1.NushiService.OpenTerminal:output_type -> nushi.v1.OpenTerminalResponse
+	227, // 446: nushi.v1.NushiService.ListTerminals:output_type -> nushi.v1.ListTerminalsResponse
+	229, // 447: nushi.v1.NushiService.AttachTerminal:output_type -> nushi.v1.AttachTerminalResponse
+	231, // 448: nushi.v1.NushiService.WriteTerminal:output_type -> nushi.v1.WriteTerminalResponse
+	233, // 449: nushi.v1.NushiService.ResizeTerminal:output_type -> nushi.v1.ResizeTerminalResponse
+	235, // 450: nushi.v1.NushiService.RenameTerminal:output_type -> nushi.v1.RenameTerminalResponse
+	237, // 451: nushi.v1.NushiService.ArrangeTerminals:output_type -> nushi.v1.ArrangeTerminalsResponse
+	239, // 452: nushi.v1.NushiService.RestartTerminal:output_type -> nushi.v1.RestartTerminalResponse
+	241, // 453: nushi.v1.NushiService.CloseTerminal:output_type -> nushi.v1.CloseTerminalResponse
+	243, // 454: nushi.v1.NushiService.ListServers:output_type -> nushi.v1.ListServersResponse
+	247, // 455: nushi.v1.NushiService.StartServer:output_type -> nushi.v1.StartServerResponse
+	249, // 456: nushi.v1.NushiService.StopServer:output_type -> nushi.v1.StopServerResponse
+	251, // 457: nushi.v1.NushiService.StopAllServers:output_type -> nushi.v1.StopAllServersResponse
+	253, // 458: nushi.v1.NushiService.WatchServerLog:output_type -> nushi.v1.WatchServerLogResponse
+	255, // 459: nushi.v1.NushiService.CheckFolder:output_type -> nushi.v1.CheckFolderResponse
+	258, // 460: nushi.v1.NushiService.TrustFolder:output_type -> nushi.v1.TrustFolderResponse
+	263, // 461: nushi.v1.NushiService.GetRemote:output_type -> nushi.v1.GetRemoteResponse
+	265, // 462: nushi.v1.NushiService.SetRemote:output_type -> nushi.v1.SetRemoteResponse
+	267, // 463: nushi.v1.NushiService.StartPairing:output_type -> nushi.v1.StartPairingResponse
+	269, // 464: nushi.v1.NushiService.ConfirmPairing:output_type -> nushi.v1.ConfirmPairingResponse
+	271, // 465: nushi.v1.NushiService.RevokeDevice:output_type -> nushi.v1.RevokeDeviceResponse
+	273, // 466: nushi.v1.NushiService.GetPushKey:output_type -> nushi.v1.GetPushKeyResponse
+	275, // 467: nushi.v1.NushiService.SetPushSubscription:output_type -> nushi.v1.SetPushSubscriptionResponse
+	277, // 468: nushi.v1.NushiService.SetDeviceView:output_type -> nushi.v1.SetDeviceViewResponse
+	279, // 469: nushi.v1.NushiService.SendTestPush:output_type -> nushi.v1.SendTestPushResponse
+	281, // 470: nushi.v1.NushiService.UnpairThisDevice:output_type -> nushi.v1.UnpairThisDeviceResponse
+	283, // 471: nushi.v1.NushiService.Log:output_type -> nushi.v1.LogResponse
+	297, // 472: nushi.v1.NushiService.ListJiraSites:output_type -> nushi.v1.ListJiraSitesResponse
+	299, // 473: nushi.v1.NushiService.AddJiraSite:output_type -> nushi.v1.AddJiraSiteResponse
+	301, // 474: nushi.v1.NushiService.RemoveJiraSite:output_type -> nushi.v1.RemoveJiraSiteResponse
+	303, // 475: nushi.v1.NushiService.CheckJiraSite:output_type -> nushi.v1.CheckJiraSiteResponse
+	305, // 476: nushi.v1.NushiService.AllowJiraToken:output_type -> nushi.v1.AllowJiraTokenResponse
+	307, // 477: nushi.v1.NushiService.ListJiraBoards:output_type -> nushi.v1.ListJiraBoardsResponse
+	309, // 478: nushi.v1.NushiService.SetJiraBoard:output_type -> nushi.v1.SetJiraBoardResponse
+	311, // 479: nushi.v1.NushiService.SetJiraSearches:output_type -> nushi.v1.SetJiraSearchesResponse
+	313, // 480: nushi.v1.NushiService.ListJiraIssues:output_type -> nushi.v1.ListJiraIssuesResponse
+	315, // 481: nushi.v1.NushiService.GetJiraJql:output_type -> nushi.v1.GetJiraJqlResponse
+	318, // 482: nushi.v1.NushiService.SuggestJiraJql:output_type -> nushi.v1.SuggestJiraJqlResponse
+	320, // 483: nushi.v1.NushiService.GetJiraIssue:output_type -> nushi.v1.GetJiraIssueResponse
+	323, // 484: nushi.v1.NushiService.ListJiraTransitions:output_type -> nushi.v1.ListJiraTransitionsResponse
+	325, // 485: nushi.v1.NushiService.TransitionJiraIssue:output_type -> nushi.v1.TransitionJiraIssueResponse
+	327, // 486: nushi.v1.NushiService.AddJiraComment:output_type -> nushi.v1.AddJiraCommentResponse
+	331, // 487: nushi.v1.NushiService.FindJiraIssues:output_type -> nushi.v1.FindJiraIssuesResponse
+	329, // 488: nushi.v1.NushiService.GetJiraAttachment:output_type -> nushi.v1.GetJiraAttachmentResponse
+	336, // 489: nushi.v1.NushiService.ListGitHubHosts:output_type -> nushi.v1.ListGitHubHostsResponse
+	338, // 490: nushi.v1.NushiService.AddGitHubToken:output_type -> nushi.v1.AddGitHubTokenResponse
+	340, // 491: nushi.v1.NushiService.RemoveGitHubToken:output_type -> nushi.v1.RemoveGitHubTokenResponse
+	342, // 492: nushi.v1.NushiService.AllowGitHubToken:output_type -> nushi.v1.AllowGitHubTokenResponse
+	345, // 493: nushi.v1.NushiService.ListGitHubRepos:output_type -> nushi.v1.ListGitHubReposResponse
+	350, // 494: nushi.v1.NushiService.ListGitHubInbox:output_type -> nushi.v1.ListGitHubInboxResponse
+	359, // 495: nushi.v1.NushiService.GetGitHubStates:output_type -> nushi.v1.GetGitHubStatesResponse
+	357, // 496: nushi.v1.NushiService.GetGitHubItems:output_type -> nushi.v1.GetGitHubItemsResponse
+	377, // 497: nushi.v1.NushiService.GetGitHubPull:output_type -> nushi.v1.GetGitHubPullResponse
+	380, // 498: nushi.v1.NushiService.GetGitHubIssue:output_type -> nushi.v1.GetGitHubIssueResponse
+	372, // 499: nushi.v1.NushiService.GetGitHubCommits:output_type -> nushi.v1.GetGitHubCommitsResponse
+	382, // 500: nushi.v1.NushiService.GetGitHubFiles:output_type -> nushi.v1.GetGitHubFilesResponse
+	384, // 501: nushi.v1.NushiService.GetGitHubViewed:output_type -> nushi.v1.GetGitHubViewedResponse
+	386, // 502: nushi.v1.NushiService.SetGitHubViewed:output_type -> nushi.v1.SetGitHubViewedResponse
+	363, // 503: nushi.v1.NushiService.ReactGitHub:output_type -> nushi.v1.ReactGitHubResponse
+	388, // 504: nushi.v1.NushiService.GetGitHubJobLog:output_type -> nushi.v1.GetGitHubJobLogResponse
+	390, // 505: nushi.v1.NushiService.ReplyGitHubThread:output_type -> nushi.v1.ReplyGitHubThreadResponse
+	392, // 506: nushi.v1.NushiService.ResolveGitHubThread:output_type -> nushi.v1.ResolveGitHubThreadResponse
+	420, // 507: nushi.v1.NushiService.AddGitHubComment:output_type -> nushi.v1.AddGitHubCommentResponse
+	423, // 508: nushi.v1.NushiService.SubmitGitHubReview:output_type -> nushi.v1.SubmitGitHubReviewResponse
+	419, // 509: nushi.v1.NushiService.EditGitHubPull:output_type -> nushi.v1.EditGitHubPullResponse
+	416, // 510: nushi.v1.NushiService.RerunGitHubChecks:output_type -> nushi.v1.RerunGitHubChecksResponse
+	395, // 511: nushi.v1.NushiService.GetGitHubMergeText:output_type -> nushi.v1.GetGitHubMergeTextResponse
+	397, // 512: nushi.v1.NushiService.MergeGitHubPull:output_type -> nushi.v1.MergeGitHubPullResponse
+	399, // 513: nushi.v1.NushiService.EnableGitHubAutoMerge:output_type -> nushi.v1.EnableGitHubAutoMergeResponse
+	401, // 514: nushi.v1.NushiService.DisableGitHubAutoMerge:output_type -> nushi.v1.DisableGitHubAutoMergeResponse
+	403, // 515: nushi.v1.NushiService.EnqueueGitHubPull:output_type -> nushi.v1.EnqueueGitHubPullResponse
+	405, // 516: nushi.v1.NushiService.DequeueGitHubPull:output_type -> nushi.v1.DequeueGitHubPullResponse
+	407, // 517: nushi.v1.NushiService.GetCleanUp:output_type -> nushi.v1.GetCleanUpResponse
+	409, // 518: nushi.v1.NushiService.RemoveChatWorktree:output_type -> nushi.v1.RemoveChatWorktreeResponse
+	411, // 519: nushi.v1.NushiService.DeleteChatBranch:output_type -> nushi.v1.DeleteChatBranchResponse
+	413, // 520: nushi.v1.NushiService.DeleteGitHubBranch:output_type -> nushi.v1.DeleteGitHubBranchResponse
+	415, // 521: nushi.v1.NushiService.RestoreGitHubBranch:output_type -> nushi.v1.RestoreGitHubBranchResponse
+	353, // 522: nushi.v1.NushiService.FindChatPull:output_type -> nushi.v1.FindChatPullResponse
+	355, // 523: nushi.v1.NushiService.LinkChatPull:output_type -> nushi.v1.LinkChatPullResponse
+	425, // 524: nushi.v1.NushiService.GetUsage:output_type -> nushi.v1.GetUsageResponse
+	201, // 525: nushi.v1.NushiService.Events:output_type -> nushi.v1.EventsResponse
+	365, // [365:526] is the sub-list for method output_type
+	204, // [204:365] is the sub-list for method input_type
+	204, // [204:204] is the sub-list for extension type_name
+	204, // [204:204] is the sub-list for extension extendee
+	0,   // [0:204] is the sub-list for field type_name
 }
 
 func init() { file_nushi_v1_nushi_proto_init() }

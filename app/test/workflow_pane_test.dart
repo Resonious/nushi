@@ -220,6 +220,13 @@ void main() {
       tester.getRect(find.text('No phase')).top,
       greaterThan(tester.getRect(find.text('review:tests')).top),
     );
+    // What it plans and hasn't reached comes last, said in words, with
+    // nothing to fold (ADR 0141).
+    expect(find.text(' · planned'), findsOne);
+    expect(
+      tester.getRect(find.text('Verify')).top,
+      greaterThan(tester.getRect(find.text('No phase')).top),
+    );
     // A phase folds its agents.
     await tester.tap(find.text('Map'));
     await tester.pump();

@@ -2465,6 +2465,10 @@ message Workflow {
   // For each of running, the index in phases of the phase it runs in; -1
   // for none. API 132.
   repeated int32 running_phases = 19;
+  // The phases its script plans and it hasn't reached, in the script's
+  // order (Claude's meta.phases), with phases 32 at most; their counts are
+  // 0. A phase leaves it for phases once reached. API 134.
+  repeated WorkflowPhase planned = 20;
 }
 
 // A phase of a workflow: its title, the agent's line on it, and how many
@@ -2646,6 +2650,10 @@ message ItemEvent {
   // has only the recent part (GetChatRequest.recent) leaves out what is
   // before it, and a new item before the end goes there.
   int32 index = 3;
+  // The item is a workflow its chat's agent ran, which the daemon saw end
+  // just now (done, failed or stopped): only this one event says so, never
+  // a replay or a reload, so a client notifies once. API 134.
+  bool workflow_ended = 4;
 }
 
 message ChatStatus {

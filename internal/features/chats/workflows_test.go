@@ -511,7 +511,41 @@ func TestAWorkflowAfterAReopen(t *testing.T) {
 				mu.Unlock()
 			}
 			eventually(t, f.c, func() bool { return f.c.itemLocked(wfCall).Workflow.State == end })
+			if got := f.endsMarked(); len(got) != 0 {
+				t.Errorf("a run found ended after a reopen was marked ended: %+v", got)
+			}
 		})
+	}
+}
+
+// endsMarked takes the events so far and returns those marking a
+// workflow's end.
+func (f workflowFixture) endsMarked() []model.Event {
+	var got []model.Event
+	for len(f.events) > 0 {
+		if e := <-f.events; e.WorkflowEnded {
+			got = append(got, e)
+		}
+	}
+	return got
+}
+
+// A run's end, as the follower sees it come, marks its one event so
+// (ADR 0141), which the notifications go by; nothing after it does.
+func TestAWorkflowsEndIsMarkedOnce(t *testing.T) {
+	f := workflowChat(t, Timing{}, runningAs)
+	eventually(t, f.c, func() bool { return f.c.itemLocked(wfCall).Workflow.State == "running" })
+	f.files.set(endedAs("failed", "failed"))
+	eventually(t, f.c, func() bool { return len(f.c.following) == 0 })
+	got := f.endsMarked()
+	if len(got) != 1 || got[0].Item == nil || got[0].Item.ID != wfCall || got[0].Item.Workflow.State != "failed" {
+		t.Fatalf("marked %+v", got)
+	}
+	f.c.mu.Lock()
+	f.c.followWorkflowsLocked() // an ended run isn't followed again
+	f.c.mu.Unlock()
+	if got := f.endsMarked(); len(got) != 0 {
+		t.Errorf("marked again: %+v", got)
 	}
 }
 
@@ -760,7 +794,7 @@ func TestWorkflowTouchedIsANewRun(t *testing.T) {
 	handedOut := it
 	later := *it.Workflow
 	later.Active = at.Add(time.Minute)
-	(&chat{}).setWorkflowLocked(&it, &later)
+	(&chat{}).setWorkflowLocked(&it, &later, false)
 	if handedOut.Workflow.Active != at {
 		t.Fatalf("the copy handed out changed: %v", handedOut.Workflow.Active)
 	}

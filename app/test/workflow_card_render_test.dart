@@ -54,7 +54,8 @@ List<Item> _subagent(
   for (var i = 0; i < steps; i++) _step('$id-$i', id, 'Read lib/part_$i.dart'),
 ];
 
-/// A workflow's call: running in its second phase, or [ended].
+/// A workflow's call: running in its second phase with two more planned,
+/// or [ended].
 Item _workflow(String id, {bool ended = false, int tokens = 0}) => Item(
   id: id,
   kind: ItemKind.ITEM_KIND_TOOL_CALL,
@@ -79,6 +80,9 @@ Item _workflow(String id, {bool ended = false, int tokens = 0}) => Item(
       WorkflowPhase(title: 'Check', started: ended ? 4 : 8, done: 4),
       if (ended) WorkflowPhase(title: 'Fix', started: 2, done: 2),
     ],
+    planned: ended
+        ? null
+        : [WorkflowPhase(title: 'Fix'), WorkflowPhase(title: 'Verify')],
     running: ended ? null : ['check:install', 'check:setup', 'check:themes'],
     runningPhases: ended ? null : [1, 1, 1],
     runningCount: ended ? 0 : 4,
@@ -102,7 +106,37 @@ List<Item> _items() => [
   _workflow('w1', tokens: 412300),
   agentSays('m3', 'An earlier pass, for comparison.'),
   _workflow('w2', ended: true, tokens: 96500),
+  agentSays('m4', 'And one stopped before its last phase.'),
+  _stopped('w3'),
 ];
+
+/// A workflow stopped in its second phase: its third never reached, as
+/// its snapshot lists it.
+Item _stopped(String id) => Item(
+  id: id,
+  kind: ItemKind.ITEM_KIND_TOOL_CALL,
+  tool: 'Workflow',
+  title: 'Workflow',
+  status: 'completed',
+  text: 'Workflow launched in background.',
+  workflow: Workflow(
+    runId: 'wf_$id',
+    name: 'rename-pages',
+    description: 'Rename the pages, then fix their links',
+    state: 'stopped',
+    end: 'killed',
+    started: msAgo(const Duration(minutes: 12)),
+    ended: msAgo(const Duration(minutes: 8)),
+    agents: 5,
+    done: 3,
+    phases: [
+      WorkflowPhase(title: 'Rename', started: 3, done: 3),
+      WorkflowPhase(title: 'Links', started: 2),
+      WorkflowPhase(title: 'Check'),
+    ],
+    tokens: Int64(40100),
+  ),
+);
 
 Future<void> _window(
   WidgetTester tester,
@@ -123,12 +157,22 @@ Future<void> _window(
   await frames(tester, 5, const Duration(milliseconds: 100));
   expectTextInside(tester, size.width);
   await render(tester, find.byType(NushiApp), '$name-collapsed');
-  // Opened in place by their chevrons (#103), which stay put.
-  for (final tip in ['Show its phases', 'Show its phases']) {
-    final at = tester.getRect(find.byTooltip(tip).first);
-    await tester.tap(find.byTooltip(tip).first);
+  // Opened in place by their chevrons (#103), which stay put on their
+  // card (the transcript, held at its end, may scroll as a card grows).
+  final cards = find.byType(WorkflowCard);
+  for (var i = 0; i < 3; i++) {
+    final chevron = find.descendant(
+      of: cards.at(i),
+      matching: find.byTooltip('Show its phases'),
+    );
+    final at = tester.getRect(chevron).shift(-tester.getTopLeft(cards.at(i)));
+    await tester.tap(chevron);
     await frames(tester, 5, const Duration(milliseconds: 100));
-    expect(tester.getRect(find.byTooltip('Hide its phases').last), at);
+    final open = find.descendant(
+      of: cards.at(i),
+      matching: find.byTooltip('Hide its phases'),
+    );
+    expect(tester.getRect(open).shift(-tester.getTopLeft(cards.at(i))), at);
   }
   expect(find.text('check:install, check:setup, check:themes'), findsOne);
   expectTextInside(tester, size.width);
@@ -156,18 +200,18 @@ Future<void> _phone(
   await tester.tap(find.text('Tidy the guides'));
   await frames(tester, 10, const Duration(milliseconds: 100));
   final cards = find.byType(WorkflowCard);
-  expect(cards, findsNWidgets(2));
+  expect(cards, findsNWidgets(3));
   final pane = find.descendant(
     of: cards,
     matching: find.byIcon(Icons.chevron_right),
   );
   // The chevrons that open it in place, at rest, are its only ones.
-  expect(pane, findsNWidgets(2));
+  expect(pane, findsNWidgets(3));
   expect(find.byTooltip('Stop'), findsNothing);
   expect(find.textContaining('412k tokens'), findsOne);
   expectTextInside(tester, size.width);
   await render(tester, find.byType(PhoneApp), '$name-collapsed');
-  for (var i = 0; i < 2; i++) {
+  for (var i = 0; i < 3; i++) {
     await tester.ensureVisible(cards.at(i));
     await tester.tap(cards.at(i), warnIfMissed: false);
     await frames(tester, 5, const Duration(milliseconds: 100));

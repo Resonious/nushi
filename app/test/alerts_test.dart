@@ -167,6 +167,53 @@ void main() {
     d.dispose();
   });
 
+  testWidgets("a workflow's end is posted once, from the event the daemon "
+      "marks: in its words, in the slot of a turn's end, by the turn "
+      "settings; its item again isn't", (tester) async {
+    final swift = _fake();
+    final (fake, d, alerts) = await _connect(tester);
+    EventsResponse call(String state, {bool ended = false}) => EventsResponse(
+      chatId: 'a',
+      item: ItemEvent(
+        workflowEnded: ended,
+        item: Item(
+          id: 'w',
+          kind: ItemKind.ITEM_KIND_TOOL_CALL,
+          tool: 'Workflow',
+          workflow: Workflow(name: 'audit-docs', state: state),
+        ),
+      ),
+    );
+    fake
+      ..emit(call('running'))
+      ..emit(call('done', ended: true))
+      ..emit(call('done'));
+    await tester.pump();
+    expect(swift.posted(), ["Claude's workflow finished"]);
+    final post = swift.calls.lastWhere((c) => c.method == 'post');
+    expect((post.arguments as Map)['id'], 'a/ended');
+    expect(
+      (post.arguments as Map)['body'],
+      'Fix the login\nWorkflow: audit-docs',
+    );
+    // Stopped or failed goes by "A turn fails"; finished by "A turn ends".
+    alertFailed.value = false;
+    fake.emit(call('stopped', ended: true));
+    await tester.pump();
+    alertFailed.value = true;
+    alertFinished.value = false;
+    fake
+      ..emit(call('done', ended: true))
+      ..emit(call('failed', ended: true));
+    await tester.pump();
+    expect(swift.posted(), [
+      "Claude's workflow finished",
+      "Claude's workflow failed",
+    ]);
+    alerts.dispose();
+    d.dispose();
+  });
+
   testWidgets("an older daemon's turn ends are still judged from their "
       'notices: an error makes it a failure, a cancel a stop', (tester) async {
     final swift = _fake();
@@ -345,7 +392,12 @@ void main() {
       themed(const SingleChildScrollView(child: NotificationsGroup())),
     );
     await tester.pump();
-    expect(find.text('An error, or the agent quit mid-turn.'), findsOne);
+    expect(
+      find.text(
+        'An error, the agent quit mid-turn, or a workflow failed or stopped.',
+      ),
+      findsOne,
+    );
     expect(find.text('macOS has notifications off for Nushi.'), findsOne);
     await tester.tap(find.text('Open Notifications…'));
     await tester.pump();
