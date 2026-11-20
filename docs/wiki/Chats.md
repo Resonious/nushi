@@ -239,6 +239,16 @@ A worktree is a separate copy of your repository on its own branch. To keep a ch
 - **Settings › Chat history** lists past chats, searchable by title and folder. Click a title to open it.
 - For a session you started in a terminal, press **⌘N**, highlight the agent and click **Sessions** (or →).
 
+## See what the agents used
+
+Settings has a Usage page: what your chats spent and the tokens they used, by day, agent, model and project, and the chats that cost the most. Where an agent reports your account's limits (Claude's 5-hour and weekly ones), they show there too.
+
+1. Open **Settings**, then **Usage**.
+2. Pick **7 days**, **30 days**, **90 days** or **All**. Nushi remembers your pick.
+3. Click a chat under **Costliest chats** to open it.
+
+Spend is what the agent reports. On a subscription that's what the API would charge for the same tokens, not what you pay. Codex and Ante report no cost, so the page says so and counts their tokens. A limit shows as the agent last said it, and changes only while one of its chats runs. Usage counts from the first turn after you updated to a version that keeps it; workflows' agents and the Context widget's `/context` aren't counted. The phone doesn't have this page.
+
 ## Good to know
 
 - **Chats belong to your agent.** Each is the agent's own session, so its own resume command, run in the chat's folder, picks it up in a terminal.

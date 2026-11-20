@@ -311,6 +311,7 @@ void main() {
         'MCP servers',
         'Skills',
         'Chat history',
+        'Usage',
         'Connections',
         'GitHub',
         'Jira',

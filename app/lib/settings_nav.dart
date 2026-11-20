@@ -11,6 +11,7 @@ extension SectionIcon on SettingsSection {
     .appearance => Icons.palette_outlined,
     .terminal => Icons.terminal,
     .history => Icons.history,
+    .usage => Icons.bar_chart_rounded,
     .remote => Icons.phone_iphone,
     .agents => Icons.smart_toy_outlined,
     .mcp => Icons.hub_outlined,
@@ -25,7 +26,7 @@ extension SectionIcon on SettingsSection {
 /// last has none (Logs & advanced, set apart). Every section is in one.
 const List<(String?, List<SettingsSection>)> settingsGroups = [
   ('App', [.general, .appearance, .terminal]),
-  ('Agents', [.agents, .mcp, .skills, .history]),
+  ('Agents', [.agents, .mcp, .skills, .history, .usage]),
   ('Connections', [.github, .jira, .remote]),
   (null, [.logs]),
 ];

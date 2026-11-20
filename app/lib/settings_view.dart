@@ -21,6 +21,7 @@ import 'package:nushi/settings_nav.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/settings_terminal.dart';
 import 'package:nushi/skills.dart';
+import 'package:nushi/usage_page.dart';
 import 'package:nushi/widgets.dart';
 
 const settingsKey = Cmd(LogicalKeyboardKey.comma);
@@ -136,6 +137,7 @@ class _SettingsViewState extends State<SettingsView> {
       settings: _set,
       onChange: _change,
     ),
+    SettingsSection.usage => UsageSection(daemon: daemon),
     SettingsSection.remote => SettingsPage(
       title: s.title,
       children: [RemoteSection(daemon.client)],
