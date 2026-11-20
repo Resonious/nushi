@@ -32,6 +32,7 @@ Nushi runs your `codex` through `@agentclientprotocol/codex-acp` 2.2.2, set up t
 - It uses Codex's own login or config (`$CODEX_HOME`, else `~/.codex`): sign in with `codex login`, or name a provider in `config.toml`. [Codex config](user/codex-config.md) has one for Fireworks.
 - A provider's key comes from the environment, which agents get from your login shell (above).
 - A Codex chat resumes in a terminal with `codex resume <session id>`.
+- **Preview: Codex without Node.** A Go agent for Codex ([codex-acp-go](https://github.com/afrase/codex-acp-go), run as `nushid codex-acp`) talks to Codex's app-server directly, so Codex needs no Node and no Set up: when npm installed your `codex`, it runs the native program inside it, not npm's Node launcher (about 14 MB less a chat) ([ADR 0142](adr/0142-codex-through-nushis-go-agent.md)). It is off by default: start the daemon with `NUSHI_CODEX_ADAPTER=go` in its environment to try it (`NUSHI_CODEX_ADAPTER=go NUSHI_DATA=/tmp/nd1 make run` for a dev daemon). Chats move between the two agents while asleep, as both use Codex's own sessions. What it doesn't do yet is in [Codex facts](facts/codex.md#the-go-agent-codex-acp-gos-codexacp).
 
 ### Ante
 
