@@ -93,11 +93,6 @@ final Pref<Map<String, KeptTabs>> fileTabsKept = Pref(
   without: (m, gone) => {...m}..removeWhere((id, _) => gone.contains(id)),
 );
 
-/// The file tabs kept in [saved] (`app.json` read whole, as [readSaved]
-/// does).
-Map<String, KeptTabs> savedFileTabs(Map<String, Object?> saved) =>
-    _entries(saved['fileTabs'], KeptTabs.read);
-
 /// Whether the Files pane shows its tree beside its viewer (on at first;
 /// ⇧⌘Y, its second row's button, its ⋯ and View › Show File Tree): one
 /// for every chat, as Claude desktop's.
@@ -393,10 +388,6 @@ final Pref<Map<String, int>> chatOpened = _byChat(
 /// in the order pinned.
 final Pref<Map<String, List<String>>> pinnedFiles = _byChat('pins', _strings);
 
-/// The pins kept in [saved] (`app.json` read whole, as [readSaved] does).
-Map<String, List<String>> savedPins(Map<String, Object?> saved) =>
-    _byPlace(saved['pins']);
-
 /// The newest comment seen of each chat's pull request (ms since the
 /// epoch), by chat id: newer ones are unread.
 final Pref<Map<String, int>> pullSeen = _byChat(
@@ -606,6 +597,11 @@ final class Pref<T> extends ValueNotifier<T> {
     value = _read(_saved[key]);
     _touched = false;
   }
+
+  /// Takes what a launch would read from [saved], `app.json` read whole
+  /// ([readSaved]): a test's relaunch.
+  @visibleForTesting
+  void readFrom(Map<String, Object?> saved) => value = _read(saved[key]);
 }
 
 /// A set pref's toggle, for what's kept as a set of ids or names (the

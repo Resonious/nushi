@@ -306,7 +306,7 @@ void main() {
     expect(pinnedFiles.value, {
       'c': ['mock/home.html', 'docs/brief.md'],
     });
-    expect(savedPins(readSaved()), pinnedFiles.value);
+    expect(readSaved()['pins'], pinnedFiles.value);
     // Unpinned, it goes back among the older.
     await tester.tap(_inRows(find.byIcon(Icons.push_pin)).first);
     await tester.pumpAndSettle();
@@ -324,7 +324,7 @@ void main() {
     final saved = readSaved();
     pinnedFiles.value = {};
     (d, _) = await _app(tester, _turns);
-    pinnedFiles.value = savedPins(saved);
+    pinnedFiles.readFrom(saved);
     await tester.pumpAndSettle();
     expect(_names(tester).take(3), ['flows.md', 'chart.png', 'report.md']);
     d.dispose();
