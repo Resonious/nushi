@@ -869,17 +869,7 @@ final List<Sheet> sheets = [
 Future<void> drawSheet(WidgetTester tester, Sheet sheet, Tokens tokens) async {
   viewport(tester, sheet.size);
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      builder: (context, child) => ToastHost(child: child!),
-      home: Builder(
-        builder: (context) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(disableAnimations: true),
-          child: Scaffold(body: sheet.build()),
-        ),
-      ),
-    ),
+    themed(sheet.build(), tokens: tokens, still: true, banner: false),
   );
   await tester.pumpAndSettle();
   await sheet.open?.call(tester);

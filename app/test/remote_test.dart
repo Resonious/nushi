@@ -86,11 +86,7 @@ void main() {
       pairing: Pairing(),
     );
     await tester.pumpWidget(
-      MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: const NushiTheme(Tokens.dark).toThemeData(),
-        home: Scaffold(body: RemoteSection(NushiServiceClient(_daemon()))),
-      ),
+      themed(RemoteSection(NushiServiceClient(_daemon())), banner: false),
     );
     viewport(tester, const Size(720, 560));
     await tester.tap(find.text('Pair a phone'));
@@ -143,15 +139,13 @@ void main() {
         ],
       );
       await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: NushiTheme(tokens).toThemeData(),
-          home: Scaffold(
-            body: Padding(
-              padding: const EdgeInsets.all(16),
-              child: RemoteSection(NushiServiceClient(daemon)),
-            ),
+        themed(
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: RemoteSection(NushiServiceClient(daemon)),
           ),
+          tokens: tokens,
+          banner: false,
         ),
       );
       await tester.pumpAndSettle();

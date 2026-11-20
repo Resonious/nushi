@@ -104,12 +104,10 @@ Future<(FakeDaemon, Daemon)> _view(
   d.skillsAgent = agent;
   viewport(tester, size, ratio: 3);
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: SkillsView(daemon: d, folder: folder),
-      ),
+    themed(
+      SkillsView(daemon: d, folder: folder),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();

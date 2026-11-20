@@ -136,12 +136,10 @@ Future<(FakeDaemon, Daemon)> _view(
   final d = await fake.connect(tester);
   viewport(tester, const Size(1000, 860), ratio: 3);
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: SkillsView(daemon: d, folder: folder),
-      ),
+    themed(
+      SkillsView(daemon: d, folder: folder),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();

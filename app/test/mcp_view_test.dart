@@ -74,12 +74,10 @@ Future<(FakeDaemon, Daemon)> _view(
   final (fake, d) = await _daemon(tester);
   viewport(tester, const Size(1000, 640), ratio: 3);
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: McpView(daemon: d, folder: folder),
-      ),
+    themed(
+      McpView(daemon: d, folder: folder),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();

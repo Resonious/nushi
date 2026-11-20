@@ -221,12 +221,10 @@ void main() {
       final (_, d) = await _daemon(tester);
       viewport(tester, Size(width, 960), ratio: 3);
       await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: NushiTheme(tokens).toThemeData(),
-          home: Scaffold(
-            body: McpView(daemon: d, folder: '/Users/me/$name'),
-          ),
+        themed(
+          McpView(daemon: d, folder: '/Users/me/$name'),
+          tokens: tokens,
+          banner: false,
         ),
       );
       await tester.pumpAndSettle();

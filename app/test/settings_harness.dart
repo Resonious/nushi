@@ -33,16 +33,14 @@ Future<void> pumpSettings(
   addTearDown(() => tester.binding.setSurfaceSize(null));
   d.openSettings(section: section, agent: agent);
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: ListenableBuilder(
-          listenable: d,
-          builder: (context, _) =>
-              d.settingsOpen != null ? SettingsView(d) : const Text('closed'),
-        ),
+    themed(
+      ListenableBuilder(
+        listenable: d,
+        builder: (context, _) =>
+            d.settingsOpen != null ? SettingsView(d) : const Text('closed'),
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();
