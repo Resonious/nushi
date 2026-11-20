@@ -105,9 +105,13 @@ func (s *server) GetGitHubStates(ctx context.Context, req *connect.Request[nushi
 		links = append(links, model.ChatGitHub{Host: l.Host, ID: l.Id})
 	}
 	out := &nushiv1.GetGitHubStatesResponse{}
-	for _, it := range s.GitHub.States(ctx, links, req.Msg.Quiet) {
+	states := s.GitHub.States(ctx, links, req.Msg.Quiet)
+	seen := make([]model.GitHubItem, 0, len(states))
+	for _, it := range states {
 		out.Items = append(out.Items, ghItemProto(it))
+		seen = append(seen, it)
 	}
+	s.sawPulls(seen)
 	return connect.NewResponse(out), nil
 }
 
@@ -125,6 +129,7 @@ func (s *server) GetGitHubItems(ctx context.Context, req *connect.Request[nushiv
 	if id := req.Msg.ChatId; id != "" && len(items) > 0 {
 		s.Chats.DropStrayPulls(id, items) // when each was opened is known now: no ask of its own
 	}
+	s.sawPulls(items)
 	out := &nushiv1.GetGitHubItemsResponse{Items: ghItemsProto(items), SignIn: signIn}
 	for _, r := range unseen {
 		out.Unseen = append(out.Unseen, &nushiv1.GitHubRef{Host: r.Host, Repo: r.Repo, Number: int32(r.Number)})
@@ -144,6 +149,7 @@ func (s *server) GetGitHubPull(ctx context.Context, req *connect.Request[nushiv1
 	if err != nil {
 		return nil, githubErr(err)
 	}
+	s.sawPulls([]model.GitHubItem{p.GitHubItem})
 	return connect.NewResponse(&nushiv1.GetGitHubPullResponse{Pull: pullProto(p)}), nil
 }
 
@@ -340,4 +346,12 @@ func pullProto(p model.GitHubPull) *nushiv1.GitHubPull {
 		out.Checks = append(out.Checks, pc)
 	}
 	return out
+}
+
+// sawPulls tells the chats what GitHub said of pull requests the app
+// asked for, so each chat's primary is its first still open (ADR 0117).
+func (s *server) sawPulls(items []model.GitHubItem) {
+	if s.Chats != nil {
+		s.Chats.SawPulls(items)
+	}
 }

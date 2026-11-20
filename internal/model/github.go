@@ -241,13 +241,16 @@ type GitHubIssue struct {
 // known by its address alone). Branch is the head branch a pull request
 // was found by; empty when it was linked by hand, opened in the chat, or
 // the chat started from it. Opened says a tool call of the chat opened it
-// (ADR 0117): it stays when the branch changes.
+// (ADR 0117): it stays when the branch changes. Done says GitHub last
+// said it was merged or closed, which the primary's pick reads (ADR 0117:
+// the first still open); a link not yet asked about is taken as open.
 type ChatGitHub struct {
 	GitHubRef
 	Pull   bool   `json:"pull,omitempty"`
 	ID     string `json:"id"`
 	Branch string `json:"branch,omitempty"`
 	Opened bool   `json:"opened,omitempty"`
+	Done   bool   `json:"done,omitempty"`
 }
 
 // Key is the link's item as host/owner/repo#number, what a link opened in

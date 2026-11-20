@@ -121,6 +121,64 @@ func TestPullsAtMost(t *testing.T) {
 	}
 }
 
+// TestPrimaryStillOpen (ADR 0117): the primary is the one the chat
+// started from, else the first still open as GitHub last said (rows,
+// states or one read whole), else the first; one picked by hand takes
+// that one's place.
+func TestPrimaryStillOpen(t *testing.T) {
+	svc, _, c := newChat(t, `{"sessionId":"s1"}`, &memModes{})
+	record := func() model.ChatRecord {
+		s, err := svc.Session(c.id)
+		testcheck.NoErr(t, err)
+		return s
+	}
+	primary := func() int {
+		if p := record().PullLink(); p != nil {
+			return p.Number
+		}
+		return 0
+	}
+	for n := 7; n <= 9; n++ {
+		testcheck.NoErr(t, svc.AddPull(c.id, pullLink(n, "")))
+	}
+	if got := primary(); got != 7 {
+		t.Fatalf("none known yet: the first, got #%d", got)
+	}
+	item := func(n int, state string) model.GitHubItem {
+		l := pullLink(n, "")
+		return model.GitHubItem{GitHubRef: l.GitHubRef, ID: l.ID, Pull: true, State: state}
+	}
+	svc.SawPulls([]model.GitHubItem{item(7, "merged"), item(8, "open")})
+	if got := primary(); got != 8 {
+		t.Fatalf("#7 merged: the first open, got #%d", got)
+	}
+	svc.SawPulls([]model.GitHubItem{item(8, "closed"), item(9, "merged")})
+	if got := primary(); got != 7 {
+		t.Fatalf("none open: the first, got #%d", got)
+	}
+	svc.SawPulls([]model.GitHubItem{item(9, "open")}) // reopened
+	if got := primary(); got != 9 {
+		t.Fatalf("#9 reopened, got #%d", got)
+	}
+	svc.SawPulls([]model.GitHubItem{item(9, "")}) // no state said: nothing changes
+	if got := primary(); got != 9 {
+		t.Fatalf("no state, got #%d", got)
+	}
+	// By hand: in the primary's place, #9's.
+	p := pullLink(10, "")
+	testcheck.NoErr(t, svc.LinkPull(c.id, &p))
+	if got := fmt.Sprint(numbers(record().AllPulls())); got != "[7 8 10]" || primary() != 10 {
+		t.Fatalf("linked by hand: %s, primary #%d", got, primary())
+	}
+	// The one the chat started from stays first, merged or not.
+	c.mu.Lock()
+	c.saveLocked(func(s *model.ChatRecord) { g := pullLink(3, ""); g.Done = true; s.GitHub = &g })
+	c.mu.Unlock()
+	if got := primary(); got != 3 {
+		t.Fatalf("started from #3, got #%d", got)
+	}
+}
+
 // TestOldRecordsPull: a record written before Pulls takes Pull as its
 // first.
 func TestOldRecordsPull(t *testing.T) {
