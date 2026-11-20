@@ -105,7 +105,7 @@ void main() {
         expectTextInside(tester, width);
         await render(tester, find.byType(NushiApp), 'workflow_cards_$name');
 
-        await tester.tap(find.byType(WorkflowCard).last);
+        await tester.tap(find.byTooltip('Open its agents').last);
         await _settle(tester);
         expect(find.byType(WorkflowPane), findsOne);
         expectTextInside(tester, width);

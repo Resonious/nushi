@@ -156,8 +156,8 @@ In the conversation, the plan's place says "shown over the box" while it's there
 Claude can run a workflow: a script that has many subagents work in phases, in the background. Its card shows in the chat where Claude started it. The chat counts as working until the workflow ends.
 
 1. Read the card: its name, the phase it's in with its progress ("Review 5/7"), how many agents run, the tokens they've used so far, and how long it has run. No cost shows: Claude doesn't report one for a workflow. At the end a check mark says it's done; otherwise it says failed or stopped.
-2. To see its phases without leaving the chat, click the chevron (›) at the card's start. The card opens in place: what the workflow does, then each phase with its progress and the subagents running in it. The phases still to come follow, each with an empty circle and **planned**. Click the chevron again to close it.
-3. Click the card anywhere else to open the **Workflow pane**. It lists each phase with all its subagents, their state, tokens and time, then the phases still planned. A phase the workflow ended before reaching says **not reached**.
+2. To see its phases without leaving the chat, click the card, or the chevron (›) at its start. The card opens in place: what the workflow does, then each phase with its progress and the subagents running in it. The phases still to come follow, each with an empty circle and **planned**. Click again to close it.
+3. Click the pane button at the card's end to open the **Workflow pane**. It lists each phase with all its subagents, their state, tokens and time, then the phases still planned. A phase the workflow ended before reaching says **not reached**.
 4. Click a subagent to read its steps. **All agents** (←) goes back.
 5. To stop it, point at the card and click **Stop**, or use Stop in the pane's header.
 

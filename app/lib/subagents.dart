@@ -83,6 +83,10 @@ List<Item> subagentSteps(SubagentRun s) => [
     if (!it.report) it,
 ];
 
+/// What ends a row that opens a side pane (a subagent's, a workflow's):
+/// a chevron is for what opens in place.
+const IconData paneIcon = Icons.view_sidebar_outlined;
+
 /// A subagent's state in a few words, in the order the workflow card's
 /// shares: "Reading notes.md · 6 tools · 40s" while it works, "39 tools ·
 /// 182k tokens · 7m 55s" once done (its check says so, #106), "failed ·
@@ -404,11 +408,7 @@ class SubagentLine extends StatelessWidget {
                         stopButton(context, daemon, chat, s.call.id, size: 13)
                       else
                         subagentMark(s),
-                      Icon(
-                        Icons.chevron_right,
-                        size: 15,
-                        color: t.textSecondary,
-                      ),
+                      Icon(paneIcon, size: 15, color: t.textSecondary),
                     ],
                   ),
                 ),

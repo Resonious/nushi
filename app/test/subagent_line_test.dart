@@ -28,7 +28,7 @@ void main() {
     // Done says no word: its check does (#106).
     expect(find.textContaining('done'), findsNothing);
     final state = tester.getRect(find.text('182k tokens'));
-    final chevron = tester.getRect(find.byIcon(Icons.chevron_right));
+    final chevron = tester.getRect(find.byIcon(paneIcon));
     // The state, its mark (a check) and the chevron end the line, not its
     // middle.
     expect(chevron.left - state.right, lessThan(40));

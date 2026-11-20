@@ -78,8 +78,9 @@ class _WorkflowCardState extends State<WorkflowCard> {
       builder: (context, {required hover}) => ValueListenableBuilder(
         valueListenable: chat.pane,
         builder: (context, open, _) => Tap(
-          onTap: phone ? _toggle : () => chat.pane.value = call.id,
-          tooltip: phone ? '' : 'Open its agents',
+          // A click opens it in place, as a tool call's; its pane is
+          // the button's at its end, so each does one thing.
+          onTap: _toggle,
           // A control's corners while it's a row or two, a card's once
           // open (ADR 0110), as a tool call's.
           radius: _open ? NushiTheme.card : NushiTheme.control,
@@ -89,9 +90,9 @@ class _WorkflowCardState extends State<WorkflowCard> {
               ? t.accentSoft
               : t.subagentTint,
           // The chevron's glyph where a tool call's is.
-          padding: const EdgeInsets.only(
+          padding: EdgeInsets.only(
             left: Collapsible.side - _chevronPad,
-            right: Collapsible.side,
+            right: phone ? Collapsible.side : Collapsible.side - _panePad,
           ),
           child: LayoutBuilder(
             builder: (context, box) {
@@ -106,7 +107,10 @@ class _WorkflowCardState extends State<WorkflowCard> {
               );
               // Narrow, the fullest that fits its line: its count, then
               // its tokens give way, never where it is or its time.
-              final room = box.maxWidth - WorkflowCard.indent - _endRoom;
+              final room =
+                  box.maxWidth -
+                  WorkflowCard.indent -
+                  (phone ? _endRoomPhone : _endRoom);
               final state = LiveText(
                 () => narrow
                     ? workflowStates(w).firstWhere(
@@ -223,10 +227,14 @@ class _WorkflowCardState extends State<WorkflowCard> {
                       ),
                     ),
                     if (!phone)
-                      Icon(
-                        Icons.chevron_right,
-                        size: 15,
+                      IconTap(
+                        paneIcon,
+                        tooltip: 'Open its agents',
+                        size: 14,
+                        padding: _panePad,
                         color: t.textSecondary,
+                        lit: open == call.id,
+                        onTap: () => chat.pane.value = call.id,
                       ),
                   ],
                 ),
@@ -265,8 +273,12 @@ const double _chevronRoom = 14 + _chevronPad * 2;
 const double _markRoom = 13 + 5 * 2;
 
 /// The room at a card's end past its words: the gaps, the mark's room and
-/// the chevron.
-const double _endRoom = 8 + _markRoom + 8 + 15;
+/// the pane's button; the phone has no pane, and keeps a chevron's room.
+const double _endRoom = 8 + _markRoom + 8 + 14 + _panePad * 2;
+const double _endRoomPhone = 8 + _markRoom + 8 + 15;
+
+/// The room around the pane button's glyph.
+const double _panePad = 4;
 
 /// "Workflow: review-changes", the kind in bold and the subagents'
 /// accent, on one line: the card's and its pane's head, as [subagentName]

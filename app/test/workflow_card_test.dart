@@ -6,6 +6,7 @@ import 'package:nushi/controls.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/items.dart';
 import 'package:nushi/motion.dart';
+import 'package:nushi/subagents.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/tool_calls.dart';
 import 'package:nushi/transcript_entries.dart';
@@ -177,9 +178,9 @@ void main() {
     await _pump(tester, call, width: 392);
     expectTextInside(tester, 392);
     final card = tester.getRect(find.byType(WorkflowCard));
-    // The pane's chevron at its end; the one that opens it in place
+    // The pane's button at its end; the chevron that opens it in place
     // at its start.
-    final chevron = tester.getRect(find.byIcon(Icons.chevron_right).last);
+    final chevron = tester.getRect(find.byIcon(paneIcon));
     expect(chevron.right, greaterThan(card.right - 20));
     final fold = tester.getRect(find.byTooltip('Show its phases'));
     expect(fold.left, lessThan(card.left + 12));
@@ -289,7 +290,16 @@ void main() {
       ),
     );
     expect(find.byTooltip('Hide its phases'), findsOne);
+    // A click on the card opens and closes it in place too, never the pane.
     await tester.tap(find.textContaining('Review 4/7 · 3 running'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Show its phases'), findsOne);
+    expect(chat.pane.value, isNull);
+    await tester.tap(find.textContaining('Review 4/7 · 3 running'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Hide its phases'), findsOne);
+    // Its pane is the button's at its end.
+    await tester.tap(find.byTooltip('Open its agents'));
     expect(chat.pane.value, 'wf');
     await tester.tap(find.byTooltip('Hide its phases'));
     await tester.pumpAndSettle();
@@ -312,7 +322,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('a click opens its pane, which lights it', (tester) async {
+  testWidgets('its pane button opens its pane, which lights it', (
+    tester,
+  ) async {
     final chat = ChatState('c', '/x');
     await tester.pumpWidget(
       themed(WorkflowCard(workflowCall('running'), chat, still: true)),
@@ -327,7 +339,7 @@ void main() {
         )
         .fill;
     expect(fill(), t.subagentTint);
-    await tester.tap(find.byType(WorkflowCard));
+    await tester.tap(find.byTooltip('Open its agents'));
     await tester.pump();
     expect(chat.pane.value, 'wf');
     expect(fill(), t.accentSoft); // lit while its pane is open
