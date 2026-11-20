@@ -16958,6 +16958,8 @@ class Workflow extends $pb.GeneratedMessage {
     $core.int? runningCount,
     $core.String? summary,
     $core.bool? stalled,
+    $fixnum.Int64? tokens,
+    $core.Iterable<$core.int>? runningPhases,
   }) {
     final result = Workflow._();
     if (runId != null) result.runId = runId;
@@ -16976,6 +16978,8 @@ class Workflow extends $pb.GeneratedMessage {
     if (runningCount != null) result.runningCount = runningCount;
     if (summary != null) result.summary = summary;
     if (stalled != null) result.stalled = stalled;
+    if (tokens != null) result.tokens = tokens;
+    if (runningPhases != null) result.runningPhases.addAll(runningPhases);
     return result;
   }
 
@@ -17009,6 +17013,9 @@ class Workflow extends $pb.GeneratedMessage {
     ..aI(15, _omitFieldNames ? '' : 'runningCount')
     ..aOS(16, _omitFieldNames ? '' : 'summary')
     ..aOB(17, _omitFieldNames ? '' : 'stalled')
+    ..aInt64(18, _omitFieldNames ? '' : 'tokens')
+    ..p<$core.int>(
+        19, _omitFieldNames ? '' : 'runningPhases', $pb.PbFieldType.K3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -17176,6 +17183,24 @@ class Workflow extends $pb.GeneratedMessage {
   $core.bool hasStalled() => $_has(15);
   @$pb.TagNumber(17)
   void clearStalled() => $_clearField(17);
+
+  /// The tokens its agents used so far, as the agent counts a subagent's
+  /// (Claude's totalTokens: each agent's last message, read from its
+  /// transcript while it runs; the snapshot's total once it ended); 0 when
+  /// not known. The agent reports no cost for a workflow. API 130.
+  @$pb.TagNumber(18)
+  $fixnum.Int64 get tokens => $_getI64(16);
+  @$pb.TagNumber(18)
+  set tokens($fixnum.Int64 value) => $_setInt64(16, value);
+  @$pb.TagNumber(18)
+  $core.bool hasTokens() => $_has(16);
+  @$pb.TagNumber(18)
+  void clearTokens() => $_clearField(18);
+
+  /// For each of running, the index in phases of the phase it runs in; -1
+  /// for none. API 130.
+  @$pb.TagNumber(19)
+  $pb.PbList<$core.int> get runningPhases => $_getList(17);
 }
 
 /// A phase of a workflow: its title, the agent's line on it, and how many

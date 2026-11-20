@@ -95,7 +95,8 @@ type run struct {
 	// at; snapshotWait how long an end its notification told waits for
 	// the snapshot.
 	agentStat, snapshotWait time.Duration
-	steps                   map[string]*steps // the agents' transcripts read for the pane
+	steps                   map[string]*steps       // the agents' transcripts read for the pane
+	tokens                  map[string]*agentTokens // and for their tokens, by agent id
 }
 
 // runKey is the folder of session sid in folder's history, for a run of
@@ -201,6 +202,7 @@ func (r *run) readJournal(root *os.Root, runID string) error {
 	}
 	if r.snap == nil && time.Since(r.statted) >= r.agentStat {
 		r.statted = time.Now()
+		r.readTokens(root, dir)
 		for _, row := range r.j.rows {
 			if row.State == "running" && agentID.MatchString(row.AgentID) {
 				if fi, err := root.Lstat(path.Join(dir, "agent-"+row.AgentID+".jsonl")); err == nil {
@@ -244,8 +246,9 @@ func latest(a, b time.Time) time.Time {
 func (r *run) summary(w model.Workflow) model.Workflow {
 	w.Started = cmp.Or(w.Started, r.started)
 	w.Active = r.active
-	w.Phases, w.Running = nil, nil
+	w.Phases, w.Running, w.RunningPhases = nil, nil, nil
 	w.Agents, w.Done, w.Failed, w.RunningCount = len(r.j.rows), 0, 0, 0
+	w.Tokens = r.tokensSum()
 	if s := r.snap; s != nil {
 		return r.ended(w, *s)
 	}
@@ -272,6 +275,7 @@ func (r *run) summary(w model.Workflow) model.Workflow {
 			w.RunningCount++
 			if len(w.Running) < model.WorkflowRunning {
 				w.Running = append(w.Running, label(row.Label, row.AgentID))
+				w.RunningPhases = append(w.RunningPhases, i)
 			}
 		}
 	}
@@ -324,6 +328,13 @@ func (r *run) ended(w model.Workflow, s snapshot) model.Workflow {
 		}
 	}
 	w.Agents = max(w.Agents, s.AgentCount, len(s.Agents))
+	// The snapshot's total, else its agents', else what their transcripts
+	// said.
+	var rows int64
+	for _, a := range s.Agents {
+		rows += int64(a.Tokens)
+	}
+	w.Tokens = cmp.Or(s.Tokens, rows, w.Tokens)
 	return w
 }
 

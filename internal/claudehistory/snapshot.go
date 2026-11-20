@@ -20,6 +20,7 @@ type snapshot struct {
 	Started                              time.Time
 	Duration                             time.Duration
 	AgentCount                           int
+	Tokens                               int64 // totalTokens: its agents' tokens
 	Phases                               []snapshotPhase
 	Agents                               []snapshotAgent
 }
@@ -44,7 +45,7 @@ func readSnapshot(data []byte) (snapshot, error) {
 	}
 	s := snapshot{Status: str(raw["status"]), TaskID: str(raw["taskId"]), Name: str(raw["workflowName"]), Summary: str(raw["summary"]),
 		Error: str(raw["error"]), Started: ms(raw["startTime"]), Duration: time.Duration(num(raw["durationMs"])) * time.Millisecond,
-		AgentCount: int(num(raw["agentCount"]))}
+		AgentCount: int(num(raw["agentCount"])), Tokens: num(raw["totalTokens"])}
 	if _, ok := raw["status"]; !ok { // as Claude's own reader takes one without
 		s.Status = "completed"
 		if s.Error != "" {
