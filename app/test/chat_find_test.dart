@@ -88,4 +88,30 @@ void main() {
       expect(f.current, by > 0 ? 'far a 0' : 'far b 0');
     });
   }
+
+  testWidgets('a common query’s millions of matches above are counted and '
+      'stepped through without a key for each, frame after frame', (
+    tester,
+  ) async {
+    // The daemon's 5000 items, 2000 matches each. A key made for each hit
+    // took about a second a frame; counted by item, it's a few
+    // milliseconds for all the frames, far inside the bound.
+    final (f, _) = _find([
+      for (var i = 0; i < 5000; i++) ChatMatch(itemId: 'i$i', count: 2000),
+    ]);
+    await _type(tester, f, 'e');
+    final took = Stopwatch()..start();
+    for (var frame = 0; frame < 10; frame++) {
+      // A streaming reply: its entry laid out again, its marks found anew.
+      f.found(['l2 0', for (var k = 0; k <= frame % 3; k++) 'l2 ${k + 1}']);
+    }
+    f.found(['l2 0', 'l2 1', 'l2 2']);
+    took.stop();
+    expect(took.elapsed, lessThan(const Duration(seconds: 3)));
+    expect(f.hits, hasLength(10000003));
+    expect(f.count, '10000001 of 10000003');
+    f.step(-1);
+    expect(f.current, 'far i4999 1999');
+    expect(f.pending, 'far i4999 1999');
+  });
 }

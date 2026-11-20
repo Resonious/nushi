@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:connectrpc/connect.dart';
@@ -178,16 +179,15 @@ class ChatFind extends Find {
   /// loaded and not yet built), then the loaded ones. A pending step lands
   /// once its item is laid out.
   void _merge() {
-    final far = <String>[
+    final all = _Hits([
       for (final m in _far)
-        if (entryOf?.call(m.itemId) == null)
-          for (var k = 0; k < m.count; k++) 'far ${m.itemId} $k',
-    ];
-    final all = [...far, ..._near];
-    if (_pending case final p? when !far.contains(p)) {
+        if (entryOf?.call(m.itemId) == null) m,
+    ], _near);
+    final far = all.far;
+    if (_pending case final p? when !all.contains(p)) {
       _pending = null;
       final i = _landing(p, all);
-      foundAt(all, i ?? min(far.length, max(0, all.length - 1)), ask: true);
+      foundAt(all, i ?? min(far, max(0, all.length - 1)), ask: true);
       return;
     }
     if (all.isEmpty) {
@@ -196,14 +196,15 @@ class ChatFind extends Find {
     }
     final was = current;
     final int i;
+    final wasAt = was == null ? -1 : all.indexOf(was);
     if (_typed) {
-      i = _near.isNotEmpty ? far.length : all.length - 1;
-    } else if (was != null && all.contains(was)) {
-      i = all.indexOf(was);
+      i = _near.isNotEmpty ? far : all.length - 1;
+    } else if (wasAt >= 0) {
+      i = wasAt;
     } else {
       i = min(at, all.length - 1);
     }
-    if (listEquals(all, hits) && i == at) return;
+    if (hits case final _Hits before when before.same(all) && i == at) return;
     foundAt(all, i);
   }
 
@@ -212,14 +213,14 @@ class ChatFind extends Find {
   /// of calls, a subagent's call and steps), its marks theirs in order: the
   /// item's own come after the matches the daemon counted in the entry's
   /// items before it.
-  int? _landing(String key, List<String> all) {
+  int? _landing(String key, _Hits all) {
     final parts = key.split(' ');
     final item = parts[1];
     final entry = entryOf?.call(item);
     if (entry == null) return null;
     final mine = [
-      for (final (i, k) in all.indexed)
-        if (k.startsWith('$entry ')) i,
+      for (final (i, k) in all.near.indexed)
+        if (k.startsWith('$entry ')) all.far + i,
     ];
     if (mine.isEmpty) return null;
     var k = int.parse(parts[2]);
@@ -234,5 +235,92 @@ class ChatFind extends Find {
   void dispose() {
     _cancel();
     super.dispose();
+  }
+}
+
+/// A chat find's hits without a string for each: the far ones are runs of
+/// an item's matches, each keyed `far <item> <k>` as it's read, then the
+/// loaded ones' keys. A common query in a long chat has millions of
+/// matches above what's loaded, and the hits are merged again on every
+/// frame whose marks may have changed (a streaming reply's).
+class _Hits extends ListBase<String> {
+  new(this.runs, this.near) {
+    var total = 0;
+    for (final m in runs) {
+      _ends.add(total += m.count);
+    }
+  }
+
+  /// The items with matches above what's laid out, in order.
+  final List<ChatMatch> runs;
+
+  /// The keys of the matches laid out.
+  final List<String> near;
+
+  // Each run's end among the far hits.
+  final _ends = <int>[];
+
+  /// How many hits are far ones.
+  int get far => _ends.lastOrNull ?? 0;
+
+  @override
+  int get length => far + near.length;
+
+  @override
+  set length(int _) => throw UnsupportedError('A find’s hits are fixed');
+
+  @override
+  String operator [](int i) {
+    if (i >= far) return near[i - far];
+    RangeError.checkNotNegative(i);
+    var (lo, hi) = (0, _ends.length - 1);
+    while (lo < hi) {
+      final mid = (lo + hi) ~/ 2;
+      if (_ends[mid] > i) {
+        hi = mid;
+      } else {
+        lo = mid + 1;
+      }
+    }
+    return 'far ${runs[lo].itemId} ${i - (lo == 0 ? 0 : _ends[lo - 1])}';
+  }
+
+  @override
+  void operator []=(int i, String value) =>
+      throw UnsupportedError('A find’s hits are fixed');
+
+  @override
+  int indexOf(Object? element, [int start = 0]) {
+    final int i;
+    if (ChatFind.farItem(element as String?) case final item?) {
+      i = _farIndex(item, int.tryParse(element!.split(' ')[2]) ?? -1);
+    } else {
+      final n = near.indexOf(element ?? '');
+      i = n < 0 ? -1 : far + n;
+    }
+    return i >= start ? i : -1;
+  }
+
+  @override
+  bool contains(Object? element) => indexOf(element) >= 0;
+
+  int _farIndex(String item, int k) {
+    for (final (j, m) in runs.indexed) {
+      if (m.itemId != item) continue;
+      if (k < 0 || k >= m.count) return -1;
+      return (j == 0 ? 0 : _ends[j - 1]) + k;
+    }
+    return -1;
+  }
+
+  /// Whether [other] has the same hits: the same runs and loaded keys.
+  bool same(_Hits other) {
+    if (runs.length != other.runs.length || !listEquals(near, other.near)) {
+      return false;
+    }
+    for (var j = 0; j < runs.length; j++) {
+      if (!identical(runs[j], other.runs[j])) return false;
+    }
+    return true;
   }
 }
