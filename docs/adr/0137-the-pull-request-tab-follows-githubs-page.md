@@ -20,3 +20,5 @@ The Pull request tab (and the GitHub view's pull request, the same pane) follows
 
 ## Amendments
 - 2026-11-20: Comments start with the comment box, under the heading and its filter, then the reviews and comments newest first (a thread's replies still oldest first), as GitHub's page has them; one just posted lands right under the box.
+- 2026-11-20: Merge status and Submit review sit at the right of the head's title, in the page's column; the slim bar comes only once the title has scrolled away, over the scroll's top (nothing moves), its content in the same column and fixed while it shows.
+- 2026-11-20: The title and the description are editable in place where GitHub lets the user (`viewerCanUpdate`), from their Markdown source, only while GitHub still has what the edit began from (API 128): the one part of "what GitHub's page also has" now in.

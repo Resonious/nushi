@@ -72,7 +72,7 @@ The chip next to the chat's title shows the first pull request, and `+2` for the
 
 The tab looks like the pull request's page on GitHub, so what you know from there works here. Click **Pull request** next to **Chat** and **Changes** at the top of the chat, or press ⌃⌘3 (Ctrl+Alt+3 on Linux).
 
-- **The bar** at the top keeps the number and title in view, with **Merge status** and **Submit review**.
+- **Merge status** and **Submit review** are at the right of the title. Scroll down and a slim bar at the top keeps the state, number, title and both buttons in view.
 - **Four tabs**: **Overview**, **Commits**, **Checks** (every check, with **Re-run failed**) and **Files changed** (the diff, with review threads at their lines).
 - **Overview** starts with the **merge status card**: whether it can merge and what blocks it, the merge button, and three segments, **Checks**, **Comments** and **Approvals**. Click a segment to see its list.
 - Under the card are the description, the **Comments** (filter them by **All**, **Unresolved** or **Mine**; the box to write one comes first, then the newest), and the latest commits. Reviewers, assignees and labels are at the right.
@@ -98,7 +98,17 @@ By default, review cards tell the agent not to reply on GitHub, and failed-check
 
 - In a thread, click **Reply…**, **Resolve conversation** or **Unresolve conversation**. Resolved and outdated threads are folded: click **Show**.
 - To write an inline comment in **Files**, hover over a line and click the blue **+**, or click or drag across line numbers.
-- Click **Submit review** in the bar to send your review: **Comment**, **Approve** or **Request changes**, then **Submit review**.
+- Click **Submit review** at the right of the title to send your review: **Comment**, **Approve** or **Request changes**, then **Submit review**.
+
+## Edit the title or description
+
+You can change a pull request's title and description here, if GitHub lets you (you opened it, or you can write to the repository).
+
+1. Click the pencil (**Edit**) beside the title, or at the top right of the description.
+2. Change the text. The description is Markdown.
+3. Click **Save** (or press Enter for the title, ⌘Enter for the description). **Cancel** or Esc leaves it as it was.
+
+If someone changed it on GitHub while you were editing, Nushi doesn't save over it and keeps your text. Click **Show GitHub's version** to see theirs, then **Save** to replace it with yours, or **Cancel**.
 
 ## Merge
 
