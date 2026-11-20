@@ -204,17 +204,26 @@ class ChatFind extends Find {
   }
 
   /// Where far hit [key] lands among [all]: its item's entry's match of
-  /// the same place, or its last.
+  /// the same place, or its last. An entry can hold several items (a run
+  /// of calls, a subagent's call and steps), its marks theirs in order: the
+  /// item's own come after the matches the daemon counted in the entry's
+  /// items before it.
   int? _landing(String key, List<String> all) {
     final parts = key.split(' ');
-    final entry = entryOf?.call(parts[1]);
+    final item = parts[1];
+    final entry = entryOf?.call(item);
     if (entry == null) return null;
     final mine = [
       for (final (i, k) in all.indexed)
         if (k.startsWith('$entry ')) i,
     ];
     if (mine.isEmpty) return null;
-    return mine[min(int.parse(parts[2]), mine.length - 1)];
+    var k = int.parse(parts[2]);
+    for (final m in _far) {
+      if (m.itemId == item) break;
+      if (entryOf?.call(m.itemId) == entry) k += m.count;
+    }
+    return mine[min(k, mine.length - 1)];
   }
 
   @override
