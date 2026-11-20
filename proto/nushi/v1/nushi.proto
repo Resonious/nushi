@@ -477,6 +477,10 @@ service NushiService {
   // A pull request's files from its merge base to its head, both sides'
   // texts, as GetDiff gives them.
   rpc GetGitHubFiles(GetGitHubFilesRequest) returns (GetGitHubFilesResponse);
+  // Which of a pull request's files the user marked viewed (GitHub's
+  // viewerViewedState), and marking one viewed or not. API 130.
+  rpc GetGitHubViewed(GetGitHubViewedRequest) returns (GetGitHubViewedResponse);
+  rpc SetGitHubViewed(SetGitHubViewedRequest) returns (SetGitHubViewedResponse);
   // The end of a failed Actions job's log (16 KB).
   rpc GetGitHubJobLog(GetGitHubJobLogRequest) returns (GetGitHubJobLogResponse);
   // The user's writes.
@@ -3951,6 +3955,29 @@ message GetGitHubFilesRequest {
 message GetGitHubFilesResponse {
   repeated FileChange files = 1;
 }
+
+message GetGitHubViewedRequest {
+  GitHubRef ref = 1;
+  bool quiet = 2;
+}
+
+// Of the first 300 files: the paths the user marked viewed, and those
+// marked before a change since (GitHub's "Changed since last view",
+// shown unticked).
+message GetGitHubViewedResponse {
+  repeated string viewed = 1;
+  repeated string changed = 2;
+}
+
+message SetGitHubViewedRequest {
+  string host = 1;
+  // The pull request's node id.
+  string pull = 2;
+  string path = 3;
+  bool viewed = 4;
+}
+
+message SetGitHubViewedResponse {}
 
 message GetGitHubJobLogRequest {
   GitHubRef ref = 1;

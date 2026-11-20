@@ -103,6 +103,16 @@ By default, review cards tell the agent not to reply on GitHub, and failed-check
 2. Change the words and click **Save**. Empty asks the default.
 3. A changed kind says **Edited**. Click **Reset** beside it to go back to the default.
 
+## Mark files viewed
+
+As on GitHub, you can tick off each file once you've looked at it. Nushi saves the mark on GitHub, so github.com shows it too.
+
+1. Open **Files changed** and pick a file.
+2. Click **Viewed** at the right of the file's name. The file folds, and gets a green tick in the list.
+3. To look again, click the chevron before its name. Click **Viewed** again to untick it.
+
+The top of the list counts them, such as **1 / 4 files viewed**. A file that changed after you marked it says **Changed since last view** and is unticked again.
+
 ## Reply, review and resolve
 
 - In a thread, click **Reply…**, **Resolve conversation** or **Unresolve conversation**. Resolved and outdated threads are folded: click **Show**.

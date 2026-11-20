@@ -405,6 +405,12 @@ const (
 	// NushiServiceGetGitHubFilesProcedure is the fully-qualified name of the NushiService's
 	// GetGitHubFiles RPC.
 	NushiServiceGetGitHubFilesProcedure = "/nushi.v1.NushiService/GetGitHubFiles"
+	// NushiServiceGetGitHubViewedProcedure is the fully-qualified name of the NushiService's
+	// GetGitHubViewed RPC.
+	NushiServiceGetGitHubViewedProcedure = "/nushi.v1.NushiService/GetGitHubViewed"
+	// NushiServiceSetGitHubViewedProcedure is the fully-qualified name of the NushiService's
+	// SetGitHubViewed RPC.
+	NushiServiceSetGitHubViewedProcedure = "/nushi.v1.NushiService/SetGitHubViewed"
 	// NushiServiceGetGitHubJobLogProcedure is the fully-qualified name of the NushiService's
 	// GetGitHubJobLog RPC.
 	NushiServiceGetGitHubJobLogProcedure = "/nushi.v1.NushiService/GetGitHubJobLog"
@@ -943,6 +949,10 @@ type NushiServiceClient interface {
 	// A pull request's files from its merge base to its head, both sides'
 	// texts, as GetDiff gives them.
 	GetGitHubFiles(context.Context, *connect.Request[v1.GetGitHubFilesRequest]) (*connect.Response[v1.GetGitHubFilesResponse], error)
+	// Which of a pull request's files the user marked viewed (GitHub's
+	// viewerViewedState), and marking one viewed or not. API 130.
+	GetGitHubViewed(context.Context, *connect.Request[v1.GetGitHubViewedRequest]) (*connect.Response[v1.GetGitHubViewedResponse], error)
+	SetGitHubViewed(context.Context, *connect.Request[v1.SetGitHubViewedRequest]) (*connect.Response[v1.SetGitHubViewedResponse], error)
 	// The end of a failed Actions job's log (16 KB).
 	GetGitHubJobLog(context.Context, *connect.Request[v1.GetGitHubJobLogRequest]) (*connect.Response[v1.GetGitHubJobLogResponse], error)
 	// The user's writes.
@@ -1835,6 +1845,18 @@ func NewNushiServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(nushiServiceMethods.ByName("GetGitHubFiles")),
 			connect.WithClientOptions(opts...),
 		),
+		getGitHubViewed: connect.NewClient[v1.GetGitHubViewedRequest, v1.GetGitHubViewedResponse](
+			httpClient,
+			baseURL+NushiServiceGetGitHubViewedProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("GetGitHubViewed")),
+			connect.WithClientOptions(opts...),
+		),
+		setGitHubViewed: connect.NewClient[v1.SetGitHubViewedRequest, v1.SetGitHubViewedResponse](
+			httpClient,
+			baseURL+NushiServiceSetGitHubViewedProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("SetGitHubViewed")),
+			connect.WithClientOptions(opts...),
+		),
 		getGitHubJobLog: connect.NewClient[v1.GetGitHubJobLogRequest, v1.GetGitHubJobLogResponse](
 			httpClient,
 			baseURL+NushiServiceGetGitHubJobLogProcedure,
@@ -2108,6 +2130,8 @@ type nushiServiceClient struct {
 	getGitHubIssue          *connect.Client[v1.GetGitHubIssueRequest, v1.GetGitHubIssueResponse]
 	getGitHubCommits        *connect.Client[v1.GetGitHubCommitsRequest, v1.GetGitHubCommitsResponse]
 	getGitHubFiles          *connect.Client[v1.GetGitHubFilesRequest, v1.GetGitHubFilesResponse]
+	getGitHubViewed         *connect.Client[v1.GetGitHubViewedRequest, v1.GetGitHubViewedResponse]
+	setGitHubViewed         *connect.Client[v1.SetGitHubViewedRequest, v1.SetGitHubViewedResponse]
 	getGitHubJobLog         *connect.Client[v1.GetGitHubJobLogRequest, v1.GetGitHubJobLogResponse]
 	replyGitHubThread       *connect.Client[v1.ReplyGitHubThreadRequest, v1.ReplyGitHubThreadResponse]
 	resolveGitHubThread     *connect.Client[v1.ResolveGitHubThreadRequest, v1.ResolveGitHubThreadResponse]
@@ -2812,6 +2836,16 @@ func (c *nushiServiceClient) GetGitHubFiles(ctx context.Context, req *connect.Re
 	return c.getGitHubFiles.CallUnary(ctx, req)
 }
 
+// GetGitHubViewed calls nushi.v1.NushiService.GetGitHubViewed.
+func (c *nushiServiceClient) GetGitHubViewed(ctx context.Context, req *connect.Request[v1.GetGitHubViewedRequest]) (*connect.Response[v1.GetGitHubViewedResponse], error) {
+	return c.getGitHubViewed.CallUnary(ctx, req)
+}
+
+// SetGitHubViewed calls nushi.v1.NushiService.SetGitHubViewed.
+func (c *nushiServiceClient) SetGitHubViewed(ctx context.Context, req *connect.Request[v1.SetGitHubViewedRequest]) (*connect.Response[v1.SetGitHubViewedResponse], error) {
+	return c.setGitHubViewed.CallUnary(ctx, req)
+}
+
 // GetGitHubJobLog calls nushi.v1.NushiService.GetGitHubJobLog.
 func (c *nushiServiceClient) GetGitHubJobLog(ctx context.Context, req *connect.Request[v1.GetGitHubJobLogRequest]) (*connect.Response[v1.GetGitHubJobLogResponse], error) {
 	return c.getGitHubJobLog.CallUnary(ctx, req)
@@ -3395,6 +3429,10 @@ type NushiServiceHandler interface {
 	// A pull request's files from its merge base to its head, both sides'
 	// texts, as GetDiff gives them.
 	GetGitHubFiles(context.Context, *connect.Request[v1.GetGitHubFilesRequest]) (*connect.Response[v1.GetGitHubFilesResponse], error)
+	// Which of a pull request's files the user marked viewed (GitHub's
+	// viewerViewedState), and marking one viewed or not. API 130.
+	GetGitHubViewed(context.Context, *connect.Request[v1.GetGitHubViewedRequest]) (*connect.Response[v1.GetGitHubViewedResponse], error)
+	SetGitHubViewed(context.Context, *connect.Request[v1.SetGitHubViewedRequest]) (*connect.Response[v1.SetGitHubViewedResponse], error)
 	// The end of a failed Actions job's log (16 KB).
 	GetGitHubJobLog(context.Context, *connect.Request[v1.GetGitHubJobLogRequest]) (*connect.Response[v1.GetGitHubJobLogResponse], error)
 	// The user's writes.
@@ -4283,6 +4321,18 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(nushiServiceMethods.ByName("GetGitHubFiles")),
 		connect.WithHandlerOptions(opts...),
 	)
+	nushiServiceGetGitHubViewedHandler := connect.NewUnaryHandler(
+		NushiServiceGetGitHubViewedProcedure,
+		svc.GetGitHubViewed,
+		connect.WithSchema(nushiServiceMethods.ByName("GetGitHubViewed")),
+		connect.WithHandlerOptions(opts...),
+	)
+	nushiServiceSetGitHubViewedHandler := connect.NewUnaryHandler(
+		NushiServiceSetGitHubViewedProcedure,
+		svc.SetGitHubViewed,
+		connect.WithSchema(nushiServiceMethods.ByName("SetGitHubViewed")),
+		connect.WithHandlerOptions(opts...),
+	)
 	nushiServiceGetGitHubJobLogHandler := connect.NewUnaryHandler(
 		NushiServiceGetGitHubJobLogProcedure,
 		svc.GetGitHubJobLog,
@@ -4689,6 +4739,10 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 			nushiServiceGetGitHubCommitsHandler.ServeHTTP(w, r)
 		case NushiServiceGetGitHubFilesProcedure:
 			nushiServiceGetGitHubFilesHandler.ServeHTTP(w, r)
+		case NushiServiceGetGitHubViewedProcedure:
+			nushiServiceGetGitHubViewedHandler.ServeHTTP(w, r)
+		case NushiServiceSetGitHubViewedProcedure:
+			nushiServiceSetGitHubViewedHandler.ServeHTTP(w, r)
 		case NushiServiceGetGitHubJobLogProcedure:
 			nushiServiceGetGitHubJobLogHandler.ServeHTTP(w, r)
 		case NushiServiceReplyGitHubThreadProcedure:
@@ -5284,6 +5338,14 @@ func (UnimplementedNushiServiceHandler) GetGitHubCommits(context.Context, *conne
 
 func (UnimplementedNushiServiceHandler) GetGitHubFiles(context.Context, *connect.Request[v1.GetGitHubFilesRequest]) (*connect.Response[v1.GetGitHubFilesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.GetGitHubFiles is not implemented"))
+}
+
+func (UnimplementedNushiServiceHandler) GetGitHubViewed(context.Context, *connect.Request[v1.GetGitHubViewedRequest]) (*connect.Response[v1.GetGitHubViewedResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.GetGitHubViewed is not implemented"))
+}
+
+func (UnimplementedNushiServiceHandler) SetGitHubViewed(context.Context, *connect.Request[v1.SetGitHubViewedRequest]) (*connect.Response[v1.SetGitHubViewedResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.SetGitHubViewed is not implemented"))
 }
 
 func (UnimplementedNushiServiceHandler) GetGitHubJobLog(context.Context, *connect.Request[v1.GetGitHubJobLogRequest]) (*connect.Response[v1.GetGitHubJobLogResponse], error) {

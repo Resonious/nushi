@@ -31886,6 +31886,281 @@ class GetGitHubFilesResponse extends $pb.GeneratedMessage {
   $pb.PbList<FileChange> get files => $_getList(0);
 }
 
+class GetGitHubViewedRequest extends $pb.GeneratedMessage {
+  factory GetGitHubViewedRequest({
+    GitHubRef? ref,
+    $core.bool? quiet,
+  }) {
+    final result = GetGitHubViewedRequest._();
+    if (ref != null) result.ref = ref;
+    if (quiet != null) result.quiet = quiet;
+    return result;
+  }
+
+  GetGitHubViewedRequest._();
+
+  factory GetGitHubViewedRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetGitHubViewedRequest()..mergeFromBuffer(data, registry);
+  factory GetGitHubViewedRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetGitHubViewedRequest()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetGitHubViewedRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: GetGitHubViewedRequest.$_createMessage)
+    ..aOM<GitHubRef>(1, _omitFieldNames ? '' : 'ref',
+        subBuilder: GitHubRef.$_createMessage)
+    ..aOB(2, _omitFieldNames ? '' : 'quiet')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetGitHubViewedRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetGitHubViewedRequest copyWith(
+          void Function(GetGitHubViewedRequest) updates) =>
+      super.copyWith((message) => updates(message as GetGitHubViewedRequest))
+          as GetGitHubViewedRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated(
+      'Use GetGitHubViewedRequest() / GetGitHubViewedRequest.new instead')
+  static GetGitHubViewedRequest create() => GetGitHubViewedRequest._();
+  static $pb.GeneratedMessage $_createMessage() => GetGitHubViewedRequest._();
+  @$core.override
+  GetGitHubViewedRequest createEmptyInstance() => GetGitHubViewedRequest._();
+  @$core.pragma('dart2js:noInline')
+  static GetGitHubViewedRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetGitHubViewedRequest>(
+          GetGitHubViewedRequest.$_createMessage);
+  static GetGitHubViewedRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  GitHubRef get ref => $_getN(0);
+  @$pb.TagNumber(1)
+  set ref(GitHubRef value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRef() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRef() => $_clearField(1);
+  @$pb.TagNumber(1)
+  GitHubRef ensureRef() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $core.bool get quiet => $_getBF(1);
+  @$pb.TagNumber(2)
+  set quiet($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasQuiet() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearQuiet() => $_clearField(2);
+}
+
+/// Of the first 300 files: the paths the user marked viewed, and those
+/// marked before a change since (GitHub's "Changed since last view",
+/// shown unticked).
+class GetGitHubViewedResponse extends $pb.GeneratedMessage {
+  factory GetGitHubViewedResponse({
+    $core.Iterable<$core.String>? viewed,
+    $core.Iterable<$core.String>? changed,
+  }) {
+    final result = GetGitHubViewedResponse._();
+    if (viewed != null) result.viewed.addAll(viewed);
+    if (changed != null) result.changed.addAll(changed);
+    return result;
+  }
+
+  GetGitHubViewedResponse._();
+
+  factory GetGitHubViewedResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetGitHubViewedResponse()..mergeFromBuffer(data, registry);
+  factory GetGitHubViewedResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetGitHubViewedResponse()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetGitHubViewedResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: GetGitHubViewedResponse.$_createMessage)
+    ..pPS(1, _omitFieldNames ? '' : 'viewed')
+    ..pPS(2, _omitFieldNames ? '' : 'changed')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetGitHubViewedResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetGitHubViewedResponse copyWith(
+          void Function(GetGitHubViewedResponse) updates) =>
+      super.copyWith((message) => updates(message as GetGitHubViewedResponse))
+          as GetGitHubViewedResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated(
+      'Use GetGitHubViewedResponse() / GetGitHubViewedResponse.new instead')
+  static GetGitHubViewedResponse create() => GetGitHubViewedResponse._();
+  static $pb.GeneratedMessage $_createMessage() => GetGitHubViewedResponse._();
+  @$core.override
+  GetGitHubViewedResponse createEmptyInstance() => GetGitHubViewedResponse._();
+  @$core.pragma('dart2js:noInline')
+  static GetGitHubViewedResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetGitHubViewedResponse>(
+          GetGitHubViewedResponse.$_createMessage);
+  static GetGitHubViewedResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<$core.String> get viewed => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<$core.String> get changed => $_getList(1);
+}
+
+class SetGitHubViewedRequest extends $pb.GeneratedMessage {
+  factory SetGitHubViewedRequest({
+    $core.String? host,
+    $core.String? pull,
+    $core.String? path,
+    $core.bool? viewed,
+  }) {
+    final result = SetGitHubViewedRequest._();
+    if (host != null) result.host = host;
+    if (pull != null) result.pull = pull;
+    if (path != null) result.path = path;
+    if (viewed != null) result.viewed = viewed;
+    return result;
+  }
+
+  SetGitHubViewedRequest._();
+
+  factory SetGitHubViewedRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      SetGitHubViewedRequest()..mergeFromBuffer(data, registry);
+  factory SetGitHubViewedRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      SetGitHubViewedRequest()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SetGitHubViewedRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: SetGitHubViewedRequest.$_createMessage)
+    ..aOS(1, _omitFieldNames ? '' : 'host')
+    ..aOS(2, _omitFieldNames ? '' : 'pull')
+    ..aOS(3, _omitFieldNames ? '' : 'path')
+    ..aOB(4, _omitFieldNames ? '' : 'viewed')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SetGitHubViewedRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SetGitHubViewedRequest copyWith(
+          void Function(SetGitHubViewedRequest) updates) =>
+      super.copyWith((message) => updates(message as SetGitHubViewedRequest))
+          as SetGitHubViewedRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated(
+      'Use SetGitHubViewedRequest() / SetGitHubViewedRequest.new instead')
+  static SetGitHubViewedRequest create() => SetGitHubViewedRequest._();
+  static $pb.GeneratedMessage $_createMessage() => SetGitHubViewedRequest._();
+  @$core.override
+  SetGitHubViewedRequest createEmptyInstance() => SetGitHubViewedRequest._();
+  @$core.pragma('dart2js:noInline')
+  static SetGitHubViewedRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SetGitHubViewedRequest>(
+          SetGitHubViewedRequest.$_createMessage);
+  static SetGitHubViewedRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get host => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set host($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasHost() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearHost() => $_clearField(1);
+
+  /// The pull request's node id.
+  @$pb.TagNumber(2)
+  $core.String get pull => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set pull($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPull() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPull() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get path => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set path($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPath() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPath() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get viewed => $_getBF(3);
+  @$pb.TagNumber(4)
+  set viewed($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasViewed() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearViewed() => $_clearField(4);
+}
+
+class SetGitHubViewedResponse extends $pb.GeneratedMessage {
+  factory SetGitHubViewedResponse() => SetGitHubViewedResponse._();
+
+  SetGitHubViewedResponse._();
+
+  factory SetGitHubViewedResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      SetGitHubViewedResponse()..mergeFromBuffer(data, registry);
+  factory SetGitHubViewedResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      SetGitHubViewedResponse()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SetGitHubViewedResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: SetGitHubViewedResponse.$_createMessage)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SetGitHubViewedResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SetGitHubViewedResponse copyWith(
+          void Function(SetGitHubViewedResponse) updates) =>
+      super.copyWith((message) => updates(message as SetGitHubViewedResponse))
+          as SetGitHubViewedResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated(
+      'Use SetGitHubViewedResponse() / SetGitHubViewedResponse.new instead')
+  static SetGitHubViewedResponse create() => SetGitHubViewedResponse._();
+  static $pb.GeneratedMessage $_createMessage() => SetGitHubViewedResponse._();
+  @$core.override
+  SetGitHubViewedResponse createEmptyInstance() => SetGitHubViewedResponse._();
+  @$core.pragma('dart2js:noInline')
+  static SetGitHubViewedResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SetGitHubViewedResponse>(
+          SetGitHubViewedResponse.$_createMessage);
+  static SetGitHubViewedResponse? _defaultInstance;
+}
+
 class GetGitHubJobLogRequest extends $pb.GeneratedMessage {
   factory GetGitHubJobLogRequest({
     GitHubRef? ref,
@@ -36155,6 +36430,17 @@ class NushiServiceApi {
           $pb.ClientContext? ctx, GetGitHubFilesRequest request) =>
       _client.invoke<GetGitHubFilesResponse>(ctx, 'NushiService',
           'GetGitHubFiles', request, GetGitHubFilesResponse());
+
+  /// Which of a pull request's files the user marked viewed (GitHub's
+  /// viewerViewedState), and marking one viewed or not. API 130.
+  $async.Future<GetGitHubViewedResponse> getGitHubViewed(
+          $pb.ClientContext? ctx, GetGitHubViewedRequest request) =>
+      _client.invoke<GetGitHubViewedResponse>(ctx, 'NushiService',
+          'GetGitHubViewed', request, GetGitHubViewedResponse());
+  $async.Future<SetGitHubViewedResponse> setGitHubViewed(
+          $pb.ClientContext? ctx, SetGitHubViewedRequest request) =>
+      _client.invoke<SetGitHubViewedResponse>(ctx, 'NushiService',
+          'SetGitHubViewed', request, SetGitHubViewedResponse());
 
   /// The end of a failed Actions job's log (16 KB).
   $async.Future<GetGitHubJobLogResponse> getGitHubJobLog(

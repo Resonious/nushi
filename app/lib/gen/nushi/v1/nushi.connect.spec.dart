@@ -1298,6 +1298,22 @@ abstract final class NushiService {
     nushiv1nushi.GetGitHubFilesResponse.new,
   );
 
+  /// Which of a pull request's files the user marked viewed (GitHub's
+  /// viewerViewedState), and marking one viewed or not. API 130.
+  static const getGitHubViewed = connect.Spec(
+    '/$name/GetGitHubViewed',
+    connect.StreamType.unary,
+    nushiv1nushi.GetGitHubViewedRequest.new,
+    nushiv1nushi.GetGitHubViewedResponse.new,
+  );
+
+  static const setGitHubViewed = connect.Spec(
+    '/$name/SetGitHubViewed',
+    connect.StreamType.unary,
+    nushiv1nushi.SetGitHubViewedRequest.new,
+    nushiv1nushi.SetGitHubViewedResponse.new,
+  );
+
   /// The end of a failed Actions job's log (16 KB).
   static const getGitHubJobLog = connect.Spec(
     '/$name/GetGitHubJobLog',

@@ -184,6 +184,19 @@ func (s *server) GetGitHubFiles(ctx context.Context, req *connect.Request[nushiv
 	return connect.NewResponse(out), nil
 }
 
+func (s *server) GetGitHubViewed(ctx context.Context, req *connect.Request[nushiv1.GetGitHubViewedRequest]) (*connect.Response[nushiv1.GetGitHubViewedResponse], error) {
+	viewed, changed, err := s.GitHub.Viewed(ctx, ref(req.Msg.Ref), req.Msg.Quiet)
+	if err != nil {
+		return nil, githubErr(err)
+	}
+	return connect.NewResponse(&nushiv1.GetGitHubViewedResponse{Viewed: viewed, Changed: changed}), nil
+}
+
+func (s *server) SetGitHubViewed(ctx context.Context, req *connect.Request[nushiv1.SetGitHubViewedRequest]) (*connect.Response[nushiv1.SetGitHubViewedResponse], error) {
+	m := req.Msg
+	return done[nushiv1.SetGitHubViewedResponse](s.GitHub.SetViewed(ctx, m.Host, m.Pull, m.Path, m.Viewed), githubErr)
+}
+
 func (s *server) GetGitHubJobLog(ctx context.Context, req *connect.Request[nushiv1.GetGitHubJobLogRequest]) (*connect.Response[nushiv1.GetGitHubJobLogResponse], error) {
 	tail, err := s.GitHub.JobTail(ctx, ref(req.Msg.Ref), req.Msg.Job)
 	if err != nil {
