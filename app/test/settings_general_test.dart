@@ -75,7 +75,6 @@ void main() {
 
   // UX review, finding 15: remembered, not the View menu's state alone.
   testWidgets('the appearance is a setting, kept in app.json', (tester) async {
-    Directory(dataDir).createSync(recursive: true);
     final (_, d) = await _open(tester, SettingsSection.appearance);
     final mode = find.byKey(const ValueKey('appearance-mode'));
     expect(find.descendant(of: mode, matching: find.text('System')), findsOne);

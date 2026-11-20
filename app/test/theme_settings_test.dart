@@ -60,7 +60,6 @@ void main() {
 
   testWidgets('a theme picked repaints the app at once and is kept across '
       'a relaunch', (tester) async {
-    Directory(dataDir).createSync(recursive: true);
     final d = await _app(tester);
     expect(_painted(tester, find.byType(SettingsView)), same(Tokens.dark));
     expect(find.byType(ThemeCard), findsNWidgets(builtInThemes.length));
@@ -89,7 +88,6 @@ void main() {
   testWidgets('Tokyo Night is picked from its card, and kept by its id', (
     tester,
   ) async {
-    Directory(dataDir).createSync(recursive: true);
     final d = await _app(tester);
     await _tap(tester, find.text('Tokyo Night'));
     await tester.pumpAndSettle();
