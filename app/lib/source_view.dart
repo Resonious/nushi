@@ -100,8 +100,10 @@ class _SourceViewState extends State<SourceView> {
   /// What a list's selection holds, a right-click menu's place.
   final GlobalKey _content = GlobalKey();
 
-  /// The list's selection area (one list's at a time).
-  final GlobalKey<SelectionAreaState> _area = GlobalKey();
+  /// Each list's selection area: a key of their own, as one shared would
+  /// move a selection area, its selection and all, into the other list.
+  final GlobalKey<SelectionAreaState> _areaWrapped = GlobalKey();
+  final GlobalKey<SelectionAreaState> _areaRunOn = GlobalKey();
 
   @override
   void initState() {
@@ -159,7 +161,11 @@ class _SourceViewState extends State<SourceView> {
   /// its own selection, but the containers above it keep pointing at it,
   /// and asking them for it then throws in Flutter's selection code
   /// (issue 100). It would be gone from sight anyway.
-  void _unselect() => _area.currentState?.selectableRegion.clearSelection();
+  void _unselect() {
+    for (final area in [_areaWrapped, _areaRunOn]) {
+      area.currentState?.selectableRegion.clearSelection();
+    }
+  }
 
   /// Its lines' change marks against [SourceView.base]: none without one,
   /// or when the lines shown aren't the file's own (JSON pretty-printed;
@@ -341,7 +347,7 @@ class _SourceViewState extends State<SourceView> {
   /// A list's selection area, its menu inside it when it has one, so its
   /// right-click is the menu's.
   Widget _selectable(_Whole whole, Widget child) => SelectionArea(
-    key: _area,
+    key: identical(whole, _wholeWrapped) ? _areaWrapped : _areaRunOn,
     child: SelectionContainer(
       delegate: whole,
       child: switch (widget.menu) {
