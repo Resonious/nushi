@@ -185,7 +185,10 @@ Future<void> _placed(
   expect(card.bottom, lessThanOrEqualTo(tester.view.physicalSize.height));
   final controls = [
     ...find.byType(Pressable).evaluate().where((e) => !_scrolls(e)),
-    ...find.byType(EditableText).evaluate(),
+    // A field that scrolls with its page (a pull request's comment box,
+    // under its description) is as a list's row: the page scrolls it out
+    // from under the card.
+    ...find.byType(EditableText).evaluate().where((e) => !_scrolls(e)),
     for (final t in _bars) ...find.byType(t).evaluate(),
   ];
   final mine = find
