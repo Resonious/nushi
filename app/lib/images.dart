@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:nushi/chat_images.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/image_ref.dart';
+import 'package:nushi/svg_image.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 
@@ -291,8 +292,12 @@ Future<bool> Function(String path) readableImage = (path) async {
 /// that, and when, the reply was read.
 Widget markdownImage(Uri uri, String? alt) {
   if (uri.scheme == 'data') {
-    final bytes = uri.data?.contentAsBytes();
+    final data = uri.data;
+    final bytes = data?.contentAsBytes();
     if (bytes != null) {
+      if (data!.mimeType == 'image/svg+xml' || looksLikeSvg(bytes)) {
+        return SvgImage(bytes, alt: alt ?? 'SVG', size: 320);
+      }
       return ClickableImage(image: MemoryImage(bytes), size: 320);
     }
   }
@@ -307,7 +312,7 @@ Widget markdownImage(Uri uri, String? alt) {
         !uri.hasFragment &&
         !uri.pathSegments.any((s) => s.contains('/'));
     if (local && !kIsWeb) {
-      return _LocalImage(uri.toFilePath(), '[image: ${alt ?? uri}');
+      return _LocalImage(uri.toFilePath(), alt ?? uri.toString());
     }
     return Text('[image: ${alt ?? uri} (not an image file Nushi reads)]');
   }
@@ -319,25 +324,50 @@ Widget markdownImage(Uri uri, String? alt) {
   return Text('[image: ${alt ?? uri}]');
 }
 
+/// What a local image's look found: whether it may be read, and an SVG's
+/// bytes.
+class _Local {
+  const new({required this.readable, this.svg});
+
+  final bool readable;
+  final Uint8List? svg;
+}
+
 /// A local file as a markdown image, once [readableImage] said it may be
 /// read; until then, room for it.
 class _LocalImage extends StatefulWidget {
-  const new(this.path, this.said);
+  const new(this.path, this.alt);
 
   final String path;
-  final String said; // "[image: <alt>", for a file it doesn't read
+  final String alt;
 
   @override
   State<_LocalImage> createState() => _LocalImageState();
 }
 
 class _LocalImageState extends State<_LocalImage> {
-  late Future<bool> _readable = readableImage(widget.path);
+  late Future<_Local> _readable = _read(widget.path);
 
   @override
   void didUpdateWidget(_LocalImage old) {
     super.didUpdateWidget(old);
-    if (old.path != widget.path) _readable = readableImage(widget.path);
+    if (old.path != widget.path) _readable = _read(widget.path);
+  }
+
+  /// Whether [path] may be read, and an SVG's bytes ([maxSvgBytes] at
+  /// most), read here: Flutter's decoders take no SVG.
+  static Future<_Local> _read(String path) async {
+    if (!await readableImage(path)) return const _Local(readable: false);
+    if (!path.toLowerCase().endsWith('.svg')) {
+      return const _Local(readable: true);
+    }
+    try {
+      final f = File(path);
+      if (await f.length() > maxSvgBytes) return const _Local(readable: false);
+      return _Local(readable: true, svg: await f.readAsBytes());
+    } on Object {
+      return const _Local(readable: false);
+    }
   }
 
   @override
@@ -345,8 +375,12 @@ class _LocalImageState extends State<_LocalImage> {
     future: _readable,
     builder: (context, snap) => switch (snap.data) {
       null => const SizedBox(width: 320, height: 24),
-      true => ClickableImage(image: FileImage(File(widget.path)), size: 320),
-      false => Text('${widget.said} (not an image file Nushi reads)]'),
+      _Local(svg: final svg?) => SvgImage(svg, alt: widget.alt, size: 320),
+      _Local(readable: true) => ClickableImage(
+        image: FileImage(File(widget.path)),
+        size: 320,
+      ),
+      _ => Text('[image: ${widget.alt} (not an image file Nushi reads)]'),
     },
   );
 }

@@ -33,6 +33,8 @@ Some agents can also open a file in the Files pane themselves, or open a page fr
 - **Mermaid diagrams** (`.mmd` or `.mermaid` files). Mermaid blocks in the agent's messages draw as diagrams too.
 - **Code and text files**, with syntax highlighting.
 
+In a Markdown preview, images written as HTML (`<img src="logo.png" width="120">`, a README's logo) and SVG images show as pictures. An SVG that would load anything from elsewhere or run anything shows as its text instead.
+
 The file's path is above the file, in the pane's second row. Click the path to copy it.
 
 ## See which lines changed
