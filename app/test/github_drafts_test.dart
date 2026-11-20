@@ -222,7 +222,8 @@ void main() {
     await _post(tester);
     final ref = pull().item.ref;
     expect(reviewDrafts(ref), hasLength(1));
-    final review = find.text('Submit review (1)', skipOffstage: false);
+    // The head's, or the slim bar's once the head has scrolled away.
+    final review = find.text('Submit review (1)', skipOffstage: false).last;
     await tester.ensureVisible(review);
     await tester.pumpAndSettle();
     await tester.tap(review);
@@ -287,7 +288,8 @@ void main() {
 
 /// Opens the review dialog from the pull request's head.
 Future<void> _openReview(WidgetTester tester) async {
-  final review = find.text('Submit review', skipOffstage: false);
+  // The head's, or the slim bar's once the head has scrolled away.
+  final review = find.text('Submit review', skipOffstage: false).last;
   await tester.ensureVisible(review);
   await tester.pumpAndSettle();
   await tester.tap(review);
@@ -295,6 +297,6 @@ Future<void> _openReview(WidgetTester tester) async {
   expect(_inDialog('Submit review'), findsOneWidget);
 }
 
-/// [text] in the open dialog (the bar has a Submit review of its own).
+/// [text] in the open dialog (the head has a Submit review of its own).
 Finder _inDialog(String text) =>
     find.descendant(of: find.byType(Dialog), matching: find.text(text));

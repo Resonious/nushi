@@ -247,17 +247,21 @@ void main() {
     await tester.tap(find.text('Add to review'));
     await tester.pumpAndSettle();
     expect(find.text('Call it Minus?'), findsOneWidget);
-    // The head counts it.
-    expect(find.text('Submit review (1)', skipOffstage: false), findsOneWidget);
+    // The head counts it (and the slim bar, the head scrolled away).
+    expect(find.text('Submit review (1)', skipOffstage: false), findsWidgets);
+    expect(find.text('Submit review', skipOffstage: false), findsNothing);
     // Nothing went to GitHub but what was asked.
     expect(fake.calls.whereType<SubmitGitHubReviewRequest>(), isEmpty);
     expect(fake.calls.whereType<AddGitHubCommentRequest>(), isEmpty);
     // Review…: it goes with the review, and is gone from here.
-    final button = find.textContaining(
-      RegExp(r'^Submit review( \(\d+\))?$'),
-      skipOffstage: false,
-    );
-    await tester.ensureVisible(button); // the head, scrolled away
+    // The slim bar's, the head scrolled away.
+    final button = find
+        .textContaining(
+          RegExp(r'^Submit review( \(\d+\))?$'),
+          skipOffstage: false,
+        )
+        .last;
+    await tester.ensureVisible(button);
     await tester.pumpAndSettle();
     await tester.tap(button);
     await tester.pumpAndSettle();

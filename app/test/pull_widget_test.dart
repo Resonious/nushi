@@ -428,7 +428,7 @@ void main() {
         of: find.byType(GitHubPullPane),
         matching: find.text('Add Sub and Neg', findRichText: true),
       ),
-      findsNWidgets(2), // the bar's and the head's
+      findsOneWidget, // the head's
     );
     expect(find.text('Start work'), findsNothing);
     expect(find.byType(MergeCard), findsOneWidget);

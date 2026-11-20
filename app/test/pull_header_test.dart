@@ -23,8 +23,8 @@ void main() {
   });
 
   testWidgets('the head: title, state, who opened it and when, base ← '
-      'head, the size; the bar: #n and the title, Merge status and '
-      'Submit review; no Start work in a chat', (tester) async {
+      'head, the size; Merge status and Submit review at the end of the '
+      "title's row; no Start work in a chat", (tester) async {
     final (d, _) = await openPullTab(
       tester,
       overviewPull(),
@@ -33,7 +33,7 @@ void main() {
     expect(find.text('#218'), findsWidgets); // and the chat's chip
     expect(
       find.text('Fix login redirect loop after session expiry'),
-      findsNWidgets(2), // the bar's and the head's
+      findsOneWidget, // the head's; the slim bar shows once it's gone
     );
     expect(
       find.textContaining('mira opened 3h ago', findRichText: true),
@@ -52,10 +52,18 @@ void main() {
     ]) {
       expect(find.text(t), findsOneWidget);
     }
-    // The bar's buttons at its right edge.
+    // The buttons end the title's row, in the page's column.
+    final tabs = find
+        .ancestor(
+          of: find.text('Overview'),
+          matching: find.byWidgetPredicate(
+            (w) => w is Column && w.key is GlobalKey,
+          ),
+        )
+        .first;
     expect(
-      tester.getRect(find.text('Submit review')).right,
-      greaterThan(1700 - 60),
+      tester.getRect(find.byType(PullActions)).right,
+      tester.getRect(tabs).right,
     );
     d.dispose();
   }, variant: onMac);
@@ -70,35 +78,14 @@ void main() {
     await tester.tap(find.text('Files changed  4'));
     await tester.pumpAndSettle();
     expect(find.byType(MergeCard), findsNothing);
-    await tester.tap(find.text('Merge status'));
+    // The slim bar's, the head having scrolled away with the tabs.
+    await tester.tap(find.text('Merge status').last);
     await tester.pumpAndSettle();
     expect(find.byType(MergeCard), findsOneWidget);
     expect(
       find.textContaining('Failing after 41s', findRichText: true),
       findsOneWidget,
     );
-    d.dispose();
-  }, variant: onMac);
-
-  testWidgets('scrolled past the head, the state pill joins the bar', (
-    tester,
-  ) async {
-    final (d, _) = await openPullTab(
-      tester,
-      overviewPull(),
-      size: const Size(1700, 1000),
-    );
-    final inBar = find.descendant(
-      of: find.byType(PullBar),
-      matching: find.text('Open'),
-    );
-    expect(inBar, findsNothing);
-    await tester.drag(
-      find.byType(CustomScrollView).last,
-      const Offset(0, -400),
-    );
-    await tester.pumpAndSettle();
-    expect(inBar, findsOneWidget);
     d.dispose();
   }, variant: onMac);
 

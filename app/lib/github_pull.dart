@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_checks.dart';
@@ -46,9 +47,10 @@ void forgetPullTabs() => _tabLeft.clear();
 void openPullAt(GitHubRef ref, PullSection section) =>
     _tabLeft['${ref.host} ${ref.repo} ${ref.number}'] = section;
 
-/// A pull request's page, after GitHub's own (ADR 0137): a slim bar (`#n`,
-/// the title, Merge status, Submit review), the head ([PullHeader]: the
-/// title, state, who opened it, base ← head), the tabs (Overview,
+/// A pull request's page, after GitHub's own (ADR 0137): the head
+/// ([PullHeader]: the title, Merge status and Submit review at its
+/// right, state, who opened it, base ← head; the slim bar, [PullBar],
+/// over the page once its title has scrolled away), the tabs (Overview,
 /// Commits, Checks, Files changed) and the tab's content in one scroll,
 /// in a column of [pullPageWidth] at most; the files' diff the whole
 /// width and the window's height.
@@ -93,8 +95,8 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
   CommentFilter _filter = CommentFilter.all;
   late final PullCommits _commits = PullCommits(widget.daemon, widget.ref);
 
-  /// The header has scrolled away: the bar shows the state pill.
-  final ValueNotifier<bool> _scrolled = ValueNotifier(false);
+  /// The head's title row, which the slim bar watches.
+  final GlobalKey _title = GlobalKey();
 
   /// Who the user is on its host ('' until known).
   String _me = '';
@@ -121,9 +123,6 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
       }),
     );
     _redraw.addListener(_changed);
-    _scroll.addListener(
-      () => _scrolled.value = _scroll.hasClients && _scroll.offset > 90,
-    );
   }
 
   void _changed() => setState(() {});
@@ -141,7 +140,6 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
     _redraw.removeListener(_changed);
     _poll?.cancel();
     _scroll.dispose();
-    _scrolled.dispose();
     _commits.dispose();
     super.dispose();
   }
@@ -183,16 +181,27 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
     }
   }
 
-  /// Scrolls [key]'s widget into view, after this frame.
+  /// Scrolls [key]'s widget into view, after this frame: up to the slim
+  /// bar's bottom, as the bar shows once the head has gone.
   void _toView(GlobalKey key) =>
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final to = key.currentContext;
-        if (to == null || !to.mounted) return;
-        Scrollable.ensureVisible(
-          to,
-          duration: Motion.standard,
-          curve: Curves.easeOutCubic,
+        final to = key.currentContext?.findRenderObject();
+        final port = to == null ? null : RenderAbstractViewport.maybeOf(to);
+        if (to == null || port == null || !_scroll.hasClients) return;
+        final at = _scroll.position;
+        final y = (port.getOffsetToReveal(to, 0).offset - pullBarHeight).clamp(
+          at.minScrollExtent,
+          at.maxScrollExtent,
         );
+        if (reduceMotion(context)) {
+          _scroll.jumpTo(y);
+        } else {
+          _scroll.animateTo(
+            y,
+            duration: Motion.standard,
+            curve: Curves.easeOutCubic,
+          );
+        }
       });
 
   /// Shows tab [s], scrolled up to the tabs.
@@ -261,16 +270,17 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
               padding: EdgeInsets.fromLTRB(pad, top, pad, bottom),
               sliver: SliverToBoxAdapter(child: child),
             );
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        Widget actions() => PullActions(
+          pull: p,
+          narrow: narrow,
+          actions: _actions(context, p),
+          onMergeStatus: open && mergeView(p) != null ? _mergeStatus : null,
+        );
+        // The slim bar lies over the scroll's top, so it comes and goes
+        // without moving the page.
+        return Stack(
           children: [
-            PullBar(
-              pull: p,
-              scrolled: _scrolled,
-              actions: _actions(context, p),
-              onMergeStatus: open && mergeView(p) != null ? _mergeStatus : null,
-            ),
-            Expanded(
+            Positioned.fill(
               child: CustomScrollView(
                 controller: _scroll,
                 slivers: [
@@ -284,7 +294,10 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
                       ),
                       top: 8,
                     ),
-                  column(PullHeader(pull: p), top: keptAt == null ? 24 : 4),
+                  column(
+                    PullHeader(pull: p, titleKey: _title, actions: actions()),
+                    top: keptAt == null ? 24 : 4,
+                  ),
                   if (error case final e?)
                     column(
                       Text(
@@ -379,6 +392,16 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
                     ),
                   },
                 ],
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: StickyPullBar(
+                scroll: _scroll,
+                titleKey: _title,
+                bar: PullBar(pull: p, pad: pad, actions: actions()),
               ),
             ),
           ],
