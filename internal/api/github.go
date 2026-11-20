@@ -212,6 +212,30 @@ func (s *server) AddGitHubComment(ctx context.Context, req *connect.Request[nush
 	return done[nushiv1.AddGitHubCommentResponse](s.GitHub.Comment(ctx, req.Msg.Host, req.Msg.Subject, req.Msg.Body), githubErr)
 }
 
+// EditGitHubPull sets a pull request's title or description on the
+// user's ask (features/github's EditPull guards it).
+func (s *server) EditGitHubPull(ctx context.Context, req *connect.Request[nushiv1.EditGitHubPullRequest]) (*connect.Response[nushiv1.EditGitHubPullResponse], error) {
+	m := req.Msg
+	if m.Ref == nil {
+		return nil, invalid(errors.New("which pull request"))
+	}
+	err := s.GitHub.EditPull(ctx, ref(m.Ref), github.PullEdit{Title: m.Title, Body: m.Body, Was: m.Was})
+	return done[nushiv1.EditGitHubPullResponse](err, editErr)
+}
+
+// editErr is an edit's failure: GitHub having changed it as its own
+// reason, so the app offers GitHub's text; GitHub not letting the user
+// edit it as PermissionDenied.
+func editErr(err error) error {
+	switch {
+	case errors.Is(err, github.ErrChangedSince):
+		return because(connect.NewError(connect.CodeFailedPrecondition, err), ReasonChangedSince)
+	case errors.Is(err, github.ErrCantEdit):
+		return connect.NewError(connect.CodePermissionDenied, err)
+	}
+	return githubErr(err)
+}
+
 func (s *server) SubmitGitHubReview(ctx context.Context, req *connect.Request[nushiv1.SubmitGitHubReviewRequest]) (*connect.Response[nushiv1.SubmitGitHubReviewResponse], error) {
 	m := req.Msg
 	r := githubapi.Review{Pull: m.Pull, HeadOID: m.HeadOid, Pending: m.PendingReview, Event: m.Event, Body: m.Body}
@@ -264,7 +288,7 @@ func pullProto(p model.GitHubPull) *nushiv1.GitHubPull {
 		Mergeable: p.Mergeable, MergeState: p.MergeState, Additions: int32(p.Additions), Deletions: int32(p.Deletions),
 		ChangedFiles: int32(p.ChangedFiles), Conversation: ghCommentsProto(p.Conversation), PendingReview: p.PendingReview,
 		PendingComments: int32(p.PendingComments), Commits: int32(p.Commits), Merge: mergeProto(p), Assignees: p.Assignees,
-		Reviews: ghCommentsProto(p.Reviews)}
+		Reviews: ghCommentsProto(p.Reviews), BodySource: p.BodySource, CanEdit: p.CanEdit}
 	for _, l := range p.Labels {
 		out.Labels = append(out.Labels, &nushiv1.GitHubLabel{Name: l.Name, Color: l.Color})
 	}

@@ -49,6 +49,27 @@ func (c *Client) Comment(ctx context.Context, subject, body string) error {
 	return err
 }
 
+const editPullMutation = `mutation EditPull($input: UpdatePullRequestInput!) {
+  updatePullRequest(input: $input) { pullRequest { id } }
+}`
+
+// EditPull sets a pull request's title or description (pull is its node
+// id); a nil one isn't sent, so GitHub leaves it.
+func (c *Client) EditPull(ctx context.Context, pull string, title, body *string) error {
+	in := map[string]any{"pullRequestId": pull}
+	if title != nil {
+		in["title"] = *title
+	}
+	if body != nil {
+		in["body"] = *body
+	}
+	if len(in) == 1 {
+		return errors.New("an edit of nothing")
+	}
+	_, err := c.graphql(ctx, editPullMutation, map[string]any{"input": in}, new(any))
+	return err
+}
+
 // Draft is a comment of a review not yet sent: on Line (from StartLine,
 // if it's more than one) of Path's Side ("left" for the base, "right" for
 // the head).

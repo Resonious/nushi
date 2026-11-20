@@ -30314,6 +30314,8 @@ class GitHubPull extends $pb.GeneratedMessage {
     $core.Iterable<GitHubLabel>? labels,
     $core.Iterable<$core.String>? assignees,
     $core.Iterable<GitHubComment>? reviews,
+    $core.String? bodySource,
+    $core.bool? canEdit,
   }) {
     final result = GitHubPull._();
     if (item != null) result.item = item;
@@ -30341,6 +30343,8 @@ class GitHubPull extends $pb.GeneratedMessage {
     if (labels != null) result.labels.addAll(labels);
     if (assignees != null) result.assignees.addAll(assignees);
     if (reviews != null) result.reviews.addAll(reviews);
+    if (bodySource != null) result.bodySource = bodySource;
+    if (canEdit != null) result.canEdit = canEdit;
     return result;
   }
 
@@ -30390,6 +30394,8 @@ class GitHubPull extends $pb.GeneratedMessage {
     ..pPS(25, _omitFieldNames ? '' : 'assignees')
     ..pPM<GitHubComment>(26, _omitFieldNames ? '' : 'reviews',
         subBuilder: GitHubComment.$_createMessage)
+    ..aOS(27, _omitFieldNames ? '' : 'bodySource')
+    ..aOB(28, _omitFieldNames ? '' : 'canEdit')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -30612,6 +30618,29 @@ class GitHubPull extends $pb.GeneratedMessage {
   /// a thread's comments can sit under their review_id's. API 127.
   @$pb.TagNumber(26)
   $pb.PbList<GitHubComment> get reviews => $_getList(24);
+
+  /// The description as written, the Markdown GitHub keeps (its line
+  /// endings \n), for editing it: never rendered or sent to an agent (body
+  /// is the one for that). API 128.
+  @$pb.TagNumber(27)
+  $core.String get bodySource => $_getSZ(25);
+  @$pb.TagNumber(27)
+  set bodySource($core.String value) => $_setString(25, value);
+  @$pb.TagNumber(27)
+  $core.bool hasBodySource() => $_has(25);
+  @$pb.TagNumber(27)
+  void clearBodySource() => $_clearField(27);
+
+  /// GitHub lets the user edit its title and description (viewerCanUpdate:
+  /// its author, or someone with write access). API 128.
+  @$pb.TagNumber(28)
+  $core.bool get canEdit => $_getBF(26);
+  @$pb.TagNumber(28)
+  set canEdit($core.bool value) => $_setBool(26, value);
+  @$pb.TagNumber(28)
+  $core.bool hasCanEdit() => $_has(26);
+  @$pb.TagNumber(28)
+  void clearCanEdit() => $_clearField(28);
 }
 
 /// A label: its name and color (six hex digits, no #, as GitHub gives it).
@@ -33954,6 +33983,151 @@ class AddGitHubCommentRequest extends $pb.GeneratedMessage {
   void clearBody() => $_clearField(3);
 }
 
+/// One of title and body: what the pull request is to say now.
+class EditGitHubPullRequest extends $pb.GeneratedMessage {
+  factory EditGitHubPullRequest({
+    GitHubRef? ref,
+    $core.String? title,
+    $core.String? body,
+    $core.String? was,
+  }) {
+    final result = EditGitHubPullRequest._();
+    if (ref != null) result.ref = ref;
+    if (title != null) result.title = title;
+    if (body != null) result.body = body;
+    if (was != null) result.was = was;
+    return result;
+  }
+
+  EditGitHubPullRequest._();
+
+  factory EditGitHubPullRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      EditGitHubPullRequest()..mergeFromBuffer(data, registry);
+  factory EditGitHubPullRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      EditGitHubPullRequest()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EditGitHubPullRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: EditGitHubPullRequest.$_createMessage)
+    ..aOM<GitHubRef>(1, _omitFieldNames ? '' : 'ref',
+        subBuilder: GitHubRef.$_createMessage)
+    ..aOS(2, _omitFieldNames ? '' : 'title')
+    ..aOS(3, _omitFieldNames ? '' : 'body')
+    ..aOS(4, _omitFieldNames ? '' : 'was')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EditGitHubPullRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EditGitHubPullRequest copyWith(
+          void Function(EditGitHubPullRequest) updates) =>
+      super.copyWith((message) => updates(message as EditGitHubPullRequest))
+          as EditGitHubPullRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated(
+      'Use EditGitHubPullRequest() / EditGitHubPullRequest.new instead')
+  static EditGitHubPullRequest create() => EditGitHubPullRequest._();
+  static $pb.GeneratedMessage $_createMessage() => EditGitHubPullRequest._();
+  @$core.override
+  EditGitHubPullRequest createEmptyInstance() => EditGitHubPullRequest._();
+  @$core.pragma('dart2js:noInline')
+  static EditGitHubPullRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EditGitHubPullRequest>(
+          EditGitHubPullRequest.$_createMessage);
+  static EditGitHubPullRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  GitHubRef get ref => $_getN(0);
+  @$pb.TagNumber(1)
+  set ref(GitHubRef value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRef() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRef() => $_clearField(1);
+  @$pb.TagNumber(1)
+  GitHubRef ensureRef() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $core.String get title => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set title($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTitle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTitle() => $_clearField(2);
+
+  /// Markdown, the whole description (empty clears it).
+  @$pb.TagNumber(3)
+  $core.String get body => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set body($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasBody() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearBody() => $_clearField(3);
+
+  /// What the edited one said when the edit began (the title, or
+  /// body_source): GitHub's saying otherwise now refuses the edit.
+  @$pb.TagNumber(4)
+  $core.String get was => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set was($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasWas() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearWas() => $_clearField(4);
+}
+
+class EditGitHubPullResponse extends $pb.GeneratedMessage {
+  factory EditGitHubPullResponse() => EditGitHubPullResponse._();
+
+  EditGitHubPullResponse._();
+
+  factory EditGitHubPullResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      EditGitHubPullResponse()..mergeFromBuffer(data, registry);
+  factory EditGitHubPullResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      EditGitHubPullResponse()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EditGitHubPullResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: EditGitHubPullResponse.$_createMessage)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EditGitHubPullResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EditGitHubPullResponse copyWith(
+          void Function(EditGitHubPullResponse) updates) =>
+      super.copyWith((message) => updates(message as EditGitHubPullResponse))
+          as EditGitHubPullResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated(
+      'Use EditGitHubPullResponse() / EditGitHubPullResponse.new instead')
+  static EditGitHubPullResponse create() => EditGitHubPullResponse._();
+  static $pb.GeneratedMessage $_createMessage() => EditGitHubPullResponse._();
+  @$core.override
+  EditGitHubPullResponse createEmptyInstance() => EditGitHubPullResponse._();
+  @$core.pragma('dart2js:noInline')
+  static EditGitHubPullResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EditGitHubPullResponse>(
+          EditGitHubPullResponse.$_createMessage);
+  static EditGitHubPullResponse? _defaultInstance;
+}
+
 class AddGitHubCommentResponse extends $pb.GeneratedMessage {
   factory AddGitHubCommentResponse() => AddGitHubCommentResponse._();
 
@@ -35990,6 +36164,15 @@ class NushiServiceApi {
           $pb.ClientContext? ctx, SubmitGitHubReviewRequest request) =>
       _client.invoke<SubmitGitHubReviewResponse>(ctx, 'NushiService',
           'SubmitGitHubReview', request, SubmitGitHubReviewResponse());
+
+  /// Sets a pull request's title or description (one at a time), only
+  /// while it still says what the edit began from: else FailedPrecondition,
+  /// reason changed_since. PermissionDenied when GitHub doesn't let the
+  /// user edit it. API 128.
+  $async.Future<EditGitHubPullResponse> editGitHubPull(
+          $pb.ClientContext? ctx, EditGitHubPullRequest request) =>
+      _client.invoke<EditGitHubPullResponse>(ctx, 'NushiService',
+          'EditGitHubPull', request, EditGitHubPullResponse());
 
   /// Re-runs the failed jobs of the workflow runs that a pull request's
   /// failed Actions jobs belong to. API 88.

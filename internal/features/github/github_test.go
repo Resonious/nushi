@@ -36,6 +36,13 @@ type fakeClient struct {
 	autos     []githubapi.MergeInput // EnableAutoMerge's
 	mergeErr  error                  // what Merge answers
 	mergeText githubapi.MergeText
+	edits     []fakeEdit // EditPull's calls
+}
+
+// fakeEdit is one of EditPull's calls.
+type fakeEdit struct {
+	pull        string
+	title, body *string
 }
 
 func (f *fakeClient) note(s string) {
@@ -158,6 +165,13 @@ func (f *fakeClient) Resolve(context.Context, string, bool) error {
 
 func (f *fakeClient) Comment(context.Context, string, string) error {
 	f.written = append(f.written, "comment")
+	return nil
+}
+
+func (f *fakeClient) EditPull(_ context.Context, pull string, title, body *string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.edits = append(f.edits, fakeEdit{pull, title, body})
 	return nil
 }
 

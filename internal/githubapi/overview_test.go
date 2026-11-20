@@ -23,6 +23,11 @@ func TestPullOverview(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// The description shown leaves the template's notes out; its source,
+	// for editing, keeps them, with \n line endings.
+	if p.Body != "Sessions now expire after 30 idle minutes." || p.BodySource != "Sessions now expire after 30 idle minutes.\n\n<!-- the template's notes -->" || !p.CanEdit {
+		t.Fatalf("body %q, source %q, can edit %v", p.Body, p.BodySource, p.CanEdit)
+	}
 	if !p.Created.Equal(time.Date(2026, 11, 18, 9, 12, 0, 0, time.UTC)) {
 		t.Fatalf("created %v", p.Created)
 	}

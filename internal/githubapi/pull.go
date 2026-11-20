@@ -23,7 +23,7 @@ const pullQuery = `query PullRequest($owner: String!, $name: String!, $number: I
   repository(owner: $owner, name: $name) {
     pullRequest(number: $number) {
       ...PullRow
-      createdAt body authorAssociation baseRefName headRefName baseRefOid headRefOid isCrossRepository
+      createdAt body viewerCanUpdate authorAssociation baseRefName headRefName baseRefOid headRefOid isCrossRepository
       headRepository { nameWithOwner }
       mergeable mergeStateStatus additions deletions changedFiles
       ` + mergeFields + `
@@ -243,6 +243,7 @@ func (c *Client) Pull(ctx context.Context, repo string, number int) (model.GitHu
 				row
 				CreatedAt         time.Time `json:"createdAt"`
 				Body              string    `json:"body"`
+				ViewerCanUpdate   bool      `json:"viewerCanUpdate"`
 				AuthorAssociation string    `json:"authorAssociation"`
 				BaseRefName       string    `json:"baseRefName"`
 				HeadRefName       string    `json:"headRefName"`
@@ -314,7 +315,8 @@ func (c *Client) Pull(ctx context.Context, repo string, number int) (model.GitHu
 		return model.GitHubPull{}, ErrNotFound
 	}
 	p := data.Repository.PullRequest
-	out := model.GitHubPull{GitHubItem: p.item(c.Host), Body: Markdown(p.Body), Association: p.AuthorAssociation,
+	out := model.GitHubPull{GitHubItem: p.item(c.Host), Body: Markdown(p.Body), BodySource: Source(p.Body),
+		CanEdit: p.ViewerCanUpdate, Association: p.AuthorAssociation,
 		Base: p.BaseRefName, Head: p.HeadRefName, BaseOID: p.BaseRefOid, HeadOID: p.HeadRefOid, CrossRepo: p.IsCrossRepository,
 		Mergeable: strings.ToLower(p.Mergeable), MergeState: strings.ToLower(p.MergeStateStatus), Additions: p.Additions,
 		Deletions: p.Deletions, ChangedFiles: p.ChangedFiles, Commits: p.CommitCount.TotalCount, Merge: p.merge(),

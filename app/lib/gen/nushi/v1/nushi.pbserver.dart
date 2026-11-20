@@ -303,6 +303,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
       $pb.ServerContext ctx, $0.AddGitHubCommentRequest request);
   $async.Future<$0.SubmitGitHubReviewResponse> submitGitHubReview(
       $pb.ServerContext ctx, $0.SubmitGitHubReviewRequest request);
+  $async.Future<$0.EditGitHubPullResponse> editGitHubPull(
+      $pb.ServerContext ctx, $0.EditGitHubPullRequest request);
   $async.Future<$0.RerunGitHubChecksResponse> rerunGitHubChecks(
       $pb.ServerContext ctx, $0.RerunGitHubChecksRequest request);
   $async.Future<$0.GetGitHubMergeTextResponse> getGitHubMergeText(
@@ -620,6 +622,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return $0.AddGitHubCommentRequest();
       case 'SubmitGitHubReview':
         return $0.SubmitGitHubReviewRequest();
+      case 'EditGitHubPull':
+        return $0.EditGitHubPullRequest();
       case 'RerunGitHubChecks':
         return $0.RerunGitHubChecksRequest();
       case 'GetGitHubMergeText':
@@ -950,6 +954,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return addGitHubComment(ctx, request as $0.AddGitHubCommentRequest);
       case 'SubmitGitHubReview':
         return submitGitHubReview(ctx, request as $0.SubmitGitHubReviewRequest);
+      case 'EditGitHubPull':
+        return editGitHubPull(ctx, request as $0.EditGitHubPullRequest);
       case 'RerunGitHubChecks':
         return rerunGitHubChecks(ctx, request as $0.RerunGitHubChecksRequest);
       case 'GetGitHubMergeText':

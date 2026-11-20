@@ -484,6 +484,11 @@ service NushiService {
   rpc ResolveGitHubThread(ResolveGitHubThreadRequest) returns (ResolveGitHubThreadResponse);
   rpc AddGitHubComment(AddGitHubCommentRequest) returns (AddGitHubCommentResponse);
   rpc SubmitGitHubReview(SubmitGitHubReviewRequest) returns (SubmitGitHubReviewResponse);
+  // Sets a pull request's title or description (one at a time), only
+  // while it still says what the edit began from: else FailedPrecondition,
+  // reason changed_since. PermissionDenied when GitHub doesn't let the
+  // user edit it. API 128.
+  rpc EditGitHubPull(EditGitHubPullRequest) returns (EditGitHubPullResponse);
   // Re-runs the failed jobs of the workflow runs that a pull request's
   // failed Actions jobs belong to. API 88.
   rpc RerunGitHubChecks(RerunGitHubChecksRequest) returns (RerunGitHubChecksResponse);
@@ -3809,6 +3814,13 @@ message GitHubPull {
   // 100: those that said nothing too, which conversation leaves out, so
   // a thread's comments can sit under their review_id's. API 127.
   repeated GitHubComment reviews = 26;
+  // The description as written, the Markdown GitHub keeps (its line
+  // endings \n), for editing it: never rendered or sent to an agent (body
+  // is the one for that). API 128.
+  string body_source = 27;
+  // GitHub lets the user edit its title and description (viewerCanUpdate:
+  // its author, or someone with write access). API 128.
+  bool can_edit = 28;
 }
 
 // A label: its name and color (six hex digits, no #, as GitHub gives it).
@@ -4094,6 +4106,19 @@ message AddGitHubCommentRequest {
   string subject = 2;
   string body = 3;
 }
+
+// One of title and body: what the pull request is to say now.
+message EditGitHubPullRequest {
+  GitHubRef ref = 1;
+  optional string title = 2;
+  // Markdown, the whole description (empty clears it).
+  optional string body = 3;
+  // What the edited one said when the edit began (the title, or
+  // body_source): GitHub's saying otherwise now refuses the edit.
+  string was = 4;
+}
+
+message EditGitHubPullResponse {}
 
 message AddGitHubCommentResponse {
   // The comment: never read (the conversation is read again).

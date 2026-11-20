@@ -59,3 +59,29 @@ func TestPhoneMergesAsItReviews(t *testing.T) {
 		}
 	}
 }
+
+// An edit refused because GitHub changed it since is its own reason, on
+// which the app keeps the user's text and offers GitHub's; GitHub not
+// letting the user edit it is PermissionDenied.
+func TestEditErr(t *testing.T) {
+	var ce *connect.Error
+	if err := editErr(github.ErrChangedSince); !errors.As(err, &ce) || ce.Code() != connect.CodeFailedPrecondition || ce.Meta().Get(ReasonHeader) != ReasonChangedSince {
+		t.Fatalf("%v", err)
+	}
+	if err := editErr(github.ErrCantEdit); connect.CodeOf(err) != connect.CodePermissionDenied {
+		t.Fatalf("%v", err)
+	}
+	if err := editErr(githubapi.ErrNotFound); connect.CodeOf(err) != connect.CodeNotFound {
+		t.Fatalf("%v", err)
+	}
+}
+
+// A phone may edit a pull request's text, as it may post a review.
+func TestPhoneEditsAsItReviews(t *testing.T) {
+	guard := deviceGuard{}
+	review := guard.macs(connect.Spec{Procedure: nushiv1connect.NushiServiceSubmitGitHubReviewProcedure})
+	edit := guard.macs(connect.Spec{Procedure: nushiv1connect.NushiServiceEditGitHubPullProcedure})
+	if (edit == nil) != (review == nil) {
+		t.Fatalf("an edit: %v; a review: %v", edit, review)
+	}
+}

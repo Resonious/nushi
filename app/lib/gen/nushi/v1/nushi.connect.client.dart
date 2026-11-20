@@ -2743,6 +2743,27 @@ extension type NushiServiceClient(connect.Transport _transport) {
     );
   }
 
+  /// Sets a pull request's title or description (one at a time), only
+  /// while it still says what the edit began from: else FailedPrecondition,
+  /// reason changed_since. PermissionDenied when GitHub doesn't let the
+  /// user edit it. API 128.
+  Future<nushiv1nushi.EditGitHubPullResponse> editGitHubPull(
+    nushiv1nushi.EditGitHubPullRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.editGitHubPull,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
   /// Re-runs the failed jobs of the workflow runs that a pull request's
   /// failed Actions jobs belong to. API 88.
   Future<nushiv1nushi.RerunGitHubChecksResponse> rerunGitHubChecks(

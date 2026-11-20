@@ -7047,6 +7047,8 @@ const GitHubPull$json = {
       '6': '.nushi.v1.GitHubComment',
       '10': 'reviews'
     },
+    {'1': 'body_source', '3': 27, '4': 1, '5': 9, '10': 'bodySource'},
+    {'1': 'can_edit', '3': 28, '4': 1, '5': 8, '10': 'canEdit'},
   ],
   '9': [
     {'1': 3, '2': 4},
@@ -7072,7 +7074,8 @@ final $typed_data.Uint8List gitHubPullDescriptor = $convert.base64Decode(
     'gWIAEoBVIHY29tbWl0cxIrCgVtZXJnZRgXIAEoCzIVLm51c2hpLnYxLkdpdEh1Yk1lcmdlUgVt'
     'ZXJnZRItCgZsYWJlbHMYGCADKAsyFS5udXNoaS52MS5HaXRIdWJMYWJlbFIGbGFiZWxzEhwKCW'
     'Fzc2lnbmVlcxgZIAMoCVIJYXNzaWduZWVzEjEKB3Jldmlld3MYGiADKAsyFy5udXNoaS52MS5H'
-    'aXRIdWJDb21tZW50UgdyZXZpZXdzSgQIAxAEUgthc3NvY2lhdGlvbg==');
+    'aXRIdWJDb21tZW50UgdyZXZpZXdzEh8KC2JvZHlfc291cmNlGBsgASgJUgpib2R5U291cmNlEh'
+    'kKCGNhbl9lZGl0GBwgASgIUgdjYW5FZGl0SgQIAxAEUgthc3NvY2lhdGlvbg==');
 
 @$core.Deprecated('Use gitHubLabelDescriptor instead')
 const GitHubLabel$json = {
@@ -7898,6 +7901,43 @@ final $typed_data.Uint8List addGitHubCommentRequestDescriptor =
     $convert.base64Decode(
         'ChdBZGRHaXRIdWJDb21tZW50UmVxdWVzdBISCgRob3N0GAEgASgJUgRob3N0EhgKB3N1YmplY3'
         'QYAiABKAlSB3N1YmplY3QSEgoEYm9keRgDIAEoCVIEYm9keQ==');
+
+@$core.Deprecated('Use editGitHubPullRequestDescriptor instead')
+const EditGitHubPullRequest$json = {
+  '1': 'EditGitHubPullRequest',
+  '2': [
+    {
+      '1': 'ref',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.nushi.v1.GitHubRef',
+      '10': 'ref'
+    },
+    {'1': 'title', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'title', '17': true},
+    {'1': 'body', '3': 3, '4': 1, '5': 9, '9': 1, '10': 'body', '17': true},
+    {'1': 'was', '3': 4, '4': 1, '5': 9, '10': 'was'},
+  ],
+  '8': [
+    {'1': '_title'},
+    {'1': '_body'},
+  ],
+};
+
+/// Descriptor for `EditGitHubPullRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List editGitHubPullRequestDescriptor = $convert.base64Decode(
+    'ChVFZGl0R2l0SHViUHVsbFJlcXVlc3QSJQoDcmVmGAEgASgLMhMubnVzaGkudjEuR2l0SHViUm'
+    'VmUgNyZWYSGQoFdGl0bGUYAiABKAlIAFIFdGl0bGWIAQESFwoEYm9keRgDIAEoCUgBUgRib2R5'
+    'iAEBEhAKA3dhcxgEIAEoCVIDd2FzQggKBl90aXRsZUIHCgVfYm9keQ==');
+
+@$core.Deprecated('Use editGitHubPullResponseDescriptor instead')
+const EditGitHubPullResponse$json = {
+  '1': 'EditGitHubPullResponse',
+};
+
+/// Descriptor for `EditGitHubPullResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List editGitHubPullResponseDescriptor =
+    $convert.base64Decode('ChZFZGl0R2l0SHViUHVsbFJlc3BvbnNl');
 
 @$core.Deprecated('Use addGitHubCommentResponseDescriptor instead')
 const AddGitHubCommentResponse$json = {
@@ -8887,6 +8927,11 @@ const $core.Map<$core.String, $core.dynamic> NushiServiceBase$json = {
       '3': '.nushi.v1.SubmitGitHubReviewResponse'
     },
     {
+      '1': 'EditGitHubPull',
+      '2': '.nushi.v1.EditGitHubPullRequest',
+      '3': '.nushi.v1.EditGitHubPullResponse'
+    },
+    {
       '1': 'RerunGitHubChecks',
       '2': '.nushi.v1.RerunGitHubChecksRequest',
       '3': '.nushi.v1.RerunGitHubChecksResponse'
@@ -9357,6 +9402,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.nushi.v1.SubmitGitHubReviewRequest': SubmitGitHubReviewRequest$json,
   '.nushi.v1.GitHubDraft': GitHubDraft$json,
   '.nushi.v1.SubmitGitHubReviewResponse': SubmitGitHubReviewResponse$json,
+  '.nushi.v1.EditGitHubPullRequest': EditGitHubPullRequest$json,
+  '.nushi.v1.EditGitHubPullResponse': EditGitHubPullResponse$json,
   '.nushi.v1.RerunGitHubChecksRequest': RerunGitHubChecksRequest$json,
   '.nushi.v1.RerunGitHubChecksResponse': RerunGitHubChecksResponse$json,
   '.nushi.v1.GetGitHubMergeTextRequest': GetGitHubMergeTextRequest$json,
@@ -9612,30 +9659,31 @@ final $typed_data.Uint8List nushiServiceDescriptor = $convert.base64Decode(
     'UmVzcG9uc2USWQoQQWRkR2l0SHViQ29tbWVudBIhLm51c2hpLnYxLkFkZEdpdEh1YkNvbW1lbn'
     'RSZXF1ZXN0GiIubnVzaGkudjEuQWRkR2l0SHViQ29tbWVudFJlc3BvbnNlEl8KElN1Ym1pdEdp'
     'dEh1YlJldmlldxIjLm51c2hpLnYxLlN1Ym1pdEdpdEh1YlJldmlld1JlcXVlc3QaJC5udXNoaS'
-    '52MS5TdWJtaXRHaXRIdWJSZXZpZXdSZXNwb25zZRJcChFSZXJ1bkdpdEh1YkNoZWNrcxIiLm51'
-    'c2hpLnYxLlJlcnVuR2l0SHViQ2hlY2tzUmVxdWVzdBojLm51c2hpLnYxLlJlcnVuR2l0SHViQ2'
-    'hlY2tzUmVzcG9uc2USXwoSR2V0R2l0SHViTWVyZ2VUZXh0EiMubnVzaGkudjEuR2V0R2l0SHVi'
-    'TWVyZ2VUZXh0UmVxdWVzdBokLm51c2hpLnYxLkdldEdpdEh1Yk1lcmdlVGV4dFJlc3BvbnNlEl'
-    'YKD01lcmdlR2l0SHViUHVsbBIgLm51c2hpLnYxLk1lcmdlR2l0SHViUHVsbFJlcXVlc3QaIS5u'
-    'dXNoaS52MS5NZXJnZUdpdEh1YlB1bGxSZXNwb25zZRJoChVFbmFibGVHaXRIdWJBdXRvTWVyZ2'
-    'USJi5udXNoaS52MS5FbmFibGVHaXRIdWJBdXRvTWVyZ2VSZXF1ZXN0GicubnVzaGkudjEuRW5h'
-    'YmxlR2l0SHViQXV0b01lcmdlUmVzcG9uc2USawoWRGlzYWJsZUdpdEh1YkF1dG9NZXJnZRInLm'
-    '51c2hpLnYxLkRpc2FibGVHaXRIdWJBdXRvTWVyZ2VSZXF1ZXN0GigubnVzaGkudjEuRGlzYWJs'
-    'ZUdpdEh1YkF1dG9NZXJnZVJlc3BvbnNlElwKEUVucXVldWVHaXRIdWJQdWxsEiIubnVzaGkudj'
-    'EuRW5xdWV1ZUdpdEh1YlB1bGxSZXF1ZXN0GiMubnVzaGkudjEuRW5xdWV1ZUdpdEh1YlB1bGxS'
-    'ZXNwb25zZRJcChFEZXF1ZXVlR2l0SHViUHVsbBIiLm51c2hpLnYxLkRlcXVldWVHaXRIdWJQdW'
-    'xsUmVxdWVzdBojLm51c2hpLnYxLkRlcXVldWVHaXRIdWJQdWxsUmVzcG9uc2USRwoKR2V0Q2xl'
-    'YW5VcBIbLm51c2hpLnYxLkdldENsZWFuVXBSZXF1ZXN0GhwubnVzaGkudjEuR2V0Q2xlYW5VcF'
-    'Jlc3BvbnNlEl8KElJlbW92ZUNoYXRXb3JrdHJlZRIjLm51c2hpLnYxLlJlbW92ZUNoYXRXb3Jr'
-    'dHJlZVJlcXVlc3QaJC5udXNoaS52MS5SZW1vdmVDaGF0V29ya3RyZWVSZXNwb25zZRJZChBEZW'
-    'xldGVDaGF0QnJhbmNoEiEubnVzaGkudjEuRGVsZXRlQ2hhdEJyYW5jaFJlcXVlc3QaIi5udXNo'
-    'aS52MS5EZWxldGVDaGF0QnJhbmNoUmVzcG9uc2USXwoSRGVsZXRlR2l0SHViQnJhbmNoEiMubn'
-    'VzaGkudjEuRGVsZXRlR2l0SHViQnJhbmNoUmVxdWVzdBokLm51c2hpLnYxLkRlbGV0ZUdpdEh1'
-    'YkJyYW5jaFJlc3BvbnNlEmIKE1Jlc3RvcmVHaXRIdWJCcmFuY2gSJC5udXNoaS52MS5SZXN0b3'
-    'JlR2l0SHViQnJhbmNoUmVxdWVzdBolLm51c2hpLnYxLlJlc3RvcmVHaXRIdWJCcmFuY2hSZXNw'
-    'b25zZRJNCgxGaW5kQ2hhdFB1bGwSHS5udXNoaS52MS5GaW5kQ2hhdFB1bGxSZXF1ZXN0Gh4ubn'
-    'VzaGkudjEuRmluZENoYXRQdWxsUmVzcG9uc2USTQoMTGlua0NoYXRQdWxsEh0ubnVzaGkudjEu'
-    'TGlua0NoYXRQdWxsUmVxdWVzdBoeLm51c2hpLnYxLkxpbmtDaGF0UHVsbFJlc3BvbnNlEkEKCE'
-    'dldFVzYWdlEhkubnVzaGkudjEuR2V0VXNhZ2VSZXF1ZXN0GhoubnVzaGkudjEuR2V0VXNhZ2VS'
-    'ZXNwb25zZRI9CgZFdmVudHMSFy5udXNoaS52MS5FdmVudHNSZXF1ZXN0GhgubnVzaGkudjEuRX'
-    'ZlbnRzUmVzcG9uc2UwAQ==');
+    '52MS5TdWJtaXRHaXRIdWJSZXZpZXdSZXNwb25zZRJTCg5FZGl0R2l0SHViUHVsbBIfLm51c2hp'
+    'LnYxLkVkaXRHaXRIdWJQdWxsUmVxdWVzdBogLm51c2hpLnYxLkVkaXRHaXRIdWJQdWxsUmVzcG'
+    '9uc2USXAoRUmVydW5HaXRIdWJDaGVja3MSIi5udXNoaS52MS5SZXJ1bkdpdEh1YkNoZWNrc1Jl'
+    'cXVlc3QaIy5udXNoaS52MS5SZXJ1bkdpdEh1YkNoZWNrc1Jlc3BvbnNlEl8KEkdldEdpdEh1Yk'
+    '1lcmdlVGV4dBIjLm51c2hpLnYxLkdldEdpdEh1Yk1lcmdlVGV4dFJlcXVlc3QaJC5udXNoaS52'
+    'MS5HZXRHaXRIdWJNZXJnZVRleHRSZXNwb25zZRJWCg9NZXJnZUdpdEh1YlB1bGwSIC5udXNoaS'
+    '52MS5NZXJnZUdpdEh1YlB1bGxSZXF1ZXN0GiEubnVzaGkudjEuTWVyZ2VHaXRIdWJQdWxsUmVz'
+    'cG9uc2USaAoVRW5hYmxlR2l0SHViQXV0b01lcmdlEiYubnVzaGkudjEuRW5hYmxlR2l0SHViQX'
+    'V0b01lcmdlUmVxdWVzdBonLm51c2hpLnYxLkVuYWJsZUdpdEh1YkF1dG9NZXJnZVJlc3BvbnNl'
+    'EmsKFkRpc2FibGVHaXRIdWJBdXRvTWVyZ2USJy5udXNoaS52MS5EaXNhYmxlR2l0SHViQXV0b0'
+    '1lcmdlUmVxdWVzdBooLm51c2hpLnYxLkRpc2FibGVHaXRIdWJBdXRvTWVyZ2VSZXNwb25zZRJc'
+    'ChFFbnF1ZXVlR2l0SHViUHVsbBIiLm51c2hpLnYxLkVucXVldWVHaXRIdWJQdWxsUmVxdWVzdB'
+    'ojLm51c2hpLnYxLkVucXVldWVHaXRIdWJQdWxsUmVzcG9uc2USXAoRRGVxdWV1ZUdpdEh1YlB1'
+    'bGwSIi5udXNoaS52MS5EZXF1ZXVlR2l0SHViUHVsbFJlcXVlc3QaIy5udXNoaS52MS5EZXF1ZX'
+    'VlR2l0SHViUHVsbFJlc3BvbnNlEkcKCkdldENsZWFuVXASGy5udXNoaS52MS5HZXRDbGVhblVw'
+    'UmVxdWVzdBocLm51c2hpLnYxLkdldENsZWFuVXBSZXNwb25zZRJfChJSZW1vdmVDaGF0V29ya3'
+    'RyZWUSIy5udXNoaS52MS5SZW1vdmVDaGF0V29ya3RyZWVSZXF1ZXN0GiQubnVzaGkudjEuUmVt'
+    'b3ZlQ2hhdFdvcmt0cmVlUmVzcG9uc2USWQoQRGVsZXRlQ2hhdEJyYW5jaBIhLm51c2hpLnYxLk'
+    'RlbGV0ZUNoYXRCcmFuY2hSZXF1ZXN0GiIubnVzaGkudjEuRGVsZXRlQ2hhdEJyYW5jaFJlc3Bv'
+    'bnNlEl8KEkRlbGV0ZUdpdEh1YkJyYW5jaBIjLm51c2hpLnYxLkRlbGV0ZUdpdEh1YkJyYW5jaF'
+    'JlcXVlc3QaJC5udXNoaS52MS5EZWxldGVHaXRIdWJCcmFuY2hSZXNwb25zZRJiChNSZXN0b3Jl'
+    'R2l0SHViQnJhbmNoEiQubnVzaGkudjEuUmVzdG9yZUdpdEh1YkJyYW5jaFJlcXVlc3QaJS5udX'
+    'NoaS52MS5SZXN0b3JlR2l0SHViQnJhbmNoUmVzcG9uc2USTQoMRmluZENoYXRQdWxsEh0ubnVz'
+    'aGkudjEuRmluZENoYXRQdWxsUmVxdWVzdBoeLm51c2hpLnYxLkZpbmRDaGF0UHVsbFJlc3Bvbn'
+    'NlEk0KDExpbmtDaGF0UHVsbBIdLm51c2hpLnYxLkxpbmtDaGF0UHVsbFJlcXVlc3QaHi5udXNo'
+    'aS52MS5MaW5rQ2hhdFB1bGxSZXNwb25zZRJBCghHZXRVc2FnZRIZLm51c2hpLnYxLkdldFVzYW'
+    'dlUmVxdWVzdBoaLm51c2hpLnYxLkdldFVzYWdlUmVzcG9uc2USPQoGRXZlbnRzEhcubnVzaGku'
+    'djEuRXZlbnRzUmVxdWVzdBoYLm51c2hpLnYxLkV2ZW50c1Jlc3BvbnNlMAE=');

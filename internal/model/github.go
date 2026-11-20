@@ -115,7 +115,12 @@ type GitHubReviewer struct {
 type GitHubPull struct {
 	GitHubItem
 	Body, Association string
-	Base, Head        string // branches
+	// BodySource is the description as written (Source), for editing it;
+	// Body is the one shown and sent.
+	BodySource string
+	// CanEdit is GitHub letting the user edit its title and description.
+	CanEdit    bool
+	Base, Head string // branches
 	// HeadRepo is the head's repository (owner/name): another one than
 	// Repo for a fork's pull request (CrossRepo).
 	HeadRepo                           string

@@ -420,6 +420,9 @@ const (
 	// NushiServiceSubmitGitHubReviewProcedure is the fully-qualified name of the NushiService's
 	// SubmitGitHubReview RPC.
 	NushiServiceSubmitGitHubReviewProcedure = "/nushi.v1.NushiService/SubmitGitHubReview"
+	// NushiServiceEditGitHubPullProcedure is the fully-qualified name of the NushiService's
+	// EditGitHubPull RPC.
+	NushiServiceEditGitHubPullProcedure = "/nushi.v1.NushiService/EditGitHubPull"
 	// NushiServiceRerunGitHubChecksProcedure is the fully-qualified name of the NushiService's
 	// RerunGitHubChecks RPC.
 	NushiServiceRerunGitHubChecksProcedure = "/nushi.v1.NushiService/RerunGitHubChecks"
@@ -947,6 +950,11 @@ type NushiServiceClient interface {
 	ResolveGitHubThread(context.Context, *connect.Request[v1.ResolveGitHubThreadRequest]) (*connect.Response[v1.ResolveGitHubThreadResponse], error)
 	AddGitHubComment(context.Context, *connect.Request[v1.AddGitHubCommentRequest]) (*connect.Response[v1.AddGitHubCommentResponse], error)
 	SubmitGitHubReview(context.Context, *connect.Request[v1.SubmitGitHubReviewRequest]) (*connect.Response[v1.SubmitGitHubReviewResponse], error)
+	// Sets a pull request's title or description (one at a time), only
+	// while it still says what the edit began from: else FailedPrecondition,
+	// reason changed_since. PermissionDenied when GitHub doesn't let the
+	// user edit it. API 128.
+	EditGitHubPull(context.Context, *connect.Request[v1.EditGitHubPullRequest]) (*connect.Response[v1.EditGitHubPullResponse], error)
 	// Re-runs the failed jobs of the workflow runs that a pull request's
 	// failed Actions jobs belong to. API 88.
 	RerunGitHubChecks(context.Context, *connect.Request[v1.RerunGitHubChecksRequest]) (*connect.Response[v1.RerunGitHubChecksResponse], error)
@@ -1857,6 +1865,12 @@ func NewNushiServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(nushiServiceMethods.ByName("SubmitGitHubReview")),
 			connect.WithClientOptions(opts...),
 		),
+		editGitHubPull: connect.NewClient[v1.EditGitHubPullRequest, v1.EditGitHubPullResponse](
+			httpClient,
+			baseURL+NushiServiceEditGitHubPullProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("EditGitHubPull")),
+			connect.WithClientOptions(opts...),
+		),
 		rerunGitHubChecks: connect.NewClient[v1.RerunGitHubChecksRequest, v1.RerunGitHubChecksResponse](
 			httpClient,
 			baseURL+NushiServiceRerunGitHubChecksProcedure,
@@ -2099,6 +2113,7 @@ type nushiServiceClient struct {
 	resolveGitHubThread     *connect.Client[v1.ResolveGitHubThreadRequest, v1.ResolveGitHubThreadResponse]
 	addGitHubComment        *connect.Client[v1.AddGitHubCommentRequest, v1.AddGitHubCommentResponse]
 	submitGitHubReview      *connect.Client[v1.SubmitGitHubReviewRequest, v1.SubmitGitHubReviewResponse]
+	editGitHubPull          *connect.Client[v1.EditGitHubPullRequest, v1.EditGitHubPullResponse]
 	rerunGitHubChecks       *connect.Client[v1.RerunGitHubChecksRequest, v1.RerunGitHubChecksResponse]
 	getGitHubMergeText      *connect.Client[v1.GetGitHubMergeTextRequest, v1.GetGitHubMergeTextResponse]
 	mergeGitHubPull         *connect.Client[v1.MergeGitHubPullRequest, v1.MergeGitHubPullResponse]
@@ -2822,6 +2837,11 @@ func (c *nushiServiceClient) SubmitGitHubReview(ctx context.Context, req *connec
 	return c.submitGitHubReview.CallUnary(ctx, req)
 }
 
+// EditGitHubPull calls nushi.v1.NushiService.EditGitHubPull.
+func (c *nushiServiceClient) EditGitHubPull(ctx context.Context, req *connect.Request[v1.EditGitHubPullRequest]) (*connect.Response[v1.EditGitHubPullResponse], error) {
+	return c.editGitHubPull.CallUnary(ctx, req)
+}
+
 // RerunGitHubChecks calls nushi.v1.NushiService.RerunGitHubChecks.
 func (c *nushiServiceClient) RerunGitHubChecks(ctx context.Context, req *connect.Request[v1.RerunGitHubChecksRequest]) (*connect.Response[v1.RerunGitHubChecksResponse], error) {
 	return c.rerunGitHubChecks.CallUnary(ctx, req)
@@ -3382,6 +3402,11 @@ type NushiServiceHandler interface {
 	ResolveGitHubThread(context.Context, *connect.Request[v1.ResolveGitHubThreadRequest]) (*connect.Response[v1.ResolveGitHubThreadResponse], error)
 	AddGitHubComment(context.Context, *connect.Request[v1.AddGitHubCommentRequest]) (*connect.Response[v1.AddGitHubCommentResponse], error)
 	SubmitGitHubReview(context.Context, *connect.Request[v1.SubmitGitHubReviewRequest]) (*connect.Response[v1.SubmitGitHubReviewResponse], error)
+	// Sets a pull request's title or description (one at a time), only
+	// while it still says what the edit began from: else FailedPrecondition,
+	// reason changed_since. PermissionDenied when GitHub doesn't let the
+	// user edit it. API 128.
+	EditGitHubPull(context.Context, *connect.Request[v1.EditGitHubPullRequest]) (*connect.Response[v1.EditGitHubPullResponse], error)
 	// Re-runs the failed jobs of the workflow runs that a pull request's
 	// failed Actions jobs belong to. API 88.
 	RerunGitHubChecks(context.Context, *connect.Request[v1.RerunGitHubChecksRequest]) (*connect.Response[v1.RerunGitHubChecksResponse], error)
@@ -4288,6 +4313,12 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(nushiServiceMethods.ByName("SubmitGitHubReview")),
 		connect.WithHandlerOptions(opts...),
 	)
+	nushiServiceEditGitHubPullHandler := connect.NewUnaryHandler(
+		NushiServiceEditGitHubPullProcedure,
+		svc.EditGitHubPull,
+		connect.WithSchema(nushiServiceMethods.ByName("EditGitHubPull")),
+		connect.WithHandlerOptions(opts...),
+	)
 	nushiServiceRerunGitHubChecksHandler := connect.NewUnaryHandler(
 		NushiServiceRerunGitHubChecksProcedure,
 		svc.RerunGitHubChecks,
@@ -4668,6 +4699,8 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 			nushiServiceAddGitHubCommentHandler.ServeHTTP(w, r)
 		case NushiServiceSubmitGitHubReviewProcedure:
 			nushiServiceSubmitGitHubReviewHandler.ServeHTTP(w, r)
+		case NushiServiceEditGitHubPullProcedure:
+			nushiServiceEditGitHubPullHandler.ServeHTTP(w, r)
 		case NushiServiceRerunGitHubChecksProcedure:
 			nushiServiceRerunGitHubChecksHandler.ServeHTTP(w, r)
 		case NushiServiceGetGitHubMergeTextProcedure:
@@ -5271,6 +5304,10 @@ func (UnimplementedNushiServiceHandler) AddGitHubComment(context.Context, *conne
 
 func (UnimplementedNushiServiceHandler) SubmitGitHubReview(context.Context, *connect.Request[v1.SubmitGitHubReviewRequest]) (*connect.Response[v1.SubmitGitHubReviewResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.SubmitGitHubReview is not implemented"))
+}
+
+func (UnimplementedNushiServiceHandler) EditGitHubPull(context.Context, *connect.Request[v1.EditGitHubPullRequest]) (*connect.Response[v1.EditGitHubPullResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.EditGitHubPull is not implemented"))
 }
 
 func (UnimplementedNushiServiceHandler) RerunGitHubChecks(context.Context, *connect.Request[v1.RerunGitHubChecksRequest]) (*connect.Response[v1.RerunGitHubChecksResponse], error) {

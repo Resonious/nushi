@@ -1335,6 +1335,17 @@ abstract final class NushiService {
     nushiv1nushi.SubmitGitHubReviewResponse.new,
   );
 
+  /// Sets a pull request's title or description (one at a time), only
+  /// while it still says what the edit began from: else FailedPrecondition,
+  /// reason changed_since. PermissionDenied when GitHub doesn't let the
+  /// user edit it. API 128.
+  static const editGitHubPull = connect.Spec(
+    '/$name/EditGitHubPull',
+    connect.StreamType.unary,
+    nushiv1nushi.EditGitHubPullRequest.new,
+    nushiv1nushi.EditGitHubPullResponse.new,
+  );
+
   /// Re-runs the failed jobs of the workflow runs that a pull request's
   /// failed Actions jobs belong to. API 88.
   static const rerunGitHubChecks = connect.Spec(
