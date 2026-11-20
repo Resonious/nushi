@@ -792,9 +792,7 @@ void main() {
     // Not forgotten: what keeps the pairing current still writes it (the
     // daemon's new id here), not shut off for the rest of the session.
     remoteState.value = Remote(rendezvous: 'moved');
-    for (var i = 0; i < 4; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 4);
     expect(platform.saved?['daemon'], 'moved');
     // And still connected and kept up, as before the Forget.
     expect(phone.daemon, isNotNull);
@@ -818,9 +816,7 @@ void main() {
     final key = Uint8List.fromList(List.generate(32, (i) => i + 1));
     Future<void> remote(Remote r) async {
       remoteState.value = r;
-      for (var i = 0; i < 4; i++) {
-        await tester.pump();
-      }
+      await frames(tester, 4);
     }
 
     await remote(Remote(id: 'moved', key: key));
@@ -898,9 +894,7 @@ void main() {
     // Paired (as pair() ends): the chats take pairing's place.
     phone.platform.saved = pairedRecord();
     await phone.start();
-    for (var i = 0; i < 8; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 8);
     expect(find.text('Chats'), findsOneWidget);
     expect(find.bySemanticsLabel('Back'), findsNothing);
     final nav = tester.state<NavigatorState>(find.byType(Navigator).first);
@@ -1003,17 +997,13 @@ void main() {
     expect(phone.canPush, isTrue);
     final registered = platform.workerRegistered;
     await phone.forget();
-    for (var i = 0; i < 8; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 8);
     expect(find.text('Pair with your computer'), findsOneWidget);
     expect(platform.workerRegistered, registered + 1);
     // Paired again, as pair() ends (a new Daemon connects).
     platform.saved = pairedRecord();
     await phone.start();
-    for (var i = 0; i < 8; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 8);
     expect(phone.daemon!.connected, isTrue);
     expect(fake.calls.whereType<GetPushKeyRequest>(), hasLength(2));
     expect(phone.canPush, isTrue);

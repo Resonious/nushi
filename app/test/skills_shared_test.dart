@@ -136,9 +136,7 @@ void main() {
     // A switch changed meanwhile: its write may come after that list.
     unawaited(l.changed());
     held.complete();
-    for (var i = 0; i < 4; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 4);
     expect(lists, 2);
     expect(l.list.skills.single.name, 'list 2');
     expect(l.loading, isFalse);

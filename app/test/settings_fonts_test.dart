@@ -393,11 +393,8 @@ void main() {
     final d = await fake.connect(tester)
       ..select(heroChat.id);
     await tester.pumpWidget(NushiApp(daemon: d));
-    Future<void> settle() async {
-      for (var i = 0; i < 8; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-    }
+    Future<void> settle() =>
+        frames(tester, 8, const Duration(milliseconds: 100));
 
     await settle();
     String? diffFont() => tester

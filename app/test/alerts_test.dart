@@ -338,9 +338,7 @@ void main() {
           alertsChannel.codec.encodeMethodCall(const MethodCall('open', 'b')),
           (_) {},
         );
-    for (var i = 0; i < 5; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 5);
     expect(d.chatsListed, isTrue);
     expect(d.selectedId, 'b');
     alerts.dispose();
