@@ -327,7 +327,8 @@ func (f *fakeGitHub) askedOf() []string {
 
 // A squash-merged worktree's branch is asked of GitHub once it's gone,
 // once: only one with commits of its own that git doesn't show merged,
-// and asked again only when GitHub couldn't answer (issue 83).
+// and asked again only when GitHub couldn't answer, once its back-off is
+// over (issue 83).
 func TestRelatedSquashMergedOnGitHub(t *testing.T) {
 	repo := relatedRepo(t)
 	idle, _ := addWorktree(t, repo, "idle")
@@ -359,9 +360,16 @@ func TestRelatedSquashMergedOnGitHub(t *testing.T) {
 	if got := gh.askedOf(); !slices.Equal(got, []string{"squashed"}) {
 		t.Fatalf("asked %v", got)
 	}
+	related(t, svc, c) // within the back-off: not asked again
+	if got := gh.askedOf(); !slices.Equal(got, []string{"squashed"}) {
+		t.Fatalf("asked within the back-off: %v", got)
+	}
 	gh.mu.Lock()
 	gh.down = false
 	gh.mu.Unlock()
+	c.looking.Lock()
+	c.pullsAfter = time.Time{} // the back-off over
+	c.looking.Unlock()
 	is := func() {
 		t.Helper()
 		for _, r := range related(t, svc, c) {

@@ -269,17 +269,23 @@ func (c *chat) markMerged(ctx context.Context, folder, base string, list []model
 	}
 }
 
-// maxPullAsks is the most worktrees one look asks GitHub about: records
-// kept from before it asked are asked over the next looks, not at once.
-const maxPullAsks = 8
+const (
+	// maxPullAsks is the most worktrees one look asks GitHub about: records
+	// kept from before it asked are asked over the next looks, not at once.
+	maxPullAsks = 8
+	// pullsBackoff is how long looks leave GitHub alone after it failed
+	// (no network, a rate limit), rather than ask at every look.
+	pullsBackoff = 5 * time.Minute
+)
 
 // askPulls asks GitHub, once for each, whether the worktrees of list that
 // went away with commits of their own that git doesn't show merged had
 // their branch merged by a pull request opened since the chat began (a
 // squash merge; issue 83). The answer is kept; one GitHub couldn't give
-// is asked again at a later look. Without GitHub nothing is asked.
+// is asked again at a later look, after [pullsBackoff]. Without GitHub
+// nothing is asked. It runs under c.looking.
 func (c *chat) askPulls(ctx context.Context, folder string, since time.Time, list []model.RelatedWorktree) {
-	if c.svc.gitHub == nil {
+	if c.svc.gitHub == nil || time.Now().Before(c.pullsAfter) {
 		return
 	}
 	asked := 0
@@ -295,7 +301,8 @@ func (c *chat) askPulls(ctx context.Context, folder string, since time.Time, lis
 		merged, err := c.svc.gitHub.BranchMerged(ctx, folder, k.Branch, since)
 		if err != nil {
 			c.log().Debug("asking GitHub about a related worktree's branch", "err", err)
-			continue
+			c.pullsAfter = time.Now().Add(pullsBackoff)
+			return
 		}
 		k.PullAsked, k.PullMerged = true, merged
 	}

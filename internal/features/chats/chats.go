@@ -244,11 +244,13 @@ type chat struct {
 	// One look at the related worktrees at a time (related.go): looking
 	// holds it across git's runs; relating says a look of the chat's own
 	// runs, relateAgain that another was asked for since, and relatedAt is
-	// when one last started.
+	// when one last started; pullsAfter is when a look may next ask GitHub
+	// after it failed (held by looking).
 	looking     sync.Mutex
 	relating    bool
 	relateAgain bool
 	relatedAt   time.Time
+	pullsAfter  time.Time
 	// titled says the agent titled the session while the daemon ran, and
 	// waitedTitle that a turn ended without that title, for naming the
 	// chat's branch (branch.go).
