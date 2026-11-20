@@ -42,7 +42,7 @@ What a paired device gets is code execution as the user on the Mac. Everything b
 | Another relay user | share the relay's caps | reach this daemon's ids without knowing them (hashes of random keys); listen at them even knowing them |
 | A stolen phone, unlocked | everything a paired device can, until revoked on the Mac; leave something behind through a terminal or an agent (code execution as you), which revoking doesn't undo; through a terminal and the token, make the Mac's calls too: pair a second device of its own (ConfirmPairing is the Allow, so on an unattended Mac nobody sees the sheet), revoke the owner's, move remote access | make the Mac's calls over its own channel |
 | Someone who gets the phone to scan a QR code of their own (forged) | have the phone pair with their daemon, and read what the user then types into it | reach the user's Mac: the real daemon answers only its own keys (the phone app is to show which Mac it is paired with) |
-| Same-user processes on the Mac, the agent included | read the daemon's key and devices file, as they can read the token ([0024](0024-the-agent-can-read-the-token.md)); pair a device through the token (the Mac app still shows Allow and Deny) | (out of scope, as for the local token) |
+| Same-user processes on the Mac, the agent included | read the daemon's key and devices file, as they can read the token ([0024](0024-the-agent-can-read-the-token.md)); pair a device through the token, confirming it themselves (the Mac app's Allow and Deny is only a prompt beside it, and with the app closed none is seen) | (out of scope, as for the local token) |
 
 Also outside what this protects:
 - Metadata (0033's list) and availability.
