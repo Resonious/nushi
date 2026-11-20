@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/pull_todo_items.dart';
 import 'package:nushi/replies.dart';
 import 'package:nushi/review_findings.dart';
 import 'package:nushi/run_state.dart';
@@ -223,13 +224,7 @@ Reply changesRequestedReply(GitHubComment c) {
 /// A review thread, its place and every comment, for the agent; with
 /// [also], a review bot's findings on the same lines.
 Reply threadReply(GitHubThread x, {List<ReviewFinding> also = const []}) {
-  final line = x.outdated ? x.originalLine : x.line;
-  final start = x.outdated ? x.originalStartLine : x.startLine;
-  final where = x.onFile
-      ? x.path
-      : start > 0 && start != line
-      ? '${x.path}:$start-$line'
-      : '${x.path}:$line';
+  final where = threadPlace(x, dash: '-');
   final outdated = x.outdated ? ' (outdated: the lines changed since)' : '';
   String who(GitHubComment c) =>
       c.outside ? '${c.author} (outside the repository)' : c.author;

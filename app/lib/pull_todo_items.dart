@@ -76,13 +76,14 @@ final class FindingTodo extends TodoItem {
   final ReviewFinding finding;
 }
 
-/// Where thread [x] is: `path:12`, `path:10–12`, or the file's path.
-String threadPlace(GitHubThread x) {
+/// Where thread [x] is: `path:12`, `path:10–12`, or the file's path; a
+/// range's [dash] is a hyphen in what goes to an agent.
+String threadPlace(GitHubThread x, {String dash = '–'}) {
   if (x.onFile) return x.path;
   final line = x.outdated ? x.originalLine : x.line;
   final start = x.outdated ? x.originalStartLine : x.startLine;
   return start > 0 && start != line
-      ? '${x.path}:$start–$line'
+      ? '${x.path}:$start$dash$line'
       : '${x.path}:$line';
 }
 
