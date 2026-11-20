@@ -10,6 +10,7 @@ import 'package:nushi/theme/theme.dart';
 import 'package:nushi/tool_calls.dart';
 import 'package:nushi/transcript_entries.dart';
 import 'package:nushi/workflow_card.dart';
+import 'package:nushi/workflow_phases.dart';
 import 'package:nushi/workflows.dart';
 
 import 'fake_daemon.dart';
@@ -58,6 +59,7 @@ Item workflowCall(String state, {bool stalled = false, String id = 'wf'}) {
         if (ended) WorkflowPhase(title: 'Verify', started: 3, done: 3),
       ],
       running: ended ? null : ['review:ui', 'review:perf', 'review:api'],
+      runningPhases: ended ? null : [1, 1, 1],
       runningCount: ended ? 0 : 3,
       tokens: Int64(ended ? 96500 : 61200),
     ),
@@ -69,8 +71,9 @@ Future<void> _pump(
   Item call, {
   Tokens tokens = Tokens.dark,
   double width = 640,
+  double height = 140,
 }) async {
-  viewport(tester, Size(width, 140));
+  viewport(tester, Size(width, height));
   await tester.pumpWidget(
     themed(
       Padding(
@@ -125,16 +128,6 @@ void main() {
       'Review 4/7 · 61.2k tokens · 4m 12s',
       'Review 4/7 · 4m 12s',
     ]);
-    expect(
-      phasesLine(workflowCall('running').workflow),
-      'Map 2/2 · Review 4/7',
-    );
-    expect(
-      runningMore(
-        Workflow(running: ['review:ui', 'review:perf'], runningCount: 3),
-      ),
-      1,
-    );
     expect(workflowEndWords(workflowCall('unknown').workflow), 'paused');
     expect(
       workflowEndWords(workflowCall('failed').workflow),
@@ -182,8 +175,12 @@ void main() {
     await _pump(tester, call, width: 392);
     expectTextInside(tester, 392);
     final card = tester.getRect(find.byType(WorkflowCard));
-    final chevron = tester.getRect(find.byIcon(Icons.chevron_right));
+    // The pane's chevron at its end; the one that opens it in place
+    // at its start.
+    final chevron = tester.getRect(find.byIcon(Icons.chevron_right).last);
     expect(chevron.right, greaterThan(card.right - 20));
+    final fold = tester.getRect(find.byTooltip('Show its phases'));
+    expect(fold.left, lessThan(card.left + 12));
     expect(tester.takeException(), isNull);
   });
 
@@ -197,6 +194,96 @@ void main() {
     expect(find.textContaining('five angles'), findsNothing);
     // One line, as a subagent's row.
     expect(tester.getSize(find.byType(WorkflowCard)).height, 36);
+  });
+
+  test('opened, each phase with its mark, progress and who runs', () {
+    final rows = workflowPhaseRows(workflowCall('running').workflow);
+    expect(
+      [for (final r in rows) (r.title, r.progress, r.state)],
+      [('Map', '2/2', 'done'), ('Review', '4/7', 'running')],
+    );
+    expect(rows[1].running, ['review:ui', 'review:perf', 'review:api']);
+    expect(rows[1].more, 0);
+    // Ended, a phase still going stopped with it; none says who runs.
+    final stopped = workflowCall('stopped').workflow
+      ..phases.add(WorkflowPhase(title: 'Fix', started: 2, done: 1));
+    expect(workflowPhaseRows(stopped).last.state, 'stopped');
+    // More run than the summary names; some in no phase.
+    final many = Workflow(
+      state: 'running',
+      phases: [WorkflowPhase(title: 'Check', started: 9, done: 2, failed: 1)],
+      running: ['check:a', 'check:b', 'loose'],
+      runningPhases: [0, 0, -1],
+      runningCount: 8,
+    );
+    final got = workflowPhaseRows(many);
+    expect(
+      [for (final r in got) (r.title, r.state, r.running.join(', '), r.more)],
+      [
+        ('Check', 'running', 'check:a, check:b', 4),
+        ('', 'running', 'loose', 1),
+      ],
+    );
+  });
+
+  testWidgets('its chevron opens it in place and stays put; a click '
+      'elsewhere opens its pane', (tester) async {
+    final chat = ChatState('c', '/x');
+    viewport(tester, const Size(640, 240));
+    await tester.pumpWidget(
+      themed(
+        Align(
+          alignment: Alignment.topCenter,
+          child: WorkflowCard(workflowCall('running'), chat, still: true),
+        ),
+      ),
+    );
+    final chevron = find.byTooltip('Show its phases');
+    final at = tester.getRect(chevron);
+    expect(
+      find.text('Review the diff from five angles, then verify'),
+      findsNothing,
+    );
+    await tester.tap(chevron);
+    await tester.pumpAndSettle();
+    expect(chat.pane.value, isNull); // the chevron only opens it
+    expect(
+      find.text('Review the diff from five angles, then verify'),
+      findsOne,
+    );
+    expect(find.text('review:ui, review:perf, review:api'), findsOne);
+    expect(tester.getRect(find.byTooltip('Hide its phases')), at);
+    // Built again (the chat's next update), it stays open.
+    await tester.pumpWidget(
+      themed(
+        Align(
+          alignment: Alignment.topCenter,
+          child: WorkflowCard(workflowCall('running'), chat, still: true),
+        ),
+      ),
+    );
+    expect(find.byTooltip('Hide its phases'), findsOne);
+    await tester.tap(find.textContaining('Review 4/7 · 3 running'));
+    expect(chat.pane.value, 'wf');
+    await tester.tap(find.byTooltip('Hide its phases'));
+    await tester.pumpAndSettle();
+    expect(find.text('review:ui, review:perf, review:api'), findsNothing);
+  });
+
+  testWidgets('long labels are cut, never how many more run', (tester) async {
+    final call = workflowCall('running');
+    call.workflow
+      ..phases[1].started = 12
+      ..running.clear()
+      ..running.addAll([for (var i = 0; i < 3; i++) 'review:${'long' * 14}'])
+      ..runningCount = 8;
+    Collapsible.opened.add(call.id);
+    await _pump(tester, call, width: 392, height: 200);
+    expectTextInside(tester, 392);
+    final card = tester.getRect(find.byType(WorkflowCard));
+    final more = tester.getRect(find.text(' +5'));
+    expect(more.right, lessThanOrEqualTo(card.right - 12));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('a click opens its pane, which lights it', (tester) async {
@@ -233,6 +320,17 @@ void main() {
         matchesGoldenFile('goldens/workflow_card_narrow_$name.png'),
       );
     });
+    for (final state in ['running', 'done']) {
+      testWidgets('a workflow card opened, $state ($name)', (tester) async {
+        final call = workflowCall(state);
+        Collapsible.opened.add(call.id);
+        await _pump(tester, call, tokens: tokens, height: 200);
+        await expectLater(
+          find.byType(WorkflowCard),
+          matchesGoldenFile('goldens/workflow_card_open_${state}_$name.png'),
+        );
+      });
+    }
     for (final (state, stalled) in [
       ('running', false),
       ('running', true),

@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:nushi/clock.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/status.dart';
@@ -92,13 +90,6 @@ String _quiet(Workflow w) {
   final h = clock().difference(active).inHours;
   return '${h < 1 ? 1 : h}h';
 }
-
-/// Its phases on one line, each with its progress: "Map 2/2 · Review 5/7".
-String phasesLine(Workflow w) => w.phases.map(phaseProgress).join(' · ');
-
-/// How many run beyond the labels the summary holds: the "+1" after
-/// "review:security, review:ui".
-int runningMore(Workflow w) => math.max(0, w.runningCount - w.running.length);
 
 /// What it says when it ended otherwise than done: Claude's own word, or
 /// the reason a failed run gave.
