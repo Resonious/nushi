@@ -16,7 +16,6 @@ import 'package:nushi/preview.dart';
 import 'package:nushi/preview_marks.dart';
 import 'package:nushi/preview_text.dart' show prettyJson;
 import 'package:nushi/settings.dart' show indentGuides, scrollPastEnd, tabSize;
-import 'package:nushi/skills_list.dart';
 import 'package:nushi/source_editor.dart';
 import 'package:nushi/source_menu.dart';
 import 'package:nushi/theme/theme.dart';
@@ -101,7 +100,7 @@ final class ShownFile {
   String get abs => watch.file?.path ?? absoluteIn(chat.folder, path);
 
   /// Shows it in Finder (Folder on Linux).
-  void reveal() => revealInFinder(abs).ignore();
+  void reveal() => native.desktop.reveal(abs).ignore();
 
   /// What its source's right-click menu does (issue 75): a quote goes to
   /// the chat's box as a reply card, the chat's transcript showing.

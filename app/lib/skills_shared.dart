@@ -5,6 +5,7 @@ import 'package:nushi/conventions.dart';
 import 'package:nushi/folder_button.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/menu.dart';
+import 'package:nushi/native.dart';
 import 'package:nushi/plain_text.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/skills_list.dart';
@@ -209,7 +210,7 @@ class _SharedRow extends StatelessWidget {
             ),
             MenuEntry(
               conventions.reveal,
-              onPick: () => revealInFinder(skill.path),
+              onPick: () => native.desktop.reveal(skill.path),
             ),
             // The daemon says what it would refuse to link or to move to
             // the Trash (a file; for a link, one in a group too).

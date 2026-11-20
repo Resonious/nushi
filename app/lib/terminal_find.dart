@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
+import 'package:nushi/native.dart';
 import 'package:nushi/settings.dart';
-import 'package:nushi/skills_list.dart' show revealInFinder;
 import 'package:nushi/terminals.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/transcript_find.dart';
@@ -74,7 +74,7 @@ Future<void> openLink(
   if (link.url case final url?) {
     await openLinkOrSay(context, url);
   } else if (link.path case final path?) {
-    if (!await showChange(path)) await revealInFinder(path);
+    if (!await showChange(path)) await native.desktop.reveal(path);
   }
 }
 

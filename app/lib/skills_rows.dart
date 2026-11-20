@@ -4,6 +4,7 @@ import 'package:nushi/conventions.dart';
 import 'package:nushi/folder_button.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/menu.dart';
+import 'package:nushi/native.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/skills_list.dart';
 import 'package:nushi/skills_shared.dart';
@@ -196,7 +197,7 @@ class _SkillRow extends StatelessWidget {
             ),
             MenuEntry(
               conventions.reveal,
-              onPick: () => revealInFinder(skill.path),
+              onPick: () => native.desktop.reveal(skill.path),
             ),
             if (deletable)
               MenuEntry(
@@ -372,7 +373,7 @@ class _PluginRow extends StatelessWidget {
           entries: [
             MenuEntry(
               conventions.reveal,
-              onPick: () => revealInFinder(plugin.path),
+              onPick: () => native.desktop.reveal(plugin.path),
             ),
             MenuEntry(
               'Uninstall…',
