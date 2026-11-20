@@ -1,6 +1,7 @@
 import 'package:connectrpc/connect.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nushi/controls.dart' show Toggle;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/skills.dart';
@@ -135,12 +136,10 @@ Future<(FakeDaemon, Daemon)> _view(
   final d = await fake.connect(tester);
   viewport(tester, const Size(1000, 860), ratio: 3);
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: SkillsView(daemon: d, folder: folder),
-      ),
+    themed(
+      SkillsView(daemon: d, folder: folder),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();
@@ -154,9 +153,9 @@ void main() {
       'here; a plugin’s skill goes with its plugin', (tester) async {
     final (fake, d) = await _view(tester, '$_home/switch');
     // release-notes, old-habits, quiet, deploy, built in, demo, team.
-    final switches = find.byType(Switch);
+    final switches = find.byType(Toggle);
     expect(switches, findsNWidgets(7));
-    expect(tester.widget<Switch>(switches.at(2)).onChanged, isNull); // quiet
+    expect(tester.widget<Toggle>(switches.at(2)).onChanged, isNull); // quiet
     expect(find.text('with its plugin'), findsOneWidget);
     expect(find.text('Only by /name'), findsOneWidget);
     await tester.tap(switches.at(0));
@@ -178,7 +177,7 @@ void main() {
   testWidgets('a daemon too old to say still has Claude’s built-in skills '
       'and plugins, by its name', (tester) async {
     final (_, d) = await _view(tester, '$_home/old', api: agentFactsApi - 1);
-    expect(find.byType(Switch), findsNWidgets(7)); // as in the test above
+    expect(find.byType(Toggle), findsNWidgets(7)); // as in the test above
     await closeView(tester, d);
   });
 
@@ -204,7 +203,7 @@ void main() {
     fail = false;
     await fake.restart(tester);
     expect(find.text('daemon unavailable: connection lost'), findsNothing);
-    expect(find.byType(Switch), findsNWidgets(7)); // as in the first test
+    expect(find.byType(Toggle), findsNWidgets(7)); // as in the first test
     await closeView(tester, d);
   });
 

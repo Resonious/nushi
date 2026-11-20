@@ -32,7 +32,7 @@ Future<(Daemon, FakeDaemon)> _relaunch(
 }) async {
   await closeView(tester, d);
   final saved = readSaved();
-  fileTabsKept.value = savedFileTabs(saved);
+  fileTabsKept.readFrom(saved);
   final app = await panesApp(tester, width: width, found: found);
   filesChats.value = {...?(saved['files'] as List<Object?>?)?.cast<String>()};
   await tester.pumpAndSettle();
@@ -187,7 +187,7 @@ void main() {
   }, variant: onMac);
 
   test('what’s saved is read without throwing; a wrong part is left out', () {
-    final kept = savedFileTabs({
+    fileTabsKept.readFrom({
       'fileTabs': {
         'a': {
           'tabs': ['x.md', 3, '', 'y.md', 'x.md'],
@@ -199,6 +199,7 @@ void main() {
         'c': 'nonsense',
       },
     });
+    final kept = fileTabsKept.value;
     expect(kept.keys, ['a']);
     expect(kept['a']!.json, {
       'tabs': ['x.md', 'y.md'],

@@ -4,7 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nushi/clock.dart';
-import 'package:nushi/commits.dart' show ago;
+import 'package:nushi/commits.dart' show agoAt;
 import 'package:nushi/conventions.dart';
 import 'package:nushi/gen/nushi/v1/nushi.connect.client.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -25,8 +25,8 @@ const _states = {
   'error': "Can't reach the relay",
 };
 
-/// Settings → Remote access: the switch, the relay, the state, pairing a
-/// phone, and the paired phones.
+/// Settings › Remote access: the switch and the relay's state, the relay,
+/// this computer's key, then the paired phones and Pair a phone.
 class RemoteSection extends StatefulWidget {
   const new(this.client, {super.key});
 
@@ -66,75 +66,92 @@ class _RemoteSectionState extends State<RemoteSection> {
       valueListenable: remoteState,
       builder: (context, r, _) {
         if (r == null) return const SizedBox.shrink();
-        final muted = theme.ui(t.textMuted, size: 12);
+        final state = switch (r.state) {
+          'error' => "${_states['error']}: ${r.error} (trying again)",
+          'reconnecting' when r.error.isNotEmpty =>
+            '${_states['reconnecting']} The relay dropped the link: '
+                '${r.error}',
+          _ => _states[r.state] ?? r.state,
+        };
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 16),
-            Row(
+            SettingsGroup(
               children: [
-                Text(
+                SettingsRow(
                   'Remote access',
-                  style: theme.ui(t.text, weight: FontWeight.w600),
+                  description: [
+                    if (state.isNotEmpty) state,
+                    if (r.on) 'keeps the ${conventions.machine} awake',
+                  ].join(' · '),
+                  descriptionColor: r.state == 'error' ? t.crashed : null,
+                  control: SettingsSwitch(value: r.on, onChanged: _set),
                 ),
-                const Spacer(),
-                SettingsSwitch(value: r.on, onChanged: _set),
+                SettingsRow(
+                  'Relay',
+                  // Narrow, the field goes under its label, as wide as the
+                  // row allows, rather than leave the label a few points.
+                  stackBelow: 440,
+                  control: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 300),
+                    child: TextField(
+                      controller: _relay,
+                      style: theme.code(t.text),
+                      decoration: const InputDecoration(
+                        // The owner's, as an example of what goes here.
+                        hintText: 'For example wss://relay.example.com',
+                        isDense: true,
+                      ),
+                      onSubmitted: (_) => r.on ? _set(true) : null,
+                    ),
+                  ),
+                ),
+                if (r.key.isNotEmpty)
+                  SettingsRow(
+                    "This ${conventions.machine}'s key",
+                    description: 'A paired phone shows the same.',
+                    control: Text(
+                      keyFingerprint(r.key),
+                      style: theme.code(t.textSecondary),
+                    ),
+                  ),
               ],
             ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _relay,
-              style: theme.code(t.text),
-              decoration: const InputDecoration(
-                // The owner's, as an example of what goes here.
-                hintText: 'For example wss://relay.example.com',
-                isDense: true,
-              ),
-              onSubmitted: (_) => r.on ? _set(true) : null,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              switch (r.state) {
-                'error' => "${_states['error']}: ${r.error} (trying again)",
-                'reconnecting' when r.error.isNotEmpty =>
-                  '${_states['reconnecting']} The relay dropped the link: '
-                      '${r.error}',
-                _ => _states[r.state] ?? r.state,
-              },
-              style: theme.ui(
-                r.state == 'error' ? t.crashed : t.textSecondary,
-                size: 12,
-              ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (r.on)
-              Text(
-                'Keeps the ${conventions.machine} awake while on.',
-                style: muted,
-              ),
-            if (r.key.isNotEmpty)
-              Text(
-                "This ${conventions.machine}'s key: ${keyFingerprint(r.key)}, "
-                'as a paired phone shows it.',
-                style: muted,
-              ),
-            const SizedBox(height: 8),
-            for (final d in r.devices) _DeviceRow(d, widget.client),
-            const SizedBox(height: 6),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Button(
-                label: 'Pair a phone',
-                onPressed: r.on ? () => _pair(context, widget.client) : null,
-              ),
+            SettingsGroup(
+              title: 'Phones',
+              actions: [
+                Button(
+                  label: 'Pair a phone',
+                  icon: Icons.add,
+                  tooltip: r.on ? '' : 'Turn on Remote access first',
+                  onPressed: r.on ? () => _pair(context, widget.client) : null,
+                ),
+              ],
+              empty: 'No phones paired',
+              // Why a button is off, where its fade alone said nothing.
+              footer: _phonesNote(r),
+              children: [
+                for (final d in r.devices) _DeviceRow(d, widget.client),
+              ],
             ),
           ],
         );
       },
     );
   }
+}
+
+/// The Phones group's note of why its buttons are off, if any are: Pair
+/// a phone while Remote access is off, a test notification for a phone
+/// whose notifications are off.
+Widget? _phonesNote(Remote r) {
+  final lines = [
+    if (!r.on) 'Turn on Remote access to pair a phone.',
+    if (r.devices.any((d) => !d.push))
+      'A test notification needs the phone’s notifications on.',
+  ];
+  return lines.isEmpty ? null : Text(lines.join(' '));
 }
 
 /// A paired device: its name, whether it's the web app or an app, whether
@@ -162,42 +179,29 @@ class _DeviceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = NushiTheme.of(context);
-    final t = theme.t;
-    final muted = theme.ui(t.textMuted, size: 12);
     final seen = d.connected
         ? 'connected'
         : d.lastSeen > 0
-        ? _seen(d.lastSeen.toInt())
+        ? agoAt(d.lastSeen.toInt(), clock())
         : '';
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
+    return SettingsRow(
+      d.name,
+      // Narrow, the two buttons go under the words rather than wrap them
+      // to three lines.
+      stackBelow: 520,
+      description:
+          '${d.kind == 'web' ? 'Web' : 'iPhone app'}'
+          ' · notifications ${d.push ? 'on' : 'off'}'
+          '${seen.isEmpty ? '' : ' · $seen'}',
+      control: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 6,
         children: [
-          Expanded(
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(text: d.name, style: theme.ui(t.text, size: 12)),
-                  TextSpan(
-                    text:
-                        '  ${d.kind == 'web' ? 'Web' : 'iPhone app'}'
-                        ' · notifications ${d.push ? 'on' : 'off'}'
-                        '${seen.isEmpty ? '' : ' · $seen'}',
-                    style: muted,
-                  ),
-                ],
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: 8),
           Button(
             label: 'Send a test notification',
             tooltip: d.push ? '' : 'Notifications are off on this device',
             onPressed: d.push ? () => _test(context) : null,
           ),
-          const SizedBox(width: 6),
           Button(
             label: 'Revoke',
             kind: ButtonKind.destructive,
@@ -478,10 +482,4 @@ class RemoteMark extends StatelessWidget {
       },
     );
   }
-}
-
-/// When a device was last seen, [ms] after the epoch, as "5m ago".
-String _seen(int ms) {
-  final at = DateTime.fromMillisecondsSinceEpoch(ms);
-  return ago(clock().difference(at), at);
 }

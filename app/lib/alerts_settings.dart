@@ -10,7 +10,9 @@ import 'package:nushi/widgets.dart';
 
 /// Settings › General's Notifications: each kind on or off, the sound and
 /// the app icon's badge (`alerts.dart`), in the platform's words; and, when
-/// the system has them off for Nushi, a way to its settings.
+/// the system has them off for Nushi, a way to its settings. They're shown
+/// while Nushi isn't the app in front, or for a chat other than the one
+/// showing; a click opens the chat.
 class NotificationsGroup extends StatefulWidget {
   const new({super.key});
 
@@ -33,7 +35,7 @@ class _NotificationsGroupState extends State<NotificationsGroup> {
   Widget build(BuildContext context) {
     final t = NushiTheme.of(context).t;
     final words = conventions;
-    SettingsRow row(String label, String text, ValueNotifier<bool> on) =>
+    SettingsRow row(String label, String? text, ValueNotifier<bool> on) =>
         SettingsRow(
           label,
           description: text,
@@ -52,11 +54,7 @@ class _NotificationsGroupState extends State<NotificationsGroup> {
       ]),
       builder: (context, _) => SettingsGroup(
         title: 'Notifications',
-        footer: Text(
-          "Shown while Nushi isn't the app in front, or for a chat other "
-          'than the one showing. A click opens the chat. They stay on this '
-          '${words.machine}.',
-        ),
+        footer: const Text('Only for chats you aren’t looking at.'),
         children: [
           if (_allowed == NotifyPermission.denied)
             SettingsRow(
@@ -73,18 +71,14 @@ class _NotificationsGroupState extends State<NotificationsGroup> {
             'A permission prompt or a question.',
             alertNeedsYou,
           ),
-          row('A turn ends', 'The agent finished its turn.', alertFinished),
+          row('A turn ends', null, alertFinished),
           row(
             'A turn fails',
-            'The turn ended with an error, or the agent quit mid-turn.',
+            'An error, or the agent quit mid-turn.',
             alertFailed,
           ),
-          row('Sound', 'Play the notification sound.', alertSound),
-          row(
-            words.badge,
-            "The number of chats that need you, on Nushi's icon.",
-            dockBadge,
-          ),
+          row('Sound', null, alertSound),
+          row(words.badge, 'Chats that need you.', dockBadge),
         ],
       ),
     );

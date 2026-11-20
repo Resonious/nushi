@@ -13,6 +13,7 @@ import 'package:nushi/fonts.dart';
 import 'package:nushi/tile_images.dart';
 import 'package:nushi/tile_look.dart';
 import 'package:nushi/tile_picture.dart';
+import 'package:nushi/usage_range.dart';
 
 /// What the app remembers across launches, in `app.json` in the data folder:
 /// whether the details panel shows (its toolbar button), which of its widgets
@@ -41,7 +42,8 @@ import 'package:nushi/tile_picture.dart';
 /// browser tab and which sites there may reach the local network, whether a
 /// preview's source wraps its lines and shows its whitespace,
 /// what reply cards ask the agent, the pull request each chat's tab shows,
-/// and the newer release whose toast was dismissed. Each is a [Pref].
+/// the range Settings › Usage shows, and the newer release whose toast
+/// was dismissed. Each is a [Pref].
 /// Not whether new chats get a worktree, nor whether a subagent's pane
 /// shows wide, nor a beta's `projectRail`: an older `worktrees`,
 /// `subagentWide` or `projectRail` key is ignored, and dropped by the
@@ -92,11 +94,6 @@ final Pref<Map<String, KeptTabs>> fileTabsKept = Pref(
   chats: (m) => m.keys,
   without: (m, gone) => {...m}..removeWhere((id, _) => gone.contains(id)),
 );
-
-/// The file tabs kept in [saved] (`app.json` read whole, as [readSaved]
-/// does).
-Map<String, KeptTabs> savedFileTabs(Map<String, Object?> saved) =>
-    _entries(saved['fileTabs'], KeptTabs.read);
 
 /// Whether the Files pane shows its tree beside its viewer (on at first;
 /// ⇧⌘Y, its second row's button, its ⋯ and View › Show File Tree): one
@@ -182,8 +179,8 @@ final Pref<Map<String, List<String>>> githubOwners = _places('githubOwners');
 /// Nushi knows ("My folders' repositories"), not all.
 final Pref<bool> githubKnownRepos = _plain('githubKnown', false);
 
-/// Findings from review bots (Settings › GitHub; off at first): the To do
-/// list reads must-address findings out of these bots' reviews (logins,
+/// Findings from review bots (Settings › GitHub; off at first): the merge
+/// status card reads must-address findings out of these bots' reviews (logins,
 /// comma-separated), the list items under a heading with any of
 /// [githubFindingHeadings]' words (comma-separated, any case).
 final Pref<bool> githubFindings = _plain('githubFindings', false);
@@ -393,10 +390,6 @@ final Pref<Map<String, int>> chatOpened = _byChat(
 /// in the order pinned.
 final Pref<Map<String, List<String>>> pinnedFiles = _byChat('pins', _strings);
 
-/// The pins kept in [saved] (`app.json` read whole, as [readSaved] does).
-Map<String, List<String>> savedPins(Map<String, Object?> saved) =>
-    _byPlace(saved['pins']);
-
 /// The newest comment seen of each chat's pull request (ms since the
 /// epoch), by chat id: newer ones are unread.
 final Pref<Map<String, int>> pullSeen = _byChat(
@@ -512,6 +505,14 @@ final Pref<bool> wrapLines = _plain('wrap', true);
 /// Only drawn: the text is as it was.
 final Pref<bool> showWhitespace = _plain('whitespace', false);
 
+/// The span of days Settings › Usage shows (ADR 0136): the last 7 days
+/// until another is picked.
+final usageRange = Pref<UsageRange>(
+  'usageRange',
+  (v) => UsageRange.values.asNameMap()[v] ?? UsageRange.week,
+  write: (r) => r.name,
+);
+
 /// The newer release whose toast was dismissed ("0.1.17"): it shows again
 /// only for a newer one.
 final Pref<String?> dismissedUpdate = _plain('dismissedUpdate', null);
@@ -606,6 +607,11 @@ final class Pref<T> extends ValueNotifier<T> {
     value = _read(_saved[key]);
     _touched = false;
   }
+
+  /// Takes what a launch would read from [saved], `app.json` read whole
+  /// ([readSaved]): a test's relaunch.
+  @visibleForTesting
+  void readFrom(Map<String, Object?> saved) => value = _read(saved[key]);
 }
 
 /// A set pref's toggle, for what's kept as a set of ids or names (the

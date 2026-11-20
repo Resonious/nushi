@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/beside.dart';
 import 'package:nushi/chat_view.dart';
@@ -28,11 +27,6 @@ void main() {
   setUpAll(loadFonts);
   setUp(() {
     brewCask = null;
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
   });
 
   void say(BuildContext context, String text, {ToastAction? action}) =>

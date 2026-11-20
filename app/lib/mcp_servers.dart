@@ -190,6 +190,17 @@ String secrets(Map<String, dynamic> c) => [
   _ => (s.detail, t.textMuted),
 };
 
+/// A server's state as a pill's tone, as Settings shows a state (Jira's
+/// and GitHub's accounts alike): working, failed, waiting on you, or
+/// quiet for off and not known yet.
+NoteTone toneOf(McpServer s) => switch (s.state) {
+  _ when s.off => NoteTone.quiet,
+  'connected' => NoteTone.done,
+  'failed' => NoteTone.crashed,
+  'needs_auth' || 'pending' => NoteTone.needs,
+  _ => NoteTone.quiet,
+};
+
 /// A server's state as a dot: filled once known, a ring until then or
 /// while it is off.
 class McpDot extends StatelessWidget {

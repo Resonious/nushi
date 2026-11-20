@@ -2617,6 +2617,26 @@ extension type NushiServiceClient(connect.Transport _transport) {
     );
   }
 
+  /// A pull request's newest 100 commits, oldest first, and how many it
+  /// has: asked when they show, not with each poll of GetGitHubPull.
+  /// API 127.
+  Future<nushiv1nushi.GetGitHubCommitsResponse> getGitHubCommits(
+    nushiv1nushi.GetGitHubCommitsRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.getGitHubCommits,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
   /// A pull request's files from its merge base to its head, both sides'
   /// texts, as GetDiff gives them.
   Future<nushiv1nushi.GetGitHubFilesResponse> getGitHubFiles(
@@ -2715,6 +2735,27 @@ extension type NushiServiceClient(connect.Transport _transport) {
   }) {
     return connect.Client(_transport).unary(
       specs.NushiService.submitGitHubReview,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
+  /// Sets a pull request's title or description (one at a time), only
+  /// while it still says what the edit began from: else FailedPrecondition,
+  /// reason changed_since. PermissionDenied when GitHub doesn't let the
+  /// user edit it. API 128.
+  Future<nushiv1nushi.EditGitHubPullResponse> editGitHubPull(
+    nushiv1nushi.EditGitHubPullRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.editGitHubPull,
       input,
       signal: signal,
       headers: headers,
@@ -2982,6 +3023,27 @@ extension type NushiServiceClient(connect.Transport _transport) {
   }) {
     return connect.Client(_transport).unary(
       specs.NushiService.linkChatPull,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
+  /// What the chats' turns used from from to to (ADR 0136): totals, by day,
+  /// agent, model and project folder, the costliest chats, and the account
+  /// limits agents reported. The Mac's only: it names project folders and
+  /// chats' titles, which the phone has no page for. API 126.
+  Future<nushiv1nushi.GetUsageResponse> getUsage(
+    nushiv1nushi.GetUsageRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.getUsage,
       input,
       signal: signal,
       headers: headers,

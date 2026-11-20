@@ -116,11 +116,6 @@ void main() {
   testWidgets('a chat of 200 screenshots holds a few screens of them', (
     tester,
   ) async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
     final cache = PaintingBinding.instance.imageCache;
     final budget = cache.maximumSizeBytes;
     cache

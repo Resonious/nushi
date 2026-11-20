@@ -25,11 +25,6 @@ Item _msg(String id, ItemKind kind, String text) =>
 /// its Changes two files, one with Sub in it.
 Future<Daemon> _app(WidgetTester tester) async {
   viewport(tester, const Size(1700, 700), brightness: Brightness.dark);
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-        const MethodChannel('nushi/fonts'),
-        (_) async => <String>[],
-      );
   showDetails.value = false;
   const user = ItemKind.ITEM_KIND_USER_MESSAGE;
   const agent = ItemKind.ITEM_KIND_AGENT_MESSAGE;

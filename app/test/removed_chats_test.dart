@@ -18,13 +18,6 @@ final List<RemovedChat> _three = [
 
 void main() {
   setUpAll(loadFonts);
-  setUp(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        ),
-  );
 
   test('the bar names the chats, and why when one agent deleted them', () {
     expect(

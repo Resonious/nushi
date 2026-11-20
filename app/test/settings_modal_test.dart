@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/app_actions.dart';
 import 'package:nushi/composer.dart';
+import 'package:nushi/controls.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/palette.dart';
@@ -18,22 +19,10 @@ import 'package:nushi/theme/theme.dart';
 import 'package:nushi/trust_card.dart';
 
 import 'fake_daemon.dart';
+import 'harness.dart';
 import 'settings_harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 final Finder _modal = find.byKey(const ValueKey('settings-modal'));
-
-Future<void> _key(
-  WidgetTester tester,
-  LogicalKeyboardKey key, {
-  bool meta = false,
-}) async {
-  if (meta) await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  if (meta) await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
-}
 
 /// The composer's field of the chat that shows.
 Finder get _box => find.descendant(
@@ -56,9 +45,12 @@ bool _focusInside(WidgetTester tester) {
 void main() {
   setUpAll(loadFonts);
 
+  // It grows with the window, 40 in from each edge, to 1120 wide at most
+  // and with no height limit: a taller window shows more of a page.
   for (final (size, want) in [
-    (const Size(1700, 1000), SettingsModal.maxSize),
-    (const Size(720, 900), const Size(640, 720)),
+    (const Size(1700, 1000), const Size(1120, 920)),
+    (const Size(2400, 1400), const Size(1120, 1320)),
+    (const Size(720, 900), const Size(640, 820)),
     (const Size(900, 600), const Size(820, 520)),
   ]) {
     testWidgets('${size.width.toInt()}×${size.height.toInt()}: '
@@ -79,7 +71,36 @@ void main() {
       expect(find.byType(Composer), findsOne);
       expect(d.place, const ChatPlace());
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
+  }
+
+  // A title's actions end a clear gap before Close, at any width.
+  for (final width in [1700.0, 900.0]) {
+    for (final (section, last) in [
+      (SettingsSection.mcp, 'Add server'),
+      (SettingsSection.skills, 'New skill…'),
+    ]) {
+      testWidgets('${width.toInt()}: ${section.name}’s $last stays 12 '
+          'clear of Close', (tester) async {
+        final d = await pumpSettingsApp(
+          tester,
+          settingsFake(),
+          section,
+          size: Size(width, 900),
+        );
+        final close = tester.getRect(
+          find.descendant(of: _modal, matching: find.byTooltip('Close Esc')),
+        );
+        final action = tester.getRect(
+          find
+              .ancestor(of: find.text(last), matching: find.byType(Pressable))
+              .first,
+        );
+        expect(action.top < close.bottom, isTrue, reason: 'on its line');
+        expect(close.left - action.right, greaterThanOrEqualTo(12));
+        d.dispose();
+      }, variant: onMac);
+    }
   }
 
   testWidgets('a theme picked repaints the app behind at once', (tester) async {
@@ -99,7 +120,7 @@ void main() {
     );
     expect(d.settingsOpen, isNotNull, reason: 'a pick keeps Settings open');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Esc, Close, ⌘, and a click on the dim each shut it, the '
       'window as it was and the focus back in the chat’s box', (tester) async {
@@ -111,7 +132,10 @@ void main() {
     d.closeSettings();
     await tester.pumpAndSettle();
     final shut = <String, Future<void> Function()>{
-      'Esc': () => _key(tester, LogicalKeyboardKey.escape),
+      'Esc': () async {
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+      },
       'Close': () async {
         await tester.tap(
           find.descendant(
@@ -121,7 +145,7 @@ void main() {
         );
         await tester.pumpAndSettle();
       },
-      '⌘,': () => _key(tester, LogicalKeyboardKey.comma, meta: true),
+      '⌘,': () => cmdKey(tester, LogicalKeyboardKey.comma),
       'the dim': () async {
         await tester.tapAt(const Offset(20, 500));
         await tester.pumpAndSettle();
@@ -131,7 +155,7 @@ void main() {
       await tester.tap(_box);
       await tester.pumpAndSettle();
       final box = FocusManager.instance.primaryFocus;
-      await _key(tester, LogicalKeyboardKey.comma, meta: true);
+      await cmdKey(tester, LogicalKeyboardKey.comma);
       expect(d.settingsOpen, isNotNull, reason: how);
       expect(_focusInside(tester), isTrue, reason: how);
       await close();
@@ -141,7 +165,7 @@ void main() {
       expect(FocusManager.instance.primaryFocus, same(box), reason: how);
     }
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the focus and the keys stay inside: Tab goes round '
       'Settings, typing never reaches the chat, ⌘N, ⌘K and ⌘1 do nothing', (
@@ -161,15 +185,15 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.keyX);
     await tester.pumpAndSettle();
     expect(d.chats['a']!.draft.text.text, isEmpty);
-    await _key(tester, LogicalKeyboardKey.keyN, meta: true);
+    await cmdKey(tester, LogicalKeyboardKey.keyN);
     expect(find.byType(Dialog), findsNothing, reason: 'no New chat');
-    await _key(tester, LogicalKeyboardKey.keyK, meta: true);
+    await cmdKey(tester, LogicalKeyboardKey.keyK);
     expect(find.byType(Palette), findsNothing);
-    await _key(tester, LogicalKeyboardKey.digit2, meta: true);
+    await cmdKey(tester, LogicalKeyboardKey.digit2);
     expect(d.selectedId, 'a');
     expect(d.settingsOpen, isNotNull);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a menu bar item shuts it first, then runs: New Chat…', (
     tester,
@@ -185,7 +209,7 @@ void main() {
     expect(d.settingsOpen, isNull);
     expect(find.byType(Dialog), findsOne, reason: 'New chat');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('opening a chat from Chat history shuts it and shows the chat', (
     tester,
@@ -200,7 +224,7 @@ void main() {
     expect(d.settingsOpen, isNull);
     expect(d.selectedId, 'b');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a trust card asking shuts it: the card is in the window', (
     tester,
@@ -221,5 +245,5 @@ void main() {
     d.trustAsk!.decide(start: false);
     expect(await started, isNull);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

@@ -128,7 +128,6 @@ Finder _inSettings(Finder f) =>
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(loadFonts);
-  final macOS = TargetPlatformVariant.only(TargetPlatform.macOS);
 
   test('the view: filters, search in titles and folders, sorts', () {
     final (chats, copies) = _many(200);
@@ -210,7 +209,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_rows(tester).first.row.id, 'c0'); // the newest
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('search finds titles and folders; filters with their counts', (
     tester,
@@ -236,14 +235,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('A deleted chat'), findsNWidgets(4));
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('no deleted chats: no filter for them', (tester) async {
     final d = await open(tester, _fake(30));
     expect(find.textContaining('Deleted chats'), findsNothing);
     expect(find.text('All  30'), findsOneWidget);
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('a click picks a row, ⌘ adds one, ⇧ a range; the bar clears '
       'them together once asked', (tester) async {
@@ -273,7 +272,7 @@ void main() {
     });
     expect(find.textContaining('selected'), findsNothing);
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('a row’s Clear shows under the pointer and asks nothing; its '
       'title opens the chat', (tester) async {
@@ -303,7 +302,7 @@ void main() {
     expect(d.selectedId, next.id);
     expect(d.place, const ChatPlace());
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets("a read-only chat's Clear asks first: the chat goes with its "
       'copy', (tester) async {
@@ -329,7 +328,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_calls<ClearTranscriptsRequest>(fake).single.chatIds, [gone.id]);
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('500 copies: only the rows that show are built', (tester) async {
     final d = await open(tester, _fake(500));
@@ -350,14 +349,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(HistoryRowView).evaluate().length, lessThan(40));
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('turning copies off asks; Delete copies clears them all', (
     tester,
   ) async {
     final fake = _fake(30);
     final d = await open(tester, fake);
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byType(Toggle));
     await tester.pumpAndSettle();
     expect(find.text('Stop keeping transcripts?'), findsOneWidget);
     await tester.tap(find.text('Delete copies'));
@@ -365,7 +364,7 @@ void main() {
     expect(fake.setSettings.last.keepTranscripts, isFalse);
     expect(_calls<ClearTranscriptsRequest>(fake).single.all, isTrue);
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('Clear all… asks; the age menu sets the setting', (tester) async {
     final fake = _fake(30);
@@ -382,7 +381,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_calls<ClearTranscriptsRequest>(fake).single.all, isTrue);
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('a slow answer shows rows that are coming after 150 ms; none '
       'says so', (tester) async {
@@ -470,7 +469,7 @@ void main() {
       moreOrLessEquals(sizes.single, epsilon: 4.5),
     );
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   for (final (size, sizeName) in [
     (const Size(1700, 1000), 'wide'),
@@ -516,7 +515,7 @@ void main() {
           'history_picked_${sizeName}_$theme',
         );
         d.dispose();
-      }, variant: macOS);
+      }, variant: onMac);
 
       testWidgets('the search filtering, $sizeName, $theme', (tester) async {
         // Wide, it's Chat history's window golden (the sidebar hidden: it
@@ -542,7 +541,7 @@ void main() {
           await render(tester, find.byType(MaterialApp), shot);
         }
         d.dispose();
-      }, variant: macOS);
+      }, variant: onMac);
     }
   }
 }

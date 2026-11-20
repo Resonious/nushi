@@ -33,16 +33,14 @@ Future<void> pumpSettings(
   addTearDown(() => tester.binding.setSurfaceSize(null));
   d.openSettings(section: section, agent: agent);
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: ListenableBuilder(
-          listenable: d,
-          builder: (context, _) =>
-              d.settingsOpen != null ? SettingsView(d) : const Text('closed'),
-        ),
+    themed(
+      ListenableBuilder(
+        listenable: d,
+        builder: (context, _) =>
+            d.settingsOpen != null ? SettingsView(d) : const Text('closed'),
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();
@@ -78,13 +76,14 @@ FakeDaemon settingsFake({List<TranscriptCopy>? copies}) {
           lastWrittenMs: Int64(now - 26 * 3600 * 1000),
         ),
       ];
-  remoteState.value = Remote(
+  final remote = Remote(
     relay: 'wss://relay.example.com',
     state: 'off',
     devices: [
-      Device(id: 'p1', name: 'Aaron’s iPhone', lastSeen: Int64(now - 3600000)),
+      Device(id: 'p1', name: 'Test phone', lastSeen: Int64(now - 3600000)),
     ],
   );
+  remoteState.value = remote;
   final checked = now - 12 * 60000; // "Last checked 12m ago"
   final fake = FakeDaemon(settingsChats)
     ..settings = Settings(
@@ -95,6 +94,7 @@ FakeDaemon settingsFake({List<TranscriptCopy>? copies}) {
       checkUpdates: true,
     )
     ..answer = (input) => switch (input) {
+      GetRemoteRequest() => GetRemoteResponse(remote: remote),
       // A packaged daemon's, as Logs & advanced shows it.
       PingRequest() => PingResponse(
         apiVersion: apiVersion,
@@ -196,22 +196,40 @@ Future<Daemon> pumpSettingsApp(
 }
 
 /// Every row's control ends at its group's right edge, less the row's
-/// padding; returns how many rows were checked.
+/// padding, or, where a narrow row stacks it under its label
+/// (`stackBelow`), starts at the label's left; returns how many rows were
+/// checked.
 int expectControlsAtEdge(WidgetTester tester) {
   var n = 0;
   for (final e in find.byType(SettingsRow).evaluate()) {
-    final control = (e.widget as SettingsRow).control;
+    final row = e.widget as SettingsRow;
+    final control = row.control;
     if (control == null) continue;
-    final group = find.ancestor(
-      of: find.byWidget(e.widget),
-      matching: find.byType(SettingsGroup),
+    final group = tester.getRect(
+      find
+          .ancestor(
+            of: find.byWidget(e.widget),
+            matching: find.byType(SettingsGroup),
+          )
+          .first,
     );
-    final right = tester.getRect(find.byWidget(control)).right;
-    expect(
-      right,
-      moreOrLessEquals(tester.getRect(group.first).right - 14, epsilon: 0.5),
-      reason: (e.widget as SettingsRow).label,
+    final at = tester.getRect(find.byWidget(control));
+    final label = tester.getRect(
+      find.descendant(of: find.byWidget(row), matching: find.text(row.label)),
     );
+    if (row.stackBelow != null && at.top >= label.bottom) {
+      expect(
+        at.left,
+        moreOrLessEquals(label.left, epsilon: 0.5),
+        reason: '${row.label}, under its label',
+      );
+    } else {
+      expect(
+        at.right,
+        moreOrLessEquals(group.right - 14, epsilon: 0.5),
+        reason: row.label,
+      );
+    }
     n++;
   }
   return n;

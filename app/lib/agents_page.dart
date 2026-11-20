@@ -162,9 +162,9 @@ class AgentRow extends StatelessWidget {
     if (ad == null) {
       return [
         if (agent.ready)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text('Ready', style: theme.ui(t.textSecondary, size: 12)),
+          const Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: NotePill('Ready', tone: NoteTone.done),
           ),
       ];
     }

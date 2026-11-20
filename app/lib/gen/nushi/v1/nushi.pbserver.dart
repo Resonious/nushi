@@ -289,6 +289,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
       $pb.ServerContext ctx, $0.GetGitHubPullRequest request);
   $async.Future<$0.GetGitHubIssueResponse> getGitHubIssue(
       $pb.ServerContext ctx, $0.GetGitHubIssueRequest request);
+  $async.Future<$0.GetGitHubCommitsResponse> getGitHubCommits(
+      $pb.ServerContext ctx, $0.GetGitHubCommitsRequest request);
   $async.Future<$0.GetGitHubFilesResponse> getGitHubFiles(
       $pb.ServerContext ctx, $0.GetGitHubFilesRequest request);
   $async.Future<$0.GetGitHubJobLogResponse> getGitHubJobLog(
@@ -301,6 +303,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
       $pb.ServerContext ctx, $0.AddGitHubCommentRequest request);
   $async.Future<$0.SubmitGitHubReviewResponse> submitGitHubReview(
       $pb.ServerContext ctx, $0.SubmitGitHubReviewRequest request);
+  $async.Future<$0.EditGitHubPullResponse> editGitHubPull(
+      $pb.ServerContext ctx, $0.EditGitHubPullRequest request);
   $async.Future<$0.RerunGitHubChecksResponse> rerunGitHubChecks(
       $pb.ServerContext ctx, $0.RerunGitHubChecksRequest request);
   $async.Future<$0.GetGitHubMergeTextResponse> getGitHubMergeText(
@@ -329,6 +333,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
       $pb.ServerContext ctx, $0.FindChatPullRequest request);
   $async.Future<$0.LinkChatPullResponse> linkChatPull(
       $pb.ServerContext ctx, $0.LinkChatPullRequest request);
+  $async.Future<$0.GetUsageResponse> getUsage(
+      $pb.ServerContext ctx, $0.GetUsageRequest request);
   $async.Future<$0.EventsResponse> events(
       $pb.ServerContext ctx, $0.EventsRequest request);
 
@@ -602,6 +608,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return $0.GetGitHubPullRequest();
       case 'GetGitHubIssue':
         return $0.GetGitHubIssueRequest();
+      case 'GetGitHubCommits':
+        return $0.GetGitHubCommitsRequest();
       case 'GetGitHubFiles':
         return $0.GetGitHubFilesRequest();
       case 'GetGitHubJobLog':
@@ -614,6 +622,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return $0.AddGitHubCommentRequest();
       case 'SubmitGitHubReview':
         return $0.SubmitGitHubReviewRequest();
+      case 'EditGitHubPull':
+        return $0.EditGitHubPullRequest();
       case 'RerunGitHubChecks':
         return $0.RerunGitHubChecksRequest();
       case 'GetGitHubMergeText':
@@ -642,6 +652,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return $0.FindChatPullRequest();
       case 'LinkChatPull':
         return $0.LinkChatPullRequest();
+      case 'GetUsage':
+        return $0.GetUsageRequest();
       case 'Events':
         return $0.EventsRequest();
       default:
@@ -927,6 +939,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return getGitHubPull(ctx, request as $0.GetGitHubPullRequest);
       case 'GetGitHubIssue':
         return getGitHubIssue(ctx, request as $0.GetGitHubIssueRequest);
+      case 'GetGitHubCommits':
+        return getGitHubCommits(ctx, request as $0.GetGitHubCommitsRequest);
       case 'GetGitHubFiles':
         return getGitHubFiles(ctx, request as $0.GetGitHubFilesRequest);
       case 'GetGitHubJobLog':
@@ -940,6 +954,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return addGitHubComment(ctx, request as $0.AddGitHubCommentRequest);
       case 'SubmitGitHubReview':
         return submitGitHubReview(ctx, request as $0.SubmitGitHubReviewRequest);
+      case 'EditGitHubPull':
+        return editGitHubPull(ctx, request as $0.EditGitHubPullRequest);
       case 'RerunGitHubChecks':
         return rerunGitHubChecks(ctx, request as $0.RerunGitHubChecksRequest);
       case 'GetGitHubMergeText':
@@ -971,6 +987,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return findChatPull(ctx, request as $0.FindChatPullRequest);
       case 'LinkChatPull':
         return linkChatPull(ctx, request as $0.LinkChatPullRequest);
+      case 'GetUsage':
+        return getUsage(ctx, request as $0.GetUsageRequest);
       case 'Events':
         return events(ctx, request as $0.EventsRequest);
       default:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nushi/controls.dart' show Toggle;
 import 'package:nushi/login_item.dart';
 
 import 'harness.dart';
@@ -35,16 +36,16 @@ void main() {
     status = 'notRegistered';
     await show(tester);
     await tester.pump();
-    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
-    await tester.tap(find.byType(Switch));
+    expect(tester.widget<Toggle>(find.byType(Toggle)).value, isFalse);
+    await tester.tap(find.byType(Toggle));
     await tester.pump();
     expect(calls.last.method, 'set');
     expect(calls.last.arguments, true);
-    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
-    await tester.tap(find.byType(Switch));
+    expect(tester.widget<Toggle>(find.byType(Toggle)).value, isTrue);
+    await tester.tap(find.byType(Toggle));
     await tester.pump();
     expect(calls.last.arguments, false);
-    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+    expect(tester.widget<Toggle>(find.byType(Toggle)).value, isFalse);
   });
 
   testWidgets('waiting for approval says so and opens Login Items', (
@@ -53,7 +54,7 @@ void main() {
     status = 'requiresApproval';
     await show(tester);
     await tester.pump();
-    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+    expect(tester.widget<Toggle>(find.byType(Toggle)).value, isTrue);
     await tester.tap(find.text('Open Login Items…'));
     await tester.pump();
     expect(calls.last.method, 'openSettings');
@@ -65,12 +66,12 @@ void main() {
     status = 'notFound'; // what macOS says before the first register
     await show(tester);
     await tester.pump();
-    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+    expect(tester.widget<Toggle>(find.byType(Toggle)).value, isFalse);
     await tester.pumpWidget(const SizedBox());
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
     await show(tester);
     await tester.pump();
-    expect(find.byType(Switch), findsNothing);
+    expect(find.byType(Toggle), findsNothing);
   });
 }

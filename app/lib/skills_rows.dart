@@ -4,6 +4,7 @@ import 'package:nushi/conventions.dart';
 import 'package:nushi/folder_button.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/menu.dart';
+import 'package:nushi/native.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/skills_list.dart';
 import 'package:nushi/skills_shared.dart';
@@ -14,6 +15,30 @@ import 'package:nushi/widgets.dart';
 Widget skillRow(Widget row) => Padding(
   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
   child: row,
+);
+
+/// What listing [skill] costs every chat's context, in a row's [muted]
+/// words.
+Widget skillTokens(BuildContext context, Skill skill, TextStyle muted) =>
+    tooltip(
+      context,
+      'About what listing it costs every chat’s context',
+      Text('≈ ${skill.tokens} tokens', style: muted),
+    );
+
+/// A skill row's ⋯: open its file, show it, then [more].
+Widget skillMenu(Skill skill, List<MenuEntry> more) => MenuIcon.line(
+  LineIcon.more,
+  size: 15,
+  tooltip: 'More',
+  entries: [
+    MenuEntry(openSkillLabel(skill), onPick: () => openSkillFile(skill)),
+    MenuEntry(
+      conventions.reveal,
+      onPick: () => native.desktop.reveal(skill.path),
+    ),
+    ...more,
+  ],
 );
 
 /// A switch for where it acts ([where]: "everywhere", "in this project"),
@@ -45,7 +70,7 @@ class SkillSwitch extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 6, right: 2),
+            padding: const EdgeInsets.only(left: 6, right: 8),
             child: Text(where, style: theme.ui(theme.t.textMuted, size: 11)),
           ),
           SettingsSwitch(value: on, run: why.isNotEmpty ? null : onChanged),
@@ -168,11 +193,7 @@ class _SkillRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        tooltip(
-          context,
-          'About what listing it costs every chat’s context',
-          Text('≈ ${skill.tokens} tokens', style: muted),
-        ),
+        skillTokens(context, skill, muted),
         if (plugin)
           Padding(
             padding: const EdgeInsets.only(left: 6),
@@ -185,26 +206,13 @@ class _SkillRow extends StatelessWidget {
             why: switchWhy(list, skill.setIn),
             onChanged: ({required on}) => setSkillOn(list, skill, on: on),
           ),
-        MenuIcon.line(
-          LineIcon.more,
-          size: 15,
-          tooltip: 'More',
-          entries: [
+        skillMenu(skill, [
+          if (deletable)
             MenuEntry(
-              openSkillLabel(skill),
-              onPick: () => openSkillFile(skill),
+              'Delete…',
+              onPick: () => deleteSkill(context, list, skill),
             ),
-            MenuEntry(
-              conventions.reveal,
-              onPick: () => revealInFinder(skill.path),
-            ),
-            if (deletable)
-              MenuEntry(
-                'Delete…',
-                onPick: () => deleteSkill(context, list, skill),
-              ),
-          ],
-        ),
+        ]),
       ],
     );
   }
@@ -372,7 +380,7 @@ class _PluginRow extends StatelessWidget {
           entries: [
             MenuEntry(
               conventions.reveal,
-              onPick: () => revealInFinder(plugin.path),
+              onPick: () => native.desktop.reveal(plugin.path),
             ),
             MenuEntry(
               'Uninstall…',

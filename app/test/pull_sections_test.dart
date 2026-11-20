@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_checks.dart';
-import 'package:nushi/settings.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
@@ -12,27 +11,17 @@ import 'pull_fixture.dart';
 void main() {
   setUpAll(loadFonts);
 
-  testWidgets("Activity: a review's findings and threads point at To do; its "
-      "resolved threads one line; a bot's numbers muted", (tester) async {
+  testWidgets("Overview's comments: a bot's review shows its start and "
+      'its numbers muted; a resolved thread folds under its review', (
+    tester,
+  ) async {
     final (d, _) = await openPullTab(tester, fixturePull());
-    await tester.tap(find.text('Activity 4'));
-    await tester.pumpAndSettle();
-    githubFindings.value = true;
-    await tester.pumpAndSettle();
-    expect(find.text('2 findings to address · in To do'), findsOneWidget);
-    expect(find.text('2 unresolved threads · in To do'), findsOneWidget);
-    // The review's pill, in To do's words (its row's tag).
-    expect(find.text('Changes requested'), findsNWidgets(2));
     // The review's last line, its numbers, apart and muted.
     expect(find.text(r'claude-opus · $2.61 · 10m 31s'), findsOneWidget);
-    expect(
-      find.textContaining('nit, .presence reads better here · afrase: Done.'),
-      findsOneWidget,
-    );
+    expect(find.text('Show the whole review'), findsOneWidget);
+    expect(find.text('Resolved'), findsOneWidget);
+    expect(find.text('nit, .presence reads better here'), findsNothing);
     expect(find.text('Markdown · posts to GitHub as afrase'), findsOneWidget);
-    await tester.tap(find.text('2 unresolved threads · in To do'));
-    await tester.pumpAndSettle();
-    expect(tester.getRect(find.text('To do')).top, lessThan(100));
     d.dispose();
   }, variant: onMac);
 
@@ -48,7 +37,7 @@ void main() {
           ? RerunGitHubChecksResponse(runs: 1)
           : null,
     );
-    await tester.tap(find.text('Checks · 3 failing'));
+    await tester.tap(find.text('Checks  3 failing'));
     await tester.pumpAndSettle();
     expect(find.text('Passed · 18'), findsOneWidget);
     expect(find.text('Show 6 more'), findsOneWidget);
@@ -79,7 +68,7 @@ void main() {
     tester,
   ) async {
     final (d, _) = await openPullTab(tester, fixturePull());
-    await tester.tap(find.text('Files 12'));
+    await tester.tap(find.text('Files changed  12'));
     await tester.pumpAndSettle();
     expect(find.text('With unresolved threads · 2'), findsOneWidget);
     final records = tester.getRect(find.text('notes_controller.rb'));

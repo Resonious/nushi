@@ -604,11 +604,6 @@ void main() {
 
   testWidgets('the Mac asks for references too, and shows a small image '
       'inline', (tester) async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
     viewport(tester, const Size(1700, 900));
     final events = <EventsRequest>[];
     final fake = FakeDaemon([_chat])
@@ -639,11 +634,6 @@ void main() {
 
   testWidgets('on the Mac a row far off the screen lets its image go, in '
       'its place, and takes it back from what is kept', (tester) async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
     viewport(tester, const Size(1700, 900));
     String sha(int i) => '$i'.padLeft(64, '0');
     final shot = await _picture(tester, 800, 500);
@@ -704,11 +694,6 @@ void main() {
 
   testWidgets('an image that failed while the daemon was away is asked '
       'again once it is back', (tester) async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
     viewport(tester, const Size(1700, 900));
     var away = true;
     var fetched = 0;
@@ -797,11 +782,6 @@ void main() {
   for (final width in [1700.0, 720.0]) {
     testWidgets('on the Mac at $width wide, an image coming, one failed and '
         'one shown', (tester) async {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-            const MethodChannel('nushi/fonts'),
-            (_) async => <String>[],
-          );
       viewport(tester, Size(width, 900), ratio: 2);
       final shot = await _picture(tester, 800, 500);
       final waits = Completer<GetChatImageResponse>();

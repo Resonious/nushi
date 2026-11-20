@@ -72,6 +72,18 @@ type Transcript interface {
 	ForkTitle(title, of string) bool
 }
 
+// UsageReader reads what an agent's usage reports say beyond ACP's
+// (usage.go, ADR 0136): another agent's limits plug in here.
+type UsageReader interface {
+	// UsageModel is the model a usage report's _meta names; "" when it
+	// names none.
+	UsageModel(meta map[string]any) string
+	// Limits are the account limits a usage report's _meta carries, as the
+	// agent reported them (Agent and Seen left to the chat); none when it
+	// carries none.
+	Limits(meta map[string]any) []model.Limit
+}
+
 // Subagents tells of the agent's subagents.
 type Subagents interface {
 	// Parent reads the subagent tool call an update comes from, from its

@@ -173,9 +173,10 @@ func run() error {
 		return err
 	}
 	kinds := chatKinds(dir, known, agentSvc)
+	usageSvc, closeUsage := openUsage(filepath.Join(dir, "nushi.db"), st)
 	chatSvc := chats.New(context.Background(), kinds, chats.Options{Remembered: st, Sessions: st, Worktrees: git.Worktrees{},
 		Scratch: filepath.Join(dir, "scratch"), Uploads: filepath.Join(dir, "uploads"), Publish: hub.Publish, Tools: mcpTools(toolSvc, filepath.Join(dir, "nushid.sock")),
-		Viewers: remoteSvc, Processes: proctree.Tree{}, Copies: copies, CopiesOn: st.KeepTranscripts, CopyDays: st.TranscriptDays, Sleep: st})
+		Viewers: remoteSvc, Processes: proctree.Tree{}, Copies: copies, CopiesOn: st.KeepTranscripts, CopyDays: st.TranscriptDays, Sleep: st, Meter: usageSvc})
 	shows.UseChats(chatSvc)
 	// Each terminal names its own shell (terminal.Terminal's Name).
 	termSvc := terminals.New(shellStarter(agentSvc), "", chatSvc, hub.Publish)
@@ -196,6 +197,7 @@ func run() error {
 	sv.GitHub = newGitHub(st, dev)
 	chatSvc.UseGitHub(sv.GitHub)
 	sv.Updates = updateSvc
+	sv.Usage = usageSvc
 	if err := usePush(st, sv.Remote, chatSvc, kinds); err != nil {
 		return err
 	}
@@ -217,7 +219,8 @@ func run() error {
 	// dev servers end first: the restart found none running a moment ago,
 	// and ending them before the agents (which take up to stopGrace)
 	// leaves none the time to start.
-	closeChats := sync.OnceFunc(func() { termSvc.CloseAll(); srvSvc.CloseAll(); chatSvc.Close() })
+	// Usage is written last: the chats' last turns end as they close.
+	closeChats := sync.OnceFunc(func() { termSvc.CloseAll(); srvSvc.CloseAll(); chatSvc.Close(); closeUsage() })
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	watchStopEvent(stop)

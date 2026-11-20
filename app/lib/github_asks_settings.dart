@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nushi/replies.dart';
@@ -9,32 +11,16 @@ import 'package:nushi/widgets.dart';
 
 /// Settings › GitHub's What reply cards ask: for each kind of card Send to
 /// agent makes, the words under its quote, the user's to change (one may
-/// want the agent to commit what it fixed). Each field starts at what a
-/// card asks now; empty, or Reset, asks the default. The data line
-/// ([asData]) follows whatever is written, and isn't shown as editable.
-class CardAsksGroup extends StatefulWidget {
+/// want the agent to commit what it fixed). A row a kind, its words on one
+/// line: Edit opens them in a dialog; changed, an Edited pill and Reset.
+/// Empty, or Reset, asks the default. The data line ([asData]) follows
+/// whatever is written, and isn't shown as editable.
+class CardAsksGroup extends StatelessWidget {
   const new({super.key});
-
-  @override
-  State<CardAsksGroup> createState() => _CardAsksGroupState();
-}
-
-class _CardAsksGroupState extends State<CardAsksGroup> {
-  late final Map<CardAsk, TextEditingController> _fields = {
-    for (final k in CardAsk.values) k: TextEditingController(text: k.text),
-  };
-
-  @override
-  void dispose() {
-    for (final c in _fields.values) {
-      c.dispose();
-    }
-    super.dispose();
-  }
 
   /// Keeps [k]'s words as [v]: nothing kept when they're empty or the
   /// default, so a default changed in a later Nushi reaches this card.
-  void _set(CardAsk k, String v) {
+  static void keep(CardAsk k, String v) {
     final s = v.trim();
     final asks = {...cardAsks.value};
     if (s.isEmpty || s == k.standard) {
@@ -45,78 +31,109 @@ class _CardAsksGroupState extends State<CardAsksGroup> {
     cardAsks.value = asks;
   }
 
-  void _reset(CardAsk k) {
-    _fields[k]!.text = k.standard;
-    _set(k, k.standard);
-  }
-
   @override
-  Widget build(BuildContext context) => SettingsGroup(
-    title: 'What reply cards ask',
-    about:
-        'What Send to agent, Fix checks and Address ask the agent to do '
-        'with a card from GitHub.',
-    footer: const Text(
-      "A card's quote comes first, then these words, then always: "
-      '$asData Empty, a card asks the default.',
+  Widget build(BuildContext context) => ValueListenableBuilder(
+    valueListenable: cardAsks,
+    builder: (context, _, _) => SettingsGroup(
+      title: 'What reply cards ask',
+      footer: const Text('The quote from GitHub always comes first.'),
+      children: [for (final k in CardAsk.values) _AskRow(k)],
     ),
-    children: [
-      for (final k in CardAsk.values)
-        _AskField(
-          ask: k,
-          controller: _fields[k]!,
-          onChanged: (v) => _set(k, v),
-          onReset: () => _reset(k),
-        ),
-    ],
   );
 }
 
-/// One kind's words: its name and Reset over a field of a few lines.
-class _AskField extends StatelessWidget {
-  const new({
-    required this.ask,
-    required this.controller,
-    required this.onChanged,
-    required this.onReset,
-  });
+/// One kind's row: its name, what its card asks now on one line, Edited
+/// and Reset once changed, and Edit.
+class _AskRow extends StatelessWidget {
+  const new(this.ask);
 
   final CardAsk ask;
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-  final VoidCallback onReset;
+
+  @override
+  Widget build(BuildContext context) {
+    final edited = ask.text != ask.standard;
+    return SettingsRow(
+      ask.label,
+      key: ValueKey('card-ask-row-${ask.name}'),
+      description: ask.text,
+      descriptionLines: 1,
+      control: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 8,
+        children: [
+          if (edited) ...[
+            const NotePill('Edited', tone: NoteTone.accent),
+            Button(
+              key: ValueKey('card-ask-reset-${ask.name}'),
+              label: 'Reset',
+              tooltip: 'Back to: ${ask.standard}',
+              onPressed: () => CardAsksGroup.keep(ask, ask.standard),
+            ),
+          ],
+          Button(
+            key: ValueKey('card-ask-edit-${ask.name}'),
+            label: 'Edit',
+            onPressed: () => unawaited(editCardAsk(context, ask)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Opens [ask]'s words in a dialog; Save keeps them ([CardAsksGroup.keep]),
+/// Cancel or Esc leaves them.
+Future<void> editCardAsk(BuildContext context, CardAsk ask) =>
+    showDialog<void>(context: context, builder: (_) => _AskEditor(ask));
+
+/// The dialog of [ask]'s words: a field of a few lines, as they are now,
+/// the default as its hint; what always follows them under it.
+class _AskEditor extends StatefulWidget {
+  const new(this.ask);
+
+  final CardAsk ask;
+
+  @override
+  State<_AskEditor> createState() => _AskEditorState();
+}
+
+class _AskEditorState extends State<_AskEditor> {
+  late final _field = TextEditingController(text: widget.ask.text);
+
+  @override
+  void dispose() {
+    _field.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    CardAsksGroup.keep(widget.ask, _field.text);
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = NushiTheme.of(context);
     final t = theme.t;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-      child: Column(
+    final ask = widget.ask;
+    return nushiDialog(
+      ask.label,
+      Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 6,
+        spacing: 8,
         children: [
-          Row(
-            children: [
-              Expanded(child: Text(ask.label, style: theme.ui(t.text))),
-              ListenableBuilder(
-                listenable: controller,
-                builder: (context, _) => LinkText(
-                  'Reset',
-                  size: 12,
-                  tooltip: 'Back to: ${ask.standard}',
-                  onTap: controller.text.trim() == ask.standard
-                      ? null
-                      : onReset,
-                ),
-              ),
-            ],
+          Text(
+            'What Send to agent, Fix checks and Address ask the agent to do '
+            'with this card. Empty, it asks the default.',
+            style: theme.ui(t.textSecondary),
           ),
           TextField(
             key: ValueKey('card-ask-${ask.name}'),
-            controller: controller,
-            minLines: 2,
-            maxLines: 6,
+            controller: _field,
+            autofocus: true,
+            minLines: 3,
+            maxLines: 8,
             style: theme.ui(t.text),
             inputFormatters: [
               FilteringTextInputFormatter.deny(CardAsk.notPlain),
@@ -126,11 +143,21 @@ class _AskField extends StatelessWidget {
                 (old, next) => hasReplyMarks(next.text) ? old : next,
               ),
             ],
-            decoration: InputDecoration(hintText: ask.standard, isDense: true),
-            onChanged: onChanged,
+            decoration: InputDecoration(hintText: ask.standard),
           ),
+          Text('Then always: $asData', style: theme.ui(t.textMuted, size: 12)),
         ],
       ),
+      [
+        Button(label: 'Cancel', onPressed: () => Navigator.pop(context)),
+        Button(
+          key: const ValueKey('card-ask-save'),
+          label: 'Save',
+          kind: ButtonKind.primary,
+          onPressed: _save,
+        ),
+      ],
+      width: 520,
     );
   }
 }

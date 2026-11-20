@@ -54,27 +54,10 @@ class _TerminalSectionState extends State<TerminalSection> {
                   families: _families,
                 ),
               ),
-              SettingsRow(
-                'Size',
-                control: MenuField(
-                  entries: [
-                    for (final s in _sizes)
-                      MenuEntry(
-                        '$s'.replaceAll('.0', ''),
-                        checked: terminalFontSize.value == s,
-                        onPick: () => terminalFontSize.value = s,
-                      ),
-                  ],
-                  label: Text('${terminalFontSize.value}'.replaceAll('.0', '')),
-                ),
-              ),
-            ],
-          ),
-          SettingsGroup(
-            title: 'Preview',
-            children: [
+              const SettingsRow('Size', control: TerminalSizeField()),
+              // On code's sunk surface, the group's last row.
               Container(
-                color: t.base,
+                color: t.codeBlock,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
                   vertical: 12,
@@ -94,4 +77,26 @@ class _TerminalSectionState extends State<TerminalSection> {
       ),
     );
   }
+}
+
+/// The terminal's font size, a menu of [_sizes]: in Settings › Terminal
+/// and in Appearance's Fonts, one setting ([terminalFontSize]).
+class TerminalSizeField extends StatelessWidget {
+  const new({super.key});
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder(
+    valueListenable: terminalFontSize,
+    builder: (context, size, _) => MenuField(
+      entries: [
+        for (final s in _sizes)
+          MenuEntry(
+            '$s'.replaceAll('.0', ''),
+            checked: size == s,
+            onPick: () => terminalFontSize.value = s,
+          ),
+      ],
+      label: Text('$size'.replaceAll('.0', '')),
+    ),
+  );
 }

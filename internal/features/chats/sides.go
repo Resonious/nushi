@@ -149,7 +149,7 @@ var errOtherSide = errors.New("the chat has another side chat open")
 // fork of an archived side chat's, and returns its id.
 func (s *Service) openSide(ctx context.Context, p *chat, from *sideSource) (string, error) {
 	p.mu.Lock()
-	agent, sid, folder := p.agent, p.sid, p.record.Folder
+	agent, sid, folder, project := p.agent, p.sid, p.record.Folder, projectFolder(p.record)
 	can := p.canFork && p.parent == nil
 	base, _ := p.finishedLocked() // the side chat forks the whole session
 	lastItem := p.lastItem        // the side chat's own items come after
@@ -186,6 +186,8 @@ func (s *Service) openSide(ctx context.Context, p *chat, from *sideSource) (stri
 	side.reapplying = true // until reapply: the fork's own options aren't picks
 	side.copies = nil      // nobody sees a side chat again, so Nushi keeps no copy of it
 	side.record = model.ChatRecord{ID: side.id, SessionID: side.sid, Agent: p.kind.Name, Folder: folder, Title: "Side chat", Created: time.Now()}
+	// Its turns count toward the chat's usage (usage.go).
+	side.costFrom, side.project = p.id, project
 	if from != nil { // its conversation and picks as they were
 		s.adoptUploads(side.id, from.items)
 		side.items, side.record.HasMessages, side.record.Picks = from.items, true, maps.Clone(from.picks)

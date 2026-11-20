@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_comment.dart';
 import 'package:nushi/github_pull.dart';
+import 'package:nushi/pull_header.dart' show pullNarrow, pullPad;
 import 'package:nushi/pull_link.dart';
 import 'package:nushi/settings.dart';
 
@@ -50,25 +51,37 @@ void main() {
     expect(longText(aiReviewBody), isTrue);
   });
 
-  test('the readable column: 860 centred, else the least padding', () {
-    expect(readablePad(1440 - 260), (1180 - 860) / 2);
-    expect(readablePad(700), 24);
-  });
-
   testWidgets("a bot's comment folds to one line; a long review shows its "
       'start, and whole on Show', (tester) async {
     final (d, _) = await openPullTab(tester, fixturePull());
-    await tester.tap(find.text('Activity 4')); // scrolled to it
-    await tester.pumpAndSettle();
     // Danger's table: its first row, on one line, until Show.
-    expect(find.textContaining('Review App Links · Notes'), findsOneWidget);
+    expect(
+      find.textContaining('Review App Links · Notes', findRichText: true),
+      findsOneWidget,
+    );
     expect(find.byType(Table), findsNothing);
-    await tester.tap(find.text('Show').first); // Danger's
+    // Danger's, in its folded line.
+    final show = find.descendant(
+      of: find
+          .ancestor(
+            of: find.textContaining(
+              'Review App Links · Notes',
+              findRichText: true,
+            ),
+            matching: find.byType(Row),
+          )
+          .first,
+      matching: find.text('Show'),
+    );
+    await tester.ensureVisible(show);
+    await tester.pumpAndSettle();
+    await tester.tap(show);
     await tester.pumpAndSettle();
     expect(find.byType(Table), findsOneWidget);
     expect(find.text('Hide'), findsOneWidget);
     // The review: clamped, with Show the whole review.
     expect(find.text('Show the whole review'), findsOneWidget);
+    await tester.ensureVisible(find.text('Show the whole review'));
     final clamp = find.ancestor(
       of: find.textContaining('PR hygiene', findRichText: true),
       matching: find.byType(ClipRect),
@@ -86,36 +99,36 @@ void main() {
       'while it shows is seen', (tester) async {
     final whole = fixturePull();
     final (d, fake) = await openPullTab(tester, whole);
-    expect(find.text('Activity 4'), findsOneWidget);
+    expect(find.textContaining('One more thing.'), findsNothing);
     fake.calls.clear();
     whole.conversation.add(said('mona', 'One more thing.', age: Duration.zero));
     await tester.pump(const Duration(minutes: 1));
     await tester.pumpAndSettle();
     expect(fake.calls.whereType<GetGitHubPullRequest>(), hasLength(1));
-    expect(find.text('Activity 5'), findsOneWidget);
+    expect(
+      find.textContaining('One more thing.', findRichText: true),
+      findsOneWidget,
+    );
     expect(pullSeen.value['c'], commentTimes(whole).reduce(max));
     d.dispose();
   }, variant: onMac);
 
-  testWidgets('the text reads in 860 points, centred, at 1440', (tester) async {
+  testWidgets("the text reads in the page's main column, at 1440", (
+    tester,
+  ) async {
     final (d, _) = await openPullTab(tester, fixturePull());
-    await tester.tap(find.text('Activity 4'));
-    await tester.pumpAndSettle();
     final pane = tester.getRect(find.byType(GitHubPullPane));
     final text = tester.getRect(
-      find
-          .text(
-            'Thanks, the guard looks right. Two small things before '
-            'this goes in.',
-            findRichText: true,
-          )
-          .last, // To do's line of it first
+      find.text(
+        'Thanks, the guard looks right. Two small things before this goes in.',
+        findRichText: true,
+      ),
     );
-    final pad = readablePad(pane.width);
-    // In the column: beside the avatar, in its card.
+    final pad = pullPad(pane.width);
+    // Beside the mark, in its card; the side column at its right.
     expect(text.left, greaterThan(pane.left + pad));
     expect(text.left, lessThan(pane.left + pad + 60));
-    expect(text.right, lessThanOrEqualTo(pane.right - pad + 1));
+    expect(text.right, lessThanOrEqualTo(pane.right - pad - 270 - 32 + 1));
     d.dispose();
   }, variant: onMac);
 
@@ -123,17 +136,16 @@ void main() {
     final p = fixturePull();
     p.conversation.first.bot = false; // shown whole
     final (d, _) = await openPullTab(tester, p, size: const Size(1100, 900));
-    // Past the pane's fold at this height, its buttons regular (ADR 0122).
-    await tester.ensureVisible(find.text('Activity 4'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Activity 4'));
+    await tester.ensureVisible(find.byType(Table).first);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     final pane = tester.getRect(find.byType(GitHubPullPane));
     final table = tester.getRect(find.byType(Table).first);
+    // Narrower than the page's two columns: the main one the whole width.
+    expect(pane.width, lessThan(pullNarrow));
     expect(
       table.right,
-      lessThanOrEqualTo(pane.right - readablePad(pane.width) + 1),
+      lessThanOrEqualTo(pane.right - pullPad(pane.width) + 1),
     );
     d.dispose();
   }, variant: onMac);

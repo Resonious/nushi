@@ -50,6 +50,14 @@ var blockElements = map[atom.Atom]bool{
 // removed are the elements whose contents GitHub drops with them.
 var removed = map[atom.Atom]bool{atom.Script: true}
 
+// Source is a description as its author wrote it, for editing: valid
+// UTF-8 with \n line endings (GitHub keeps a browser's \r\n), nothing
+// else changed. It's never rendered or sent to an agent (Markdown is).
+func Source(s string) string {
+	s = strings.ToValidUTF8(s, "\uFFFD")
+	return strings.ReplaceAll(strings.ReplaceAll(s, "\r\n", "\n"), "\r", "\n")
+}
+
 // Markdown is GitHub-flavoured Markdown from GitHub (a pull request's
 // text, a comment, a check's summary) as Nushi shows it and gives it to an
 // agent: what GitHub's page shows of it, written again as Markdown. What

@@ -371,9 +371,8 @@ class _HistorySectionState extends State<HistorySection> {
             if (set != null && set.hasKeepTranscripts())
               SettingsRow(
                 'Keep transcripts',
-                description:
-                    "Nushi's own read-only copy of each chat, for the history "
-                    'its agent no longer replays. Never sent to an agent.',
+                // For the history its agent no longer replays (ADR 0047).
+                description: 'A copy of each chat, never sent to an agent.',
                 control: SettingsSwitch(
                   value: set.keepTranscripts,
                   run: ({required on}) => _keep(on),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nushi/daemon.dart';
-import 'package:nushi/native.dart';
 import 'package:nushi/slides.dart';
 import 'package:nushi/status_bar.dart';
 import 'package:nushi/theme/theme.dart';
@@ -27,17 +26,16 @@ class DaemonUpdateBar extends StatelessWidget {
               builder: (context, _) => _Waiting(daemon),
             ),
           ),
-          if (native.install.canStop)
-            ListenableBuilder(
-              listenable: daemon,
-              builder: (context, _) => Button(
-                label: daemon.restarting ? 'Restarting…' : 'Restart now',
-                // What it stops is asked first.
-                onPressed: daemon.restarting
-                    ? null
-                    : () => restartDaemonAsking(context, daemon),
-              ),
+          ListenableBuilder(
+            listenable: daemon,
+            builder: (context, _) => Button(
+              label: daemon.restarting ? 'Restarting…' : 'Restart now',
+              // What it stops is asked first.
+              onPressed: daemon.restarting
+                  ? null
+                  : () => restartDaemonAsking(context, daemon),
             ),
+          ),
         ],
       ),
     );
@@ -121,7 +119,7 @@ class OutdatedScreen extends StatelessWidget {
               style: theme.ui(t.textSecondary),
             ),
             const SizedBox(height: 14),
-            if (daemon.bundled != null && native.install.canStop)
+            if (daemon.bundled != null)
               ListenableBuilder(
                 listenable: daemon,
                 builder: (context, _) => Button(
@@ -131,13 +129,6 @@ class OutdatedScreen extends StatelessWidget {
                       ? null
                       : () => tryOrShow(context, daemon.restartDaemon),
                 ),
-              )
-            else if (daemon.bundled != null)
-              Text(
-                'To restart it, ${native.install.stopByHand}: Nushi starts '
-                'the new one.',
-                textAlign: TextAlign.center,
-                style: theme.ui(t.textSecondary),
               )
             else
               Text('make stop daemon', style: theme.code(t.textMuted)),

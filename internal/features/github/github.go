@@ -30,6 +30,7 @@ type Client interface { //nolint:interfacebloat // the GitHub calls the feature 
 	Status(ctx context.Context, ids []string) (map[string]model.GitHubItem, error)
 	Items(ctx context.Context, refs []model.GitHubRef) ([]model.GitHubItem, []model.GitHubRef, error)
 	Pull(ctx context.Context, repo string, number int) (model.GitHubPull, error)
+	Commits(ctx context.Context, repo string, number int) ([]model.GitHubCommit, int, error)
 	Issue(ctx context.Context, repo string, number int) (model.GitHubIssue, error)
 	PullsByHead(ctx context.Context, repo, head string) ([]githubapi.HeadPull, time.Duration, error)
 	JobLog(ctx context.Context, repo string, job int64) (string, error)
@@ -43,6 +44,7 @@ type Client interface { //nolint:interfacebloat // the GitHub calls the feature 
 	Reply(ctx context.Context, thread, body string) error
 	Resolve(ctx context.Context, thread string, resolve bool) error
 	Comment(ctx context.Context, subject, body string) error
+	EditPull(ctx context.Context, pull string, title, body *string) error
 	SubmitReview(ctx context.Context, r githubapi.Review) error
 	MergeText(ctx context.Context, repo string, number int) (githubapi.MergeText, error)
 	Merge(ctx context.Context, m githubapi.MergeInput) error

@@ -21,11 +21,6 @@ void main() {
   setUpAll(loadFonts);
   setUp(() {
     brewCask = null;
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
   });
 
   testWidgets('a beta version: Update and Copy upgrade the beta cask; the '

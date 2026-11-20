@@ -6,8 +6,8 @@ import 'package:nushi/conventions.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart' show Item;
 import 'package:nushi/history_table.dart' show diskSize;
 import 'package:nushi/images.dart';
+import 'package:nushi/native.dart';
 import 'package:nushi/preview.dart';
-import 'package:nushi/skills_list.dart' show revealInFinder;
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/tool_parts.dart' show plainPath;
 import 'package:nushi/widgets.dart';
@@ -207,7 +207,8 @@ Widget? messageFiles(BuildContext context, Item item, ChatState chat) {
               : null,
           onReveal: kIsWeb || !f.startsWith('/') && chat.folder.isEmpty
               ? null
-              : () => revealInFinder(absoluteIn(chat.folder, f)).ignore(),
+              : () =>
+                    native.desktop.reveal(absoluteIn(chat.folder, f)).ignore(),
         ),
     ],
   );

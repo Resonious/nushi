@@ -7,6 +7,7 @@ import 'package:nushi/cleanup_parts.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/folder_button.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/plain_text.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 
@@ -120,9 +121,7 @@ class _CleanUpDialogState extends State<_CleanUpDialog> {
   /// …".
   String get _stillOpen {
     final n = [for (final x in widget.openOnBranch) '#$x'];
-    final which = n.length == 1
-        ? '${n.single} is'
-        : '${n.sublist(0, n.length - 1).join(', ')} and ${n.last} are';
+    final which = '${andList(n)} ${n.length == 1 ? 'is' : 'are'}';
     final on = widget.branch.isEmpty ? "this chat's branch" : widget.branch;
     return '$which still open on $on. The worktree, its branch and this '
         'chat stay until ${n.length == 1 ? 'it merges or closes' : 'they '

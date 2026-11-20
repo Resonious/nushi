@@ -399,6 +399,9 @@ const (
 	// NushiServiceGetGitHubIssueProcedure is the fully-qualified name of the NushiService's
 	// GetGitHubIssue RPC.
 	NushiServiceGetGitHubIssueProcedure = "/nushi.v1.NushiService/GetGitHubIssue"
+	// NushiServiceGetGitHubCommitsProcedure is the fully-qualified name of the NushiService's
+	// GetGitHubCommits RPC.
+	NushiServiceGetGitHubCommitsProcedure = "/nushi.v1.NushiService/GetGitHubCommits"
 	// NushiServiceGetGitHubFilesProcedure is the fully-qualified name of the NushiService's
 	// GetGitHubFiles RPC.
 	NushiServiceGetGitHubFilesProcedure = "/nushi.v1.NushiService/GetGitHubFiles"
@@ -417,6 +420,9 @@ const (
 	// NushiServiceSubmitGitHubReviewProcedure is the fully-qualified name of the NushiService's
 	// SubmitGitHubReview RPC.
 	NushiServiceSubmitGitHubReviewProcedure = "/nushi.v1.NushiService/SubmitGitHubReview"
+	// NushiServiceEditGitHubPullProcedure is the fully-qualified name of the NushiService's
+	// EditGitHubPull RPC.
+	NushiServiceEditGitHubPullProcedure = "/nushi.v1.NushiService/EditGitHubPull"
 	// NushiServiceRerunGitHubChecksProcedure is the fully-qualified name of the NushiService's
 	// RerunGitHubChecks RPC.
 	NushiServiceRerunGitHubChecksProcedure = "/nushi.v1.NushiService/RerunGitHubChecks"
@@ -458,6 +464,8 @@ const (
 	// NushiServiceLinkChatPullProcedure is the fully-qualified name of the NushiService's LinkChatPull
 	// RPC.
 	NushiServiceLinkChatPullProcedure = "/nushi.v1.NushiService/LinkChatPull"
+	// NushiServiceGetUsageProcedure is the fully-qualified name of the NushiService's GetUsage RPC.
+	NushiServiceGetUsageProcedure = "/nushi.v1.NushiService/GetUsage"
 	// NushiServiceEventsProcedure is the fully-qualified name of the NushiService's Events RPC.
 	NushiServiceEventsProcedure = "/nushi.v1.NushiService/Events"
 )
@@ -928,6 +936,10 @@ type NushiServiceClient interface {
 	GetGitHubItems(context.Context, *connect.Request[v1.GetGitHubItemsRequest]) (*connect.Response[v1.GetGitHubItemsResponse], error)
 	GetGitHubPull(context.Context, *connect.Request[v1.GetGitHubPullRequest]) (*connect.Response[v1.GetGitHubPullResponse], error)
 	GetGitHubIssue(context.Context, *connect.Request[v1.GetGitHubIssueRequest]) (*connect.Response[v1.GetGitHubIssueResponse], error)
+	// A pull request's newest 100 commits, oldest first, and how many it
+	// has: asked when they show, not with each poll of GetGitHubPull.
+	// API 127.
+	GetGitHubCommits(context.Context, *connect.Request[v1.GetGitHubCommitsRequest]) (*connect.Response[v1.GetGitHubCommitsResponse], error)
 	// A pull request's files from its merge base to its head, both sides'
 	// texts, as GetDiff gives them.
 	GetGitHubFiles(context.Context, *connect.Request[v1.GetGitHubFilesRequest]) (*connect.Response[v1.GetGitHubFilesResponse], error)
@@ -938,6 +950,11 @@ type NushiServiceClient interface {
 	ResolveGitHubThread(context.Context, *connect.Request[v1.ResolveGitHubThreadRequest]) (*connect.Response[v1.ResolveGitHubThreadResponse], error)
 	AddGitHubComment(context.Context, *connect.Request[v1.AddGitHubCommentRequest]) (*connect.Response[v1.AddGitHubCommentResponse], error)
 	SubmitGitHubReview(context.Context, *connect.Request[v1.SubmitGitHubReviewRequest]) (*connect.Response[v1.SubmitGitHubReviewResponse], error)
+	// Sets a pull request's title or description (one at a time), only
+	// while it still says what the edit began from: else FailedPrecondition,
+	// reason changed_since. PermissionDenied when GitHub doesn't let the
+	// user edit it. API 128.
+	EditGitHubPull(context.Context, *connect.Request[v1.EditGitHubPullRequest]) (*connect.Response[v1.EditGitHubPullResponse], error)
 	// Re-runs the failed jobs of the workflow runs that a pull request's
 	// failed Actions jobs belong to. API 88.
 	RerunGitHubChecks(context.Context, *connect.Request[v1.RerunGitHubChecksRequest]) (*connect.Response[v1.RerunGitHubChecksResponse], error)
@@ -981,6 +998,11 @@ type NushiServiceClient interface {
 	// Links a pull request picked by hand to a chat, or unlinks its own.
 	// API 81.
 	LinkChatPull(context.Context, *connect.Request[v1.LinkChatPullRequest]) (*connect.Response[v1.LinkChatPullResponse], error)
+	// What the chats' turns used from from to to (ADR 0136): totals, by day,
+	// agent, model and project folder, the costliest chats, and the account
+	// limits agents reported. The Mac's only: it names project folders and
+	// chats' titles, which the phone has no page for. API 126.
+	GetUsage(context.Context, *connect.Request[v1.GetUsageRequest]) (*connect.Response[v1.GetUsageResponse], error)
 	// Streams every change to every chat from now on. The first message is
 	// empty: it says the subscription is live.
 	Events(context.Context, *connect.Request[v1.EventsRequest]) (*connect.ServerStreamForClient[v1.EventsResponse], error)
@@ -1801,6 +1823,12 @@ func NewNushiServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(nushiServiceMethods.ByName("GetGitHubIssue")),
 			connect.WithClientOptions(opts...),
 		),
+		getGitHubCommits: connect.NewClient[v1.GetGitHubCommitsRequest, v1.GetGitHubCommitsResponse](
+			httpClient,
+			baseURL+NushiServiceGetGitHubCommitsProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("GetGitHubCommits")),
+			connect.WithClientOptions(opts...),
+		),
 		getGitHubFiles: connect.NewClient[v1.GetGitHubFilesRequest, v1.GetGitHubFilesResponse](
 			httpClient,
 			baseURL+NushiServiceGetGitHubFilesProcedure,
@@ -1835,6 +1863,12 @@ func NewNushiServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			httpClient,
 			baseURL+NushiServiceSubmitGitHubReviewProcedure,
 			connect.WithSchema(nushiServiceMethods.ByName("SubmitGitHubReview")),
+			connect.WithClientOptions(opts...),
+		),
+		editGitHubPull: connect.NewClient[v1.EditGitHubPullRequest, v1.EditGitHubPullResponse](
+			httpClient,
+			baseURL+NushiServiceEditGitHubPullProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("EditGitHubPull")),
 			connect.WithClientOptions(opts...),
 		),
 		rerunGitHubChecks: connect.NewClient[v1.RerunGitHubChecksRequest, v1.RerunGitHubChecksResponse](
@@ -1919,6 +1953,12 @@ func NewNushiServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			httpClient,
 			baseURL+NushiServiceLinkChatPullProcedure,
 			connect.WithSchema(nushiServiceMethods.ByName("LinkChatPull")),
+			connect.WithClientOptions(opts...),
+		),
+		getUsage: connect.NewClient[v1.GetUsageRequest, v1.GetUsageResponse](
+			httpClient,
+			baseURL+NushiServiceGetUsageProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("GetUsage")),
 			connect.WithClientOptions(opts...),
 		),
 		events: connect.NewClient[v1.EventsRequest, v1.EventsResponse](
@@ -2066,12 +2106,14 @@ type nushiServiceClient struct {
 	getGitHubItems          *connect.Client[v1.GetGitHubItemsRequest, v1.GetGitHubItemsResponse]
 	getGitHubPull           *connect.Client[v1.GetGitHubPullRequest, v1.GetGitHubPullResponse]
 	getGitHubIssue          *connect.Client[v1.GetGitHubIssueRequest, v1.GetGitHubIssueResponse]
+	getGitHubCommits        *connect.Client[v1.GetGitHubCommitsRequest, v1.GetGitHubCommitsResponse]
 	getGitHubFiles          *connect.Client[v1.GetGitHubFilesRequest, v1.GetGitHubFilesResponse]
 	getGitHubJobLog         *connect.Client[v1.GetGitHubJobLogRequest, v1.GetGitHubJobLogResponse]
 	replyGitHubThread       *connect.Client[v1.ReplyGitHubThreadRequest, v1.ReplyGitHubThreadResponse]
 	resolveGitHubThread     *connect.Client[v1.ResolveGitHubThreadRequest, v1.ResolveGitHubThreadResponse]
 	addGitHubComment        *connect.Client[v1.AddGitHubCommentRequest, v1.AddGitHubCommentResponse]
 	submitGitHubReview      *connect.Client[v1.SubmitGitHubReviewRequest, v1.SubmitGitHubReviewResponse]
+	editGitHubPull          *connect.Client[v1.EditGitHubPullRequest, v1.EditGitHubPullResponse]
 	rerunGitHubChecks       *connect.Client[v1.RerunGitHubChecksRequest, v1.RerunGitHubChecksResponse]
 	getGitHubMergeText      *connect.Client[v1.GetGitHubMergeTextRequest, v1.GetGitHubMergeTextResponse]
 	mergeGitHubPull         *connect.Client[v1.MergeGitHubPullRequest, v1.MergeGitHubPullResponse]
@@ -2086,6 +2128,7 @@ type nushiServiceClient struct {
 	restoreGitHubBranch     *connect.Client[v1.RestoreGitHubBranchRequest, v1.RestoreGitHubBranchResponse]
 	findChatPull            *connect.Client[v1.FindChatPullRequest, v1.FindChatPullResponse]
 	linkChatPull            *connect.Client[v1.LinkChatPullRequest, v1.LinkChatPullResponse]
+	getUsage                *connect.Client[v1.GetUsageRequest, v1.GetUsageResponse]
 	events                  *connect.Client[v1.EventsRequest, v1.EventsResponse]
 }
 
@@ -2759,6 +2802,11 @@ func (c *nushiServiceClient) GetGitHubIssue(ctx context.Context, req *connect.Re
 	return c.getGitHubIssue.CallUnary(ctx, req)
 }
 
+// GetGitHubCommits calls nushi.v1.NushiService.GetGitHubCommits.
+func (c *nushiServiceClient) GetGitHubCommits(ctx context.Context, req *connect.Request[v1.GetGitHubCommitsRequest]) (*connect.Response[v1.GetGitHubCommitsResponse], error) {
+	return c.getGitHubCommits.CallUnary(ctx, req)
+}
+
 // GetGitHubFiles calls nushi.v1.NushiService.GetGitHubFiles.
 func (c *nushiServiceClient) GetGitHubFiles(ctx context.Context, req *connect.Request[v1.GetGitHubFilesRequest]) (*connect.Response[v1.GetGitHubFilesResponse], error) {
 	return c.getGitHubFiles.CallUnary(ctx, req)
@@ -2787,6 +2835,11 @@ func (c *nushiServiceClient) AddGitHubComment(ctx context.Context, req *connect.
 // SubmitGitHubReview calls nushi.v1.NushiService.SubmitGitHubReview.
 func (c *nushiServiceClient) SubmitGitHubReview(ctx context.Context, req *connect.Request[v1.SubmitGitHubReviewRequest]) (*connect.Response[v1.SubmitGitHubReviewResponse], error) {
 	return c.submitGitHubReview.CallUnary(ctx, req)
+}
+
+// EditGitHubPull calls nushi.v1.NushiService.EditGitHubPull.
+func (c *nushiServiceClient) EditGitHubPull(ctx context.Context, req *connect.Request[v1.EditGitHubPullRequest]) (*connect.Response[v1.EditGitHubPullResponse], error) {
+	return c.editGitHubPull.CallUnary(ctx, req)
 }
 
 // RerunGitHubChecks calls nushi.v1.NushiService.RerunGitHubChecks.
@@ -2857,6 +2910,11 @@ func (c *nushiServiceClient) FindChatPull(ctx context.Context, req *connect.Requ
 // LinkChatPull calls nushi.v1.NushiService.LinkChatPull.
 func (c *nushiServiceClient) LinkChatPull(ctx context.Context, req *connect.Request[v1.LinkChatPullRequest]) (*connect.Response[v1.LinkChatPullResponse], error) {
 	return c.linkChatPull.CallUnary(ctx, req)
+}
+
+// GetUsage calls nushi.v1.NushiService.GetUsage.
+func (c *nushiServiceClient) GetUsage(ctx context.Context, req *connect.Request[v1.GetUsageRequest]) (*connect.Response[v1.GetUsageResponse], error) {
+	return c.getUsage.CallUnary(ctx, req)
 }
 
 // Events calls nushi.v1.NushiService.Events.
@@ -3330,6 +3388,10 @@ type NushiServiceHandler interface {
 	GetGitHubItems(context.Context, *connect.Request[v1.GetGitHubItemsRequest]) (*connect.Response[v1.GetGitHubItemsResponse], error)
 	GetGitHubPull(context.Context, *connect.Request[v1.GetGitHubPullRequest]) (*connect.Response[v1.GetGitHubPullResponse], error)
 	GetGitHubIssue(context.Context, *connect.Request[v1.GetGitHubIssueRequest]) (*connect.Response[v1.GetGitHubIssueResponse], error)
+	// A pull request's newest 100 commits, oldest first, and how many it
+	// has: asked when they show, not with each poll of GetGitHubPull.
+	// API 127.
+	GetGitHubCommits(context.Context, *connect.Request[v1.GetGitHubCommitsRequest]) (*connect.Response[v1.GetGitHubCommitsResponse], error)
 	// A pull request's files from its merge base to its head, both sides'
 	// texts, as GetDiff gives them.
 	GetGitHubFiles(context.Context, *connect.Request[v1.GetGitHubFilesRequest]) (*connect.Response[v1.GetGitHubFilesResponse], error)
@@ -3340,6 +3402,11 @@ type NushiServiceHandler interface {
 	ResolveGitHubThread(context.Context, *connect.Request[v1.ResolveGitHubThreadRequest]) (*connect.Response[v1.ResolveGitHubThreadResponse], error)
 	AddGitHubComment(context.Context, *connect.Request[v1.AddGitHubCommentRequest]) (*connect.Response[v1.AddGitHubCommentResponse], error)
 	SubmitGitHubReview(context.Context, *connect.Request[v1.SubmitGitHubReviewRequest]) (*connect.Response[v1.SubmitGitHubReviewResponse], error)
+	// Sets a pull request's title or description (one at a time), only
+	// while it still says what the edit began from: else FailedPrecondition,
+	// reason changed_since. PermissionDenied when GitHub doesn't let the
+	// user edit it. API 128.
+	EditGitHubPull(context.Context, *connect.Request[v1.EditGitHubPullRequest]) (*connect.Response[v1.EditGitHubPullResponse], error)
 	// Re-runs the failed jobs of the workflow runs that a pull request's
 	// failed Actions jobs belong to. API 88.
 	RerunGitHubChecks(context.Context, *connect.Request[v1.RerunGitHubChecksRequest]) (*connect.Response[v1.RerunGitHubChecksResponse], error)
@@ -3383,6 +3450,11 @@ type NushiServiceHandler interface {
 	// Links a pull request picked by hand to a chat, or unlinks its own.
 	// API 81.
 	LinkChatPull(context.Context, *connect.Request[v1.LinkChatPullRequest]) (*connect.Response[v1.LinkChatPullResponse], error)
+	// What the chats' turns used from from to to (ADR 0136): totals, by day,
+	// agent, model and project folder, the costliest chats, and the account
+	// limits agents reported. The Mac's only: it names project folders and
+	// chats' titles, which the phone has no page for. API 126.
+	GetUsage(context.Context, *connect.Request[v1.GetUsageRequest]) (*connect.Response[v1.GetUsageResponse], error)
 	// Streams every change to every chat from now on. The first message is
 	// empty: it says the subscription is live.
 	Events(context.Context, *connect.Request[v1.EventsRequest], *connect.ServerStream[v1.EventsResponse]) error
@@ -4199,6 +4271,12 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(nushiServiceMethods.ByName("GetGitHubIssue")),
 		connect.WithHandlerOptions(opts...),
 	)
+	nushiServiceGetGitHubCommitsHandler := connect.NewUnaryHandler(
+		NushiServiceGetGitHubCommitsProcedure,
+		svc.GetGitHubCommits,
+		connect.WithSchema(nushiServiceMethods.ByName("GetGitHubCommits")),
+		connect.WithHandlerOptions(opts...),
+	)
 	nushiServiceGetGitHubFilesHandler := connect.NewUnaryHandler(
 		NushiServiceGetGitHubFilesProcedure,
 		svc.GetGitHubFiles,
@@ -4233,6 +4311,12 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 		NushiServiceSubmitGitHubReviewProcedure,
 		svc.SubmitGitHubReview,
 		connect.WithSchema(nushiServiceMethods.ByName("SubmitGitHubReview")),
+		connect.WithHandlerOptions(opts...),
+	)
+	nushiServiceEditGitHubPullHandler := connect.NewUnaryHandler(
+		NushiServiceEditGitHubPullProcedure,
+		svc.EditGitHubPull,
+		connect.WithSchema(nushiServiceMethods.ByName("EditGitHubPull")),
 		connect.WithHandlerOptions(opts...),
 	)
 	nushiServiceRerunGitHubChecksHandler := connect.NewUnaryHandler(
@@ -4317,6 +4401,12 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 		NushiServiceLinkChatPullProcedure,
 		svc.LinkChatPull,
 		connect.WithSchema(nushiServiceMethods.ByName("LinkChatPull")),
+		connect.WithHandlerOptions(opts...),
+	)
+	nushiServiceGetUsageHandler := connect.NewUnaryHandler(
+		NushiServiceGetUsageProcedure,
+		svc.GetUsage,
+		connect.WithSchema(nushiServiceMethods.ByName("GetUsage")),
 		connect.WithHandlerOptions(opts...),
 	)
 	nushiServiceEventsHandler := connect.NewServerStreamHandler(
@@ -4595,6 +4685,8 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 			nushiServiceGetGitHubPullHandler.ServeHTTP(w, r)
 		case NushiServiceGetGitHubIssueProcedure:
 			nushiServiceGetGitHubIssueHandler.ServeHTTP(w, r)
+		case NushiServiceGetGitHubCommitsProcedure:
+			nushiServiceGetGitHubCommitsHandler.ServeHTTP(w, r)
 		case NushiServiceGetGitHubFilesProcedure:
 			nushiServiceGetGitHubFilesHandler.ServeHTTP(w, r)
 		case NushiServiceGetGitHubJobLogProcedure:
@@ -4607,6 +4699,8 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 			nushiServiceAddGitHubCommentHandler.ServeHTTP(w, r)
 		case NushiServiceSubmitGitHubReviewProcedure:
 			nushiServiceSubmitGitHubReviewHandler.ServeHTTP(w, r)
+		case NushiServiceEditGitHubPullProcedure:
+			nushiServiceEditGitHubPullHandler.ServeHTTP(w, r)
 		case NushiServiceRerunGitHubChecksProcedure:
 			nushiServiceRerunGitHubChecksHandler.ServeHTTP(w, r)
 		case NushiServiceGetGitHubMergeTextProcedure:
@@ -4635,6 +4729,8 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 			nushiServiceFindChatPullHandler.ServeHTTP(w, r)
 		case NushiServiceLinkChatPullProcedure:
 			nushiServiceLinkChatPullHandler.ServeHTTP(w, r)
+		case NushiServiceGetUsageProcedure:
+			nushiServiceGetUsageHandler.ServeHTTP(w, r)
 		case NushiServiceEventsProcedure:
 			nushiServiceEventsHandler.ServeHTTP(w, r)
 		default:
@@ -5182,6 +5278,10 @@ func (UnimplementedNushiServiceHandler) GetGitHubIssue(context.Context, *connect
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.GetGitHubIssue is not implemented"))
 }
 
+func (UnimplementedNushiServiceHandler) GetGitHubCommits(context.Context, *connect.Request[v1.GetGitHubCommitsRequest]) (*connect.Response[v1.GetGitHubCommitsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.GetGitHubCommits is not implemented"))
+}
+
 func (UnimplementedNushiServiceHandler) GetGitHubFiles(context.Context, *connect.Request[v1.GetGitHubFilesRequest]) (*connect.Response[v1.GetGitHubFilesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.GetGitHubFiles is not implemented"))
 }
@@ -5204,6 +5304,10 @@ func (UnimplementedNushiServiceHandler) AddGitHubComment(context.Context, *conne
 
 func (UnimplementedNushiServiceHandler) SubmitGitHubReview(context.Context, *connect.Request[v1.SubmitGitHubReviewRequest]) (*connect.Response[v1.SubmitGitHubReviewResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.SubmitGitHubReview is not implemented"))
+}
+
+func (UnimplementedNushiServiceHandler) EditGitHubPull(context.Context, *connect.Request[v1.EditGitHubPullRequest]) (*connect.Response[v1.EditGitHubPullResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.EditGitHubPull is not implemented"))
 }
 
 func (UnimplementedNushiServiceHandler) RerunGitHubChecks(context.Context, *connect.Request[v1.RerunGitHubChecksRequest]) (*connect.Response[v1.RerunGitHubChecksResponse], error) {
@@ -5260,6 +5364,10 @@ func (UnimplementedNushiServiceHandler) FindChatPull(context.Context, *connect.R
 
 func (UnimplementedNushiServiceHandler) LinkChatPull(context.Context, *connect.Request[v1.LinkChatPullRequest]) (*connect.Response[v1.LinkChatPullResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.LinkChatPull is not implemented"))
+}
+
+func (UnimplementedNushiServiceHandler) GetUsage(context.Context, *connect.Request[v1.GetUsageRequest]) (*connect.Response[v1.GetUsageResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.GetUsage is not implemented"))
 }
 
 func (UnimplementedNushiServiceHandler) Events(context.Context, *connect.Request[v1.EventsRequest], *connect.ServerStream[v1.EventsResponse]) error {

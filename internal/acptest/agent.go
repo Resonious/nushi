@@ -93,6 +93,7 @@ type Agent struct {
 	// answered.
 	childUpdates bool
 	after        map[string]func()
+	spent        map[string]float64 // each session's cost so far in this process, for "usage"
 }
 
 // turn is a running prompt's: cancelled once session/cancel came for it.
@@ -120,6 +121,7 @@ func (a *Agent) Serve(r io.Reader, w io.Writer) {
 	a.pending = map[string]chan json.RawMessage{}
 	a.cwds = map[string]string{}
 	a.turns = map[string]*turn{}
+	a.spent = map[string]float64{}
 	sc := bufio.NewScanner(r)
 	sc.Buffer(nil, 1<<30)
 	for sc.Scan() {
@@ -302,7 +304,7 @@ func (a *Agent) answer(f frame) {
 		for _, b := range p.Prompt {
 			blocks = append(blocks, b.Text)
 		}
-		result = map[string]any{"stopReason": a.prompt(p.SessionID, blocks)}
+		result = a.promptAnswer(p.SessionID, blocks)
 	case "session/set_config_option":
 		result = a.optionsSet(f.Params)
 	default:
@@ -357,8 +359,18 @@ func (a *Agent) say(session, text string) {
 	a.update(session, map[string]any{"sessionUpdate": "agent_message_chunk", "content": map[string]any{"type": "text", "text": text}})
 }
 
+// promptAnswer runs a prompt's script and answers it: its stop reason,
+// and for "usage" the turn's tokens.
+func (a *Agent) promptAnswer(session string, blocks []string) map[string]any {
+	answer := map[string]any{"stopReason": a.prompt(session, blocks)}
+	if strings.Contains(strings.Join(blocks, "\n"), "usage") {
+		answer["usage"] = map[string]any{"totalTokens": 100, "inputTokens": 10, "outputTokens": 20, "cachedReadTokens": 30, "cachedWriteTokens": 40}
+	}
+	return answer
+}
+
 // prompt runs the script for text and returns the turn's stop reason.
-func (a *Agent) prompt(session string, blocks []string) string { //nolint:gocognit,gocyclo // one case per script word
+func (a *Agent) prompt(session string, blocks []string) string { //nolint:gocognit,gocyclo,maintidx // one case per script word
 	a.mu.Lock()
 	cwd := a.cwds[session]
 	a.mu.Unlock()
@@ -479,6 +491,8 @@ func (a *Agent) prompt(session string, blocks []string) string { //nolint:gocogn
 				"text": fmt.Sprintf("Step **%d**: read `file%d.go`.\n\n```go\nfunc f%d() int { return %d }\n```\n", i, i, i, i)}})
 			time.Sleep(a.Pause / 20)
 		}
+	case strings.Contains(text, "usage"):
+		a.usage(session)
 	case strings.Contains(text, "plan"):
 		steps := []string{"Read the code", "Make the change", "Run the tests"}
 		for done := 0; done <= len(steps); done++ {
@@ -502,6 +516,21 @@ func (a *Agent) prompt(session string, blocks []string) string { //nolint:gocogn
 		a.say(session, text)
 	}
 	return "end_turn"
+}
+
+// usage reports the turn's usage as Claude's agent does: the session's
+// cost so far, a quarter more each turn (anew in each process), with the
+// model and an account's rate limit in _meta; the prompt's answer has
+// the turn's tokens.
+func (a *Agent) usage(session string) {
+	a.mu.Lock()
+	a.spent[session] += 0.25
+	total := a.spent[session]
+	a.mu.Unlock()
+	a.say(session, "Used some.")
+	a.update(session, map[string]any{"sessionUpdate": "usage_update", "used": 100, "size": 1000, "cost": map[string]any{"amount": total, "currency": "USD"},
+		"_meta": map[string]any{"_claude/model": "claude-fake", "_claude/origin": map[string]any{"kind": "human"},
+			"_claude/rateLimit": map[string]any{"status": "allowed_warning", "rateLimitType": "five_hour", "utilization": 0.9, "resetsAt": 1700000000}}})
 }
 
 // workflow sends the Workflow call of the "workflow" parity recording,

@@ -5,6 +5,7 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_thread.dart';
 import 'package:nushi/main.dart';
+import 'package:nushi/menu.dart';
 import 'package:nushi/replies.dart';
 import 'package:nushi/reply_cards.dart';
 import 'package:nushi/send_to_agent.dart';
@@ -18,6 +19,29 @@ const _repo = 'afrase/nushi-gh-test';
 Finder get _send => find.byTooltip(
   "Send to the agent: a reply card in the chat's box, to send",
 );
+
+/// Sends [author]'s comment from its card's ⋯: the ⋯ level with it.
+Future<void> _sendComment(WidgetTester tester, String author) async {
+  final card = find.textContaining('$author commented', findRichText: true);
+  await tester.ensureVisible(card);
+  await tester.pumpAndSettle();
+  final head = tester.getCenter(card).dy;
+  final mores = find.byTooltip('More');
+  var best = 0;
+  for (var i = 0; i < mores.evaluate().length; i++) {
+    final dy = (tester.getCenter(mores.at(i)).dy - head).abs();
+    if (dy < (tester.getCenter(mores.at(best)).dy - head).abs()) best = i;
+  }
+  await tester.tap(mores.at(best));
+  await tester.pumpAndSettle();
+  await tester.tap(
+    find.descendant(
+      of: find.byType(Menu),
+      matching: find.text('Send to agent'),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
 
 void main() {
   setUpAll(loadFonts);
@@ -103,12 +127,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Activity 3')); // scrolled to it
-    await tester.pumpAndSettle();
-    // The description and the two comments.
-    expect(_send, findsNWidgets(3));
-    await tester.tap(_send.at(2)); // drive-by's
-    await tester.pumpAndSettle();
+    // A comment's ⋯ has Send to agent; drive-by's.
+    await _sendComment(tester, 'drive-by');
     final box = d.chats['c']!.draft.replies;
     expect(box.value, hasLength(1));
     expect(
@@ -130,11 +150,16 @@ void main() {
       findsOneWidget,
     );
     // Sent again: still one.
-    await tester.tap(_send.at(2));
-    await tester.pumpAndSettle();
+    await _sendComment(tester, 'drive-by');
     expect(box.value, hasLength(1));
 
-    await tester.tap(find.text('Checks · 1 failing'));
+    // Back up to the tabs.
+    await tester.drag(
+      find.byType(CustomScrollView).last,
+      const Offset(0, 3000),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Checks  1 failing'));
     await tester.pumpAndSettle();
     expect(_send, findsOneWidget); // the failed one only
     await tester.tap(_send);

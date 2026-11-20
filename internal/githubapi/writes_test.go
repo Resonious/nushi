@@ -49,6 +49,40 @@ func TestReplyResolveComment(t *testing.T) {
 	}
 }
 
+func TestEditPull(t *testing.T) {
+	f := newFake(t)
+	edit := f.vars("EditPull", `{"data":{"updatePullRequest":{"pullRequest":{"id":"PR_218"}}}}`)
+	c := f.client()
+	title, body := "Fix the login loop", ""
+	if err := c.EditPull(t.Context(), "PR_218", &title, nil); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.EditPull(t.Context(), "PR_218", nil, &body); err != nil {
+		t.Fatal(err)
+	}
+	in := func(i int) map[string]any {
+		m, _ := (*edit)[i]["input"].(map[string]any)
+		return m
+	}
+	// Only the field being changed goes: GitHub leaves the other.
+	if m := in(0); len(m) != 2 || m["pullRequestId"] != "PR_218" || m["title"] != title {
+		t.Fatalf("%v", m)
+	}
+	if m := in(1); len(m) != 2 || m["body"] != "" {
+		t.Fatalf("%v", m)
+	}
+	if err := c.EditPull(t.Context(), "PR_218", nil, nil); err == nil || len(*edit) != 2 {
+		t.Fatal("an edit of nothing went")
+	}
+	f.route("graphql EditPull", func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"data":{"updatePullRequest":null},"errors":[{"type":"FORBIDDEN","message":"mira does not have the correct permissions to execute UpdatePullRequest"}]}`))
+	})
+	var api *APIError
+	if err := c.EditPull(t.Context(), "PR_218", &title, nil); !errors.As(err, &api) || !strings.Contains(err.Error(), "permissions") {
+		t.Fatal(err)
+	}
+}
+
 func TestSubmitReview(t *testing.T) {
 	f := newFake(t)
 	review := f.vars("Review", `{"data":{"addPullRequestReview":{"pullRequestReview":{"id":"R1"}}}}`)

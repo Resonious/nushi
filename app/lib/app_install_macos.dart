@@ -68,9 +68,6 @@ class MacAppInstall implements AppInstall {
   @override
   String get stopByHand => 'quit nushid in Activity Monitor';
 
-  @override
-  bool get canStop => true;
-
   /// Launch Services opens the helper; the helper's daemon keeps the
   /// default data folder unless the app has `NUSHI_DATA`, which it passes.
   @override

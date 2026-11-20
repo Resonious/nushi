@@ -19,8 +19,11 @@ GitHubComment said(
   bool bot = false,
   Duration age = const Duration(minutes: 30),
   bool outside = false,
+  String? id,
+  String reviewId = '',
 }) => GitHubComment(
-  id: 'C_${author}_${body.length}_${age.inSeconds}',
+  id: id ?? 'C_${author}_${body.length}_${age.inSeconds}',
+  reviewId: reviewId,
   author: author,
   outside: outside,
   bot: bot,
@@ -93,7 +96,9 @@ GitHubThread thread(
   int line,
   List<GitHubComment> comments, {
   bool resolved = false,
+  String diffHunk = '',
 }) => GitHubThread(
+  diffHunk: diffHunk,
   id: id,
   path: path,
   side: 'right',
@@ -105,9 +110,72 @@ GitHubThread thread(
   comments: comments,
 );
 
+/// The review bot's review, mona's changes requested (with T1 and T2) and
+/// her earlier review that said nothing but T3; the ids the threads'
+/// comments name (API 127).
+const _botReview = 'PRR_bot';
+const _monaReview = 'PRR_mona';
+const _monaFirst = 'PRR_mona_1';
+
+GitHubComment _botSaid() => said(
+  'github-actions',
+  aiReviewBody,
+  bot: true,
+  review: 'commented',
+  age: const Duration(minutes: 2),
+  outside: true,
+  id: _botReview,
+);
+
+GitHubComment _monaSaid() => said(
+  'mona',
+  'Thanks, the guard looks right. Two small things before this goes in.',
+  review: 'changes_requested',
+  age: const Duration(minutes: 1),
+  id: _monaReview,
+);
+
+/// [fixturePull]'s one commit (its head), as GetGitHubCommits answers it
+/// (API 127); with [many], three, oldest first, the last its head, for a
+/// pull request whose `commits` is 3: one by an author GitHub has no
+/// account for, one with no checks.
+GetGitHubCommitsResponse fixtureCommits({bool many = false}) {
+  final head = GitHubCommit(
+    oid: 'b' * 40,
+    headline: "Ignore q params that aren't hashes in admin filters",
+    author: 'afrase',
+    authorName: 'afrase',
+    committedMs: msAgo(const Duration(minutes: 20)),
+    checks: 'failure',
+  );
+  if (!many) return GetGitHubCommitsResponse(total: 1, commits: [head]);
+  return GetGitHubCommitsResponse(
+    total: 3,
+    commits: [
+      GitHubCommit(
+        oid: '1a2b3c4d5e6f708192a3b4c5d6e7f80912345678',
+        headline: 'Guard the admin filters',
+        author: 'afrase',
+        authorName: 'afrase',
+        committedMs: msAgo(const Duration(hours: 3)),
+        checks: 'success',
+      ),
+      GitHubCommit(
+        oid: '9f8e7d6c5b4a39281706f5e4d3c2b1a098765432',
+        headline: 'Guard the notebook pages too',
+        authorName: 'Tomas',
+        committedMs: msAgo(const Duration(hours: 2)),
+      ),
+      head,
+    ],
+  );
+}
+
 /// A pull request with something to act on: three failing checks, changes
 /// requested with two threads open, a code owners' team still to approve,
-/// the Danger bot's comment and a review bot's long review.
+/// the Danger bot's comment and a review bot's long review. Opened three
+/// hours ago, labelled and assigned; each thread names its review and has
+/// its diff hunk (API 127).
 GitHubPull fixturePull() => GitHubPull(
   item: GitHubItem(
     ref: GitHubRef(host: 'github.com', repo: fixtureRepo, number: 412),
@@ -118,10 +186,27 @@ GitHubPull fixturePull() => GitHubPull(
     state: 'open',
     author: 'afrase',
     updatedMs: msAgo(const Duration(minutes: 1)),
+    createdMs: msAgo(const Duration(hours: 3)),
     checks: 'failure',
     review: 'changes_requested',
     unresolved: 2,
   ),
+  labels: [
+    GitHubLabel(name: 'bug', color: 'd73a4a'),
+    GitHubLabel(name: 'admin', color: '0e8a16'),
+  ],
+  assignees: ['afrase', 'mira'],
+  reviews: [
+    said(
+      'mona',
+      '',
+      review: 'commented',
+      age: const Duration(minutes: 25),
+      id: _monaFirst,
+    ),
+    _botSaid(),
+    _monaSaid(),
+  ],
   body:
       '**Explanation:** admin and notebook filters call '
       "`params[:q].permit(…)`, so a `q` that isn't a hash (`q=foo` or "
@@ -158,42 +243,69 @@ GitHubPull fixturePull() => GitHubPull(
       age: const Duration(minutes: 11),
       outside: true,
     ),
-    said(
-      'github-actions',
-      aiReviewBody,
-      bot: true,
-      review: 'commented',
-      age: const Duration(minutes: 2),
-      outside: true,
-    ),
-    said(
-      'mona',
-      'Thanks, the guard looks right. Two small things before this goes in.',
-      review: 'changes_requested',
-      age: const Duration(minutes: 1),
-    ),
+    _botSaid(),
+    _monaSaid(),
   ],
   threads: [
-    thread('T1', 'app/controllers/admin/notes_controller.rb', 42, [
-      said(
-        'mona',
-        'Can we log when we drop a malformed `q`? Otherwise we lose the '
-            'signal that someone is sending scalars here.',
-        age: const Duration(minutes: 1),
-      ),
-    ]),
-    thread('T2', 'spec/reports/page_spec.rb', 409, [
-      said(
-        'mona',
-        'The example says a non-hash `q` means no filters but only checks '
-            'the 201. Can it assert `report.filters == {}` too?',
-        age: const Duration(minutes: 1),
-      ),
-    ]),
-    thread('T3', 'app/helpers/admin/search_helper.rb', 18, [
-      said('mona', 'nit, `.presence` reads better here'),
-      said('afrase', 'Done.'),
-    ], resolved: true),
+    thread(
+      'T1',
+      'app/controllers/admin/notes_controller.rb',
+      42,
+      [
+        said(
+          'mona',
+          'Can we log when we drop a malformed `q`? Otherwise we lose the '
+              'signal that someone is sending scalars here.',
+          age: const Duration(minutes: 1),
+          reviewId: _monaReview,
+        ),
+      ],
+      diffHunk:
+          '@@ -39,4 +39,4 @@\n'
+          '     # 39\n'
+          '     # 40\n'
+          '     # 41\n'
+          '-      q\n'
+          '+      q.is_a?(Hash) ? q : {}',
+    ),
+    thread(
+      'T2',
+      'spec/reports/page_spec.rb',
+      409,
+      [
+        said(
+          'mona',
+          'The example says a non-hash `q` means no filters but only checks '
+              'the 201. Can it assert `report.filters == {}` too?',
+          age: const Duration(minutes: 1),
+          reviewId: _monaReview,
+        ),
+      ],
+      diffHunk:
+          '@@ -405,3 +405,5 @@ describe "reports" do\n'
+          '   it "ignores a non-hash q" do\n'
+          '+    get "/reports", params: { q: "foo" }\n'
+          '+    expect(response).to have_http_status(201)',
+    ),
+    thread(
+      'T3',
+      'app/helpers/admin/search_helper.rb',
+      18,
+      [
+        said(
+          'mona',
+          'nit, `.presence` reads better here',
+          reviewId: _monaFirst,
+        ),
+        said('afrase', 'Done.', reviewId: 'PRR_afrase_reply'),
+      ],
+      resolved: true,
+      diffHunk:
+          '@@ -16,3 +16,3 @@ module SearchHelper\n'
+          '     def term\n'
+          '-      params[:term].blank? ? nil : params[:term]\n'
+          '+      params[:term].presence',
+    ),
   ],
   checks: [
     check(
@@ -301,7 +413,8 @@ final fixtureLink = GitHubLink(
 );
 
 /// The app at [size] on a chat linked to [whole], its Pull request tab
-/// open; [more] answers the calls the fixture doesn't.
+/// open; [more] answers the calls the fixture doesn't, [commits] its
+/// commits (else [fixtureCommits]'s one).
 Future<(Daemon, FakeDaemon)> openPullTab(
   WidgetTester tester,
   GitHubPull whole, {
@@ -312,6 +425,7 @@ Future<(Daemon, FakeDaemon)> openPullTab(
   bool open = true,
   Worktree? worktree,
   bool busy = false,
+  GetGitHubCommitsResponse? commits,
 }) async {
   viewport(tester, size, brightness: brightness);
   showDetails.value = details;
@@ -335,11 +449,18 @@ Future<(Daemon, FakeDaemon)> openPullTab(
         switch (input) {
           FindChatPullRequest() => FindChatPullResponse(
             host: 'github.com',
-            repo: fixtureRepo,
+            repo: whole.item.ref.repo,
             branch: whole.head,
-            pull: fixtureLink,
+            pull: GitHubLink(
+              host: whole.item.ref.host,
+              repo: whole.item.ref.repo,
+              number: whole.item.ref.number,
+              id: whole.item.id,
+              pull: true,
+            ),
           ),
           GetGitHubPullRequest() => GetGitHubPullResponse(pull: whole),
+          GetGitHubCommitsRequest() => commits ?? fixtureCommits(),
           ListGitHubHostsRequest() => ListGitHubHostsResponse(
             hosts: [
               GitHubHost(host: 'github.com', login: 'afrase', source: 'gh'),

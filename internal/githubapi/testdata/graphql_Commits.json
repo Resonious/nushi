@@ -1,0 +1,22 @@
+{
+  "data": {
+    "repository": {
+      "pullRequest": {
+        "commits": {
+          "totalCount": 3,
+          "nodes": [
+            { "commit": { "oid": "1a2b3c4d5e6f708192a3b4c5d6e7f80912345678", "messageHeadline": "Expire idle sessions",
+              "committedDate": "2026-11-18T09:00:00Z", "author": { "name": "Mira", "user": { "login": "mira" } },
+              "statusCheckRollup": { "state": "FAILURE" } } },
+            { "commit": { "oid": "2222222222222222222222222222222222222222", "messageHeadline": "Read the idle timeout from config",
+              "committedDate": "2026-11-18T12:00:00Z", "author": { "name": "Tomas", "user": null },
+              "statusCheckRollup": null } },
+            { "commit": { "oid": "3333333333333333333333333333333333333333", "messageHeadline": "Test the expired case",
+              "committedDate": "2026-11-19T08:55:00Z", "author": { "name": "Mira", "user": { "login": "mira" } },
+              "statusCheckRollup": { "state": "SUCCESS" } } }
+          ]
+        }
+      }
+    }
+  }
+}

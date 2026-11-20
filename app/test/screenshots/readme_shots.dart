@@ -158,11 +158,6 @@ Future<(Daemon, FakeDaemon)> _app(
   addTearDown(tester.view.reset);
   tester.platformDispatcher.platformBrightnessTestValue = brightness;
   addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-        const MethodChannel('nushi/fonts'),
-        (_) async => <String>[],
-      );
   clock = () => demoNow;
   showDetails.value = details;
   paneWidths.value = {};

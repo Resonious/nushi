@@ -2,6 +2,7 @@ import 'package:connectrpc/connect.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
+import 'package:nushi/controls.dart' show Toggle;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/mcp.dart';
@@ -73,12 +74,10 @@ Future<(FakeDaemon, Daemon)> _view(
   final (fake, d) = await _daemon(tester);
   viewport(tester, const Size(1000, 640), ratio: 3);
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: McpView(daemon: d, folder: folder),
-      ),
+    themed(
+      McpView(daemon: d, folder: folder),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();
@@ -94,7 +93,7 @@ void main() {
     expect(find.text('Off'), findsOneWidget);
     expect(find.text('in this project'), findsNWidgets(4));
     expect(find.text('Off only with /mcp in a terminal'), findsNWidgets(2));
-    await tester.tap(find.byType(Switch).at(1)); // github, notes, web, db
+    await tester.tap(find.byType(Toggle).at(1)); // github, notes, web, db
     await tester.pumpAndSettle();
     final set = fake.calls.whereType<SetMcpServerOnRequest>().single;
     expect(
@@ -113,7 +112,7 @@ void main() {
     viewport(tester, const Size(340, 500), ratio: 3);
     await tester.pumpWidget(themed(PanelWidgets([mcpWidget(chat, d)])));
     await tester.pumpAndSettle();
-    expect(find.byType(Switch), findsNWidgets(4));
+    expect(find.byType(Toggle), findsNWidgets(4));
     expect(find.text('/mcp only'), findsNWidgets(2));
     expect(find.text('Applies when the chat restarts'), findsOneWidget);
     await tester.tap(find.text('Reload'));

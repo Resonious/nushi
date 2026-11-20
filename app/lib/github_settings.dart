@@ -9,6 +9,7 @@ import 'package:nushi/gen/nushi/v1/nushi.connect.client.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_asks_settings.dart';
 import 'package:nushi/github_findings_settings.dart';
+import 'package:nushi/menu.dart';
 import 'package:nushi/send_to_agent.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/theme/theme.dart';
@@ -56,14 +57,20 @@ String budgetLine(GitHubHost h, DateTime now) {
       '${mins != null && mins >= 0 ? ' (GraphQL resets in ${mins}m)' : ''}';
 }
 
-/// Settings › GitHub: each host gh is signed in to or given a token, who
-/// its token is (gh's login, or a pasted one, in the keychain), and what's
-/// left of its rate limits (shared with gh in a terminal and agents that
-/// run gh); Add a token, for a host without gh, or instead of gh's.
+/// Settings › GitHub: an account row for each host gh is signed in to or
+/// given a token, who its token is (gh's login, or a pasted one, in the
+/// keychain) and what's left of its rate limits (shared with gh in a
+/// terminal and agents that run gh), its kind and scopes behind ⋯; Add a
+/// token, for a host
+/// without gh, or instead of gh's. Then review bots and the reply cards'
+/// asks.
 class GitHubPage extends StatefulWidget {
-  const new(this.daemon, {super.key});
+  const new(this.daemon, {super.key, this.onHosts});
 
   final Daemon daemon;
+
+  /// Told each listing of the hosts (Settings' nav marks GitHub by it).
+  final ValueChanged<List<GitHubHost>>? onHosts;
   NushiServiceClient get client => daemon.client;
 
   @override
@@ -98,6 +105,7 @@ class _GitHubPageState extends State<GitHubPage> {
       final r = await widget.client.listGitHubHosts(ListGitHubHostsRequest());
       keepGitHubLogins(r.hosts);
       if (!mounted) return;
+      widget.onHosts?.call(r.hosts);
       setState(() {
         _hosts = r.hosts;
         _error = null;
@@ -150,10 +158,18 @@ class _GitHubPageState extends State<GitHubPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SettingsGroup(
-          title: 'Hosts',
+          title: 'Accounts',
+          actions: [
+            if (!_adding)
+              Button(
+                label: 'Add a token',
+                icon: Icons.add,
+                onPressed: () => setState(() => _adding = true),
+              ),
+          ],
           footer: const Text(
-            'Nushi asks GitHub only while its view, a pull request or a '
-            "chat's status shows, and writes only what you send.",
+            'Asked only while a GitHub view shows; writes only what you '
+            'send.',
           ),
           children: [
             for (final h in hosts)
@@ -166,10 +182,8 @@ class _GitHubPageState extends State<GitHubPage> {
               ),
             if (hosts.isEmpty)
               const SettingsRow(
-                'No GitHub host',
-                description:
-                    'Sign in with gh auth login in a terminal, or add a '
-                    'token.',
+                'No GitHub account',
+                description: 'Run gh auth login in a terminal, or add a token.',
               ),
           ],
         ),
@@ -178,7 +192,7 @@ class _GitHubPageState extends State<GitHubPage> {
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(e, style: theme.ui(t.crashed, size: 12)),
           ),
-        if (_adding)
+        if (_adding) ...[
           TokenForm(
             title: 'Add a GitHub token',
             note:
@@ -206,18 +220,9 @@ class _GitHubPageState extends State<GitHubPage> {
             onCancel: hosts.isEmpty
                 ? null
                 : () => setState(() => _adding = false),
-          )
-        else
-          Row(
-            children: [
-              Button(
-                label: 'Add a token',
-                icon: Icons.add,
-                onPressed: () => setState(() => _adding = true),
-              ),
-            ],
           ),
-        const SizedBox(height: 24),
+          const SizedBox(height: 24),
+        ],
         const FindingsGroup(),
         const CardAsksGroup(),
       ],
@@ -225,8 +230,13 @@ class _GitHubPageState extends State<GitHubPage> {
   }
 }
 
-/// A host's row: who its token is or what's wrong, where the token
-/// comes from, and what's left of its rate limits.
+/// Whether any of [hosts] is signed in and works: Settings' nav dot.
+bool githubConnected(Iterable<GitHubHost> hosts) => hosts.any(githubHostWorks);
+
+/// A host's row: who its token is and where it's from, or what's wrong;
+/// "Signed in" once GitHub said who; under it, a muted line of what's left
+/// of its rate limits this hour, which people check; its token's kind and
+/// scopes, the jargon, behind ⋯, with Remove for a pasted token.
 AccountRow _hostRow(
   Tokens t,
   GitHubHost h, {
@@ -236,10 +246,16 @@ AccountRow _hostRow(
 }) {
   final who = h.login.isEmpty
       ? null
-      : 'Signed in as ${h.login}${h.name.isEmpty ? '' : ' (${h.name})'}';
+      : '${h.login}${h.name.isEmpty ? '' : ' (${h.name})'}';
+  final from = h.source.isEmpty ? '' : 'from ${tokenSource(h)}';
   final kind = tokenKind(h.kind);
   final budget = budgetLine(h, now);
+  final token = [
+    if (kind.isNotEmpty) kind[0].toUpperCase() + kind.substring(1),
+    if (h.scopes.isNotEmpty) 'scopes ${h.scopes.join(', ')}',
+  ].join(' · ');
   return AccountRow(
+    icon: Icons.merge_type,
     title: h.host,
     lines: [
       if (h.needsOk)
@@ -247,20 +263,23 @@ AccountRow _hostRow(
       else if (h.problem.isNotEmpty)
         (h.problem, t.crashed)
       else
-        (who ?? 'Checking…', t.textSecondary),
-      if (h.source.isNotEmpty)
         (
-          [
-            'From ${tokenSource(h)}',
-            if (kind.isNotEmpty) kind,
-            if (h.scopes.isNotEmpty) 'scopes ${h.scopes.join(', ')}',
-          ].join(' · '),
-          t.textMuted,
+          [who ?? 'Checking…', if (from.isNotEmpty) from].join(' · '),
+          t.textSecondary,
         ),
       if (budget.isNotEmpty) (budget, t.textMuted),
     ],
+    state: switch (h) {
+      _ when h.needsOk => null, // Allow… says it
+      _ when h.problem.isNotEmpty => ('Not signed in', NoteTone.crashed),
+      _ when who != null => ('Signed in', NoteTone.done),
+      _ => null,
+    },
     needsOk: h.needsOk,
     onAllow: onAllow,
-    onRemove: h.pasted ? onRemove : null,
+    more: [
+      if (token.isNotEmpty) MenuEntry.heading(token),
+      if (h.pasted) MenuEntry('Remove token…', danger: true, onPick: onRemove),
+    ],
   );
 }

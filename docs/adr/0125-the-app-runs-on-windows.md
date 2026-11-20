@@ -22,3 +22,5 @@ The daemon builds and answers on Windows (ADR 0124). The app reaches the OS only
 - A channel in the runner for each capability, as Linux's GTK runner has: C++ to build and test for what FFI and a system program do now. A capability that needs a COM object or a window message (notifications, WebView2) may bring one.
 - A drawn title bar (`window_manager`): the system's is what Linux keeps too, and it moves, snaps and zooms as Windows users expect.
 - WebView2 now: a plugin and its runtime for pages and diagrams, the largest piece left; the placeholder that opens a page in the browser stands in, as it did on Linux at first.
+
+**Amendment (2026-11-20): `AppInstall.canStop` is gone.** Windows stops its daemon by the stop event its pid names ([ADR 0134](0134-the-apps-capabilities-on-windows.md)), so every platform's install stops the daemon and the flag answered true everywhere. Restart daemon is offered wherever the app has a packaged daemon (`restartsDaemon`); a daemon that doesn't stop when asked still says how to end it by hand (`stopByHand`).

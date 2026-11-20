@@ -10,7 +10,7 @@ If you already use the `gh` command-line tool and are signed in (`gh auth login`
 
 To check, or to use a token instead:
 
-1. Open **Settings › GitHub**. Under **Hosts** you see who you're signed in as.
+1. Open **Settings › GitHub**. Under **Accounts** you see who you're signed in as, **Signed in** once GitHub has answered, and under it what's left of this hour's requests. The **⋯** beside it shows the token's kind and scopes.
 2. To add a token, click **Add a token**, fill in **Host** (for example `github.com`) and **Token**, then click **Add**.
 
 A classic token with the `repo` and `read:org` scopes covers everything. Nushi keeps it in your system keychain and sends it only to its own host.
@@ -68,37 +68,51 @@ The chip next to the chat's title shows the first pull request, and `+2` for the
 
 ## The Pull request tab
 
-![The Pull request tab, with its status lights and To do list](https://raw.githubusercontent.com/afrase/nushi/main/docs/images/pull-request.png)
+![The Pull request tab: the merge status card, the description and the comments](https://raw.githubusercontent.com/afrase/nushi/main/docs/images/pull-request.png)
 
-Click **Pull request** next to **Chat** and **Changes** at the top of the chat, or press ⌃⌘3 (Ctrl+Alt+3 on Linux). From top to bottom:
+The tab looks like the pull request's page on GitHub, so what you know from there works here. Click **Pull request** next to **Chat** and **Changes** at the top of the chat, or press ⌃⌘3 (Ctrl+Alt+3 on Linux).
 
-- **The header** says whose move it is, such as "Your move.", "Waiting on checks." or "Ready to merge."
-- **Four status lights**: **Checks**, **Review**, **Threads** and **Branch** (conflicts, or behind its base). Click one to jump to the details.
-- **To do**: everything that blocks the merge. That means each failing check (**Log** shows the failing part), each open review thread (**Reply**, **Resolve**), and findings that review bots list.
-- Three tabs, each with a count: **Activity** (the conversation), **Checks** (every check, with **Re-run failed**) and **Files** (the diff, with review threads at their lines).
+- **Merge status** and **Submit review** are at the right of the title. Scroll down and a slim bar at the top keeps the state, number, title and both buttons in view.
+- **Four tabs**: **Overview**, **Commits**, **Checks** (every check, with **Re-run failed**) and **Files changed** (the diff, with review threads at their lines).
+- **Overview** starts with the **merge status card**: whether it can merge and what blocks it, the merge button, and three segments, **Checks**, **Comments** and **Approvals**. Click a segment to see its list.
+- Under the card are the description, the **Comments** (filter them by **All**, **Unresolved** or **Mine**; the box to write one comes first, then the newest), and the latest commits. Reviewers, assignees and labels are at the right.
 
 ## Send review feedback to the agent
 
-1. In **To do**, do one of these:
-   - Click **Send** on one item.
-   - Tick a few items and click **Send N picked**.
-   - Click **Send all N to agent**.
+1. Do one of these:
+   - In the merge status card, click **Send N to agent** to send everything that blocks the merge.
+   - Open the **Checks** segment and click **Send to agent** on a failing check.
+   - Click **Send to agent** under a review thread, or in a comment's **⋯**.
 2. Each item goes into the chat's message box as a card, quoting the comment or the failing log.
 3. Add anything you want to say, and send.
 
-Comments and threads elsewhere in the tab have **Send to agent**, and **Fix checks** sends every failed check at once.
+**Fix checks** in the **Checks** tab sends every failed check at once.
 
-By default, review cards tell the agent not to reply on GitHub, and failed-check cards tell it not to commit or push. Change what each kind of card asks in **Settings › GitHub › What reply cards ask**.
+By default, review cards tell the agent not to reply on GitHub, and failed-check cards tell it not to commit or push. Change what each kind of card asks in **Settings › GitHub › What reply cards ask**:
+
+1. Click **Edit** beside the kind of card.
+2. Change the words and click **Save**. Empty asks the default.
+3. A changed kind says **Edited**. Click **Reset** beside it to go back to the default.
 
 ## Reply, review and resolve
 
-- In a thread, use **Reply**, **Resolve** or **Unresolve**.
+- In a thread, click **Reply…**, **Resolve conversation** or **Unresolve conversation**. Resolved and outdated threads are folded: click **Show**.
 - To write an inline comment in **Files**, hover over a line and click the blue **+**, or click or drag across line numbers.
-- Click **Review…** to send your review: **Comment**, **Approve** or **Request changes**, then **Submit review**.
+- Click **Submit review** at the right of the title to send your review: **Comment**, **Approve** or **Request changes**, then **Submit review**.
+
+## Edit the title or description
+
+You can change a pull request's title and description here, if GitHub lets you (you opened it, or you can write to the repository).
+
+1. Click the pencil (**Edit**) beside the title, or at the top right of the description.
+2. Change the text. The description is Markdown.
+3. Click **Save** (or press Enter for the title, ⌘Enter for the description). **Cancel** or Esc leaves it as it was.
+
+If someone changed it on GitHub while you were editing, Nushi doesn't save over it and keeps your text. Click **Show GitHub's version** to see theirs, then **Save** to replace it with yours, or **Cancel**.
 
 ## Merge
 
-When the pull request can merge, the merge box says **Ready to merge**. If it can't, it says why (failing checks, a review needed, conflicts, and so on).
+When the pull request can merge, the merge status card says **Ready to merge**. If it can't, it says why (failing checks, a review needed, conflicts, and so on).
 
 1. Pick a method from the merge button's ▾: **Create a merge commit**, **Squash and merge** or **Rebase and merge**. Nushi remembers your choice for each repository.
 2. Click the button. A dialog shows what will merge. For a merge commit or a squash, you can edit the commit message.

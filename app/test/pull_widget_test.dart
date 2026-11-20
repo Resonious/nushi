@@ -15,6 +15,7 @@ import 'package:nushi/main.dart';
 import 'package:nushi/panel_widgets.dart';
 import 'package:nushi/pull_link.dart';
 import 'package:nushi/pull_link_dialog.dart';
+import 'package:nushi/pull_merge_card.dart';
 import 'package:nushi/pull_rows.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/theme/theme.dart';
@@ -427,15 +428,18 @@ void main() {
         of: find.byType(GitHubPullPane),
         matching: find.text('Add Sub and Neg', findRichText: true),
       ),
-      findsOneWidget,
+      findsOneWidget, // the head's
     );
     expect(find.text('Start work'), findsNothing);
-    expect(find.text('To do'), findsOneWidget);
-    // A thread's first words in To do; the conversation under it.
-    expect(find.text('Should this check for overflow?'), findsOneWidget);
-    expect(find.text('A first look.'), findsOneWidget);
+    expect(find.byType(MergeCard), findsOneWidget);
+    // An open thread, and the conversation.
+    expect(
+      find.text('Should this check for overflow?', findRichText: true),
+      findsOneWidget,
+    );
+    expect(find.text('A first look.', findRichText: true), findsOneWidget);
     expect(pullSeen.value['c'], unseen + 1); // the newest comment's time
-    await tester.tap(find.text('Checks · 1 failing'));
+    await tester.tap(find.text('Checks  1 failing'));
     await tester.pumpAndSettle();
     expect(find.byType(GitHubChecks), findsOneWidget);
     expect(fake.calls.whereType<GetGitHubPullRequest>().last.ref.number, 1);

@@ -15,23 +15,26 @@ import 'package:nushi/widgets.dart';
 /// "Last checked 12m ago", or "Not checked yet".
 String lastChecked(Int64 ms, DateTime now) {
   if (ms == 0) return 'Not checked yet';
-  final at = DateTime.fromMillisecondsSinceEpoch(ms.toInt());
-  return 'Last checked ${ago(now.difference(at), at)}';
+  return 'Last checked ${agoAt(ms.toInt(), now)}';
 }
 
-/// Settings › General's Updates: whether the daemon checks GitHub for a
-/// newer release (on by default), when it last did, and Check now.
+/// Settings › General's Updates: [login] first (Start at login's rows,
+/// which make it "Startup and updates"), whether the daemon checks GitHub
+/// for a newer release (on by default; at start and every 2 hours), then
+/// the version running, when GitHub was last asked, and Check now.
 class UpdatesGroup extends StatefulWidget {
   const new({
     required this.daemon,
     required this.settings,
     required this.onChange,
     super.key,
+    this.login = const [],
   });
 
   final Daemon daemon;
   final Settings settings;
   final SettingsChange onChange;
+  final List<Widget> login;
 
   @override
   State<UpdatesGroup> createState() => _UpdatesGroupState();
@@ -57,41 +60,56 @@ class _UpdatesGroupState extends State<UpdatesGroup> {
     super.dispose();
   }
 
+  /// What the version's row says under it: whether this is the latest
+  /// release, and when GitHub was last asked.
+  String _state() {
+    final d = widget.daemon;
+    final u = d.update;
+    final checked = lastChecked(u.checkedMs, clock());
+    if (u.version.isNotEmpty) return '$checked · ${u.version} is out';
+    if (u.latest.isNotEmpty && u.latest == d.daemonVersion) {
+      return '$checked · up to date';
+    }
+    return checked;
+  }
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: Listenable.merge([widget.daemon, _checking]),
-    builder: (context, _) => SettingsGroup(
-      title: 'Updates',
-      footer: Wrap(
-        crossAxisAlignment: WrapCrossAlignment.center,
+    builder: (context, _) {
+      final version = widget.daemon.daemonVersion;
+      return SettingsGroup(
+        title: widget.login.isEmpty ? 'Updates' : 'Startup and updates',
         children: [
-          Text('${lastChecked(widget.daemon.update.checkedMs, clock())} · '),
-          LinkText(
-            _checking.value ? 'Checking…' : 'Check now',
-            size: 12,
-            onTap: _checking.value
-                ? null
-                : () => unawaited(
-                    _checking.run(
-                      context,
-                      () => checkForUpdates(context, widget.daemon),
+          ...widget.login,
+          SettingsRow(
+            'Check for updates',
+            description: 'At start and every 2 hours.',
+            control: SettingsSwitch(
+              value: widget.settings.checkUpdates,
+              run: ({required on}) =>
+                  widget.onChange((s) => s.checkUpdates = on),
+            ),
+          ),
+          SettingsRow(
+            version.isEmpty ? 'Nushi' : 'Nushi $version',
+            description: _state(),
+            // An action, so a button, not a link (docs/design.md).
+            control: Button(
+              key: const ValueKey('check-now'),
+              label: _checking.value ? 'Checking…' : 'Check now',
+              onPressed: _checking.value
+                  ? null
+                  : () => unawaited(
+                      _checking.run(
+                        context,
+                        () => checkForUpdates(context, widget.daemon),
+                      ),
                     ),
-                  ),
+            ),
           ),
         ],
-      ),
-      children: [
-        SettingsRow(
-          'Check for updates',
-          description:
-              'Asks GitHub for a newer release of Nushi at start and every '
-              '2 hours.',
-          control: SettingsSwitch(
-            value: widget.settings.checkUpdates,
-            run: ({required on}) => widget.onChange((s) => s.checkUpdates = on),
-          ),
-        ),
-      ],
-    ),
+      );
+    },
   );
 }

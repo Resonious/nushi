@@ -110,7 +110,7 @@ class DiffBox extends StatefulWidget {
   final int line;
 
   /// ⌘F: its hits in this file are marked, and this box finds them.
-  final TranscriptFind? find;
+  final Find? find;
 
   @override
   State<DiffBox> createState() => _DiffBoxState();

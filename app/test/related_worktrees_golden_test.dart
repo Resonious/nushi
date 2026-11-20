@@ -1,6 +1,5 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/daemon.dart';
@@ -93,11 +92,6 @@ Future<Daemon> _app(
   Brightness brightness,
 ) async {
   viewport(tester, size, brightness: brightness);
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-        const MethodChannel('nushi/fonts'),
-        (_) async => <String>[],
-      );
   final fake = FakeDaemon([chat('c', 'claude', 'Rewrite the parser')])
     ..answer = (input) => switch (input) {
       GetChatRequest() => GetChatResponse(

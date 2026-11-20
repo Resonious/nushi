@@ -59,7 +59,7 @@ The daemon (Nushi's background service) asks GitHub for the latest release when 
 - **Download** opens the release's page, when Homebrew didn't install it (and on Linux).
 - **×** hides the card until a newer release.
 
-Settings › General › Updates turns the check off, and has Check now. The palette's Check for updates does the same.
+Settings › General › Updates turns the check off, and its Nushi row has Check now. The palette's Check for updates does the same.
 
 ### Beta versions
 
@@ -104,7 +104,7 @@ It doesn't touch the agents' own history (`~/.claude`, `~/.codex`, `~/.ante`, `~
 Nushi is two programs: a background service (the daemon, `nushid`, written in Go) that runs the agents, and a Flutter app that is the window.
 
 - The packaged app carries `nushid` in `Contents/Helpers/Nushi Daemon.app`, a background-only app (on Linux in `lib/nushid`). The app starts the daemon when none is running, and leaves it running when the app quits ([ADR 0013](adr/0013-app-starts-its-daemon.md), [ADR 0036](adr/0036-the-daemon-is-a-background-helper-app.md)).
-- Settings › Start at login also starts it at login.
+- Settings › General › Startup and updates › Start at login also starts it at login.
 - If its app is deleted, the daemon stops within about a minute. If its app is replaced (by an upgrade or `make install`), it keeps running until it restarts.
 - Settings › Logs & advanced shows the app's version and the running daemon's. `nushid -version` in the helper app says the same.
 

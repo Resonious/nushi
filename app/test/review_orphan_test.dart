@@ -1,6 +1,5 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/chat_header.dart';
@@ -39,11 +38,6 @@ void main() {
     Brightness brightness = Brightness.dark,
   }) async {
     viewport(tester, Size(width, 640), brightness: brightness);
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
     showDetails.value = false;
     files = [
       FileChange(

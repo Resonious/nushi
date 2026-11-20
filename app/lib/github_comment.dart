@@ -13,7 +13,7 @@ import 'package:nushi/widgets.dart';
 export 'package:nushi/github_text.dart';
 
 /// A comment (an issue's, a thread's, a bot's in a pull request's
-/// Activity, whose reviews have their own entry): its author (marked when
+/// Comments, whose reviews have their own card): its author (marked when
 /// outside the repository, or a bot), when, its text. A bot's comment
 /// folds to one line, its first words, with Show; a long text shows its
 /// first lines, with Show the whole comment.

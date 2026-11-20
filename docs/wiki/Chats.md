@@ -86,17 +86,28 @@ Archived chats wait at the bottom of the sidebar, newest archived first, so a ch
 
 If you've picked a sort in the Arrange menu's **Sort by**, Archived uses it too. Chats archived before Nushi recorded archive times come after the rest, newest first.
 
-## Change the fonts
+## Change the theme
 
-Nushi comes with its own fonts. You can use any font installed on your computer instead, one for the app's text and one for code.
+Nushi comes in a few color themes, each with a dark and a light look. Settings stays open over the window, so you see a theme on your chats as you pick it.
 
 1. Open **Settings**, then **Appearance**.
-2. Under **Fonts**, click **App font** and pick a font. The whole window changes at once.
-3. Click **Code font** and pick a font for code in chats, diffs and files.
+2. Under **Theme**, pick **System**, **Light** or **Dark** beside **Mode**. **System** follows your computer.
+3. Click a theme's card. The picked one has a ring and a check.
+
+To make your own, click **New from** and the theme's name: Nushi writes a JSON file of its colors to the themes folder, which **Show folder** opens. Change the colors in the file; Nushi reads it again as you save it.
+
+## Change the fonts
+
+Nushi comes with its own fonts. You can use any font installed on your computer instead: one for the app's text, one for code, and one for the terminal.
+
+1. Open **Settings**, then **Appearance**.
+2. Under **Fonts**, click the menu beside **App** and pick a font. The whole window changes at once.
+3. Beside **Code**, pick a font for code in chats, diffs and files.
+4. Beside **Terminal**, pick the terminal's font and its size.
 
 The list is long: type a few letters to find a font. To go back, pick the first font in the list, the one marked **bundled**. On a Mac, **System** is the font macOS itself uses.
 
-The terminal has its own font, in **Settings**, then **Terminal**. The phone always uses Nushi's own fonts.
+**Settings**, then **Terminal** has the terminal's font and size too, beside a preview. The phone always uses Nushi's own fonts.
 
 ## Send a message
 
@@ -227,6 +238,17 @@ A worktree is a separate copy of your repository on its own branch. To keep a ch
 - **⌘K** finds any chat by title.
 - **Settings › Chat history** lists past chats, searchable by title and folder. Click a title to open it.
 - For a session you started in a terminal, press **⌘N**, highlight the agent and click **Sessions** (or →).
+
+## See what the agents used
+
+Settings has a Usage page: what your chats spent and the tokens they used, by day, agent, model and project, and the chats that cost the most. Where an agent reports your account's limits (Claude's 5-hour and weekly ones), they show there too.
+
+1. Open **Settings**, then **Usage**.
+2. Pick **7 days**, **30 days**, **90 days** or **All**. Nushi remembers your pick.
+3. Point at a day in the chart for its spend, tokens and turns.
+4. Click a chat under **Costliest chats** to open it.
+
+Spend is what the agent reports. On a subscription that's what the API would charge for the same tokens, not what you pay. Codex and Ante report no cost, so the page says so and counts their tokens. A limit shows as the agent last said it, and changes only while one of its chats runs. Usage counts from the first turn after you updated to a version that keeps it; workflows' agents and the Context widget's `/context` aren't counted. The phone doesn't have this page.
 
 ## Good to know
 

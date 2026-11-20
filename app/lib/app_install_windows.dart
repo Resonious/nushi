@@ -68,9 +68,6 @@ class WindowsAppInstall implements AppInstall {
   @override
   String get stopByHand => 'end nushid.exe in Task Manager';
 
-  @override
-  bool get canStop => true;
-
   /// Started detached with its standard streams, so what it says on
   /// stderr goes to the app's log: a daemon whose data folder isn't the
   /// user's alone says there why it won't run, before it has a log of its

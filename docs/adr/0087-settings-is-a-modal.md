@@ -17,3 +17,10 @@ ADR 0053 made Settings a view in the chat's place, so its pages had room. With t
 - Keep Settings in the chat's place: a theme can't be judged on the chat it repaints.
 - A separate window (macOS's usual Settings window): ADR 0053's reasons stand (focus moving between windows on every deep link).
 - A modal route on the navigator: its open and closed state would live beside the daemon's and the deep links that switch a page while it's open would have to reach into the route.
+
+## Amendment (2026-11-19): it grows with the window, one title, a grouped nav
+- **Its size follows the window**: 40 px in from each edge, as before, but up to 1120 wide (past that a page's column, 740 at most, would only leave space) and as tall as the window lets it, not 960×720. At 1700×1000 it was about 40% of the window, and long pages scrolled inside a small box.
+- **One title**: the bar that said "Settings" over the page's own title is gone. "Settings" heads the nav; the page's name is the page's title; Close (Esc) sits in the page's top right corner, and a title's actions keep clear of it.
+- **The nav is grouped**: App (General, Appearance, Terminal), Agents (Agents, MCP servers, Skills, Chat history), Connections (GitHub, Jira, Remote access), then Logs & advanced set apart. A connection with an account that works (a GitHub host signed in, a Jira site whose token Jira took) has a solid dot in the done color. Opening Settings asks nothing for it: the dot is what this launch already knows (a GitHub view's listing of the hosts, Settings › Jira's check of each site), and each page moves it as it finds otherwise, so a token Jira turns down loses its dot.
+- The direction picked of three mocked ("Tidy modal", the owner: "it's easier and looks good"); the other two, one searchable page and Settings in the main area, were larger changes, the second undoing this ADR.
+
