@@ -197,7 +197,7 @@ Skipped questions open the same way. Nothing in the open card can be clicked to 
 
 ## Get notified
 
-Nushi notifies you when a chat needs you, a turn ends, or a turn fails. Click one to open its chat. Pick which you get, and the sound, in **Settings › General › Notifications**.
+Nushi notifies you when a chat needs you, a turn ends, or a turn fails, and when one of Claude's workflows finishes, fails or stops. Click one to open its chat. Pick which you get, and the sound, in **Settings › General › Notifications**: a workflow that finishes goes with **A turn ends**, one that fails or stops with **A turn fails**.
 
 ## Rewind a message
 
