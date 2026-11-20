@@ -101,8 +101,8 @@ void main() {
     d.dispose();
   });
 
-  testWidgets('Restart shows for a packaged daemon the app can stop, and '
-      'not where it can’t (Windows): here nor in the palette', (tester) async {
+  testWidgets('Restart shows for a packaged daemon, and not without one: '
+      'here nor in the palette', (tester) async {
     fakeInstall.daemon = '/opt/nushi/lib/nushid';
     final d = await FakeDaemon([]).connect(tester);
     late BuildContext context;
@@ -130,7 +130,7 @@ void main() {
     await show();
     expect(find.text('Restart'), findsOneWidget);
     expect(restartRow(), isTrue);
-    fakeInstall.canStop = false;
+    fakeInstall.daemon = null;
     await show();
     expect(find.text('Restart'), findsNothing);
     expect(restartRow(), isFalse);

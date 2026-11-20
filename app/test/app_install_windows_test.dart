@@ -39,7 +39,6 @@ void main() {
         return true;
       },
     );
-    expect(install.canStop, isTrue);
     await install.stop(r'C:\nd', pid: 4242);
     await install.stop(r'C:\nd');
     expect(set, [r'Local\nushid-4242-stop']);
