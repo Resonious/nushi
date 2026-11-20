@@ -358,6 +358,10 @@ class FakeDaemon implements Transport {
   /// (ADR 0096), by the path asked for; null for one that isn't there.
   /// Each write is in [writes]; [putFile] changes one as an agent would.
   final files = <String, List<int>?>{};
+
+  /// The [files] whose permissions don't let them be written: they show
+  /// read-only.
+  final readOnlyFiles = <String>{};
   final writes = <WriteChatFileRequest>[];
   final _watches = <String, List<StreamController<WatchChatFileResponse>>>{};
 
@@ -369,7 +373,8 @@ class FakeDaemon implements Transport {
       data: data,
       size: Int64(data.length),
       sha256: sha256.convert(data).toString(),
-      editable: true,
+      editable: !readOnlyFiles.contains(path),
+      readOnly: readOnlyFiles.contains(path),
     ),
   };
 

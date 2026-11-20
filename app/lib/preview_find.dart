@@ -1,3 +1,5 @@
+import 'dart:ui' show BoxHeightStyle;
+
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
@@ -208,4 +210,144 @@ Revealed revealFound({
   // Sideways (a code block's, a wide table's, a long line's) too.
   box.showOnScreen(rect: rect);
   return Revealed.shown;
+}
+
+/// A match in a line of text a view holds whole (a source's line, a
+/// table's cell): its characters, and whether it's the current one.
+typedef LineHit = ({int start, int end, bool now});
+
+/// The matches of [query] (lowered) in [text], case aside, each its
+/// start and end. A few characters change length when lowered: there the
+/// lowered text's offsets would be another text's, so they're found anew.
+Iterable<(int, int)> hitsIn(String text, String query) {
+  if (query.isEmpty || text.isEmpty) return const [];
+  final lower = text.toLowerCase();
+  final found = lower.length == text.length
+      ? query.allMatches(lower)
+      : RegExp(RegExp.escape(query), caseSensitive: false).allMatches(text);
+  return found.map((m) => (m.start, m.end));
+}
+
+/// The boxes [p] draws [start] to [end] in, a line high; none when they
+/// aren't drawn (past an ellipsis).
+List<Rect> hitBoxes(RenderParagraph p, int start, int end) => [
+  for (final b in p.getBoxesForSelection(
+    TextSelection(baseOffset: start, extentOffset: end),
+    boxHeightStyle: BoxHeightStyle.max,
+  ))
+    b.toRect(),
+];
+
+/// Paints [hits] under the text of the paragraph in [child], as the
+/// transcript's find does ([findColors]); a match that isn't drawn (cut
+/// off past an ellipsis) tints the whole box instead, as a folded row's
+/// does in the transcript.
+class LineHits extends SingleChildRenderObjectWidget {
+  const new({
+    required this.hits,
+    required this.colors,
+    required Widget super.child,
+    super.key,
+  });
+
+  final List<LineHit> hits;
+  final FindColors colors;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderLineHits(hits, colors);
+
+  @override
+  void updateRenderObject(BuildContext context, RenderObject renderObject) =>
+      (renderObject as _RenderLineHits)
+        ..hits = hits
+        ..colors = colors;
+}
+
+class _RenderLineHits extends RenderProxyBox {
+  new(this._hits, this._colors);
+
+  List<LineHit> _hits;
+  List<LineHit> get hits => _hits;
+  set hits(List<LineHit> v) {
+    if (_hits.isEmpty && v.isEmpty) return;
+    _hits = v;
+    markNeedsPaint();
+  }
+
+  FindColors _colors;
+  FindColors get colors => _colors;
+  set colors(FindColors v) {
+    if (v == _colors) return;
+    _colors = v;
+    markNeedsPaint();
+  }
+
+  RenderParagraph? _paragraph() {
+    RenderParagraph? found;
+    void visit(RenderObject o) {
+      if (found != null) return;
+      if (o is RenderParagraph) {
+        found = o;
+      } else {
+        o.visitChildren(visit);
+      }
+    }
+
+    if (child case final c?) visit(c);
+    return found;
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final p = _hits.isEmpty ? null : _paragraph();
+    if (p != null && p.hasSize) {
+      final canvas = context.canvas;
+      final at =
+          offset +
+          MatrixUtils.transformPoint(p.getTransformTo(this), Offset.zero);
+      final edge = Paint()
+        ..color = _colors.edge
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1;
+      for (final h in _hits) {
+        final fill = Paint()..color = h.now ? _colors.now : _colors.hit;
+        final boxes = hitBoxes(p, h.start, h.end);
+        if (boxes.isEmpty) {
+          final row = offset & size;
+          canvas.drawRect(row, fill);
+          if (h.now) canvas.drawRect(row.deflate(0.5), edge);
+          continue;
+        }
+        for (final box in boxes) {
+          // A found word's box, its corners small whatever the app's, as
+          // the transcript's marks are (TextMarks).
+          final r = RRect.fromRectAndRadius(
+            box.shift(at).inflate(1),
+            const Radius.circular(3),
+          );
+          canvas.drawRRect(r, fill);
+          if (h.now) canvas.drawRRect(r, edge);
+        }
+      }
+    }
+    super.paint(context, offset);
+  }
+}
+
+/// The paragraph whose matches a [LineHits] under [root] paints, if one is
+/// laid out there.
+RenderParagraph? hitParagraphIn(RenderObject root) {
+  RenderParagraph? found;
+  void visit(RenderObject o) {
+    if (found != null) return;
+    if (o is _RenderLineHits) {
+      found = o._paragraph();
+    } else {
+      o.visitChildren(visit);
+    }
+  }
+
+  visit(root);
+  return found;
 }

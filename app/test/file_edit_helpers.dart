@@ -59,7 +59,8 @@ String sumOf(List<int> b) => sha256.convert(b).toString();
 /// fake disk, [open] in the preview; the tree lists [folder] at the
 /// chat's folder (empty without it); GetDiff answers [fileDiffs] for one
 /// file (`FakeDaemon.fileDiffs`); the chat's transcript is [items];
-/// [answer] goes first for anything else (`FakeDaemon.answer`).
+/// [answer] goes first for anything else (`FakeDaemon.answer`); the
+/// files in [readOnly] can't be written, so show read-only.
 Future<(Daemon, FakeDaemon)> openEditor(
   WidgetTester tester,
   Map<String, List<int>?> files, {
@@ -71,6 +72,7 @@ Future<(Daemon, FakeDaemon)> openEditor(
   Map<String, Object> fileDiffs = const {},
   List<Item>? items,
   Object? Function(Object input)? answer,
+  Set<String> readOnly = const {},
 }) async {
   viewport(tester, Size(width, 900), brightness: brightness);
   showDetails.value = false;
@@ -101,6 +103,7 @@ Future<(Daemon, FakeDaemon)> openEditor(
     };
   }
   fake.files.addAll(files);
+  fake.readOnlyFiles.addAll(readOnly);
   fake.fileDiffs.addAll(fileDiffs);
   final d = await fake.connect(tester);
   d.select('c');

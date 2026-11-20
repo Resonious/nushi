@@ -86,7 +86,7 @@ Right-click in a file's text in the Files pane to get an editor's menu.
 - **Copy**: the selected text.
 - **Copy path**: the file's path with a line, as `docs/roadmap.md:12`: the selection's first line, or the line you clicked.
 - **Quote in reply**: the selected lines go into the chat's message box as a quote, with the file and line numbers. Type your message under it and send.
-- **Find…** (⌘F): find in the file, while you're editing it.
+- **Find…** (⌘F): find in the file.
 - **Show in Finder** (Show in Folder on Linux, Show in Explorer on Windows) and **Open in your editor**, your default text editor.
 
 While you're editing, **Cut** and **Paste** are there too. Copy, Cut and Quote in reply need a selection. Right-clicking keeps your selection where it is.
@@ -100,7 +100,7 @@ Press ⌘F with a file in the Files pane to find text in it, the same way you fi
 3. Press ⏎ for the next match and ⇧⏎ for the one before. The file scrolls to each one.
 4. Press Esc to close the bar.
 
-It works in rendered Markdown and while you edit a file.
+It works in rendered Markdown, in a file you're editing, and in one that shows read-only (it finds in every line, not just those on screen).
 
 ## Use the browser
 
