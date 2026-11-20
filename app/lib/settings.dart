@@ -13,6 +13,7 @@ import 'package:nushi/fonts.dart';
 import 'package:nushi/tile_images.dart';
 import 'package:nushi/tile_look.dart';
 import 'package:nushi/tile_picture.dart';
+import 'package:nushi/usage_range.dart';
 
 /// What the app remembers across launches, in `app.json` in the data folder:
 /// whether the details panel shows (its toolbar button), which of its widgets
@@ -41,7 +42,8 @@ import 'package:nushi/tile_picture.dart';
 /// browser tab and which sites there may reach the local network, whether a
 /// preview's source wraps its lines and shows its whitespace,
 /// what reply cards ask the agent, the pull request each chat's tab shows,
-/// and the newer release whose toast was dismissed. Each is a [Pref].
+/// the range Settings › Usage shows, and the newer release whose toast
+/// was dismissed. Each is a [Pref].
 /// Not whether new chats get a worktree, nor whether a subagent's pane
 /// shows wide, nor a beta's `projectRail`: an older `worktrees`,
 /// `subagentWide` or `projectRail` key is ignored, and dropped by the
@@ -502,6 +504,14 @@ final Pref<bool> wrapLines = _plain('wrap', true);
 /// marks its spaces (a dot) and tabs (an arrow) (off at first; ADR 0096).
 /// Only drawn: the text is as it was.
 final Pref<bool> showWhitespace = _plain('whitespace', false);
+
+/// The span of days Settings › Usage shows (ADR 0136): the last 7 days
+/// until another is picked.
+final usageRange = Pref<UsageRange>(
+  'usageRange',
+  (v) => UsageRange.values.asNameMap()[v] ?? UsageRange.week,
+  write: (r) => r.name,
+);
 
 /// The newer release whose toast was dismissed ("0.1.17"): it shows again
 /// only for a newer one.
