@@ -6,7 +6,6 @@ import 'dart:async';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/cleanup_dialog.dart';
 import 'package:nushi/clock.dart';
@@ -105,11 +104,6 @@ Future<Daemon> _app(
   bool details = false,
 }) async {
   viewport(tester, size, brightness: brightness);
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-        const MethodChannel('nushi/fonts'),
-        (_) async => <String>[],
-      );
   clock = () => demoNow;
   showDetails.value = details;
   paneWidths.value = {};

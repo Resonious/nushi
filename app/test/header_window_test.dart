@@ -41,11 +41,6 @@ void main() {
     testWidgets('the whole window, $width wide, $name$pane: ⋯ at the '
         'header’s end', (tester) async {
       viewport(tester, Size(width, 600), brightness: brightness);
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-            const MethodChannel('nushi/fonts'),
-            (_) async => <String>[],
-          );
       final link = GitHubLink(
         host: 'github.com',
         repo: 'afrase/nushi',

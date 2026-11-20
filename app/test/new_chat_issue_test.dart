@@ -103,11 +103,6 @@ void main() {
   setUpAll(loadFonts);
   setUp(() {
     lastJiraSite.value = _other;
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
   });
 
   testWidgets('⌘V with an issue’s link picks it: a worktree on its branch, '

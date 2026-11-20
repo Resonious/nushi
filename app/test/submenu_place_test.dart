@@ -217,11 +217,6 @@ void main() {
         '$width wide', (tester) async {
       final window = Size(width, 760);
       viewport(tester, window);
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-            const MethodChannel('nushi/fonts'),
-            (_) async => <String>[],
-          );
       final fake = FakeDaemon([chat('c', 'claude', 'Plant the beds')])
         ..answer = ((input) => switch (input) {
           GetChatRequest() => GetChatResponse(

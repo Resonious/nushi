@@ -14,11 +14,6 @@ import 'harness.dart';
 /// folders (one gone).
 Future<Daemon> _firstRun(WidgetTester tester, double width) async {
   viewport(tester, Size(width, 600), brightness: Brightness.dark);
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-        const MethodChannel('nushi/fonts'),
-        (_) async => <String>[],
-      );
   FoundSession found(String folder, int age, {bool gone = false}) =>
       FoundSession(
         sessionId: folder,

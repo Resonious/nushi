@@ -50,11 +50,6 @@ Future<void> _double(WidgetTester tester, Offset at) async {
 
 /// The app on a daemon whose Ping answers [ping] (null: none answers).
 Future<Daemon> _open(WidgetTester tester, PingResponse? Function() ping) async {
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-        const MethodChannel('nushi/fonts'),
-        (_) async => <String>[],
-      );
   viewport(tester, const Size(1200, 700));
   final fake = FakeDaemon([chat('c', 'claude', 'Fix the login')])
     ..answer = (input) => switch (input) {

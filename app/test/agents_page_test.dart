@@ -95,13 +95,6 @@ Future<(FakeDaemon, Daemon)> _settings(
 
 void main() {
   setUpAll(loadFonts);
-  setUp(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
-  });
 
   testWidgets('each agent as found, and what can be done', (tester) async {
     final (_, d) = await _settings(tester);

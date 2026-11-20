@@ -29,11 +29,6 @@ ReviewComment _comment(String id, int line, String quote, String text) =>
 /// review comments made in its Changes view and not sent.
 Future<Daemon> _app(WidgetTester tester, double width) async {
   viewport(tester, Size(width, 640), brightness: Brightness.dark);
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-        const MethodChannel('nushi/fonts'),
-        (_) async => <String>[],
-      );
   showDetails.value = false;
   final fake = FakeDaemon([chat('c', 'claude', 'Subtract')])
     ..answer = (input) => switch (input) {

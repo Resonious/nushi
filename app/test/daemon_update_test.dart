@@ -56,13 +56,6 @@ const _bar = 'Nushi will update its daemon when the chats are idle.';
 
 void main() {
   setUpAll(loadFonts);
-  setUp(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        ),
-  );
 
   testWidgets('an older daemon is asked to restart when idle, again with '
       'each ping; the bar says so until the new one answers', (tester) async {

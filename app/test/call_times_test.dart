@@ -1,7 +1,6 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart' hide LiveText;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/call_times.dart';
 import 'package:nushi/chat.dart';
@@ -119,13 +118,6 @@ Future<void> _window(
 
 void main() {
   setUpAll(loadFonts);
-  setUp(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        ),
-  );
 
   test('times read as a row shows them', () {
     expect(elapsed(const Duration(seconds: 12)), '12s');

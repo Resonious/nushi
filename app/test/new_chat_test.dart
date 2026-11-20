@@ -110,13 +110,6 @@ List<Agent> _notAllReady() => [
 
 void main() {
   setUpAll(loadFonts);
-  setUp(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        ),
-  );
 
   testWidgets('an agent not set up is dimmed and goes to Settings; one '
       'not installed isn’t offered', (tester) async {

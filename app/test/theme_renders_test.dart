@@ -13,7 +13,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/clock.dart';
@@ -102,11 +101,6 @@ Future<void> _pump(WidgetTester tester, [int times = 8]) async {
 /// The Mac app at [size] in [b], on the demo's chats, the hero's open.
 Future<Daemon> _window(WidgetTester tester, Size size, Brightness b) async {
   viewport(tester, size, brightness: b);
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-        const MethodChannel('nushi/fonts'),
-        (_) async => <String>[],
-      );
   clock = () => demoNow;
   final open = <StreamController<Object>>[];
   addTearDown(() {

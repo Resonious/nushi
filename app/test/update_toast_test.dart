@@ -29,11 +29,6 @@ void main() {
   setUpAll(loadFonts);
   setUp(() {
     brewCask = null;
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
   });
 
   test('versions order as semantic versioning does', () {
