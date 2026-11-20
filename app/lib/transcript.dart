@@ -887,16 +887,16 @@ class _TranscriptState extends State<Transcript> {
     final live = widget.items == null ? chat.busy : widget.live;
     _follower.stick();
     _restoreAfterLayout();
-    final t = NushiTheme.of(context).t;
+    final colors = findColors(NushiTheme.of(context).t);
     // A find looks in all of it, once it's built: while it fills in, what
     // it found stays as it was.
     if (_tail == null || query.isEmpty) {
       _marks.look(
         query,
         query.isEmpty ? const [] : [for (final e in entries) _key(e)],
-        hit: t.needs.withValues(alpha: 0.3),
-        now: t.accent.withValues(alpha: 0.4),
-        edge: t.accent,
+        hit: colors.hit,
+        now: colors.now,
+        edge: colors.edge,
       );
     }
     final before = _built;

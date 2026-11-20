@@ -91,6 +91,17 @@ Right-click in a file's text in the Files pane to get an editor's menu.
 
 While you're editing, **Cut** and **Paste** are there too. Copy, Cut and Quote in reply need a selection. Right-clicking keeps your selection where it is.
 
+## Find in a file
+
+Press ⌘F with a file in the Files pane to find text in it, the same way you find in the chat. Click in the file first: ⌘F finds in whatever has the focus, so with the message box focused it finds in the chat.
+
+1. Click in the file, then press ⌘F. The find bar opens at the file's top right.
+2. Type. Every match is marked, the current one in the accent, and the bar counts them ("2 of 7", or "None").
+3. Press ⏎ for the next match and ⇧⏎ for the one before. The file scrolls to each one.
+4. Press Esc to close the bar.
+
+It works in rendered Markdown and while you edit a file.
+
 ## Use the browser
 
 A browser tab shows a web page beside the chat, such as the dev server the agent just started.

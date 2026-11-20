@@ -8,6 +8,18 @@ import 'package:nushi/keys.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 
+/// What every find marks its matches in, from the theme: each match in
+/// `hit`, the current one in `now` with an `edge` around it. The
+/// transcript, the editor and each preview's find draw in these.
+typedef FindColors = ({Color hit, Color now, Color edge});
+
+/// [t]'s find colours ([FindColors]).
+FindColors findColors(Tokens t) => (
+  hit: t.needs.withValues(alpha: 0.3),
+  now: t.accent.withValues(alpha: 0.4),
+  edge: t.accent,
+);
+
 /// ⌘F in a chat's transcript: what's looked for (null: the bar is closed),
 /// its matches as the transcript last laid them out ([TextMark.key]: each
 /// match in a text, each in what a row folds away) and which one is current.

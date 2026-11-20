@@ -26,6 +26,7 @@ import 'package:nushi/native.dart';
 import 'package:nushi/new_chat.dart';
 import 'package:nushi/open_file.dart';
 import 'package:nushi/palette.dart';
+import 'package:nushi/preview_find.dart' show focusedPreviewFind;
 import 'package:nushi/preview_marks.dart';
 import 'package:nushi/pull_link.dart';
 import 'package:nushi/pull_link_dialog.dart';
@@ -52,8 +53,9 @@ import 'package:nushi/widgets.dart';
 enum ActMenu { nushi, file, view, chat }
 
 /// ⌘F: find in the chat's transcript, or its changed files. A focused
-/// terminal keeps it for its own find, and the preview's editor for the
-/// file's (`EditorFind`).
+/// terminal keeps it for its own find, the preview's editor for the
+/// file's (`EditorFind`), and a preview with the focus for what it shows
+/// (`FindSlot`).
 const findKey = Cmd(LogicalKeyboardKey.keyF);
 
 /// ⇧⌘B: a side chat (Claude Code's /btw, "by the way").
@@ -280,6 +282,8 @@ List<AppAction> appActions(BuildContext context, Daemon d) {
     _ => null,
   };
   final closing = shown == null ? null : tabToClose(shown);
+  // The preview with the focus, which ⌘F finds in (issue 63).
+  final preview = shown == null ? null : focusedPreviewFind();
   return [
     AppAction(.newChat, 'New chat', run: () => newChat(context, d, '')),
     AppAction(
@@ -334,16 +338,21 @@ List<AppAction> appActions(BuildContext context, Daemon d) {
     ),
     AppAction(
       .find,
-      shown?.shownTab == ChatTab.changes
+      preview != null
+          ? 'Find in the file'
+          : shown?.shownTab == ChatTab.changes
           ? 'Find in changes'
           : 'Find in the chat',
       // Not under a pane expanded over the transcript, where its bar
-      // would open unseen.
+      // would open unseen; a preview with the focus finds in its file.
       enabled:
+          preview != null ||
           shown != null &&
-          (shown.shownTab == ChatTab.chat && shown.covered == null ||
-              shown.shownTab == ChatTab.changes),
-      run: () => shown!.shownTab == ChatTab.changes
+              (shown.shownTab == ChatTab.chat && shown.covered == null ||
+                  shown.shownTab == ChatTab.changes),
+      run: () => preview != null
+          ? preview.open()
+          : shown!.shownTab == ChatTab.changes
           ? shown.changesFind.open()
           : shown.find.open(),
     ),

@@ -22,7 +22,7 @@ import 'package:nushi/source_menu.dart';
 import 'package:nushi/source_spans.dart';
 import 'package:nushi/tab_indent.dart';
 import 'package:nushi/theme/theme.dart';
-import 'package:nushi/transcript_find.dart' show FindBar;
+import 'package:nushi/transcript_find.dart' show FindBar, findColors;
 import 'package:nushi/whitespace_marks.dart';
 import 'package:re_editor/re_editor.dart';
 
@@ -340,7 +340,7 @@ class _SourceEditorState extends State<SourceEditor> {
               cursorLineColor: t.base,
               // A find's matches; the current one is the selection, as the
               // transcript's (TextMarks) are.
-              highlightColor: t.needs.withValues(alpha: 0.3),
+              highlightColor: findColors(t).hit,
             ),
             indicatorBuilder: (context, controller, chunks, notifier) {
               _lines.follow(notifier);

@@ -2,11 +2,14 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:markdown_view/markdown_view.dart' show markdownHeadings;
+import 'package:markdown_view/markdown_view.dart';
 
 import 'package:nushi/markdown.dart';
 import 'package:nushi/motion.dart';
+import 'package:nushi/preview_find.dart';
 import 'package:nushi/rail.dart';
+import 'package:nushi/theme/theme.dart';
+import 'package:nushi/transcript_find.dart';
 
 // A Markdown preview's outline (ADR 0106), as Claude's desktop app has it:
 // a rail of dashes left of the text, one for each heading, the current
@@ -28,7 +31,9 @@ const _deepest = 2;
 
 /// Rendered Markdown that scrolls, with its outline's rail when it has two
 /// headings or more: [text] as [AgentMarkdown] draws it, [images] its
-/// images, in [padding] (its left grown for the rail).
+/// images, in [padding] (its left grown for the rail). Under a [FindSlot]
+/// (the Files pane's) ⌘F finds in its text as the transcript's find does
+/// ([TextMarks]), its bar at the top right.
 class OutlinedMarkdown extends StatefulWidget {
   const new(
     this.text, {
@@ -98,8 +103,71 @@ class _Scope extends InheritedWidget {
   bool updateShouldNotify(_Scope old) => old.outline != outline;
 }
 
-class _OutlinedMarkdownState extends State<OutlinedMarkdown> {
+class _OutlinedMarkdownState extends State<OutlinedMarkdown>
+    with FindInSlot<OutlinedMarkdown> {
   final _scroll = ScrollController();
+
+  /// The find's matches in the text as laid out, its one entry the text;
+  /// the last time the find asked for its current one to show; whether
+  /// the text starts below the bar, for a match at its very top.
+  final _hits = TextMarks();
+  int _shownAsk = -1;
+  bool _roomAbove = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _hits.onFound = (marks) {
+      find?.found([for (final m in marks) m.key]);
+      _showCurrent();
+    };
+  }
+
+  @override
+  void findChanged() {
+    final f = find!;
+    if (f.query == null && _roomAbove) {
+      setState(() => _roomAbove = false);
+    }
+    if ((f.query ?? '').toLowerCase() == _hits.query) {
+      _showCurrent();
+    } else {
+      setState(() {}); // the build looks for it
+    }
+  }
+
+  /// Draws the current match as such and, when it was asked for (typed
+  /// or stepped to), brings it into view.
+  void _showCurrent() {
+    final f = find;
+    if (f == null) return;
+    final marks = _hits.marks;
+    final mark = marks.isEmpty ? null : marks[f.at.clamp(0, marks.length - 1)];
+    _hits.pick(mark);
+    if (f.asked == _shownAsk) return;
+    _shownAsk = f.asked;
+    if (mark != null) _reveal(mark);
+  }
+
+  void _reveal(TextMark mark) {
+    final view = _viewport.currentContext?.findRenderObject();
+    final (box, rect) = mark.place;
+    if (view is! RenderBox || !mounted) return;
+    final r = revealFound(
+      scroll: _scroll,
+      box: box,
+      rect: rect,
+      view: view,
+      roomAbove: _roomAbove,
+    );
+    if (r == Revealed.needsRoom) {
+      setState(() => _roomAbove = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _reveal(mark);
+      });
+    }
+  }
+
   final _marks = <_MarkState>{};
   final ValueNotifier<int> _current = ValueNotifier(0);
   final GlobalKey _viewport = GlobalKey();
@@ -125,6 +193,7 @@ class _OutlinedMarkdownState extends State<OutlinedMarkdown> {
 
   @override
   void dispose() {
+    _hits.dispose();
     _scroll.dispose();
     _current.dispose();
     super.dispose();
@@ -261,9 +330,19 @@ class _OutlinedMarkdownState extends State<OutlinedMarkdown> {
           : pad.left + 40;
       // Laid out at a new width, the headings stand elsewhere.
       if (_order.isNotEmpty) _changed();
+      final query = find?.query ?? '';
+      final colors = findColors(NushiTheme.of(context).t);
+      _hits.look(
+        query,
+        query.isEmpty ? const [] : const ['text'],
+        hit: colors.hit,
+        now: colors.now,
+        edge: colors.edge,
+      );
+      final top = pad.top + (_roomAbove ? FindBar.height : 0);
       // Filling the pane, as the text's view did on its own: a click below a
       // short text still selects.
-      return Stack(
+      final stack = Stack(
         fit: StackFit.expand,
         children: [
           NotificationListener<ScrollNotification>(
@@ -271,21 +350,29 @@ class _OutlinedMarkdownState extends State<OutlinedMarkdown> {
               _follow();
               return false;
             },
-            child: SelectionArea(
-              child: SingleChildScrollView(
-                key: _viewport,
-                controller: _scroll,
-                padding: pad.copyWith(left: textLeft),
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: markdownWidth),
-                    child: _Scope(
-                      outline: this,
-                      child: AgentMarkdown(
-                        widget.text,
-                        images: widget.images,
-                        headingMark: _Mark.new,
+            child: TextMarksScope(
+              marks: _hits,
+              child: SelectionArea(
+                child: SingleChildScrollView(
+                  key: _viewport,
+                  controller: _scroll,
+                  padding: pad.copyWith(left: textLeft, top: top),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: markdownWidth,
+                      ),
+                      child: _Scope(
+                        outline: this,
+                        child: Marks(
+                          entry: 'text',
+                          child: AgentMarkdown(
+                            widget.text,
+                            images: widget.images,
+                            headingMark: _Mark.new,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -308,6 +395,7 @@ class _OutlinedMarkdownState extends State<OutlinedMarkdown> {
             ),
         ],
       );
+      return FindFrame(find: find, child: stack);
     },
   );
 }
