@@ -57,7 +57,7 @@ func workflowProto(w model.Workflow) *nushiv1.Workflow {
 		Started: unixMs(w.Started), Ended: unixMs(w.Ended), Active: unixMs(w.Active), Agents: int32(w.Agents), Done: int32(w.Done),
 		Failed: int32(w.Failed), Running: w.Running, RunningCount: int32(w.RunningCount), Summary: w.Summary, Stalled: w.Stalled, Tokens: w.Tokens}
 	for _, i := range w.RunningPhases {
-		out.RunningPhases = append(out.RunningPhases, int32(i)) //nolint:gosec // an index of at most WorkflowPhases
+		out.RunningPhases = append(out.RunningPhases, int32(i))
 	}
 	for _, p := range w.Phases {
 		out.Phases = append(out.Phases, &nushiv1.WorkflowPhase{Title: p.Title, Detail: p.Detail, Started: int32(p.Started), Done: int32(p.Done), Failed: int32(p.Failed)})
