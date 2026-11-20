@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import 'package:nushi/chat.dart';
+import 'package:nushi/chat_column.dart';
 import 'package:nushi/controls.dart';
 import 'package:nushi/spinner.dart';
 import 'package:nushi/theme/theme.dart';
@@ -109,11 +110,17 @@ class _OverBottomState extends State<OverBottom> {
           LayoutId(
             id: _Part.bottom,
             // The update card stands above it, in the chat area's main
-            // view ([CardFloor]).
-            child: UnderCard(
-              child: ColoredBox(
-                color: NushiTheme.of(context).t.base,
-                child: widget.bottom,
+            // view ([CardFloor]); beside it where the view is wider than
+            // the chat's column, whose gutters are bare.
+            child: LayoutBuilder(
+              builder: (context, box) => UnderCard(
+                clear: TouchTargets.of(context)
+                    ? 0
+                    : chatSides(context, box.maxWidth).left - NushiTheme.gutter,
+                child: ColoredBox(
+                  color: NushiTheme.of(context).t.base,
+                  child: widget.bottom,
+                ),
               ),
             ),
           ),
