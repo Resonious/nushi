@@ -4,21 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_checks.dart';
-import 'package:nushi/github_comment.dart';
 import 'package:nushi/github_files.dart';
 import 'package:nushi/github_parts.dart';
 import 'package:nushi/github_review.dart';
 import 'package:nushi/item_chats.dart';
 import 'package:nushi/motion.dart';
 import 'package:nushi/plain_tabs.dart';
-import 'package:nushi/pull_activity.dart';
 import 'package:nushi/pull_cache.dart';
+import 'package:nushi/pull_comments.dart';
+import 'package:nushi/pull_commits.dart';
 import 'package:nushi/pull_header.dart';
 import 'package:nushi/pull_link.dart';
-import 'package:nushi/pull_merge.dart';
+import 'package:nushi/pull_merge_card.dart';
 import 'package:nushi/pull_merge_state.dart';
+import 'package:nushi/pull_overview.dart';
 import 'package:nushi/pull_skeleton.dart';
-import 'package:nushi/pull_todo.dart';
+import 'package:nushi/pull_thread_card.dart';
 import 'package:nushi/pull_todo_items.dart';
 import 'package:nushi/review_findings.dart';
 import 'package:nushi/run_state.dart';
@@ -31,9 +32,9 @@ import 'package:nushi/widgets.dart';
 /// GitHub view.
 const pullPoll = Duration(seconds: 30);
 
-/// Each pull request's tab (Activity, Checks, Files) as left, while the
-/// app runs: a look at a chat comes back to it, and to what was being
-/// written there.
+/// Each pull request's tab (Overview, Commits, Checks, Files changed) as
+/// left, while the app runs: a look at a chat comes back to it, and to
+/// what was being written there.
 final Map<String, PullSection> _tabLeft = runMap();
 
 /// No pull request's tab left (tests: each starts afresh).
@@ -45,12 +46,12 @@ void forgetPullTabs() => _tabLeft.clear();
 void openPullAt(GitHubRef ref, PullSection section) =>
     _tabLeft['${ref.host} ${ref.repo} ${ref.number}'] = section;
 
-/// A pull request's page: its head ([PullHeader]: state, title, branches,
-/// whose move it is, the status lights), then its activity (the
-/// description, comments and reviews), its checks, or its files with the
-/// review threads at their lines, in one scroll; the text in a column of
-/// [readableWidth] at most, the files' diff the whole width and the
-/// window's height.
+/// A pull request's page, after GitHub's own (ADR 0137): a slim bar (`#n`,
+/// the title, Merge status, Submit review), the head ([PullHeader]: the
+/// title, state, who opened it, base ← head), the tabs (Overview,
+/// Commits, Checks, Files changed) and the tab's content in one scroll,
+/// in a column of [pullPageWidth] at most; the files' diff the whole
+/// width and the window's height.
 ///
 /// In a chat's Pull request tab it shows the chat's pull request as
 /// [source] has it, asked on its timer (the pane has none of its own),
@@ -81,15 +82,19 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
   bool _asking = true;
   String? _error;
   Timer? _poll;
-  late PullSection _tab = _tabLeft[_refKey] ?? PullSection.activity;
+  late PullSection _tab = _tabLeft[_refKey] ?? PullSection.overview;
   String get _refKey =>
       '${widget.ref.host} ${widget.ref.repo} ${widget.ref.number}';
   final _scroll = ScrollController();
   final GlobalKey _tabs = GlobalKey();
-  final GlobalKey _todo = GlobalKey();
+  final _mergeKey = GlobalKey<MergeCardState>();
+  final _threadKeys = <String, GlobalKey<PullThreadState>>{};
+  final _reviewKeys = <String, GlobalKey>{};
+  CommentFilter _filter = CommentFilter.all;
+  late final PullCommits _commits = PullCommits(widget.daemon, widget.ref);
 
-  /// A review To do pointed at in Activity, and its key.
-  (String, GlobalKey)? _shown;
+  /// The header has scrolled away: the bar shows the state pill.
+  final ValueNotifier<bool> _scrolled = ValueNotifier(false);
 
   /// Who the user is on its host ('' until known).
   String _me = '';
@@ -116,6 +121,9 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
       }),
     );
     _redraw.addListener(_changed);
+    _scroll.addListener(
+      () => _scrolled.value = _scroll.hasClients && _scroll.offset > 90,
+    );
   }
 
   void _changed() => setState(() {});
@@ -133,6 +141,8 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
     _redraw.removeListener(_changed);
     _poll?.cancel();
     _scroll.dispose();
+    _scrolled.dispose();
+    _commits.dispose();
     super.dispose();
   }
 
@@ -173,39 +183,54 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
     }
   }
 
-  /// Shows [s]: its tab picked, scrolled to the top.
+  /// Scrolls [key]'s widget into view, after this frame.
+  void _toView(GlobalKey key) =>
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final to = key.currentContext;
+        if (to == null || !to.mounted) return;
+        Scrollable.ensureVisible(
+          to,
+          duration: Motion.standard,
+          curve: Curves.easeOutCubic,
+        );
+      });
+
+  /// Shows tab [s], scrolled up to the tabs.
   void _jump(PullSection s) {
-    void show() {
-      final to = (s == PullSection.todo ? _todo : _tabs).currentContext;
-      if (to == null || !to.mounted) return;
-      Scrollable.ensureVisible(
-        to,
-        duration: Motion.standard,
-        curve: Curves.easeOutCubic,
-      );
-    }
-
-    if (s == PullSection.todo) return show();
     setState(() => _tab = s);
-    WidgetsBinding.instance.addPostFrameCallback((_) => show());
+    _toView(_tabs);
   }
 
-  /// Shows review [c] in Activity, To do's pointer to it.
-  void _showReview(GitHubComment c) {
-    setState(() {
-      _tab = PullSection.activity;
-      _shown = (c.id, GlobalKey());
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final to = _shown?.$2.currentContext;
-      if (to == null || !to.mounted) return;
-      Scrollable.ensureVisible(
-        to,
-        duration: Motion.standard,
-        curve: Curves.easeOutCubic,
-      );
-    });
+  /// The bar's Merge status: the card, its first segment not met open.
+  void _mergeStatus() {
+    setState(() => _tab = PullSection.overview);
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _mergeKey.currentState?.reveal(),
+    );
+    _toView(_mergeKey);
   }
+
+  /// A thread's row in the merge status card: the thread, open.
+  void _showThread(GitHubThread x) {
+    setState(() {
+      if (_filter == CommentFilter.mine) _filter = CommentFilter.all;
+    });
+    final key = _threadKey(x.id);
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => key.currentState?.show(),
+    );
+    _toView(key);
+  }
+
+  /// A finding's row: the review it's in.
+  void _showReview(String id) {
+    setState(() => _filter = CommentFilter.all);
+    _toView(_reviewKey(id));
+  }
+
+  GlobalKey<PullThreadState> _threadKey(String id) =>
+      _threadKeys.putIfAbsent(id, GlobalKey<PullThreadState>.new);
+  GlobalKey _reviewKey(String id) => _reviewKeys.putIfAbsent(id, GlobalKey.new);
 
   @override
   Widget build(BuildContext context) {
@@ -221,156 +246,157 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
           ? const PullSkeleton()
           : Center(child: Text(error, style: theme.ui(t.crashed)));
     }
+    if (_tab == PullSection.overview || _tab == PullSection.commits) {
+      _commits.want(p.headOid);
+    }
     final failed = p.checks.where((c) => c.failed).length;
     final todo = todoOf(p);
-    final items = todo.items;
     final open = p.item.state == 'open';
-    // The text reads in a column of [readableWidth] at most, centred; the
-    // files' diff takes the whole width.
     return LayoutBuilder(
       builder: (context, box) {
-        final pad = readablePad(box.maxWidth);
+        final pad = pullPad(box.maxWidth);
+        final narrow = box.maxWidth < pullNarrow;
         Widget column(Widget child, {double top = 0, double bottom = 0}) =>
             SliverPadding(
               padding: EdgeInsets.fromLTRB(pad, top, pad, bottom),
               sliver: SliverToBoxAdapter(child: child),
             );
-        return CustomScrollView(
-          controller: _scroll,
-          slivers: [
-            if (keptAt case final at?)
-              column(
-                Text(
-                  updatedLine(at, loading: asking)!,
-                  key: const ValueKey('pull-kept'),
-                  textAlign: TextAlign.right,
-                  style: theme.ui(t.textMuted, size: 11.5),
-                ),
-                top: 8,
-              ),
-            column(
-              PullHeader(
-                pull: p,
-                todo: items.length + (hasConflicts(p) ? 1 : 0),
-                onJump: _jump,
-                threadsTo: open ? PullSection.todo : PullSection.activity,
-                actions: _actions(context, p),
-              ),
-              top: keptAt == null ? 14 : 2,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PullBar(
+              pull: p,
+              scrolled: _scrolled,
+              actions: _actions(context, p),
+              onMergeStatus: open && mergeView(p) != null ? _mergeStatus : null,
             ),
-            if (mergeView(p) != null)
-              column(
-                MergeControl(
-                  daemon: widget.daemon,
-                  pull: p,
-                  stale: keptAt != null,
-                  onChanged: _refresh,
-                ),
-                top: 10,
-              ),
-            if (open)
-              column(
-                PullTodo(
-                  key: _todo,
-                  daemon: widget.daemon,
-                  pull: p,
-                  items: items,
-                  older: todo.older,
-                  onOlder: _showReview,
-                  onChanged: _refresh,
-                ),
-                top: 16,
-              ),
-            if (!_inChat) column(ItemChats(widget.daemon, p.item.ref), top: 10),
-            if (error case final e?)
-              column(
-                Text('Not current: $e', style: theme.ui(t.needs, size: 12)),
-                top: 6,
-              ),
-            column(
-              Row(
-                key: _tabs,
-                children: [
-                  PlainTabs(
-                    value: _tab,
-                    tabs: [
-                      (
-                        PullSection.activity,
-                        'Activity ${p.conversation.length + 1}',
+            Expanded(
+              child: CustomScrollView(
+                controller: _scroll,
+                slivers: [
+                  if (keptAt case final at?)
+                    column(
+                      Text(
+                        updatedLine(at, loading: asking)!,
+                        key: const ValueKey('pull-kept'),
+                        textAlign: TextAlign.right,
+                        style: theme.ui(t.textMuted, size: 11.5),
                       ),
-                      (
-                        PullSection.checks,
-                        failed > 0
-                            ? 'Checks · $failed failing'
-                            : 'Checks ${p.checks.length}',
+                      top: 8,
+                    ),
+                  column(PullHeader(pull: p), top: keptAt == null ? 24 : 4),
+                  if (error case final e?)
+                    column(
+                      Text(
+                        'Not current: $e',
+                        style: theme.ui(t.needs, size: 12),
                       ),
-                      (PullSection.files, 'Files ${p.changedFiles}'),
-                    ],
-                    // Scrolled up to the section picked.
-                    onChanged: _jump,
+                      top: 6,
+                    ),
+                  column(
+                    Column(
+                      key: _tabs,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: PlainTabs(
+                              value: _tab,
+                              tabs: [
+                                (PullSection.overview, 'Overview'),
+                                (PullSection.commits, 'Commits  ${p.commits}'),
+                                (
+                                  PullSection.checks,
+                                  failed > 0
+                                      ? 'Checks  $failed failing'
+                                      : 'Checks  ${p.checks.length}',
+                                ),
+                                (
+                                  PullSection.files,
+                                  'Files changed  ${p.changedFiles}',
+                                ),
+                              ],
+                              onChanged: _jump,
+                            ),
+                          ),
+                        ),
+                        Divider(height: 1, thickness: 1, color: t.line),
+                      ],
+                    ),
+                    top: 16,
+                    bottom: 20,
                   ),
+                  switch (_tab) {
+                    PullSection.commits => column(
+                      PullCommitsList(commits: _commits),
+                      bottom: 24,
+                    ),
+                    PullSection.checks => column(
+                      GitHubChecks(
+                        daemon: widget.daemon,
+                        pull: p,
+                        onChanged: _refresh,
+                      ),
+                      bottom: 20,
+                    ),
+                    PullSection.files => SliverToBoxAdapter(
+                      // The window's height, under the tabs: the list and
+                      // the diff scroll in it.
+                      child: SizedBox(
+                        height: box.maxHeight - 84,
+                        child: GitHubFiles(
+                          daemon: widget.daemon,
+                          pull: p,
+                          onChanged: _refresh,
+                        ),
+                      ),
+                    ),
+                    PullSection.overview => column(
+                      PullOverview(
+                        daemon: widget.daemon,
+                        pull: p,
+                        todo: todo,
+                        me: _me,
+                        narrow: narrow,
+                        commits: _commits,
+                        filter: _filter,
+                        onFilter: (f) => setState(() => _filter = f),
+                        onChanged: _refresh,
+                        onCommits: () => _jump(PullSection.commits),
+                        onThread: _showThread,
+                        onReview: _showReview,
+                        mergeKey: _mergeKey,
+                        threadKeys: _threadKey,
+                        reviewKeys: _reviewKey,
+                        stale: keptAt != null,
+                        sideTop: _inChat
+                            ? null
+                            : ItemChats(widget.daemon, p.item.ref),
+                      ),
+                      bottom: 48,
+                    ),
+                  },
                 ],
               ),
-              top: 18,
-              bottom: 6,
             ),
-            switch (_tab) {
-              PullSection.checks => column(
-                GitHubChecks(
-                  daemon: widget.daemon,
-                  pull: p,
-                  onChanged: _refresh,
-                ),
-                bottom: 20,
-              ),
-              PullSection.files => SliverToBoxAdapter(
-                // The window's height, under the tabs: the list and the
-                // diff scroll in it.
-                child: SizedBox(
-                  height: box.maxHeight - 40,
-                  child: GitHubFiles(
-                    daemon: widget.daemon,
-                    pull: p,
-                    onChanged: _refresh,
-                  ),
-                ),
-              ),
-              _ => column(
-                PullActivity(
-                  daemon: widget.daemon,
-                  pull: p,
-                  me: _me,
-                  onPosted: _refresh,
-                  onTodo: () => _jump(PullSection.todo),
-                  findings: findingCounts(items),
-                  shown: _shown,
-                ),
-                top: 6,
-                bottom: 24,
-              ),
-            },
           ],
         );
       },
     );
   }
 
-  /// The head's buttons: Start work (the GitHub view), Review…, Open on
-  /// GitHub.
+  /// The bar's buttons: Start work (the GitHub view), Submit review.
   List<Widget> _actions(BuildContext context, GitHubPull p) {
     final it = p.item;
-    final daemon = widget.daemon;
     final pending = p.pendingComments + reviewDrafts(it.ref).length;
     return [
-      if (!_inChat) StartWork(daemon: daemon, item: it),
+      if (!_inChat) StartWork(daemon: widget.daemon, item: it),
       Button(
-        label: pending > 0 ? 'Review ($pending)…' : 'Review…',
+        label: pending > 0 ? 'Submit review ($pending)' : 'Submit review',
+        tooltip: 'Comment, approve or request changes',
         onPressed: () => _review(context, p),
-      ),
-      Button(
-        label: 'Open on GitHub',
-        icon: Icons.open_in_new,
-        onPressed: it.url.isEmpty ? null : () => openWeb(context, it.url),
       ),
     ];
   }
@@ -399,7 +425,8 @@ final _redraw = Listenable.merge([
   draftsChanged,
 ]);
 
-/// [p]'s To do, with the bots' findings when Settings reads them.
+/// What blocks [p]'s merge for the agent ([todo]), with the bots' findings
+/// when Settings reads them.
 Todo todoOf(GitHubPull p) => todo(
   p,
   findings: githubFindings.value

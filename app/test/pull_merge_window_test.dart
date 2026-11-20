@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
-import 'package:nushi/pull_merge.dart';
+import 'package:nushi/pull_merge_card.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
@@ -36,13 +36,13 @@ Future<Daemon> _tab(
   return d;
 }
 
-/// The Merge control in each state, in the Pull request tab at the window's
+/// The merge status card in each state, in the Pull request tab at the window's
 /// real widths and in the details widget (which shows beside the chat), in
 /// both themes, all of it inside the window; and the confirmation. Each a
 /// render (harness.dart's [render]), not a golden.
-/// The Merge control and its words inside a window [width] wide.
+/// The merge status card and its words inside a window [width] wide.
 void _inside(WidgetTester tester, double width) {
-  final control = find.byType(MergeControl);
+  final control = find.byType(MergeCard);
   final box = tester.getRect(control);
   expect(box.left, greaterThanOrEqualTo(0));
   expect(box.right, lessThanOrEqualTo(width));

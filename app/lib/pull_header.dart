@@ -1,303 +1,206 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nushi/clock.dart';
 import 'package:nushi/commits.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_card.dart';
+import 'package:nushi/github_comment.dart';
+import 'package:nushi/github_parts.dart';
 import 'package:nushi/pull_lights.dart';
-import 'package:nushi/pull_merge_state.dart';
+import 'package:nushi/pull_merge_card.dart';
+import 'package:nushi/pull_side.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 
 export 'package:nushi/pull_lights.dart';
 
-/// The page's head: the state pill, `repo#n`, who opened it and when, the
-/// title, head › base, commits and the diff's size; [actions] at the
-/// right of the first line; then whose move it is ([todo] things block the
-/// merge), unless the Merge control says the same, and the four status
-/// lights, each jumping ([onJump]) to its section.
-class PullHeader extends StatelessWidget {
+/// The widest the pull request's page is: its main column and side
+/// column, centred, as GitHub's.
+const pullPageWidth = 1160.0;
+
+/// Below this the side column goes under the main one.
+const pullNarrow = 1000.0;
+
+/// The space at each side of the page in a pane [width] wide.
+double pullPad(double width) =>
+    math.max((width - pullPageWidth) / 2, width < pullNarrow ? 16.0 : 32.0);
+
+/// The bar over the page: `#n` and the title (the state pill joins them
+/// once the header has scrolled away, [scrolled]); at its right Merge
+/// status (an open pull request's: shows the merge status card,
+/// [onMergeStatus]) and [actions] (Submit review; Start work in the
+/// GitHub view).
+class PullBar extends StatelessWidget {
   const new({
     required this.pull,
-    required this.todo,
-    required this.onJump,
+    required this.scrolled,
     required this.actions,
     super.key,
-    this.threadsTo = PullSection.activity,
+    this.onMergeStatus,
   });
 
   final GitHubPull pull;
-  final int todo;
-  final ValueChanged<PullSection> onJump;
+  final ValueListenable<bool> scrolled;
   final List<Widget> actions;
-  final PullSection threadsTo;
+  final VoidCallback? onMergeStatus;
 
   @override
   Widget build(BuildContext context) {
     final theme = NushiTheme.of(context);
     final t = theme.t;
-    Widget branch(String name) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-      decoration: BoxDecoration(
-        color: t.raised,
-        borderRadius: BorderRadius.circular(NushiTheme.tag),
-      ),
-      child: SelectableText(name, style: theme.code(t.text, size: 11.5)),
-    );
-    // The buttons beside the first line; under the branches when narrow
-    // or many.
+    final it = pull.item;
     return LayoutBuilder(
-      builder: (context, room) =>
-          _build(context, room.maxWidth < 700 || actions.length > 4, branch),
-    );
-  }
-
-  Widget _build(
-    BuildContext context,
-    bool narrow,
-    Widget Function(String) branch,
-  ) {
-    final theme = NushiTheme.of(context);
-    final t = theme.t;
-    final p = pull;
-    final it = p.item;
-    final small = theme.ui(t.textSecondary, size: 12);
-    final move = moveWords(p, todo);
-    // The Merge control under the lights says it, with the button that acts
-    // on it: said once.
-    final said = mergeView(p)?.lead == move.lead;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 4,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  ItemStatePill(it),
-                  Text(
-                    '${it.ref.repo}#${it.ref.number}',
-                    style: theme.code(t.textSecondary, size: 12),
-                  ),
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        const TextSpan(text: '·  by '),
-                        TextSpan(
-                          text: it.author,
-                          style: theme.ui(t.text, size: 12),
-                        ),
-                        if (p.outside)
-                          TextSpan(
-                            text: ' (outside the repository)',
-                            style: theme.ui(t.needs, size: 12),
-                          ),
-                        TextSpan(
-                          text: ', ${agoAt(it.updatedMs.toInt(), clock())}',
-                        ),
-                      ],
-                    ),
-                    style: small,
-                  ),
-                ],
-              ),
-            ),
-            if (!narrow) ...[
-              const SizedBox(width: 8),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 6,
-                children: actions,
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 8),
-        SelectableText(
-          it.title,
-          style: theme.ui(t.text, size: 18, weight: FontWeight.w600),
-        ),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 6,
-          runSpacing: 4,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            branch(p.crossRepo ? '${p.headRepo}:${p.head}' : p.head),
-            Icon(Icons.chevron_right, size: 14, color: t.textMuted),
-            branch(p.base),
-            if (p.commits > 0)
-              Text(
-                '·  ${p.commits} commit${p.commits == 1 ? '' : 's'}',
-                style: small,
-              ),
-            Text.rich(
-              TextSpan(
-                children: [
-                  const TextSpan(text: '·  '),
-                  TextSpan(
-                    text: '+${p.additions}',
-                    style: theme.ui(t.done, size: 12),
-                  ),
-                  const TextSpan(text: ' '),
-                  TextSpan(
-                    text: '−${p.deletions}',
-                    style: theme.ui(t.crashed, size: 12),
-                  ),
-                  TextSpan(
-                    text:
-                        ' in ${p.changedFiles} '
-                        'file${p.changedFiles == 1 ? '' : 's'}',
-                  ),
-                ],
-              ),
-              style: small,
-            ),
-          ],
-        ),
-        if (narrow) ...[
-          const SizedBox(height: 10),
-          Wrap(spacing: 6, runSpacing: 6, children: actions),
-        ],
-        const SizedBox(height: 14),
-        if (!said) ...[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (context, box) {
+        final narrow = box.maxWidth < pullNarrow;
+        final head = mergeHead(pull);
+        return Container(
+          height: 44,
+          padding: EdgeInsets.symmetric(
+            horizontal: narrow ? 16 : NushiTheme.gutter,
+          ),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: t.line)),
+          ),
+          child: Row(
+            spacing: 8,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Icon(
-                  move.icon,
-                  size: 15,
-                  color: moodColor(t, move.mood),
-                ),
+              ValueListenableBuilder(
+                valueListenable: scrolled,
+                builder: (context, on, _) =>
+                    on ? ItemStatePill(it) : const SizedBox.shrink(),
               ),
-              const SizedBox(width: 6),
+              Text('#${it.ref.number}', style: theme.ui(t.textMuted)),
               Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: move.lead,
-                        style: theme.ui(t.text, weight: FontWeight.w600),
-                      ),
-                      if (move.rest.isNotEmpty) TextSpan(text: ' ${move.rest}'),
-                    ],
-                  ),
-                  style: theme.ui(t.textSecondary),
+                child: Text(
+                  it.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.ui(t.text, weight: FontWeight.w600),
                 ),
               ),
+              if (onMergeStatus != null)
+                Button(
+                  label: narrow ? 'Status' : 'Merge status',
+                  icon: switch (head.mood) {
+                    Mood.ok => Icons.check_circle_outline,
+                    Mood.bad => Icons.cancel_outlined,
+                    Mood.warn => Icons.error_outline,
+                    Mood.quiet => Icons.schedule,
+                  },
+                  tooltip: 'Show the merge status',
+                  onPressed: onMergeStatus,
+                ),
+              ...actions,
             ],
           ),
-          const SizedBox(height: 8),
-        ],
-        LayoutBuilder(
-          builder: (context, box) {
-            final lights = [
-              for (final l in pullLights(p, threadsTo: threadsTo))
-                _LightBox(l, onTap: () => onJump(l.to)),
-            ];
-            // Four across; two by two where they'd be too narrow.
-            if (box.maxWidth >= 560) {
-              return IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: 8,
-                  children: [for (final l in lights) Expanded(child: l)],
-                ),
-              );
-            }
-            return Column(
-              spacing: 8,
-              children: [
-                for (var i = 0; i < 4; i += 2)
-                  IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      spacing: 8,
-                      children: [
-                        Expanded(child: lights[i]),
-                        Expanded(child: lights[i + 1]),
-                      ],
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-      ],
+        );
+      },
     );
   }
 }
 
-class _LightBox extends StatelessWidget {
-  const new(this.light, {required this.onTap});
+/// The page's head: the title (selectable) and Open on GitHub; under it
+/// the state pill, who opened it and when, base ← head and the diff's
+/// size.
+class PullHeader extends StatelessWidget {
+  const new({required this.pull, super.key});
 
-  final Light light;
-  final VoidCallback onTap;
+  final GitHubPull pull;
 
   @override
   Widget build(BuildContext context) {
     final theme = NushiTheme.of(context);
     final t = theme.t;
-    final l = light;
-    final color = moodColor(t, l.mood);
-    return Tap(
-      onTap: onTap,
-      tooltip: switch (l.to) {
-        PullSection.checks => 'Show the checks',
-        PullSection.files => 'Show the files',
-        PullSection.todo => 'Show the To do list',
-        PullSection.activity => 'Show the activity',
-      },
-      radius: NushiTheme.card,
-      // A card (ADR 0111): what it says is its mark, in a round chip of
-      // the state's soft fill, and its value in the state's ink. No line
-      // along its top, which tapered in the card's round corners.
-      child: Container(
-        decoration: cardBox(t),
-        padding: const EdgeInsets.fromLTRB(11, 8, 11, 9),
-        child: Row(
+    final p = pull;
+    final it = p.item;
+    Widget branch(String name) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        color: t.accentSoft,
+        borderRadius: BorderRadius.circular(NushiTheme.tag),
+      ),
+      child: SelectableText(name, style: theme.code(t.accentInk, size: 12)),
+    );
+    final opened = it.createdMs.toInt() != 0 ? it.createdMs : it.updatedMs;
+    return Column(
+      key: const ValueKey('pull-header'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 9,
           children: [
-            Container(
-              width: 26,
-              height: 26,
-              margin: const EdgeInsets.only(top: 3),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: moodSoft(t, l.mood),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(l.icon, size: 15, color: color),
-            ),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 1,
-                children: [
-                  Text(l.name, style: theme.ui(t.textMuted, size: 11.5)),
-                  Text(
-                    l.value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.ui(color, weight: FontWeight.w600),
+              child: SelectableText(
+                it.title,
+                style: theme.ui(t.text, size: 20, weight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconTap.line(
+              LineIcon.openOutside,
+              tooltip: 'Open on GitHub',
+              onTap: it.url.isEmpty ? null : () => openWeb(context, it.url),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            ItemStatePill(it),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 6,
+              children: [
+                PersonMark(it.author, size: 18),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: it.author,
+                        style: theme.ui(t.text, weight: FontWeight.w600),
+                      ),
+                      TextSpan(
+                        text: ' opened ${agoAt(opened.toInt(), clock())}',
+                      ),
+                    ],
                   ),
-                  Text(
-                    l.sub.isEmpty ? ' ' : l.sub,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.ui(t.textMuted, size: 11.5),
+                  style: theme.ui(t.textMuted),
+                ),
+                if (p.outside) const OutsideMark(),
+              ],
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 6,
+              children: [
+                branch(p.base),
+                Icon(Icons.arrow_back, size: 14, color: t.textMuted),
+                branch(p.crossRepo ? '${p.headRepo}:${p.head}' : p.head),
+              ],
+            ),
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '+${p.additions}',
+                    style: theme.code(t.done, size: 12),
+                  ),
+                  const TextSpan(text: ' '),
+                  TextSpan(
+                    text: '−${p.deletions}',
+                    style: theme.code(t.crashed, size: 12),
                   ),
                 ],
               ),
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 }

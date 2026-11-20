@@ -43,7 +43,7 @@ void main() {
     answer.complete(GetGitHubPullResponse(pull: fixturePull()));
     await tester.pumpAndSettle();
     expect(find.byType(PullSkeleton), findsNothing);
-    expect(find.text(_title), findsOneWidget);
+    expect(find.text(_title), findsNWidgets(2)); // the bar's and the head's
     expect(find.byKey(const ValueKey('pull-kept')), findsNothing);
     d.dispose();
   }, variant: onMac);
@@ -58,14 +58,14 @@ void main() {
       more: (input) => input is GetGitHubPullRequest ? answer.future : null,
     );
     expect(find.byType(PullSkeleton), findsNothing);
-    expect(find.text(_title), findsOneWidget);
-    expect(find.text('To do'), findsOneWidget);
+    expect(find.text(_title), findsNWidgets(2)); // the bar's and the head's
+    expect(find.text('Merging is blocked'), findsOneWidget);
     expect(find.text('Updated 2m ago · refreshing'), findsOneWidget);
     answer.complete(
       GetGitHubPullResponse(pull: fixturePull()..item.title = 'Renamed'),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Renamed'), findsOneWidget);
+    expect(find.text('Renamed'), findsNWidgets(2));
     expect(find.byKey(const ValueKey('pull-kept')), findsNothing);
     // And it's what shows next time.
     expect(cachedPull(_ref)!.$2.item.title, 'Renamed');
@@ -83,7 +83,7 @@ void main() {
           ? Future<GetGitHubPullResponse>.error(StateError('offline'))
           : null,
     );
-    expect(find.text(_title), findsOneWidget);
+    expect(find.text(_title), findsNWidgets(2)); // the bar's and the head's
     expect(find.text('Updated 5m ago'), findsOneWidget);
     d.dispose();
   }, variant: onMac);

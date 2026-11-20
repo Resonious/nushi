@@ -6,8 +6,8 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_agent.dart';
 import 'package:nushi/github_card.dart';
 import 'package:nushi/github_pull.dart';
-import 'package:nushi/github_text.dart' show readablePad;
 import 'package:nushi/menu.dart';
+import 'package:nushi/pull_header.dart' show pullPad;
 import 'package:nushi/pull_link.dart';
 import 'package:nushi/pull_rows.dart';
 import 'package:nushi/pull_states.dart';
@@ -110,10 +110,10 @@ class _Picker extends StatelessWidget {
     final theme = NushiTheme.of(context);
     final t = theme.t;
     final it = cp.itemOf(shown);
-    // Over the pane's column ([readablePad]), where its head starts.
+    // Over the page's column ([pullPad]), where its head starts.
     return LayoutBuilder(
       builder: (context, box) => Padding(
-        padding: EdgeInsets.fromLTRB(readablePad(box.maxWidth), 12, 16, 0),
+        padding: EdgeInsets.fromLTRB(pullPad(box.maxWidth), 12, 16, 0),
         child: Align(
           alignment: Alignment.centerLeft,
           child: MenuField(

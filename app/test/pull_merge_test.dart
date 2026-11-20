@@ -7,7 +7,7 @@ import 'package:nushi/controls.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/pull_cache.dart';
 import 'package:nushi/pull_lights.dart';
-import 'package:nushi/pull_merge.dart';
+import 'package:nushi/pull_merge_card.dart';
 import 'package:nushi/pull_merge_state.dart';
 import 'package:nushi/pull_rows.dart';
 import 'package:nushi/settings.dart';
@@ -17,11 +17,12 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 import 'pull_fixture.dart';
 
-/// What the control's box says, whole.
-String _says(WidgetTester tester) => tester
-    .widget<Text>(find.byKey(const ValueKey('merge-words')).first)
-    .textSpan!
-    .toPlainText();
+/// What the merge status card says: its heading, then its line.
+String _says(WidgetTester tester) => [
+  for (final k in ['merge-heading', 'merge-line'])
+    if (find.byKey(ValueKey(k)).evaluate().isNotEmpty)
+      tester.widget<Text>(find.byKey(ValueKey(k))).data!,
+].join(' ');
 
 const ValueKey<String> _key = ValueKey('merge-title');
 
@@ -171,7 +172,7 @@ void main() {
             _ => null,
           },
         );
-        expect(_says(tester), 'Ready to merge.');
+        expect(_says(tester), 'Ready to merge All requirements are met.');
         await _pressMerge(tester);
         expect(fake.calls.whereType<MergeGitHubPullRequest>(), isEmpty);
         expect(find.text('Squash and merge?'), findsOneWidget);
@@ -201,8 +202,8 @@ void main() {
         expect(sent.title, 'My title');
         expect(sent.body, '* One\n* Two');
         expect(find.byType(AlertDialog), findsNothing);
-        // The view follows: no control on a merged pull request.
-        expect(find.byKey(const ValueKey('merge-control')), findsNothing);
+        // The view follows: no merge button on a merged pull request.
+        expect(find.byType(SplitButton), findsNothing);
         expect(find.text('Merged'), findsWidgets);
         d.dispose();
       },
@@ -371,7 +372,7 @@ void main() {
         kept,
         more: (input) => input is GetGitHubPullRequest ? never.future : null,
       );
-      expect(_says(tester), 'Ready to merge.');
+      expect(_says(tester), 'Ready to merge All requirements are met.');
       expect(find.byType(SplitButton), findsNothing);
       d.dispose();
     }, variant: onMac);
@@ -399,7 +400,7 @@ void main() {
           _ => null,
         },
       );
-      expect(_says(tester), contains("Can't merge yet."));
+      expect(_says(tester), startsWith('Merging is blocked'));
       expect(find.text('Squash and merge'), findsNothing);
       await tester.tap(find.text('Enable auto-merge').first);
       await tester.pumpAndSettle();
@@ -511,7 +512,7 @@ void main() {
       details: true,
       open: false,
     );
-    expect(find.byType(MergeControl), findsNothing);
+    expect(find.byType(MergeCard), findsNothing);
     await tester.tap(
       find.descendant(
         of: find.byType(PullRow),
@@ -527,27 +528,17 @@ void main() {
     tester,
   ) async {
     final (d, _) = await openPullTab(tester, mergePull('ready'));
-    expect(
-      find.textContaining('Ready to merge', findRichText: true),
-      findsOneWidget,
-    );
-    expect(find.byKey(const ValueKey('merge-words')), findsOneWidget);
+    expect(find.text('Ready to merge'), findsOneWidget);
     expect(find.textContaining('nothing blocks'), findsNothing);
-    expect(find.textContaining('Nothing else waits'), findsNothing);
     d.dispose();
   }, variant: onMac);
 
-  testWidgets('a move the control doesn’t say stays in the head', (
-    tester,
-  ) async {
+  testWidgets('blocked: the card says by what, in a line', (tester) async {
     final (d, _) = await openPullTab(tester, mergePull('blocked'));
     expect(
-      find.textContaining('Your move', findRichText: true),
-      findsOneWidget,
-    );
-    expect(
-      find.textContaining("Can't merge yet", findRichText: true),
-      findsOneWidget,
+      _says(tester),
+      'Merging is blocked 2 required checks failing, changes requested, '
+      'unresolved conversations.',
     );
     d.dispose();
   }, variant: onMac);

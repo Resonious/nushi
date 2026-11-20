@@ -413,7 +413,8 @@ final fixtureLink = GitHubLink(
 );
 
 /// The app at [size] on a chat linked to [whole], its Pull request tab
-/// open; [more] answers the calls the fixture doesn't.
+/// open; [more] answers the calls the fixture doesn't, [commits] its
+/// commits (else [fixtureCommits]'s one).
 Future<(Daemon, FakeDaemon)> openPullTab(
   WidgetTester tester,
   GitHubPull whole, {
@@ -424,6 +425,7 @@ Future<(Daemon, FakeDaemon)> openPullTab(
   bool open = true,
   Worktree? worktree,
   bool busy = false,
+  GetGitHubCommitsResponse? commits,
 }) async {
   viewport(tester, size, brightness: brightness);
   showDetails.value = details;
@@ -447,12 +449,18 @@ Future<(Daemon, FakeDaemon)> openPullTab(
         switch (input) {
           FindChatPullRequest() => FindChatPullResponse(
             host: 'github.com',
-            repo: fixtureRepo,
+            repo: whole.item.ref.repo,
             branch: whole.head,
-            pull: fixtureLink,
+            pull: GitHubLink(
+              host: whole.item.ref.host,
+              repo: whole.item.ref.repo,
+              number: whole.item.ref.number,
+              id: whole.item.id,
+              pull: true,
+            ),
           ),
           GetGitHubPullRequest() => GetGitHubPullResponse(pull: whole),
-          GetGitHubCommitsRequest() => fixtureCommits(),
+          GetGitHubCommitsRequest() => commits ?? fixtureCommits(),
           ListGitHubHostsRequest() => ListGitHubHostsResponse(
             hosts: [
               GitHubHost(host: 'github.com', login: 'afrase', source: 'gh'),

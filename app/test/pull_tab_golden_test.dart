@@ -44,7 +44,11 @@ void main() {
   }
 
   // Each section, scrolled to, at 1440.
-  for (final section in ['Activity 4', 'Checks · 3 failing', 'Files 12']) {
+  for (final section in [
+    'Overview',
+    'Checks  3 failing',
+    'Files changed  12',
+  ]) {
     for (final (name, brightness) in [
       ('dark', Brightness.dark),
       ('light', Brightness.light),
