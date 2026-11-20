@@ -3,6 +3,7 @@ package githubapi
 import (
 	"cmp"
 	"context"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -14,18 +15,21 @@ const threadFields = `
 fragment Thread on PullRequestReviewThread {
   id path line startLine originalLine originalStartLine diffSide subjectType
   isOutdated isResolved viewerCanReply viewerCanResolve viewerCanUnresolve
-  comments(first: 50) { nodes ` + saidFields + ` }
+  comments(first: 50) { nodes { id url author { login __typename } authorAssociation body createdAt pullRequestReview { id } } }
+  hunk: comments(first: 1) { nodes { diffHunk } }
 }`
 
 const pullQuery = `query PullRequest($owner: String!, $name: String!, $number: Int!) {
   repository(owner: $owner, name: $name) {
     pullRequest(number: $number) {
       ...PullRow
-      body authorAssociation baseRefName headRefName baseRefOid headRefOid isCrossRepository
+      createdAt body authorAssociation baseRefName headRefName baseRefOid headRefOid isCrossRepository
       headRepository { nameWithOwner }
       mergeable mergeStateStatus additions deletions changedFiles
       ` + mergeFields + `
       commitCount: commits { totalCount }
+      labels(first: 20) { nodes { name color } }
+      assignees(first: 10) { nodes { login } }
       reviewRequests(first: 30) { nodes { asCodeOwner requestedReviewer { __typename ... on User { login } ... on Bot { login } ... on Mannequin { login } ... on Team { slug } } } }
       latestReviews(first: 30) { nodes { author { login } state } }
       comments(last: 100) { nodes ` + saidFields + ` }
@@ -66,12 +70,22 @@ type said struct {
 	Commit            *struct {
 		OID string `json:"oid"`
 	} `json:"commit"`
+	PullRequestReview *struct {
+		ID string `json:"id"`
+	} `json:"pullRequestReview"`
 }
 
 func (s said) comment() model.GitHubComment {
 	return model.GitHubComment{ID: s.ID, Author: s.Author.name(), Association: s.AuthorAssociation, Body: Markdown(s.Body),
 		URL: webURL(s.URL), Bot: s.Author != nil && s.Author.Typename == "Bot", Created: cmp.Or(s.SubmittedAt, s.CreatedAt),
-		Review: strings.ToLower(s.State), Commit: s.commit()}
+		Review: strings.ToLower(s.State), Commit: s.commit(), ReviewID: s.reviewID()}
+}
+
+func (s said) reviewID() string {
+	if s.PullRequestReview == nil {
+		return ""
+	}
+	return s.PullRequestReview.ID
 }
 
 func (s said) commit() string {
@@ -98,6 +112,12 @@ type thread struct {
 	Comments           struct {
 		Nodes []said `json:"nodes"`
 	} `json:"comments"`
+	// Hunk is the first comment's diff hunk.
+	Hunk struct {
+		Nodes []struct {
+			DiffHunk string `json:"diffHunk"`
+		} `json:"nodes"`
+	} `json:"hunk"`
 }
 
 type threadPage struct {
@@ -114,6 +134,9 @@ func (t thread) thread() model.GitHubThread {
 		Outdated: t.IsOutdated, Resolved: t.IsResolved, CanReply: t.ViewerCanReply, CanResolve: t.ViewerCanResolve, CanUnresolve: t.ViewerCanUnresolve}
 	for _, c := range t.Comments.Nodes {
 		out.Comments = append(out.Comments, c.comment())
+	}
+	if n := t.Hunk.Nodes; len(n) > 0 && !out.OnFile {
+		out.DiffHunk = TailHunk(n[0].DiffHunk, hunkLines)
 	}
 	return out
 }
@@ -187,6 +210,25 @@ func (n checkNode) check() model.GitHubCheck {
 	return c
 }
 
+// conversation is a pull request's comments and the reviews that said
+// something, oldest first, and every review submitted (none pending).
+func conversation(comments, reviews []said) (talk, submitted []model.GitHubComment) {
+	for _, c := range comments {
+		talk = append(talk, c.comment())
+	}
+	for _, r := range reviews {
+		if r.State == "PENDING" {
+			continue
+		}
+		submitted = append(submitted, r.comment())
+		if strings.TrimSpace(r.Body) != "" {
+			talk = append(talk, r.comment())
+		}
+	}
+	slices.SortStableFunc(talk, func(a, b model.GitHubComment) int { return a.Created.Compare(b.Created) })
+	return talk, submitted
+}
+
 // Pull is a pull request whole (about two points): its header, the
 // conversation, its review threads (paged past 100), and its head's
 // checks.
@@ -199,13 +241,14 @@ func (c *Client) Pull(ctx context.Context, repo string, number int) (model.GitHu
 		Repository *struct {
 			PullRequest *struct {
 				row
-				Body              string `json:"body"`
-				AuthorAssociation string `json:"authorAssociation"`
-				BaseRefName       string `json:"baseRefName"`
-				HeadRefName       string `json:"headRefName"`
-				BaseRefOid        string `json:"baseRefOid"`
-				HeadRefOid        string `json:"headRefOid"`
-				IsCrossRepository bool   `json:"isCrossRepository"`
+				CreatedAt         time.Time `json:"createdAt"`
+				Body              string    `json:"body"`
+				AuthorAssociation string    `json:"authorAssociation"`
+				BaseRefName       string    `json:"baseRefName"`
+				HeadRefName       string    `json:"headRefName"`
+				BaseRefOid        string    `json:"baseRefOid"`
+				HeadRefOid        string    `json:"headRefOid"`
+				IsCrossRepository bool      `json:"isCrossRepository"`
 				HeadRepository    *struct {
 					NameWithOwner string `json:"nameWithOwner"`
 				} `json:"headRepository"`
@@ -218,6 +261,10 @@ func (c *Client) Pull(ctx context.Context, repo string, number int) (model.GitHu
 				CommitCount struct {
 					TotalCount int `json:"totalCount"`
 				} `json:"commitCount"`
+				Labels    labels `json:"labels"`
+				Assignees struct {
+					Nodes []login `json:"nodes"`
+				} `json:"assignees"`
 				ReviewRequests struct {
 					Nodes []struct {
 						AsCodeOwner       bool `json:"asCodeOwner"`
@@ -270,7 +317,12 @@ func (c *Client) Pull(ctx context.Context, repo string, number int) (model.GitHu
 	out := model.GitHubPull{GitHubItem: p.item(c.Host), Body: Markdown(p.Body), Association: p.AuthorAssociation,
 		Base: p.BaseRefName, Head: p.HeadRefName, BaseOID: p.BaseRefOid, HeadOID: p.HeadRefOid, CrossRepo: p.IsCrossRepository,
 		Mergeable: strings.ToLower(p.Mergeable), MergeState: strings.ToLower(p.MergeStateStatus), Additions: p.Additions,
-		Deletions: p.Deletions, ChangedFiles: p.ChangedFiles, Commits: p.CommitCount.TotalCount, Merge: p.merge()}
+		Deletions: p.Deletions, ChangedFiles: p.ChangedFiles, Commits: p.CommitCount.TotalCount, Merge: p.merge(),
+		Labels: p.Labels.labels()}
+	out.Created = p.CreatedAt
+	for _, a := range p.Assignees.Nodes {
+		out.Assignees = append(out.Assignees, a.Login)
+	}
 	if p.HeadRepository != nil {
 		out.HeadRepo = p.HeadRepository.NameWithOwner
 	}
@@ -285,15 +337,7 @@ func (c *Client) Pull(ctx context.Context, repo string, number int) (model.GitHu
 			out.Reviewers = append(out.Reviewers, model.GitHubReviewer{Login: r.Author.name(), State: strings.ToLower(r.State)})
 		}
 	}
-	for _, s := range p.Comments.Nodes {
-		out.Conversation = append(out.Conversation, s.comment())
-	}
-	for _, s := range p.Reviews.Nodes {
-		if strings.TrimSpace(s.Body) != "" && s.State != "PENDING" {
-			out.Conversation = append(out.Conversation, s.comment())
-		}
-	}
-	slices.SortStableFunc(out.Conversation, func(a, b model.GitHubComment) int { return a.Created.Compare(b.Created) })
+	out.Conversation, out.Reviews = conversation(p.Comments.Nodes, p.Reviews.Nodes)
 	if n := p.Pending.Nodes; len(n) > 0 {
 		out.PendingReview, out.PendingComments = n[0].ID, n[0].Comments.TotalCount
 	}
@@ -347,12 +391,8 @@ func (c *Client) Issue(ctx context.Context, repo string, number int) (model.GitH
 				row
 				Body              string `json:"body"`
 				AuthorAssociation string `json:"authorAssociation"`
-				Labels            struct {
-					Nodes []struct {
-						Name string `json:"name"`
-					} `json:"nodes"`
-				} `json:"labels"`
-				Assignees struct {
+				Labels            labels `json:"labels"`
+				Assignees         struct {
 					Nodes []login `json:"nodes"`
 				} `json:"assignees"`
 				Comments struct {
@@ -379,4 +419,30 @@ func (c *Client) Issue(ctx context.Context, repo string, number int) (model.GitH
 		out.Conversation = append(out.Conversation, s.comment())
 	}
 	return out, nil
+}
+
+// colorRE is a label's color as GitHub gives it: six hex digits, no #.
+var colorRE = regexp.MustCompile(`^[0-9a-fA-F]{6}$`)
+
+// labels decodes a labels connection (an issue's asks for names only).
+// Names are plain (256 bytes), and a color that isn't six hex digits is
+// "".
+
+type labels struct {
+	Nodes []struct {
+		Name  string `json:"name"`
+		Color string `json:"color"`
+	} `json:"nodes"`
+}
+
+func (ls labels) labels() []model.GitHubLabel {
+	var out []model.GitHubLabel
+	for _, n := range ls.Nodes {
+		l := model.GitHubLabel{Name: plain(n.Name, 256)}
+		if colorRE.MatchString(n.Color) {
+			l.Color = n.Color
+		}
+		out = append(out, l)
+	}
+	return out
 }

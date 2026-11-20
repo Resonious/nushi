@@ -63,6 +63,9 @@ type GitHubComment struct {
 	// Commit is the head commit a review was made on (its oid); "" for a
 	// comment.
 	Commit string
+	// ReviewID is the review a review thread's comment was made in (its
+	// node id, as a review's ID); "" for any other comment.
+	ReviewID string
 }
 
 // GitHubThread is a review thread on a pull request's diff: on Line (from
@@ -75,6 +78,9 @@ type GitHubThread struct {
 	OnFile, Outdated, Resolved                       bool
 	CanReply, CanResolve, CanUnresolve               bool
 	Comments                                         []GitHubComment
+	// DiffHunk is the diff above the first comment, as GitHub keeps it
+	// (githubapi.TailHunk's tail of it); "" on a file.
+	DiffHunk string
 }
 
 // GitHubCheck is a check run (ID is its id, an Actions job's) or a commit
@@ -130,6 +136,28 @@ type GitHubPull struct {
 	PendingReview   string
 	PendingComments int
 	Merge           GitHubMerge
+	// Labels are its first 20 labels, Assignees its first 10 assignees'
+	// logins.
+	Labels    []GitHubLabel
+	Assignees []string
+	// Reviews are every review submitted (none pending), oldest first,
+	// the latest 100: those that said nothing too.
+	Reviews []GitHubComment
+}
+
+// GitHubLabel is a label: its name and color (six hex digits, no #).
+type GitHubLabel struct {
+	Name, Color string
+}
+
+// GitHubCommit is a pull request's commit: its full id, its message's
+// first line, its author's login (when the commit's email is an
+// account's, else "") and name as git has it, when it was committed, and
+// its checks ("success", "failure", "pending", or "" for none).
+type GitHubCommit struct {
+	OID, Headline, Author, AuthorName string
+	Committed                         time.Time
+	Checks                            string
 }
 
 // GitHubMerge is what merging a pull request may do, as GitHub says for

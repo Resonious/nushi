@@ -1,0 +1,106 @@
+{
+  "data": {
+    "repository": {
+      "pullRequest": {
+        "id": "PR_lumen_57",
+        "number": 57,
+        "title": "Expire idle sessions after 30 minutes",
+        "url": "https://github.com/acme/lumen/pull/57",
+        "state": "OPEN",
+        "isDraft": false,
+        "createdAt": "2026-11-18T09:12:00Z",
+        "updatedAt": "2026-11-19T15:40:00Z",
+        "author": { "login": "mira" },
+        "repository": { "nameWithOwner": "acme/lumen" },
+        "reviewDecision": "CHANGES_REQUESTED",
+        "totalCommentsCount": 4,
+        "commits": { "nodes": [ { "commit": { "statusCheckRollup": { "state": "SUCCESS" } } } ] },
+        "reviewThreads": { "nodes": [ { "isResolved": false }, { "isResolved": true } ] },
+        "body": "Sessions now expire after 30 idle minutes.",
+        "authorAssociation": "MEMBER",
+        "baseRefName": "main",
+        "headRefName": "idle-expiry",
+        "baseRefOid": "1111111111111111111111111111111111111111",
+        "headRefOid": "3333333333333333333333333333333333333333",
+        "isCrossRepository": false,
+        "headRepository": { "nameWithOwner": "acme/lumen" },
+        "mergeable": "MERGEABLE",
+        "mergeStateStatus": "BLOCKED",
+        "additions": 42,
+        "deletions": 7,
+        "changedFiles": 3,
+        "commitCount": { "totalCount": 3 },
+        "labels": { "nodes": [
+          { "name": "security", "color": "d73a4a" },
+          { "name": "needs-docs", "color": "0e8a16" }
+        ] },
+        "assignees": { "nodes": [ { "login": "mira" }, { "login": "iris" } ] },
+        "reviewRequests": { "nodes": [] },
+        "latestReviews": { "nodes": [
+          { "author": { "login": "tomas" }, "state": "CHANGES_REQUESTED" },
+          { "author": { "login": "iris" }, "state": "APPROVED" }
+        ] },
+        "comments": { "nodes": [
+          { "id": "IC_1", "url": "https://github.com/acme/lumen/pull/57#issuecomment-1", "author": { "login": "iris", "__typename": "User" },
+            "authorAssociation": "MEMBER", "body": "Does this cover the API tokens too?", "createdAt": "2026-11-18T10:00:00Z" }
+        ] },
+        "reviews": { "nodes": [
+          { "id": "PRR_tomas_1", "url": "https://github.com/acme/lumen/pull/57#pullrequestreview-1", "author": { "login": "tomas", "__typename": "User" },
+            "authorAssociation": "MEMBER", "body": "", "state": "COMMENTED", "submittedAt": "2026-11-18T11:00:00Z",
+            "commit": { "oid": "2222222222222222222222222222222222222222" } },
+          { "id": "PRR_tomas_2", "url": "https://github.com/acme/lumen/pull/57#pullrequestreview-2", "author": { "login": "tomas", "__typename": "User" },
+            "authorAssociation": "MEMBER", "body": "One more thing before this goes in.", "state": "CHANGES_REQUESTED", "submittedAt": "2026-11-19T09:00:00Z",
+            "commit": { "oid": "3333333333333333333333333333333333333333" } },
+          { "id": "PRR_iris_1", "url": "https://github.com/acme/lumen/pull/57#pullrequestreview-3", "author": { "login": "iris", "__typename": "User" },
+            "authorAssociation": "MEMBER", "body": "", "state": "APPROVED", "submittedAt": "2026-11-19T12:00:00Z",
+            "commit": { "oid": "3333333333333333333333333333333333333333" } },
+          { "id": "PRR_mira_pending", "url": "https://github.com/acme/lumen/pull/57#pullrequestreview-4", "author": { "login": "mira", "__typename": "User" },
+            "authorAssociation": "MEMBER", "body": "", "state": "PENDING", "submittedAt": null, "commit": null }
+        ] },
+        "pending": { "nodes": [ { "id": "PRR_mira_pending", "comments": { "totalCount": 0 } } ] },
+        "threads": {
+          "pageInfo": { "hasNextPage": false, "endCursor": "c2" },
+          "nodes": [
+            { "id": "PRRT_1", "path": "auth/session.go", "line": 48, "startLine": null, "originalLine": 48, "originalStartLine": null,
+              "diffSide": "RIGHT", "subjectType": "LINE", "isOutdated": false, "isResolved": false,
+              "viewerCanReply": true, "viewerCanResolve": true, "viewerCanUnresolve": false,
+              "comments": { "nodes": [
+                { "id": "PRRC_1", "url": "https://github.com/acme/lumen/pull/57#discussion_r1", "author": { "login": "tomas", "__typename": "User" },
+                  "authorAssociation": "MEMBER", "body": "Should this read the timeout from config?", "createdAt": "2026-11-18T11:00:00Z",
+                  "pullRequestReview": { "id": "PRR_tomas_1" } },
+                { "id": "PRRC_2", "url": "https://github.com/acme/lumen/pull/57#discussion_r2", "author": { "login": "mira", "__typename": "User" },
+                  "authorAssociation": "MEMBER", "body": "Yes, moved it.", "createdAt": "2026-11-18T12:00:00Z",
+                  "pullRequestReview": { "id": "PRR_mira_reply" } }
+              ] },
+              "hunk": { "nodes": [ { "diffHunk": "@@ -40,9 +40,14 @@ func (s *Store) Touch(id string) error {\n \tsess, ok := s.byID[id]\n \tif !ok {\n \t\treturn ErrNoSession\n \t}\n-\tsess.seen = time.Now()\n+\tif time.Since(sess.seen) > 30*time.Minute {\n+\t\tdelete(s.byID, id)\n+\t\treturn ErrExpired\n+\t}\n+\tsess.seen = time.Now()\n+\ts.byID[id] = sess\n \treturn nil" } ] } },
+            { "id": "PRRT_2", "path": "auth/session_test.go", "line": null, "startLine": null, "originalLine": 12, "originalStartLine": null,
+              "diffSide": "RIGHT", "subjectType": "LINE", "isOutdated": true, "isResolved": true,
+              "viewerCanReply": true, "viewerCanResolve": false, "viewerCanUnresolve": true,
+              "comments": { "nodes": [
+                { "id": "PRRC_3", "url": "https://github.com/acme/lumen/pull/57#discussion_r3", "author": { "login": "tomas", "__typename": "User" },
+                  "authorAssociation": "MEMBER", "body": "A test for the expired case?", "createdAt": "2026-11-18T11:00:00Z",
+                  "pullRequestReview": { "id": "PRR_tomas_1" } }
+              ] },
+              "hunk": { "nodes": [ { "diffHunk": "@@ -0,0 +1,12 @@\n+package auth\n+\n+import \"testing\"\n+\n+func TestTouch(t *testing.T) {\n+\ts := NewStore()\n+\tid := s.Open(\"mira\")\n+\tif err := s.Touch(id); err != nil {\n+\t\tt.Fatal(err)\n+\t}\n+}\n+" } ] } },
+            { "id": "PRRT_3", "path": "docs/sessions.md", "line": null, "startLine": null, "originalLine": null, "originalStartLine": null,
+              "diffSide": "RIGHT", "subjectType": "FILE", "isOutdated": false, "isResolved": false,
+              "viewerCanReply": true, "viewerCanResolve": true, "viewerCanUnresolve": false,
+              "comments": { "nodes": [
+                { "id": "PRRC_4", "url": "https://github.com/acme/lumen/pull/57#discussion_r4", "author": { "login": "iris", "__typename": "User" },
+                  "authorAssociation": "MEMBER", "body": "Mention the new timeout here.", "createdAt": "2026-11-19T12:00:00Z",
+                  "pullRequestReview": { "id": "PRR_iris_1" } }
+              ] },
+              "hunk": { "nodes": [ { "diffHunk": "" } ] } }
+          ]
+        },
+        "last": { "nodes": [ { "commit": { "statusCheckRollup": { "contexts": { "nodes": [
+          { "__typename": "CheckRun", "databaseId": 901, "name": "test", "status": "COMPLETED", "conclusion": "SUCCESS",
+            "detailsUrl": "https://github.com/acme/lumen/actions/runs/7/job/901", "title": "", "summary": "",
+            "startedAt": "2026-11-19T09:01:00Z", "completedAt": "2026-11-19T09:03:12Z", "isRequired": true,
+            "checkSuite": { "app": { "name": "GitHub Actions" }, "workflowRun": { "workflow": { "name": "CI" } } },
+            "annotations": { "nodes": [] } }
+        ] } } } } ] }
+      }
+    }
+  }
+}
