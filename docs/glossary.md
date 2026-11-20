@@ -143,10 +143,13 @@ Nushi's words, defined once. The UI, the code and the docs use them; a new user-
 | Term | Meaning | Code | ADR |
 |---|---|---|---|
 | **Review comment** | A comment you write on a line in Changes, for the agent: Add to review, then Send review comments to agent. Once sent and its lines changed, it leaves the code for the diff's "2 sent" pill. | `ReviewComment`, `SentComments` | |
-| **Send to agent** | Put a GitHub comment, thread or failed check into the box as a reply card, to send when you're ready. Never sends by itself. | `SendToAgent` | 0059 |
-| **Fix checks**, **Address** | Put the failed checks, or the review threads, into the box as reply cards: the Checks section's and the PR widget's buttons, in the send look. | `checkReplies`, `threadReplies` | 0059 |
+| **Send to agent** | Put a GitHub comment, thread or failed check into the box as a reply card, to send when you're ready; Send N to agent puts what blocks the merge. Never sends by itself. | `SendToAgent`, `toAgent` | 0059 |
+| **Fix checks**, **Address** | Put the failed checks, or the review threads, into the box as reply cards: the Checks tab's and the PR widget's buttons, in the send look. | `checkReplies`, `threadReplies` | 0059 |
 | **Re-run failed** | Ask GitHub to re-run the failed jobs of a pull request's failed checks' workflow runs. | `RerunGitHubChecks` | |
-| **Activity** | The Pull request tab's conversation, under To do: the description, comments and reviews, a bot's comment one line, a long review its start. | `PullActivity` | |
+| **Overview** | The Pull request tab's first tab, after GitHub's page: the merge status card, the description, Comments and the commit trail, the side column beside them (under them when narrow). | `PullOverview` | 0137 |
+| **Comments** (a pull request's) | The Overview's reviews and comments in time order, each review holding its threads (by review id), with a filter: All, Unresolved, Mine; a resolved or outdated thread folds to one line (Show). | `PullComments`, `PullThread`, `commentItems` | 0137 |
+| **Commit trail** | The newest and oldest commits after the comments, with "N additional commits by …" between, which opens the Commits tab. | `CommitTrail`, `PullCommits` | 0137 |
+| **Side column** | The Overview's right column: Activity (its commits), Reviewers, Assignees, Labels, participants; read-only. | `PullSide` | 0137 |
 | **GitHub view** | ⌘G: GitHub in the chat's place: the inbox, and an item's details. | `github_view.dart` | 0046 |
 | **Inbox** | The GitHub view's three cards: Review requested, My pull requests, Assigned issues. | `ListGitHubInbox`, `github_inbox.dart` | 0046 |
 | **Item** (GitHub) | A pull request or an issue in the inbox. | `GitHubItem`, `GitHubRef` | |
@@ -154,14 +157,13 @@ Nushi's words, defined once. The UI, the code and the docs use them; a new user-
 | **Link chip** | A pull request's or an issue's address in a message as a chip: its state's icon, `owner/repo#n` and the title; its **hover card** (the state pill, age, title, author, size) after 400 ms. A link with words of its own stays words, with the same card. | `GitHubLinkChip`, `GitHubLinkWords`, `GitHubCard`, `GitHubItems`, `GetGitHubItems` | 0117 |
 | **Start work** | Start a chat on an issue or pull request: pick a folder, then New chat with it, in a worktree. | `StartChatRequest`, `new_chat_issue.dart` | |
 | **Pull request** (a chat's) | One of the chat's pull requests, 10 at most: found by the head of a branch it pushed (opened in its life), opened by its own tool call (`gh pr create`), or linked by hand (Link pull request…, Link another pull request…, a row's Unlink). The **primary** is the one it started from, else the first: what the header's chip and the tab show first. | `FindChatPull`, `LinkChatPull`, `ChatRecord.Pulls`, `Chat.pulls`, `ChatPull` | 0059, 0117 |
-| **Pull request tab** | The chat's pull request in the chat's place: its head, the To do list, then conversation, checks, files with review threads. | `PullTab`, `GitHubPullPane` | 0059 |
-| **Status lights** | The Pull request tab's four boxes under its head, Checks, Review, Threads and Branch, each in its state's color; a click goes to its section. | `pullLights`, `PullHeader` | |
-| **Your move** | The sentence over the status lights saying whose move it is: "Your move. 5 things block the merge…", "Waiting on @team.", "Ready to merge." | `moveWords` | |
-| **To do** | The Pull request tab's list of what blocks the merge: failing checks, reviews that requested changes, review threads not resolved (an outdated one marked), and, with Findings from review bots on, a review bot's findings to address; each with Send; Send picked, Send all to agent. | `PullTodo`, `todo` | |
+| **Pull request tab** | The chat's pull request in the chat's place, laid out as GitHub's own page: a slim bar (`#n`, the title, Merge status, Submit review), the head, and the tabs Overview, Commits, Checks, Files changed. | `PullTab`, `GitHubPullPane`, `PullBar`, `PullHeader` | 0059, 0137 |
+| **Merge status card** | The Overview's first card: its state ("Merging is blocked", "Ready to merge"), a line of what blocks it, Send N to agent (what blocks it, as reply cards) and the merge button; under it the segments. | `MergeCard`, `mergeHead`, `todo` | 0069, 0137 |
+| **Segment** | One of the merge status card's three parts, Checks, Comments and Approvals: a few words and a bar of what's met, waiting and failing; a click opens its list (one at a time). | `SegmentRow`, `segmentsOf` | 0137 |
 | **Finding** (a review bot's) | An item a review bot's newest message lists under a heading such as "Must address" (Settings › GitHub › Review bots, off at first: which bots, which headings), found by its Markdown's shape; one on a thread's lines joins that thread. | `readFindings`, `ReviewFinding` | |
-| **Findings from review bots** | Settings › GitHub's opt-in for findings in To do (its Review bots group, Show bots' findings in To do): the bots' logins and the headings that start them. | `githubFindings`, `FindingsGroup` | |
+| **Findings from review bots** | Settings › GitHub's opt-in for findings in the merge status card (its Review bots group, Show bots' findings to address): the bots' logins and the headings that start them. | `githubFindings`, `FindingsGroup` | |
 | **PR widget** (Pull request widget) | The details panel's list of the chat's pull requests, a **row** each ("Pull requests" with two or more): the state's icon, the title, the **CI badge** (a dot and passed/total; its popover has Fix checks and Show checks), `#n +adds −dels` and one cue; its ⋯ has Merge…, Send open threads to agent, Clean up…, Unlink. Folded, one line. | `pull_widget.dart`, `PullRow`, `ChecksBadge`, `pullSummary`, `pullsFolded` | 0059, 0117 |
-| **Merge control** | Under the Pull request tab's head and in the PR widget: ready to merge or exactly why not, and what you may do (a method as a split button, Enable auto-merge, Add to queue, Merge when ready). | `MergeControl`, `mergeView`, `MergeBlocks` | 0069 |
+| **Merge button** | The merge status card's: what you may do (a method as a split button, Enable auto-merge, Add to queue, Merge when ready); the PR widget's row has Merge… instead. | `MergeButtons`, `mergeView`, `MergeBlocks` | 0069 |
 | **Clean up…** | After a chat's pull request merged or closed: delete its worktree, its local branch and the branch on GitHub, and archive the chat, each ticked in a dialog that says what it costs; Not now hides the PR widget's offer. | `showCleanUp`, `CleanUpJob`, `RemoveChatWorktree`, `DeleteChatBranch`, `DeleteGitHubBranch` | 0063 |
 | **Restore branch** | Make the pull request's branch on GitHub again at its head, after a clean-up deleted it. | `RestoreGitHubBranch` | 0063 |
 | **Review thread** | A GitHub inline comment and its replies at a line: Reply, Resolve, Unresolve. | `GitHubThread` | |
@@ -232,6 +234,10 @@ One line each; the word after the arrow wins.
 - opencode → **OpenCode** in the UI; `opencode` is its command.
 - Nushi Next → **Nushi** (ADR 0018).
 - group, for tool rows → **run**.
+- To do (the Pull request tab's list), status lights, Your move → the **merge status card** and its **segments** (ADR 0137).
+- Activity (the Pull request tab's) → **Overview**, its **Comments**; Files → **Files changed**.
+- Merge control → **merge status card** and its **merge button**.
+- Review… → **Submit review**.
 - built-in browser → **browser tab**. Only the setting Open local links in built-in browser says it, after Claude desktop's words.
 
 ## Renames to do
@@ -239,3 +245,4 @@ One line each; the word after the arrow wins.
 Code that uses an old word, for the clean-up batch. A proto field or message is renamed in place, its number and type kept (ADR 0004's amendment): the old name goes in its comment.
 
 - `PreviewEntry` and `PreviewFile` (a tab: a file's or a browser's), `PreviewBody`, `preview.dart`, `preview_path.dart`, `preview_marks.dart`: the file viewer's parts, still named for the preview, and the phone's preview, which keeps the word.
+- `TodoItem`, `todo`, `pull_todo_items.dart` (what blocks the merge, for Send N to agent) and `pull_lights.dart` (`Mood`, `PullSection`, the checks counted): named for the To do list and the status lights.

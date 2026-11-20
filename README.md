@@ -33,7 +33,7 @@ Then open Nushi and set up an agent in **Settings › Agents**. To install from 
 </tr>
 <tr>
 <td><b>The Pull request tab.</b> Checks, reviews and threads in one place, with what blocks the merge at the top. One click puts any of them in the agent's message box. Merge from the same tab when it's ready.</td>
-<td><a href="docs/images/pull-request.png"><img src="docs/images/pull-request.png" width="440" alt="The Pull request tab: status lights and the To do list of a failing check and review threads"></a></td>
+<td><a href="docs/images/pull-request.png"><img src="docs/images/pull-request.png" width="440" alt="The Pull request tab: the merge status card, the description and the comments"></a></td>
 </tr>
 <tr>
 <td><b>Jira.</b> Your issues and sprints as a task list. <b>Start work</b> opens a chat in a worktree (a separate checkout on its own branch) named after the issue.</td>
