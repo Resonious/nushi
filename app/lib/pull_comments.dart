@@ -30,10 +30,12 @@ typedef CommentItem = ({
   int at,
 });
 
-/// [p]'s comments in time order: each review with its threads (placed by
-/// their first comment's review id), each plain comment; a review that
-/// said nothing and holds no thread is left out, and threads whose
-/// review isn't among them come on their own, at their first comment.
+/// [p]'s comments, the newest first, as GitHub's page has them (ADR
+/// 0137): each review with its threads (placed by their first comment's
+/// review id; a thread's replies stay oldest first), each plain comment;
+/// a review that said nothing and holds no thread is left out, and
+/// threads whose review isn't among them come on their own, at their
+/// first comment.
 List<CommentItem> commentItems(GitHubPull p) {
   final reviews = p.reviews.isNotEmpty
       ? p.reviews
@@ -66,7 +68,15 @@ List<CommentItem> commentItems(GitHubPull p) {
         at: x.comments.firstOrNull?.createdMs.toInt() ?? 0,
       ),
   ];
-  return out..sort((a, b) => a.at.compareTo(b.at));
+  // What came at the same moment keeps GitHub's order.
+  final order = [for (var n = 0; n < out.length; n++) n]
+    ..sort(
+      (a, b) => switch (out[b].at.compareTo(out[a].at)) {
+        0 => a.compareTo(b),
+        final c => c,
+      },
+    );
+  return [for (final n in order) out[n]];
 }
 
 /// [items] as [filter] shows them; [me] is who the user is ('' unknown).
@@ -96,10 +106,11 @@ List<CommentItem> filtered(
   };
 }
 
-/// The Overview's Comments: the heading with its filter (All,
-/// Unresolved, Mine), then each review and comment in time order, a
-/// review's threads in its card ([PullThread], each by its key in
-/// [threadKeys]), then the box for a comment.
+/// The Overview's Comments, as GitHub's page: the heading with its
+/// filter (All, Unresolved, Mine), the box for a comment, then each
+/// review and comment, the newest first (one just posted lands right
+/// under the box, so nothing above it moves), a review's threads in its
+/// card ([PullThread], each by its key in [threadKeys]).
 class PullComments extends StatelessWidget {
   const new({
     required this.daemon,
@@ -165,6 +176,22 @@ class PullComments extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
+        CommentBox(
+          draft: githubDraft(p.item.ref, 'comment'),
+          hint: 'Leave a comment',
+          note: me.isEmpty ? 'Markdown' : 'Markdown · posts to GitHub as $me',
+          onPost: (text) async {
+            await daemon.client.addGitHubComment(
+              AddGitHubCommentRequest(
+                host: p.item.ref.host,
+                subject: p.item.id,
+                body: text,
+              ),
+            );
+            await onPosted();
+          },
+        ),
+        const SizedBox(height: 16),
         if (shown.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -201,22 +228,6 @@ class PullComments extends StatelessWidget {
                 ),
             ],
           ),
-        ),
-        const SizedBox(height: 16),
-        CommentBox(
-          draft: githubDraft(p.item.ref, 'comment'),
-          hint: 'Leave a comment',
-          note: me.isEmpty ? 'Markdown' : 'Markdown · posts to GitHub as $me',
-          onPost: (text) async {
-            await daemon.client.addGitHubComment(
-              AddGitHubCommentRequest(
-                host: p.item.ref.host,
-                subject: p.item.id,
-                body: text,
-              ),
-            );
-            await onPosted();
-          },
         ),
       ],
     );

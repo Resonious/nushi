@@ -60,9 +60,22 @@ void main() {
       findsOneWidget,
     );
     expect(find.byType(Table), findsNothing);
-    // Danger's, after mona's first review's resolved thread.
-    await tester.ensureVisible(find.text('Show').at(1));
-    await tester.tap(find.text('Show').at(1));
+    // Danger's, in its folded line.
+    final show = find.descendant(
+      of: find
+          .ancestor(
+            of: find.textContaining(
+              'Review App Links · Notes',
+              findRichText: true,
+            ),
+            matching: find.byType(Row),
+          )
+          .first,
+      matching: find.text('Show'),
+    );
+    await tester.ensureVisible(show);
+    await tester.pumpAndSettle();
+    await tester.tap(show);
     await tester.pumpAndSettle();
     expect(find.byType(Table), findsOneWidget);
     expect(find.text('Hide'), findsOneWidget);

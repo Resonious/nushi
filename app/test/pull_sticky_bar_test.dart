@@ -237,4 +237,19 @@ void main() {
       d.dispose();
     }, variant: onMac);
   }
+
+  testWidgets("a thread's row in the Comments segment lands on that thread, "
+      'under the slim bar, the comments newest first', (tester) async {
+    final d = await open(tester, 1700);
+    await tester.tap(find.byKey(const ValueKey('segment comments')));
+    await tester.pumpAndSettle();
+    // iris's thread: the oldest, so the lowest.
+    await tester.tap(find.byTooltip('Show it in Comments').last);
+    await tester.pumpAndSettle();
+    final place = tester.getRect(find.text('auth/session_test.go:12').last);
+    expect(bar, findsOneWidget);
+    expect(place.top, greaterThan(tester.getRect(bar).bottom));
+    expect(place.bottom, lessThan(1000));
+    d.dispose();
+  }, variant: onMac);
 }

@@ -75,7 +75,7 @@ The tab looks like the pull request's page on GitHub, so what you know from ther
 - **The bar** at the top keeps the number and title in view, with **Merge status** and **Submit review**.
 - **Four tabs**: **Overview**, **Commits**, **Checks** (every check, with **Re-run failed**) and **Files changed** (the diff, with review threads at their lines).
 - **Overview** starts with the **merge status card**: whether it can merge and what blocks it, the merge button, and three segments, **Checks**, **Comments** and **Approvals**. Click a segment to see its list.
-- Under the card are the description, the **Comments** (filter them by **All**, **Unresolved** or **Mine**), and the latest commits. Reviewers, assignees and labels are at the right.
+- Under the card are the description, the **Comments** (filter them by **All**, **Unresolved** or **Mine**; the box to write one comes first, then the newest), and the latest commits. Reviewers, assignees and labels are at the right.
 
 ## Send review feedback to the agent
 

@@ -17,3 +17,6 @@ The Pull request tab (and the GitHub view's pull request, the same pane) follows
 - One map: what someone knows from github.com finds its place here, and the merge button is the page's one primary.
 - The page needs a pull request's labels, assignees, every review, each thread's review id and hunk, and its commits (API 127). Commits are asked when they show and when the head moves, not with each poll.
 - What blocks the merge is one click further (a segment's list) than To do's always-open rows; Send N to agent and Merge status keep it a click away.
+
+## Amendments
+- 2026-11-20: Comments start with the comment box, under the heading and its filter, then the reviews and comments newest first (a thread's replies still oldest first), as GitHub's page has them; one just posted lands right under the box.

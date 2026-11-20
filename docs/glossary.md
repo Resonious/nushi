@@ -147,7 +147,7 @@ Nushi's words, defined once. The UI, the code and the docs use them; a new user-
 | **Fix checks**, **Address** | Put the failed checks, or the review threads, into the box as reply cards: the Checks tab's and the PR widget's buttons, in the send look. | `checkReplies`, `threadReplies` | 0059 |
 | **Re-run failed** | Ask GitHub to re-run the failed jobs of a pull request's failed checks' workflow runs. | `RerunGitHubChecks` | |
 | **Overview** | The Pull request tab's first tab, after GitHub's page: the merge status card, the description, Comments and the commit trail, the side column beside them (under them when narrow). | `PullOverview` | 0137 |
-| **Comments** (a pull request's) | The Overview's reviews and comments in time order, each review holding its threads (by review id), with a filter: All, Unresolved, Mine; a resolved or outdated thread folds to one line (Show). | `PullComments`, `PullThread`, `commentItems` | 0137 |
+| **Comments** (a pull request's) | The Overview's comment box, then its reviews and comments, the newest first, each review holding its threads (by review id), with a filter: All, Unresolved, Mine; a resolved or outdated thread folds to one line (Show). | `PullComments`, `PullThread`, `commentItems` | 0137 |
 | **Commit trail** | The newest and oldest commits after the comments, with "N additional commits by …" between, which opens the Commits tab. | `CommitTrail`, `PullCommits` | 0137 |
 | **Side column** | The Overview's right column: Activity (its commits), Reviewers, Assignees, Labels, participants; read-only. | `PullSide` | 0137 |
 | **GitHub view** | ⌘G: GitHub in the chat's place: the inbox, and an item's details. | `github_view.dart` | 0046 |
