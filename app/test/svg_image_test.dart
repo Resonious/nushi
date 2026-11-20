@@ -13,6 +13,8 @@ import 'harness.dart';
 // What an SVG in Markdown may hold (issue 69): it's someone else's file, so
 // nothing in it may load from elsewhere or run.
 
+const _xhtml = 'http://www.w3.org/1999/xhtml';
+
 Uint8List _bytes(String s) => Uint8List.fromList(utf8.encode(s));
 
 String _svg(String inner, {String attrs = ''}) =>
@@ -22,7 +24,7 @@ String _svg(String inner, {String attrs = ''}) =>
 
 /// One that's drawn: a gradient and a shape used by id, a style sheet,
 /// text, a title.
-final _fine = _svg('''
+final String _fine = _svg('''
 <title>A mark</title>
 <defs>
   <linearGradient id="g"><stop offset="0" stop-color="#fff"/></linearGradient>
@@ -46,10 +48,7 @@ void main() {
     'a script': (_svg('<script>alert(1)</script>'), 'a <script>'),
     'a script, upper case': (_svg('<SCRIPT>x</SCRIPT>'), 'a <SCRIPT>'),
     'a foreignObject': (
-      _svg(
-        '<foreignObject><div xmlns="http://www.w3.org/1999/xhtml">'
-        'x</div></foreignObject>',
-      ),
+      _svg('<foreignObject><div xmlns="$_xhtml">x</div></foreignObject>'),
       'a <foreignObject>',
     ),
     'an XHTML element': (
@@ -162,6 +161,15 @@ void main() {
     expect(looksLikeSvg(_bytes(_fine)), isTrue);
     expect(looksLikeSvg(_bytes('﻿<?xml version="1.0"?>\n$_fine')), isTrue);
     expect(looksLikeSvg(_bytes('<!-- by hand -->\n$_fine')), isTrue);
+    expect(
+      looksLikeSvg(
+        _bytes(
+          '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" '
+          '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n$_fine',
+        ),
+      ),
+      isTrue,
+    );
     expect(looksLikeSvg(_bytes('<html><svg/></html>')), isFalse);
     expect(looksLikeSvg([0x89, 0x50, 0x4E, 0x47]), isFalse);
   });

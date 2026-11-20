@@ -19,15 +19,23 @@ const int maxSvgBytes = 1 << 20;
 const int maxSvgElements = 20000;
 
 /// Whether [bytes] look like an SVG: an XML document whose root is `svg`,
-/// by its first bytes (a byte order mark, an XML declaration and comments
-/// aside), whatever the file is named.
+/// by its first bytes (a byte order mark, an XML declaration, a DOCTYPE
+/// and comments aside), whatever the file is named. One with a DOCTYPE is
+/// an SVG [svgRefusal] refuses, said as such rather than as a broken image.
 bool looksLikeSvg(List<int> bytes) {
   final head = utf8
       .decode(bytes.take(4096).toList(), allowMalformed: true)
-      .replaceFirst('﻿', '');
-  return RegExp(r'^\s*(<\?xml[^>]*>\s*)?(<!--[\s\S]*?-->\s*)*<svg[\s>]')
-      .hasMatch(head);
+      .replaceFirst('\uFEFF', '');
+  return _svgStart.hasMatch(head);
 }
+
+/// An SVG document's start: an XML declaration, comments, a DOCTYPE of
+/// `svg` (an internal subset and all), then the `svg` element.
+final _svgStart = RegExp(
+  r'^\s*(<\?xml[^>]*>\s*)?(<!--[\s\S]*?-->\s*)*'
+  r'(<!DOCTYPE\s+svg\b[^\[>]*(\[[\s\S]*?\])?\s*>\s*)?'
+  r'(<!--[\s\S]*?-->\s*)*<svg[\s>]',
+);
 
 /// The elements an SVG may not hold: script, other documents or media, and
 /// animation, which can set an attribute (a link) after the checks.
