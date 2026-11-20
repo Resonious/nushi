@@ -168,7 +168,7 @@ void main() {
   });
 
   testWidgets("a workflow's end is posted once, from the event the daemon "
-      'marks: in its words, in the slot of a turn\'s end, by the turn '
+      "marks: in its words, in the slot of a turn's end, by the turn "
       "settings; its item again isn't", (tester) async {
     final swift = _fake();
     final (fake, d, alerts) = await _connect(tester);
