@@ -118,7 +118,7 @@ func (s *server) StartChat(ctx context.Context, req *connect.Request[nushiv1.Sta
 		return connect.NewResponse(out), nil
 	}
 	if errors.Is(err, chats.ErrStart) {
-		return nil, because(connect.NewError(connect.CodeFailedPrecondition, err), ReasonAgentStart)
+		return nil, signInDetail(because(connect.NewError(connect.CodeFailedPrecondition, err), ReasonAgentStart), err)
 	} else if err != nil {
 		return nil, refused(err)
 	}

@@ -114,7 +114,7 @@ func (c *chat) openSession(ctx context.Context, sid, folder string, fork bool, a
 	if err != nil {
 		_ = agent.Close() // its start failed; that error is the one to return
 		c.notOpeningLocked()
-		return opened{}, c.kind.explain(err)
+		return opened{}, c.kind.explain(c.kind.signInError(init, err))
 	}
 	return o, nil
 }

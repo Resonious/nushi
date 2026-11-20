@@ -2913,6 +2913,7 @@ class Agent extends $pb.GeneratedMessage {
     $core.int? awake,
     $core.bool? mcpUserOnly,
     $core.bool? goAgentSwitch,
+    $core.String? signIn,
   }) {
     final result = Agent._();
     if (name != null) result.name = name;
@@ -2929,6 +2930,7 @@ class Agent extends $pb.GeneratedMessage {
     if (awake != null) result.awake = awake;
     if (mcpUserOnly != null) result.mcpUserOnly = mcpUserOnly;
     if (goAgentSwitch != null) result.goAgentSwitch = goAgentSwitch;
+    if (signIn != null) result.signIn = signIn;
     return result;
   }
 
@@ -2960,6 +2962,7 @@ class Agent extends $pb.GeneratedMessage {
     ..aI(13, _omitFieldNames ? '' : 'awake')
     ..aOB(15, _omitFieldNames ? '' : 'mcpUserOnly')
     ..aOB(16, _omitFieldNames ? '' : 'goAgentSwitch')
+    ..aOS(17, _omitFieldNames ? '' : 'signIn')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3133,6 +3136,17 @@ class Agent extends $pb.GeneratedMessage {
   $core.bool hasGoAgentSwitch() => $_has(13);
   @$pb.TagNumber(16)
   void clearGoAgentSwitch() => $_clearField(16);
+
+  /// What the user runs in a terminal to sign it in ("codex login"); empty
+  /// when Nushi doesn't know (API 139).
+  @$pb.TagNumber(17)
+  $core.String get signIn => $_getSZ(14);
+  @$pb.TagNumber(17)
+  set signIn($core.String value) => $_setString(14, value);
+  @$pb.TagNumber(17)
+  $core.bool hasSignIn() => $_has(14);
+  @$pb.TagNumber(17)
+  void clearSignIn() => $_clearField(17);
 }
 
 /// An agent's adapter.
@@ -3364,6 +3378,79 @@ class SetUpAgentResponse extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<SetUpAgentResponse>(
           SetUpAgentResponse.$_createMessage);
   static SetUpAgentResponse? _defaultInstance;
+}
+
+/// A start the agent refused because it isn't signed in (ACP's
+/// Authentication required): StartChat's and OpenAgentSession's error
+/// carries it as a detail, beside the plain message. Its methods are the
+/// ways the agent signs itself in that Nushi can run: the
+/// agent's own, none needing a key typed into Nushi; there is no detail
+/// when it offers none. A chat whose reopen fails so says it in a notice of
+/// status "sign_in" whose options are these methods (API 139, ADR 0145).
+class AgentSignIn extends $pb.GeneratedMessage {
+  factory AgentSignIn({
+    $core.String? agent,
+    $core.Iterable<Option>? methods,
+  }) {
+    final result = AgentSignIn._();
+    if (agent != null) result.agent = agent;
+    if (methods != null) result.methods.addAll(methods);
+    return result;
+  }
+
+  AgentSignIn._();
+
+  factory AgentSignIn.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      AgentSignIn()..mergeFromBuffer(data, registry);
+  factory AgentSignIn.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      AgentSignIn()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'AgentSignIn',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: AgentSignIn.$_createMessage)
+    ..aOS(1, _omitFieldNames ? '' : 'agent')
+    ..pPM<Option>(2, _omitFieldNames ? '' : 'methods',
+        subBuilder: Option.$_createMessage)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AgentSignIn clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AgentSignIn copyWith(void Function(AgentSignIn) updates) =>
+      super.copyWith((message) => updates(message as AgentSignIn))
+          as AgentSignIn;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use AgentSignIn() / AgentSignIn.new instead')
+  static AgentSignIn create() => AgentSignIn._();
+  static $pb.GeneratedMessage $_createMessage() => AgentSignIn._();
+  @$core.override
+  AgentSignIn createEmptyInstance() => AgentSignIn._();
+  @$core.pragma('dart2js:noInline')
+  static AgentSignIn getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AgentSignIn>(
+          AgentSignIn.$_createMessage);
+  static AgentSignIn? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get agent => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set agent($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasAgent() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAgent() => $_clearField(1);
+
+  /// Each method's id, name ("ChatGPT") and description, as the agent
+  /// gives them.
+  @$pb.TagNumber(2)
+  $pb.PbList<Option> get methods => $_getList(1);
 }
 
 class RemoveAgentRequest extends $pb.GeneratedMessage {

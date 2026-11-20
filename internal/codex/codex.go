@@ -87,6 +87,14 @@ var adapterFiles embed.FS
 // CLI is Codex's program.
 const CLI = "codex"
 
+// NoSignIn are the sign-in methods codex-acp and the Go agent may offer
+// that Nushi doesn't (ADR 0145): an API key ("api-key", from the request or
+// the environment) and a model gateway ("gateway"), which are the user's
+// keys, and ChatGPT's device code ("chat-gpt-device-code"), whose code and
+// page the agent shows through a URL elicitation Nushi doesn't take.
+// "chat-gpt" stays: the agent opens the browser and waits on its own.
+var NoSignIn = []string{"api-key", "chat-gpt-device-code", "gateway"}
+
 // Tested are the Codex versions the adapter was run with: its own (until
 // milestone Z), then the user's.
 var Tested = []string{"0.160.1", "0.163.0"}

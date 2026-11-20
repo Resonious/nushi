@@ -960,6 +960,9 @@ message Agent {
   // Settings.codex_go_agent picks: Settings › Agents shows that switch
   // under it (API 138, ADR 0142).
   bool go_agent_switch = 16;
+  // What the user runs in a terminal to sign it in ("codex login"); empty
+  // when Nushi doesn't know (API 139).
+  string sign_in = 17;
 }
 
 // An agent's adapter.
@@ -983,6 +986,20 @@ message SetUpAgentRequest {
 }
 
 message SetUpAgentResponse {}
+
+// A start the agent refused because it isn't signed in (ACP's
+// Authentication required): StartChat's and OpenAgentSession's error
+// carries it as a detail, beside the plain message. Its methods are the
+// ways the agent signs itself in that Nushi can run: the
+// agent's own, none needing a key typed into Nushi; there is no detail
+// when it offers none. A chat whose reopen fails so says it in a notice of
+// status "sign_in" whose options are these methods (API 139, ADR 0145).
+message AgentSignIn {
+  string agent = 1;
+  // Each method's id, name ("ChatGPT") and description, as the agent
+  // gives them.
+  repeated Option methods = 2;
+}
 
 message RemoveAgentRequest {
   string agent = 1;

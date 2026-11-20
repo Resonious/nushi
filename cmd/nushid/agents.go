@@ -45,10 +45,11 @@ func chatKinds(dir string, known []knownagents.Agent, agentSvc *agents.Service) 
 	for _, a := range known {
 		name, harness := a.Agent.Name, a.Local
 		kinds = append(kinds, chats.Kind{
-			Harness: harness,
-			MCP:     a.MCP != nil,
-			Explain: signedOut(a.Agent.SignIn, agentSvc.Explain(name)),
-			Ready:   func() error { _, err := agentSvc.Run(name); return err },
+			Harness:  harness,
+			MCP:      a.MCP != nil,
+			Explain:  signedOut(a.Agent.SignIn, agentSvc.Explain(name)),
+			NoSignIn: a.Agent.NoSignIn,
+			Ready:    func() error { _, err := agentSvc.Run(name); return err },
 			Launch: func(h acp.Client, log *slog.Logger) (chats.Agent, error) {
 				run, err := agentSvc.Run(name)
 				if err != nil {

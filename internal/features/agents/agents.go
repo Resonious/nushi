@@ -38,6 +38,9 @@ type Agent struct {
 	// SignIn is what the user runs in a terminal to sign the CLI in:
 	// "codex login". "": Nushi doesn't know it.
 	SignIn string
+	// NoSignIn are the ids of sign-in methods the agent may offer through
+	// ACP that Nushi doesn't (chats' Kind.NoSignIn, ADR 0145).
+	NoSignIn []string
 	// Own says whether the agent runs, for now, through Nushi's own ACP
 	// agent rather than its Adapter: Codex through the Go agent, as the
 	// user's setting says (ADR 0142). It is asked each time, so a change

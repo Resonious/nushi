@@ -855,6 +855,7 @@ const Agent$json = {
     {'1': 'awake', '3': 13, '4': 1, '5': 5, '10': 'awake'},
     {'1': 'mcp_user_only', '3': 15, '4': 1, '5': 8, '10': 'mcpUserOnly'},
     {'1': 'go_agent_switch', '3': 16, '4': 1, '5': 8, '10': 'goAgentSwitch'},
+    {'1': 'sign_in', '3': 17, '4': 1, '5': 9, '10': 'signIn'},
   ],
   '9': [
     {'1': 8, '2': 9},
@@ -872,7 +873,8 @@ final $typed_data.Uint8List agentDescriptor = $convert.base64Decode(
     'CVIIc2lnbmVkSW4SKwoHYWRhcHRlchgLIAEoCzIRLm51c2hpLnYxLkFkYXB0ZXJSB2FkYXB0ZX'
     'ISFAoFcmVhZHkYDCABKAhSBXJlYWR5EhQKBWF3YWtlGA0gASgFUgVhd2FrZRIiCg1tY3BfdXNl'
     'cl9vbmx5GA8gASgIUgttY3BVc2VyT25seRImCg9nb19hZ2VudF9zd2l0Y2gYECABKAhSDWdvQW'
-    'dlbnRTd2l0Y2hKBAgIEAlKBAgOEA9SBHBhZ2VSCGdvX2FnZW50');
+    'dlbnRTd2l0Y2gSFwoHc2lnbl9pbhgRIAEoCVIGc2lnbkluSgQICBAJSgQIDhAPUgRwYWdlUghn'
+    'b19hZ2VudA==');
 
 @$core.Deprecated('Use adapterDescriptor instead')
 const Adapter$json = {
@@ -915,6 +917,27 @@ const SetUpAgentResponse$json = {
 /// Descriptor for `SetUpAgentResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List setUpAgentResponseDescriptor =
     $convert.base64Decode('ChJTZXRVcEFnZW50UmVzcG9uc2U=');
+
+@$core.Deprecated('Use agentSignInDescriptor instead')
+const AgentSignIn$json = {
+  '1': 'AgentSignIn',
+  '2': [
+    {'1': 'agent', '3': 1, '4': 1, '5': 9, '10': 'agent'},
+    {
+      '1': 'methods',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.Option',
+      '10': 'methods'
+    },
+  ],
+};
+
+/// Descriptor for `AgentSignIn`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List agentSignInDescriptor = $convert.base64Decode(
+    'CgtBZ2VudFNpZ25JbhIUCgVhZ2VudBgBIAEoCVIFYWdlbnQSKgoHbWV0aG9kcxgCIAMoCzIQLm'
+    '51c2hpLnYxLk9wdGlvblIHbWV0aG9kcw==');
 
 @$core.Deprecated('Use removeAgentRequestDescriptor instead')
 const RemoveAgentRequest$json = {

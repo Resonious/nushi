@@ -199,23 +199,28 @@ func (s *Service) resume(c *chat) {
 
 // failedLocked marks the chat's reopen failed, not tried again until it's
 // shown (Reopen), a message, a reload or a move, or its agent becoming
-// ready, and says why in one notice, which replaces the last one's. Its
-// reason says what helps: "not_ready" setting its agent up (Settings ›
-// Agents), "folder_gone" moving the chat, "reopen_failed" trying again.
+// ready or signed in, and says why in one notice, which replaces the last
+// one's. Its reason says what helps: "not_ready" setting its agent up
+// (Settings › Agents), "folder_gone" moving the chat, "sign_in" signing
+// the agent in, one of the ways the notice's options are (SignInError,
+// ADR 0145), "reopen_failed" trying again.
 func (c *chat) failedLocked(err error) {
 	c.reopenFailed = true
 	reason := "reopen_failed"
+	var options []model.Option
 	if gone := folderGone(c.record); gone != nil {
 		reason, err = "folder_gone", gone
 	} else if ready := c.kind.ready(); ready != nil {
 		reason, err = "not_ready", ready
+	} else if in, ok := errors.AsType[*SignInError](err); ok {
+		reason, options = "sign_in", in.Methods
 	}
 	text := "Couldn't reopen the chat: " + detail(err)
 	if i := c.indexLocked(c.failure); i >= 0 && i == len(c.items)-1 && c.items[i].Status == reason && c.items[i].Text == text {
 		return // said already
 	}
 	c.unsendLocked(c.failure)
-	c.failure = c.addLocked(model.Item{Kind: model.Notice, Status: reason, Text: text})
+	c.failure = c.addLocked(model.Item{Kind: model.Notice, Status: reason, Text: text, Options: options})
 }
 
 // Reopen is a chat being shown (or Try again): one whose agent should run
