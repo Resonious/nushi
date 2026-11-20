@@ -648,7 +648,9 @@ final class CommitWatch: NSObject, WKNavigationDelegate {
 /// A page's find (lib/web_find.dart, ADR 0143): a script run in a content world
 /// of Nushi's own, so the page's scripts can't see its variables or change the
 /// functions it calls, marking the matches with the CSS Custom Highlight API,
-/// which leaves the page's DOM and text as they were. Its colours come as
+/// which leaves the page's DOM, text and selection as they were (WebKit's own
+/// find sets the selection, which the page sees). The page can read the
+/// highlights' ranges while they're shown; they're emptied as they go. Its colours come as
 /// arguments, checked to be rgba() before they go in the style sheet.
 enum PageFind {
   /// The body of an async function of `op` ("find", "show" or "clear"),
@@ -660,6 +662,9 @@ enum PageFind {
     const color = (c) => (typeof c === 'string' && /^rgba\([0-9., ]+\)$/.test(c)) ? c : 'transparent';
     const top = typeof cover === 'number' ? cover : 0;
     function clear() {
+      // Emptied first: once the page has read the registry WebKit keeps its
+      // own view of it, which a delete from this world doesn't reach.
+      for (const r of S.ranges) r.collapse(true);
       if (reg) { reg.delete('nushi-find'); reg.delete('nushi-find-now'); }
       if (S.sheet) {
         document.adoptedStyleSheets = document.adoptedStyleSheets.filter((s) => s !== S.sheet);
