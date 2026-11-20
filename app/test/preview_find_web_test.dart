@@ -175,7 +175,9 @@ void main() {
   }
 
   testWidgets("⌘F with the browser's address field focused finds in its "
-      'page', (tester) async {
+      'page; Esc gives the field its keys back, not the web view', (
+    tester,
+  ) async {
     final finder = FakePageFinder(_page);
     final d = await _tab(tester, finder);
     await tester.tap(addressField);
@@ -183,6 +185,30 @@ void main() {
     await cmd(tester, LogicalKeyboardKey.keyF);
     expect(find.text('Find in the page'), findsOne);
     expect(chatC(d).find.query, isNull);
+    await look(tester, 'teapot');
+    expect(addressEditable(tester).widget.focusNode.hasFocus, isFalse);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(findBar, findsNothing);
+    expect(finder.asked.last, 'clear');
+    expect(finder.asked, isNot(contains('focus')));
+    expect(addressEditable(tester).widget.focusNode.hasFocus, isTrue);
+    await endEditor(tester, d);
+  }, variant: onMac);
+
+  testWidgets('⌘F from the page, the prompt box focused before: Esc gives '
+      'the web view the keys, not the prompt box', (tester) async {
+    final finder = FakePageFinder(_page);
+    final d = await _tab(tester, finder);
+    await _focusPrompt(tester);
+    final prompt = FocusManager.instance.primaryFocus!;
+    finder.hasKeys = true;
+    await cmd(tester, LogicalKeyboardKey.keyF);
+    await look(tester, 'teapot');
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(finder.asked.sublist(finder.asked.length - 2), ['clear', 'focus']);
+    expect(prompt.hasFocus, isFalse);
     await endEditor(tester, d);
   }, variant: onMac);
 

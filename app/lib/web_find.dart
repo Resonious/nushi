@@ -63,7 +63,10 @@ Future<WebFind?> focusedPageFind() async {
 /// [Find] over a page, through its [finder]: the page answers each query
 /// with a count, its matches are numbered, and a step asks it to show the
 /// next. Answers come in the order asked; one overtaken by a later query
-/// is dropped. Esc gives the web view the keys back.
+/// is dropped. Esc gives the keys back to where they were as the bar
+/// opened: the web view when ⌘F came from it ([openFromPage]), else the
+/// Flutter field that had them (a browser tab's address field), as
+/// [PreviewFind] does.
 class WebFind extends Find {
   new(this.finder) {
     finder.loaded.addListener(_reloaded);
@@ -131,15 +134,47 @@ class WebFind extends Find {
     if (query != null) _look();
   }
 
+  // Where the keys were as the bar opened: the web view, or a Flutter node.
+  bool _fromPage = false;
+  FocusNode? _back;
+
+  /// Opens the bar from the web view, which had the keys: Flutter's focus
+  /// is wherever it was before the page took them, so it isn't kept.
+  void openFromPage() {
+    if (query == null) {
+      _fromPage = true;
+      _back = null;
+    }
+    super.open();
+  }
+
+  @override
+  void open() {
+    if (query == null) {
+      _fromPage = false;
+      final now = FocusManager.instance.primaryFocus;
+      _back = now == focus ? null : now;
+    }
+    super.open();
+  }
+
   @override
   void close() {
     final had = focus.hasFocus;
+    final (fromPage, back) = (_fromPage, _back);
+    _fromPage = false;
+    _back = null;
     _answered = ++_asks;
     super.close();
     _then(finder.clear);
-    if (had) {
+    if (!had) return;
+    if (fromPage) {
       focus.unfocus();
       _then(finder.focus);
+    } else if (back != null && back.context != null && back.canRequestFocus) {
+      back.requestFocus();
+    } else {
+      focus.unfocus();
     }
   }
 

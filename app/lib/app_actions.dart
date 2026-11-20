@@ -367,7 +367,9 @@ List<AppAction> appActions(BuildContext context, Daemon d) {
 
         if (pageFinds.isEmpty) return own();
         unawaited(
-          focusedPageFind().then((page) => page == null ? own() : page.open()),
+          focusedPageFind().then(
+            (page) => page == null ? own() : page.openFromPage(),
+          ),
         );
       },
     ),

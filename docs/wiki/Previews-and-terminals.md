@@ -102,7 +102,7 @@ Press ⌘F with a file in the Files pane to find text in it, the same way you fi
 
 It works in rendered Markdown, in a CSV's table (its header too; a match hidden past a cell's "…" marks the whole cell), in a file you're editing, and in one that shows read-only. It finds in every line or row, not just those on screen.
 
-On the Mac it works in an HTML page and a browser tab too: click in the page, then press ⌘F. It finds the text you can see on the page; Esc puts you back in the page. On Linux and Windows a page has no find of its own yet. SVG, PDF and diagram previews have none.
+On the Mac it works in an HTML page and a browser tab too: click in the page, then press ⌘F. It finds the text you can see on the page; Esc puts you back where you were: in the page, or in the address bar if you pressed ⌘F there. On Linux and Windows a page has no find of its own yet. SVG, PDF and diagram previews have none.
 
 ## Use the browser
 
