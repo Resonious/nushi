@@ -800,6 +800,12 @@ message GetChatItemsRequest {
   int32 limit = 3;
   // As GetChatRequest.image_refs. API 110.
   bool image_refs = 4;
+  // An item before the page to reach back to, for going to a message far
+  // above what's loaded (⌘F's step to a match, ADR 0144): the page goes
+  // back past it by `limit` more items, 2000 items at most; when that
+  // doesn't reach it, the client asks again from the page's first item.
+  // not_found when the chat has no such item. API 137.
+  string through = 5;
 }
 
 message GetChatImageRequest {

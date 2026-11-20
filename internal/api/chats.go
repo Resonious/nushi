@@ -54,7 +54,7 @@ func (s *server) GetChatItems(_ context.Context, req *connect.Request[nushiv1.Ge
 	if n <= 0 || n > 500 {
 		n = 500
 	}
-	items, start, err := s.Chats.Items(req.Msg.ChatId, req.Msg.Before, n)
+	items, start, err := s.Chats.Items(req.Msg.ChatId, req.Msg.Before, req.Msg.Through, n)
 	if err != nil {
 		return nil, notFound(err)
 	}

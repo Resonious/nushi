@@ -45,6 +45,12 @@ func TestRecentThenOlderPages(t *testing.T) {
 	if transcript(items) != transcript(all.Items) {
 		t.Errorf("pages:\n%s\nwhole:\n%s", transcript(items), transcript(all.Items))
 	}
+	// A page through an item far above reaches it and limit items more.
+	far := must(a.c.GetChatItems(ctx, connect.NewRequest(&nushiv1.GetChatItemsRequest{ChatId: id,
+		Before: snap.Items[0].Id, Through: all.Items[3].Id, Limit: 2})))
+	if far.Older != 1 || far.Items[2].Id != all.Items[3].Id {
+		t.Errorf("through item 3: %d older, first %s", far.Older, far.Items[0].Id)
+	}
 	// A new item's event says where it is, so a client with the recent
 	// part only can tell it from an update to an item it hasn't got.
 	a.send(id, "six")

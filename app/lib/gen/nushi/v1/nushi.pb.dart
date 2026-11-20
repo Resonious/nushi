@@ -1859,12 +1859,14 @@ class GetChatItemsRequest extends $pb.GeneratedMessage {
     $core.String? before,
     $core.int? limit,
     $core.bool? imageRefs,
+    $core.String? through,
   }) {
     final result = GetChatItemsRequest._();
     if (chatId != null) result.chatId = chatId;
     if (before != null) result.before = before;
     if (limit != null) result.limit = limit;
     if (imageRefs != null) result.imageRefs = imageRefs;
+    if (through != null) result.through = through;
     return result;
   }
 
@@ -1885,6 +1887,7 @@ class GetChatItemsRequest extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'before')
     ..aI(3, _omitFieldNames ? '' : 'limit')
     ..aOB(4, _omitFieldNames ? '' : 'imageRefs')
+    ..aOS(5, _omitFieldNames ? '' : 'through')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1949,6 +1952,20 @@ class GetChatItemsRequest extends $pb.GeneratedMessage {
   $core.bool hasImageRefs() => $_has(3);
   @$pb.TagNumber(4)
   void clearImageRefs() => $_clearField(4);
+
+  /// An item before the page to reach back to, for going to a message far
+  /// above what's loaded (⌘F's step to a match, ADR 0144): the page goes
+  /// back past it by `limit` more items, 2000 items at most; when that
+  /// doesn't reach it, the client asks again from the page's first item.
+  /// not_found when the chat has no such item. API 137.
+  @$pb.TagNumber(5)
+  $core.String get through => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set through($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasThrough() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearThrough() => $_clearField(5);
 }
 
 class GetChatImageRequest extends $pb.GeneratedMessage {

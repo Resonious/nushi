@@ -576,6 +576,7 @@ const GetChatItemsRequest$json = {
     {'1': 'before', '3': 2, '4': 1, '5': 9, '10': 'before'},
     {'1': 'limit', '3': 3, '4': 1, '5': 5, '10': 'limit'},
     {'1': 'image_refs', '3': 4, '4': 1, '5': 8, '10': 'imageRefs'},
+    {'1': 'through', '3': 5, '4': 1, '5': 9, '10': 'through'},
   ],
 };
 
@@ -583,7 +584,7 @@ const GetChatItemsRequest$json = {
 final $typed_data.Uint8List getChatItemsRequestDescriptor = $convert.base64Decode(
     'ChNHZXRDaGF0SXRlbXNSZXF1ZXN0EhcKB2NoYXRfaWQYASABKAlSBmNoYXRJZBIWCgZiZWZvcm'
     'UYAiABKAlSBmJlZm9yZRIUCgVsaW1pdBgDIAEoBVIFbGltaXQSHQoKaW1hZ2VfcmVmcxgEIAEo'
-    'CFIJaW1hZ2VSZWZz');
+    'CFIJaW1hZ2VSZWZzEhgKB3Rocm91Z2gYBSABKAlSB3Rocm91Z2g=');
 
 @$core.Deprecated('Use getChatImageRequestDescriptor instead')
 const GetChatImageRequest$json = {

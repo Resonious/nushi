@@ -1714,7 +1714,13 @@ type GetChatItemsRequest struct {
 	// `recent` does.
 	Limit int32 `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	// As GetChatRequest.image_refs. API 110.
-	ImageRefs     bool `protobuf:"varint,4,opt,name=image_refs,json=imageRefs,proto3" json:"image_refs,omitempty"`
+	ImageRefs bool `protobuf:"varint,4,opt,name=image_refs,json=imageRefs,proto3" json:"image_refs,omitempty"`
+	// An item before the page to reach back to, for going to a message far
+	// above what's loaded (⌘F's step to a match, ADR 0144): the page goes
+	// back past it by `limit` more items, 2000 items at most; when that
+	// doesn't reach it, the client asks again from the page's first item.
+	// not_found when the chat has no such item. API 137.
+	Through       string `protobuf:"bytes,5,opt,name=through,proto3" json:"through,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1775,6 +1781,13 @@ func (x *GetChatItemsRequest) GetImageRefs() bool {
 		return x.ImageRefs
 	}
 	return false
+}
+
+func (x *GetChatItemsRequest) GetThrough() string {
+	if x != nil {
+		return x.Through
+	}
+	return ""
 }
 
 type GetChatImageRequest struct {
@@ -27748,13 +27761,14 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\x05queue\x18\b \x01(\v2\x13.nushi.v1.ChatQueueR\x05queue\x12\x14\n" +
 	"\x05older\x18\t \x01(\x05R\x05older\x12(\n" +
 	"\arunning\x18\n" +
-	" \x03(\v2\x0e.nushi.v1.ItemR\arunning\"{\n" +
+	" \x03(\v2\x0e.nushi.v1.ItemR\arunning\"\x95\x01\n" +
 	"\x13GetChatItemsRequest\x12\x17\n" +
 	"\achat_id\x18\x01 \x01(\tR\x06chatId\x12\x16\n" +
 	"\x06before\x18\x02 \x01(\tR\x06before\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x1d\n" +
 	"\n" +
-	"image_refs\x18\x04 \x01(\bR\timageRefs\"F\n" +
+	"image_refs\x18\x04 \x01(\bR\timageRefs\x12\x18\n" +
+	"\athrough\x18\x05 \x01(\tR\athrough\"F\n" +
 	"\x13GetChatImageRequest\x12\x17\n" +
 	"\achat_id\x18\x01 \x01(\tR\x06chatId\x12\x16\n" +
 	"\x06sha256\x18\x02 \x01(\tR\x06sha256\";\n" +

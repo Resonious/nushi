@@ -124,7 +124,7 @@ func look(t *testing.T, svc *Service, id string, n int) seen {
 	s.Recent, err = svc.Recent(id, n)
 	testcheck.NoErr(t, err)
 	for before, older := s.Recent.Chat.Items[0].ID, s.Recent.Older; older > 0; {
-		page, start, err := svc.Items(id, before, n)
+		page, start, err := svc.Items(id, before, "", n)
 		testcheck.NoErr(t, err)
 		s.Pages, s.Starts = append(s.Pages, page), append(s.Starts, start)
 		before, older = page[0].ID, start
