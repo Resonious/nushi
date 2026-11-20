@@ -7,6 +7,7 @@ import 'package:nushi/native.dart';
 import 'package:nushi/panes.dart';
 import 'package:nushi/preview.dart';
 import 'package:nushi/toast.dart';
+import 'package:nushi/web_find.dart';
 import 'package:nushi/web_views.dart';
 
 /// What draws a page (HTML, SVG, PDF) the agent wrote, from disk: on the
@@ -21,6 +22,9 @@ abstract interface class PageHost {
 
   /// Reads it again, keeping where it was scrolled to.
   Future<void> reload();
+
+  /// Its page's own find, or null where it has none (issue 63).
+  PageFinder? get finder;
 
   void dispose();
 }

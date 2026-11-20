@@ -14,6 +14,7 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/preview_entry.dart';
 import 'package:nushi/settings.dart';
+import 'package:nushi/web_find.dart';
 
 import 'fake_daemon.dart';
 import 'fake_web_views.dart';
@@ -85,6 +86,10 @@ class FakeBrowserHost implements BrowserHost {
     snapshots++;
     return fakePng;
   }
+
+  /// The page's find, as a test gives it; none by default.
+  @override
+  PageFinder? finder;
 
   @override
   Future<void> back() async {}

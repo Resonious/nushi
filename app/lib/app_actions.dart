@@ -41,6 +41,7 @@ import 'package:nushi/status_bar.dart';
 import 'package:nushi/terminal_panel.dart';
 import 'package:nushi/update_toast.dart';
 import 'package:nushi/view_options.dart';
+import 'package:nushi/web_find.dart' show focusedPageFind, pageFinds;
 import 'package:nushi/web_views.dart' show webEmbedded;
 import 'package:nushi/widgets.dart';
 
@@ -282,8 +283,14 @@ List<AppAction> appActions(BuildContext context, Daemon d) {
     _ => null,
   };
   final closing = shown == null ? null : tabToClose(shown);
-  // The preview with the focus, which ⌘F finds in (issue 63).
+  // The preview with the focus, which ⌘F finds in (issue 63); else the
+  // chat's or Changes', not under a pane expanded over the transcript,
+  // where its bar would open unseen.
   final preview = shown == null ? null : focusedPreviewFind();
+  final chatFinds =
+      shown != null &&
+      (shown.shownTab == ChatTab.chat && shown.covered == null ||
+          shown.shownTab == ChatTab.changes);
   return [
     AppAction(.newChat, 'New chat', run: () => newChat(context, d, '')),
     AppAction(
@@ -343,18 +350,26 @@ List<AppAction> appActions(BuildContext context, Daemon d) {
           : shown?.shownTab == ChatTab.changes
           ? 'Find in changes'
           : 'Find in the chat',
-      // Not under a pane expanded over the transcript, where its bar
-      // would open unseen; a preview with the focus finds in its file.
-      enabled:
-          preview != null ||
-          shown != null &&
-              (shown.shownTab == ChatTab.chat && shown.covered == null ||
-                  shown.shownTab == ChatTab.changes),
-      run: () => preview != null
-          ? preview.open()
-          : shown!.shownTab == ChatTab.changes
-          ? shown.changesFind.open()
-          : shown.find.open(),
+      // A preview with the focus finds in its file. A page's web view with
+      // the keys gives ⌘F to the menu bar, which comes here: that page's
+      // find, asked of the web views shown.
+      enabled: preview != null || pageFinds.isNotEmpty || chatFinds,
+      run: () {
+        void own() {
+          if (preview != null) {
+            preview.open();
+          } else if (chatFinds) {
+            shown.shownTab == ChatTab.changes
+                ? shown.changesFind.open()
+                : shown.find.open();
+          }
+        }
+
+        if (pageFinds.isEmpty) return own();
+        unawaited(
+          focusedPageFind().then((page) => page == null ? own() : page.open()),
+        );
+      },
     ),
     AppAction(
       .chat,

@@ -32,6 +32,7 @@ import 'package:nushi/settings.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/tool_calls.dart';
 import 'package:nushi/transcript.dart';
+import 'package:nushi/web_find.dart';
 import 'package:nushi/web_page.dart';
 import 'package:xterm2/xterm.dart' hide Terminal;
 
@@ -99,6 +100,9 @@ class _Page implements PageHost {
 
   @override
   Future<void> reload() async {}
+
+  @override
+  PageFinder? get finder => null;
 
   @override
   void dispose() => live.value--;

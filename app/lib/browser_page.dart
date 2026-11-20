@@ -8,6 +8,7 @@ import 'package:nushi/browser_navigation.dart';
 import 'package:nushi/native.dart';
 import 'package:nushi/run_state.dart';
 import 'package:nushi/settings.dart' show localNetworkSites;
+import 'package:nushi/web_find.dart';
 import 'package:nushi/web_views.dart';
 
 export 'package:nushi/browser_navigation.dart';
@@ -47,6 +48,9 @@ abstract interface class BrowserHost {
   /// The page as it's on screen, the part in sight only, as a PNG (the ⋯
   /// menu's Save screenshot).
   Future<Uint8List> snapshot();
+
+  /// Its page's own find, or null where it has none (issue 63).
+  PageFinder? get finder;
 
   void dispose();
 }

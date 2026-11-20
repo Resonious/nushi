@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nushi/web_find.dart';
+import 'package:nushi/web_find_macos.dart';
 import 'package:nushi/web_page.dart';
 import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -67,6 +69,10 @@ class WebKitPage implements PageHost {
     const PlatformWebViewControllerCreationParams(),
   );
   late final CookielessLoads _loads;
+  late final _finder = WebKitFinder(() => _c.webViewIdentifier);
+
+  @override
+  PageFinder get finder => _finder;
   final _page = PageFile();
   String _root = '';
   bool _loaded = false;
@@ -105,6 +111,7 @@ class WebKitPage implements PageHost {
 
   void _finished(String url) {
     _loaded = true;
+    _finder.pageLoaded();
     if (_scrollTo case final y?) {
       _scrollTo = null;
       unawaited(_c.runJavaScript('window.scrollTo(0, $y)').catchError((_) {}));

@@ -21,6 +21,7 @@ import 'package:nushi/settings.dart' show indentGuides, scrollPastEnd, tabSize;
 import 'package:nushi/source_editor.dart';
 import 'package:nushi/source_menu.dart';
 import 'package:nushi/theme/theme.dart';
+import 'package:nushi/web_find.dart';
 import 'package:nushi/web_page.dart';
 import 'package:nushi/web_views.dart';
 
@@ -204,6 +205,7 @@ class _FileViewState extends State<FileView> {
   @override
   void dispose() {
     _focus.dispose();
+    _pageFind?.dispose();
     super.dispose();
   }
 
@@ -221,8 +223,16 @@ class _FileViewState extends State<FileView> {
   };
 
   /// ⌘F with the focus in the view: the preview's own find ([FindSlot]);
-  /// the editor's, deeper, takes it first while it has the focus.
-  late final _slot = FindSlot();
+  /// the editor's, deeper, takes it first while it has the focus. An HTML
+  /// page finds with its web view's own text, where the web view can
+  /// ([PageHost.finder]; ADR 0143).
+  late final _slot = FindSlot()
+    ..choose = () =>
+        _shown.page != null && !_shown.showsSource ? _pageFind : null;
+  late final WebFind? _pageFind = switch (_shown.page?.finder) {
+    final finder? when _shown.kind == PreviewKind.html => WebFind(finder),
+    _ => null,
+  };
 
   KeyEventResult _key(FocusNode _, KeyEvent e) {
     if (e is KeyUpEvent) return KeyEventResult.ignored;
@@ -305,11 +315,17 @@ class _FileViewState extends State<FileView> {
                         editor: _editor,
                         readOnly: shown.readOnly,
                         page: switch ((shown.page, shown.diagram)) {
-                          (final page?, _) => (watch) => WebPage(
-                            host: page,
-                            watch: watch,
-                            roots: [chat.folder, ?chat.worktree?.path],
-                          ),
+                          (final page?, _) => (watch) {
+                            final view = WebPage(
+                              host: page,
+                              watch: watch,
+                              roots: [chat.folder, ?chat.worktree?.path],
+                            );
+                            final find = _pageFind;
+                            return find == null
+                                ? view
+                                : PageFindFrame(find: find, child: view);
+                          },
                           (_, final diagram?) => (watch) => DiagramView(
                             host: diagram,
                             watch: watch,
