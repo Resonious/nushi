@@ -423,8 +423,8 @@ void main() {
     d.dispose();
   }, variant: onMac);
 
-  testWidgets('sent and outdated above its file while the turn runs: '
-      'Remove on hover takes it out', (tester) async {
+  testWidgets('sent and outdated while the turn runs: not a card but the '
+      "diff's sent pill, whose Remove takes it out", (tester) async {
     final (d, chat) = await open(tester);
     await sendToAgent(tester);
     busy(chat, on: true);
@@ -439,14 +439,18 @@ void main() {
     ];
     await tester.tap(find.byTooltip('Reload'));
     await settle(tester);
-    // Above its file: each state its own pill, its lines between them.
-    expect(find.text('Outdated'), findsOne);
+    // Not a card: the pill over the file says it was sent, its list
+    // shows it with its lines.
+    expect(find.byType(CommentCard), findsNothing);
+    expect(find.text('Check for overflow.'), findsNothing);
+    await tester.tap(find.text('1 sent'));
+    await settle(tester);
     expect(find.text('Line 4'), findsOne);
-    expect(find.text('Sent'), findsOne);
-    await hover(tester, 'Check for overflow.');
+    expect(find.text('Check for overflow.'), findsOne);
     await tester.tap(find.byTooltip('Remove'));
     await settle(tester);
     expect(commentsOf('c'), isEmpty);
+    expect(find.text('1 sent'), findsNothing);
     expect(find.text('Check for overflow.'), findsNothing);
     d.dispose();
   }, variant: onMac);

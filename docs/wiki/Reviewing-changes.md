@@ -43,6 +43,8 @@ The tab shows how many comments you haven't sent yet (**Changes 2**). To edit a 
 2. Nushi takes you back to the chat. Your comments are now in the message box as cards.
 3. Add a note if you like, then send. The agent gets all your comments in one message.
 
+Once the agent changes the lines you commented on, your sent comments leave the diff. A small **2 sent** pill above the file says they were there. Click it to read them, or click ✕ to remove one. They go by themselves when the agent's turn ends.
+
 If you go back to the chat before you send them, a line above the message box reminds you that the comments aren't sent yet. It has **Send to agent** and **Show** links.
 
 ## Commit

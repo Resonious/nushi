@@ -216,6 +216,7 @@ When a chat's subagents work in worktrees of their own, a menu at the left of th
 - **Send to agent** puts the comments into the chat's box as reply cards, to send with your next message, and takes you back to the chat. It sends every view's, a related worktree's after the chat's own under the line naming it. Beside a related worktrees' menu in a narrow window it reads **Send**.
 - Comments not sent yet show in the header ("Changes 2") and over the box, with Send to agent and Show.
 - Taking a comment's card out of the box (or its queued message out of the queue) removes the comment: it doesn't come back with the next Send to agent.
+- A sent comment whose lines the agent has since changed leaves the code: the diff says how many in a quiet pill above its first line, at the right ("2 sent"), whose list shows each with the lines it was on, to remove. A comment not sent stays on its lines, or above the file with the lines it was on when they're gone.
 - A comment on a file the view no longer shows (committed, reverted), or made in another view (a related worktree is one), shows above the list with the lines it was on, to remove, or to edit while not sent. A sent one goes once the turn that took it has ended and its lines or its file changed, or the file was committed.
 
 ## Previews and artifacts
