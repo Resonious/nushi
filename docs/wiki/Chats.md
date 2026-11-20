@@ -139,7 +139,7 @@ Each step the agent takes (a tool call) has a row that ends with how long it ran
 - Calls from before Nushi saw the chat (resumed from a terminal, or replayed by the agent) have no time.
 - A call still running when the turn ends stops counting there.
 
-A subagent is a helper the agent starts for part of a task. Its row shows the time it actually worked, such as **3m 12s**. Its clock stops while it waits for a message. Once a Claude subagent is done, its row also shows the tokens it used, such as **48k tokens**. Other agents don't report tokens, so their subagents show only the time.
+A subagent is a helper the agent starts for part of a task. Its row shows how many tools it used and the time it actually worked, such as **6 tools · 3m 12s**. Its clock stops while it waits for a message. Once a Claude subagent is done, its row also shows the tokens it used, before the time: **39 tools · 182k tokens · 7m 55s**, then a check mark. Other agents don't report tokens, so their subagents show only the tools and the time. No cost shows: Claude counts a subagent's cost in the chat's total, not on its own.
 
 ## Follow the agent's plan
 
@@ -155,10 +155,11 @@ In the conversation, the plan's place says "shown over the box" while it's there
 
 Claude can run a workflow: a script that has many subagents work in phases, in the background. Its card shows in the chat where Claude started it. The chat counts as working until the workflow ends.
 
-1. Read the card: its name, what it does, each phase's progress ("Review 5/7"), who runs now, and how long it has run. At the end it says done, failed or stopped.
-2. Click the card to open the **Workflow pane**. It lists each phase with its subagents, their state and their time.
-3. Click a subagent to read its steps. **All agents** (←) goes back.
-4. To stop it, point at the card and click **Stop**, or use Stop in the pane's header.
+1. Read the card: its name, the phase it's in with its progress ("Review 5/7"), how many agents run, the tokens they've used so far, and how long it has run. No cost shows: Claude doesn't report one for a workflow. At the end a check mark says it's done; otherwise it says failed or stopped.
+2. To see its phases without leaving the chat, click the chevron (›) at the card's start. The card opens in place: what the workflow does, then each phase with its progress and the subagents running in it. Click the chevron again to close it.
+3. Click the card anywhere else to open the **Workflow pane**. It lists each phase with all its subagents, their state, tokens and time.
+4. Click a subagent to read its steps. **All agents** (←) goes back.
+5. To stop it, point at the card and click **Stop**, or use Stop in the pane's header.
 
 If a workflow writes nothing for an hour, it says "no activity for 1h" and no longer counts as working. It still ends only when Claude says so.
 

@@ -17,9 +17,12 @@ import "time"
 // runs), Active when its files last changed. Phases are in the order
 // first reached (or the agent's own list, at the end), 32 at most. Agents
 // counts the run's agents, Done and Failed those that ended so; Running
-// holds the labels of up to 8 that run now, RunningCount how many do.
+// holds the labels of up to 8 that run now, RunningPhases the index in
+// Phases of each one's phase (-1 for none), RunningCount how many do.
 // Summary is how a failed run ended, in the agent's words (its error's
-// first line), at most 2 KB. Stalled says
+// first line), at most 2 KB. Tokens are what its agents used so far, as
+// the agent counts a subagent's (Claude's totalTokens), 0 when not known;
+// no agent reports a workflow's cost. Stalled says
 // no file of the run changed for so long (an hour) that it no longer
 // counts as working, though nothing says it ended; any change clears it.
 //
@@ -37,9 +40,11 @@ type Workflow struct {
 	Phases                           []WorkflowPhase
 	Agents, Done, Failed             int
 	Running                          []string
+	RunningPhases                    []int `json:",omitempty"`
 	RunningCount                     int
 	Summary                          string
-	Stalled                          bool `json:",omitzero"`
+	Tokens                           int64 `json:",omitzero"`
+	Stalled                          bool  `json:",omitzero"`
 }
 
 // WorkflowPhase is one phase of a workflow: its title and the agent's line

@@ -3982,6 +3982,8 @@ const Workflow$json = {
     {'1': 'running_count', '3': 15, '4': 1, '5': 5, '10': 'runningCount'},
     {'1': 'summary', '3': 16, '4': 1, '5': 9, '10': 'summary'},
     {'1': 'stalled', '3': 17, '4': 1, '5': 8, '10': 'stalled'},
+    {'1': 'tokens', '3': 18, '4': 1, '5': 3, '10': 'tokens'},
+    {'1': 'running_phases', '3': 19, '4': 3, '5': 5, '10': 'runningPhases'},
   ],
   '9': [
     {'1': 2, '2': 3},
@@ -3998,8 +4000,9 @@ final $typed_data.Uint8List workflowDescriptor = $convert.base64Decode(
     'aS52MS5Xb3JrZmxvd1BoYXNlUgZwaGFzZXMSFgoGYWdlbnRzGAsgASgFUgZhZ2VudHMSEgoEZG'
     '9uZRgMIAEoBVIEZG9uZRIWCgZmYWlsZWQYDSABKAVSBmZhaWxlZBIYCgdydW5uaW5nGA4gAygJ'
     'UgdydW5uaW5nEiMKDXJ1bm5pbmdfY291bnQYDyABKAVSDHJ1bm5pbmdDb3VudBIYCgdzdW1tYX'
-    'J5GBAgASgJUgdzdW1tYXJ5EhgKB3N0YWxsZWQYESABKAhSB3N0YWxsZWRKBAgCEANSB3Rhc2tf'
-    'aWQ=');
+    'J5GBAgASgJUgdzdW1tYXJ5EhgKB3N0YWxsZWQYESABKAhSB3N0YWxsZWQSFgoGdG9rZW5zGBIg'
+    'ASgDUgZ0b2tlbnMSJQoOcnVubmluZ19waGFzZXMYEyADKAVSDXJ1bm5pbmdQaGFzZXNKBAgCEA'
+    'NSB3Rhc2tfaWQ=');
 
 @$core.Deprecated('Use workflowPhaseDescriptor instead')
 const WorkflowPhase$json = {

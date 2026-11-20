@@ -2457,6 +2457,14 @@ message Workflow {
   // Nothing of it changed for so long (an hour) that it no longer counts as
   // the chat's work, though nothing says it ended.
   bool stalled = 17;
+  // The tokens its agents used so far, as the agent counts a subagent's
+  // (Claude's totalTokens: each agent's last message, read from its
+  // transcript while it runs; the snapshot's total once it ended); 0 when
+  // not known. The agent reports no cost for a workflow. API 132.
+  int64 tokens = 18;
+  // For each of running, the index in phases of the phase it runs in; -1
+  // for none. API 132.
+  repeated int32 running_phases = 19;
 }
 
 // A phase of a workflow: its title, the agent's line on it, and how many

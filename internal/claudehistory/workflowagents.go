@@ -42,7 +42,11 @@ func (r *run) agents() []model.WorkflowAgent {
 		if (r.snap != nil || r.noted() != nil) && state == "running" {
 			state = "stopped" // the run ended without it
 		}
-		out = append(out, model.WorkflowAgent{ID: row.AgentID, Label: label(row.Label, row.AgentID), Phase: label(row.Phase, ""), State: state})
+		wa := model.WorkflowAgent{ID: row.AgentID, Label: label(row.Label, row.AgentID), Phase: label(row.Phase, ""), State: state}
+		if a := r.tokens[row.AgentID]; a != nil {
+			wa.Tokens = int(a.tokens)
+		}
+		out = append(out, wa)
 	}
 	return out
 }

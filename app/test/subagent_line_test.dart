@@ -1,3 +1,4 @@
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
@@ -17,14 +18,16 @@ void main() {
         agent: 'general-purpose',
         title: 'Verify the steps',
         status: 'completed',
-        subagent: Subagent(state: 'done'),
+        subagent: Subagent(state: 'done', tokens: Int64(182400)),
       ),
       items: <Item>[],
     );
     await tester.pumpWidget(
       themed(SubagentLine(run, ChatState('c', '/x'), still: true)),
     );
-    final state = tester.getRect(find.text('done'));
+    // Done says no word: its check does (#106).
+    expect(find.textContaining('done'), findsNothing);
+    final state = tester.getRect(find.text('182k tokens'));
     final chevron = tester.getRect(find.byIcon(Icons.chevron_right));
     // The state, its mark (a check) and the chevron end the line, not its
     // middle.

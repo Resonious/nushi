@@ -13180,7 +13180,15 @@ type Workflow struct {
 	Summary string `protobuf:"bytes,16,opt,name=summary,proto3" json:"summary,omitempty"`
 	// Nothing of it changed for so long (an hour) that it no longer counts as
 	// the chat's work, though nothing says it ended.
-	Stalled       bool `protobuf:"varint,17,opt,name=stalled,proto3" json:"stalled,omitempty"`
+	Stalled bool `protobuf:"varint,17,opt,name=stalled,proto3" json:"stalled,omitempty"`
+	// The tokens its agents used so far, as the agent counts a subagent's
+	// (Claude's totalTokens: each agent's last message, read from its
+	// transcript while it runs; the snapshot's total once it ended); 0 when
+	// not known. The agent reports no cost for a workflow. API 132.
+	Tokens int64 `protobuf:"varint,18,opt,name=tokens,proto3" json:"tokens,omitempty"`
+	// For each of running, the index in phases of the phase it runs in; -1
+	// for none. API 132.
+	RunningPhases []int32 `protobuf:"varint,19,rep,packed,name=running_phases,json=runningPhases,proto3" json:"running_phases,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -13325,6 +13333,20 @@ func (x *Workflow) GetStalled() bool {
 		return x.Stalled
 	}
 	return false
+}
+
+func (x *Workflow) GetTokens() int64 {
+	if x != nil {
+		return x.Tokens
+	}
+	return 0
+}
+
+func (x *Workflow) GetRunningPhases() []int32 {
+	if x != nil {
+		return x.RunningPhases
+	}
+	return nil
 }
 
 // A phase of a workflow: its title, the agent's line on it, and how many
@@ -28293,7 +28315,7 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\x0eserver_command\x18' \x01(\tR\rserverCommand\x12.\n" +
 	"\bworkflow\x18( \x01(\v2\x12.nushi.v1.WorkflowR\bworkflow\x12\x18\n" +
 	"\astarted\x18) \x01(\x03R\astarted\x12\x14\n" +
-	"\x05ended\x18* \x01(\x03R\x05endedJ\x04\b\x11\x10\x12J\x04\b\x1e\x10\x1fR\afork_atR\fpassed_on_by\"\xbe\x03\n" +
+	"\x05ended\x18* \x01(\x03R\x05endedJ\x04\b\x11\x10\x12J\x04\b\x1e\x10\x1fR\afork_atR\fpassed_on_by\"\xfd\x03\n" +
 	"\bWorkflow\x12\x15\n" +
 	"\x06run_id\x18\x01 \x01(\tR\x05runId\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12 \n" +
@@ -28311,7 +28333,9 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\arunning\x18\x0e \x03(\tR\arunning\x12#\n" +
 	"\rrunning_count\x18\x0f \x01(\x05R\frunningCount\x12\x18\n" +
 	"\asummary\x18\x10 \x01(\tR\asummary\x12\x18\n" +
-	"\astalled\x18\x11 \x01(\bR\astalledJ\x04\b\x02\x10\x03R\atask_id\"\x83\x01\n" +
+	"\astalled\x18\x11 \x01(\bR\astalled\x12\x16\n" +
+	"\x06tokens\x18\x12 \x01(\x03R\x06tokens\x12%\n" +
+	"\x0erunning_phases\x18\x13 \x03(\x05R\rrunningPhasesJ\x04\b\x02\x10\x03R\atask_id\"\x83\x01\n" +
 	"\rWorkflowPhase\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12\x16\n" +
 	"\x06detail\x18\x02 \x01(\tR\x06detail\x12\x18\n" +
