@@ -5,10 +5,11 @@ import 'package:nushi/replies.dart';
 import 'package:nushi/review_findings.dart';
 import 'package:nushi/send_to_agent.dart';
 
-/// One thing that blocks the merge, in the To do list: a failing check, a
-/// review that requested changes, a review thread not resolved (with a
-/// review bot's findings on its lines: one item, two voices), or a
-/// finding a review bot asked to address. [id] is the same across polls.
+/// One thing that blocks the merge, for the merge status card's Send N to
+/// agent: a failing check, a review that requested changes, a review
+/// thread not resolved (with a review bot's findings on its lines: one
+/// item, two voices), or a finding a review bot asked to address. [id]
+/// is the same across polls.
 sealed class TodoItem {
   const new(this.id);
 

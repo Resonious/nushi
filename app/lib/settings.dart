@@ -179,8 +179,8 @@ final Pref<Map<String, List<String>>> githubOwners = _places('githubOwners');
 /// Nushi knows ("My folders' repositories"), not all.
 final Pref<bool> githubKnownRepos = _plain('githubKnown', false);
 
-/// Findings from review bots (Settings › GitHub; off at first): the To do
-/// list reads must-address findings out of these bots' reviews (logins,
+/// Findings from review bots (Settings › GitHub; off at first): the merge
+/// status card reads must-address findings out of these bots' reviews (logins,
 /// comma-separated), the list items under a heading with any of
 /// [githubFindingHeadings]' words (comma-separated, any case).
 final Pref<bool> githubFindings = _plain('githubFindings', false);

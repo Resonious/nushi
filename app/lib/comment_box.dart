@@ -14,7 +14,7 @@ import 'package:nushi/widgets.dart';
 final Map<String, String> _drafts = runMap();
 
 /// Says a draft changed, for the other boxes of its key (a thread's reply
-/// in To do and in Files), which show the same text, and for the file
+/// on the Overview and in Files), which show the same text, and for the file
 /// that keeps them.
 final ValueNotifier<int> commentDraftsChanged = ValueNotifier(0);
 

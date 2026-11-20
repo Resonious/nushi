@@ -35,7 +35,7 @@ bool isFindingsBot(GitHubComment c, FindingsSetup setup) {
 /// What a review's findings are: `found` false when it has no heading that
 /// starts them; `findings` empty with `found` true when its section says
 /// none, or when its shape doesn't parse cleanly (`clean` false): then it
-/// shows only in Activity rather than in pieces.
+/// shows only in Comments rather than in pieces.
 typedef ReadFindings = ({bool found, bool clean, List<ReviewFinding> findings});
 
 final _heading = RegExp(r'^(#{1,6})\s+(.*?)\s*#*\s*$');

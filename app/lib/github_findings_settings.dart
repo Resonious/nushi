@@ -3,8 +3,9 @@ import 'package:nushi/settings.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/theme/theme.dart';
 
-/// Settings › GitHub's Review bots: off at first; on, a
-/// pull request's To do lists the must-address findings read out of the
+/// Settings › GitHub's Review bots: off at first; on, a pull request's
+/// merge status card (its Comments) lists the must-address findings read
+/// out of the
 /// named bots' reviews (the list items under a heading with one of the
 /// words given), a guess at one bot's Markdown that only fits some.
 class FindingsGroup extends StatefulWidget {
@@ -51,12 +52,12 @@ class _FindingsGroupState extends State<FindingsGroup> {
         footer: on
             ? const Text(
                 "The list items under such a heading in a bot's newest "
-                'review; Activity keeps its message.',
+                'review; Comments keeps its message.',
               )
             : null,
         children: [
           SettingsRow(
-            "Show bots' findings in To do",
+            "Show bots' findings to address",
             description: 'What a review bot says must be fixed.',
             control: SettingsSwitch(
               value: on,

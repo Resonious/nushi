@@ -11,7 +11,7 @@ import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 
 /// The key of thread [x]'s reply box, on pull request [ref]: the Files
-/// tab's card and To do's row share it.
+/// tab's card and the Overview's share it.
 String threadDraft(GitHubRef ref, GitHubThread x) =>
     githubDraft(ref, 'thread ${x.id}');
 
