@@ -223,29 +223,43 @@ class CardFloors extends InheritedWidget {
 /// it, which the update card never covers: it's in the [CardFloor] around
 /// it, if any.
 class UnderCard extends SingleChildRenderObjectWidget {
-  const new({super.child, super.key});
+  const new({super.child, super.key, this.clear = 0});
+
+  /// How much of each end of [child]'s width is bare (a chat's foot is
+  /// as wide as its view, its composer and the lines over it only its
+  /// column's): the card may stand across from that much of it.
+  final double clear;
 
   @override
   RenderObject createRenderObject(BuildContext context) {
     final at = CardFloors._of(context);
-    return _Bar(at?.floor, pane: at?.pane ?? false);
+    return _Bar(at?.floor, pane: at?.pane ?? false, clear: clear);
   }
 
   @override
   void updateRenderObject(BuildContext context, RenderObject renderObject) {
     final at = CardFloors._of(context);
-    (renderObject as _Bar).follow(at?.floor, pane: at?.pane ?? false);
+    (renderObject as _Bar).follow(
+      at?.floor,
+      pane: at?.pane ?? false,
+      clear: clear,
+    );
   }
 }
 
 class _Bar extends RenderProxyBox {
-  new(this._floor, {required this.pane});
+  new(this._floor, {required this.pane, required this.clear});
 
   CardFloor? _floor;
   bool pane;
+  double clear;
 
-  void follow(CardFloor? floor, {required bool pane}) {
+  void follow(CardFloor? floor, {required bool pane, required double clear}) {
     this.pane = pane;
+    if (clear != this.clear) {
+      this.clear = clear;
+      _floor?._moved();
+    }
     if (floor == _floor) return;
     if (attached) _floor?._remove(this);
     _floor = floor;
@@ -326,7 +340,8 @@ class _Lifted extends RenderProxyBox {
   }
 
   /// How far it rises: until it's [TopNotices.cardInset] above each bar
-  /// of its floor that it's across from, not wholly above and not hidden
+  /// of its floor that it's across from (but for the bar's bare ends,
+  /// [UnderCard.clear]), not wholly above and not hidden
   /// (offstage, or a view's bar under the panes lying over it).
   double get _lift {
     final floor = _floor;
@@ -340,8 +355,15 @@ class _Lifted extends RenderProxyBox {
     var lift = 0.0;
     for (final bar in floor._bars) {
       if (!bar.attached || !bar.hasSize) continue;
-      final r = _resting(bar);
-      if (r == null) continue;
+      final whole = _resting(bar);
+      if (whole == null) continue;
+      // Its bare ends aside: the card may stand across from them.
+      final r = Rect.fromLTRB(
+        whole.left + bar.clear,
+        whole.top,
+        max(whole.left + bar.clear, whole.right - bar.clear),
+        whole.bottom,
+      );
       final right = cut != null && !bar.pane ? min(r.right, cut) : r.right;
       final across = min(right, card.right) - max(r.left, card.left);
       if (across <= 0.5 || r.bottom <= card.top) continue;
