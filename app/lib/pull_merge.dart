@@ -211,3 +211,42 @@ class MergeControl extends StatelessWidget {
     };
   }
 }
+
+/// The merge status card's merge button, for an open pull request: what
+/// [MergeControl] offers (a method as a split button with its menu, Enable
+/// auto-merge, Add to queue, Merge when ready, or the way out of
+/// auto-merge or the queue), without its words. Nothing while the card
+/// shows what was kept from before ([stale]).
+class MergeButtons extends StatelessWidget {
+  const new({
+    required this.daemon,
+    required this.pull,
+    required this.onChanged,
+    super.key,
+    this.stale = false,
+  });
+
+  final Daemon daemon;
+  final GitHubPull pull;
+  final Future<void> Function() onChanged;
+  final bool stale;
+
+  @override
+  Widget build(BuildContext context) {
+    final view = mergeView(pull);
+    if (view == null || stale) return const SizedBox.shrink();
+    final control = MergeControl(
+      daemon: daemon,
+      pull: pull,
+      onChanged: onChanged,
+    );
+    return ValueListenableBuilder(
+      valueListenable: mergeMethods,
+      builder: (context, _, _) => Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 6,
+        children: control._actions(context, view),
+      ),
+    );
+  }
+}
