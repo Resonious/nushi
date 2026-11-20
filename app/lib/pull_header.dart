@@ -3,11 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:nushi/clock.dart';
 import 'package:nushi/commits.dart';
+import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_card.dart';
 import 'package:nushi/github_comment.dart';
 import 'package:nushi/github_parts.dart';
 import 'package:nushi/motion.dart';
+import 'package:nushi/pull_edit.dart';
 import 'package:nushi/pull_lights.dart';
 import 'package:nushi/pull_merge_card.dart';
 import 'package:nushi/pull_side.dart';
@@ -217,19 +219,26 @@ class _StickyPullBarState extends State<StickyPullBar> {
   );
 }
 
-/// The page's head: the title (selectable), Open on GitHub beside it
+/// The page's head: the title (selectable; [PullTitle], with Edit when
+/// GitHub lets the user), Open on GitHub beside it
 /// and [actions] ([PullActions]) at the row's right end; under it the
 /// state pill, who opened it and when, base ← head and the diff's size.
 /// [titleKey] marks the title's row, which the slim bar watches.
 class PullHeader extends StatelessWidget {
   const new({
+    required this.daemon,
     required this.pull,
     required this.actions,
+    required this.onSaved,
     super.key,
     this.titleKey,
   });
 
+  final Daemon daemon;
   final GitHubPull pull;
+
+  /// The title was edited: the pull request is read again.
+  final Future<void> Function() onSaved;
   final Widget actions;
   final Key? titleKey;
 
@@ -257,28 +266,15 @@ class PullHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Flexible(
-                    child: SelectableText(
-                      it.title,
-                      style: theme.ui(
-                        t.text,
-                        size: 20,
-                        weight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  IconTap.line(
-                    LineIcon.openOutside,
-                    tooltip: 'Open on GitHub',
-                    onTap: it.url.isEmpty
-                        ? null
-                        : () => openWeb(context, it.url),
-                  ),
-                ],
+              child: PullTitle(
+                daemon: daemon,
+                pull: p,
+                onSaved: onSaved,
+                trailing: IconTap.line(
+                  LineIcon.openOutside,
+                  tooltip: 'Open on GitHub',
+                  onTap: it.url.isEmpty ? null : () => openWeb(context, it.url),
+                ),
               ),
             ),
             const SizedBox(width: 12),

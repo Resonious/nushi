@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
-import 'package:nushi/github_comment.dart';
-import 'package:nushi/github_parts.dart';
-import 'package:nushi/markdown.dart';
 import 'package:nushi/pull_comments.dart';
 import 'package:nushi/pull_commits.dart';
+import 'package:nushi/pull_edit.dart';
 import 'package:nushi/pull_merge_card.dart';
 import 'package:nushi/pull_side.dart';
 import 'package:nushi/pull_thread_card.dart';
 import 'package:nushi/pull_todo_items.dart';
-import 'package:nushi/theme/theme.dart';
 
 /// The Overview tab, after GitHub's page (ADR 0137): the main column (the
 /// merge status card, the description, the comments, the commit trail)
@@ -74,7 +71,7 @@ class PullOverview extends StatelessWidget {
           onReview: onReview,
         ),
         const SizedBox(height: 20),
-        PullDescription(p),
+        PullDescription(daemon: daemon, pull: p, me: me, onSaved: onChanged),
         const SizedBox(height: 32),
         PullComments(
           daemon: daemon,
@@ -106,29 +103,6 @@ class PullOverview extends StatelessWidget {
         const SizedBox(width: 32),
         SizedBox(width: 270, child: side),
       ],
-    );
-  }
-}
-
-/// The description: the pull request's text alone on a card.
-class PullDescription extends StatelessWidget {
-  const new(this.pull, {super.key});
-
-  final GitHubPull pull;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = NushiTheme.of(context);
-    final t = theme.t;
-    return Container(
-      key: const ValueKey('pull-description'),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-      decoration: cardBox(t),
-      child: pull.body.isEmpty
-          ? Text('No description', style: theme.ui(t.textMuted, size: 12))
-          : SelectionArea(
-              child: AgentMarkdown(githubText(pull.body), images: githubImage),
-            ),
     );
   }
 }

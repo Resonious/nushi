@@ -295,7 +295,13 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
                       top: 8,
                     ),
                   column(
-                    PullHeader(pull: p, titleKey: _title, actions: actions()),
+                    PullHeader(
+                      daemon: widget.daemon,
+                      pull: p,
+                      onSaved: _refresh,
+                      titleKey: _title,
+                      actions: actions(),
+                    ),
                     top: keptAt == null ? 24 : 4,
                   ),
                   if (error case final e?)
