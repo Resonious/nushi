@@ -103,6 +103,15 @@ By default, review cards tell the agent not to reply on GitHub, and failed-check
 2. Change the words and click **Save**. Empty asks the default.
 3. A changed kind says **Edited**. Click **Reset** beside it to go back to the default.
 
+## React to a comment
+
+Reactions show under the description and each comment, as on GitHub: an emoji and how many people used it. Yours are filled in blue with a ring.
+
+1. Click the smiley under the comment.
+2. Pick one of the eight emoji. It's added on GitHub.
+
+Click one of your reactions to take it back, or someone else's to add yours.
+
 ## Mark files viewed
 
 As on GitHub, you can tick off each file once you've looked at it. Nushi saves the mark on GitHub, so github.com shows it too.

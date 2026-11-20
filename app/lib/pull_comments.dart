@@ -9,6 +9,7 @@ import 'package:nushi/github_parts.dart';
 import 'package:nushi/github_review.dart';
 import 'package:nushi/markdown.dart';
 import 'package:nushi/menu.dart';
+import 'package:nushi/pull_reactions.dart';
 import 'package:nushi/pull_side.dart';
 import 'package:nushi/pull_thread_card.dart';
 import 'package:nushi/pull_todo_items.dart';
@@ -153,6 +154,11 @@ class PullComments extends StatelessWidget {
       for (final i in items.whereType<ThreadTodo>()) i.thread.id: i.also,
     };
     final shown = filtered(commentItems(p), filter, me);
+    final reacting = (
+      daemon: daemon,
+      host: p.item.ref.host,
+      onChanged: onPosted,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -210,6 +216,7 @@ class PullComments extends StatelessWidget {
                 _CommentCard(
                   key: i.comment == null ? null : reviewKeys(i.comment!.id),
                   comment: i.comment,
+                  reacting: reacting,
                   older: switch (i.comment) {
                     final c? when older[c.author] == c.commit => c.commit,
                     _ => '',
@@ -257,15 +264,18 @@ final _numbers = RegExp(
 /// A review's or a comment's card: its author's mark, what they did and
 /// when, its state's icon and a ⋯ (Send to agent, Open on GitHub); its
 /// text (a long one's start, with Show the whole review; a bot's comment
-/// folded to one line, with Show; a bot's numbers muted at its foot);
-/// then its [threads].
+/// folded to one line, with Show; a bot's numbers muted at its foot)
+/// and its reactions; then its [threads].
 class _CommentCard extends StatefulWidget {
   const new({
     required this.comment,
     required this.threads,
+    required this.reacting,
     super.key,
     this.older = '',
   });
+
+  final Reacting reacting;
 
   final GitHubComment? comment;
   final List<Widget> threads;
@@ -422,6 +432,14 @@ class _CommentCardState extends State<_CommentCard> {
                     ),
                   if (foot.isNotEmpty)
                     Text(foot, style: theme.ui(t.textMuted, size: 11.5)),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Reactions(
+                      c.id,
+                      c.reactions,
+                      reacting: widget.reacting,
+                    ),
+                  ),
                 ],
               ),
             )

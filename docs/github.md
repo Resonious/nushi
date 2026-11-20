@@ -115,6 +115,8 @@ It follows GitHub's own pull request page ([ADR 0137](adr/0137-the-pull-request-
 
 **Checks**: failing first, each opening to its annotations and log, with **Re-run failed** (it asks GitHub to re-run the failed jobs of their workflow runs) and Fix checks; then the passed in two columns, then the skipped.
 
+**Reactions** sit under the description, each comment and review, and each thread comment, as on GitHub: a smiley that opens GitHub's eight (👍 👎 😄 🎉 😕 ❤️ 🚀 👀), then a pill per kind used with its count, yours filled in the accent with its ring. A click on a pill or in the picker adds yours or takes it away on GitHub at once (put back with GitHub's words if it refuses), then the pull request is read again. They come with the pull request (`reactionGroups`), no call of their own (API 131).
+
 **Files changed**: those with review threads not resolved first, the side-by-side diff with the threads at their lines. Over the picked file's diff, its head: a chevron that folds it, its path and size, "Changed since last view" when it changed after you marked it, and GitHub's **Viewed** checkbox, which marks it viewed on GitHub for you (`markFileAsViewed`, `unmarkFileAsViewed`) and folds it; the list's top counts them ("1 / 4 files viewed", of all the pull request's files), and a viewed file has a green tick in the list. What's viewed is read from GitHub (`viewerViewedState`, the first 300 files) when the tab shows and when the head moves, never on a timer (API 130).
 
 A finding is a guess at the common shapes of a review bot's comment (Settings › GitHub › Review bots): a review it can't read shows only in Comments, and a finding on a thread's lines joins it (one item, two voices).

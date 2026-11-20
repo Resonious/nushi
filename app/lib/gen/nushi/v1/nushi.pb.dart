@@ -29513,6 +29513,7 @@ class GitHubComment extends $pb.GeneratedMessage {
     $core.String? review,
     $core.String? commit,
     $core.String? reviewId,
+    $core.Iterable<GitHubReaction>? reactions,
   }) {
     final result = GitHubComment._();
     if (id != null) result.id = id;
@@ -29525,6 +29526,7 @@ class GitHubComment extends $pb.GeneratedMessage {
     if (review != null) result.review = review;
     if (commit != null) result.commit = commit;
     if (reviewId != null) result.reviewId = reviewId;
+    if (reactions != null) result.reactions.addAll(reactions);
     return result;
   }
 
@@ -29551,6 +29553,8 @@ class GitHubComment extends $pb.GeneratedMessage {
     ..aOS(9, _omitFieldNames ? '' : 'review')
     ..aOS(10, _omitFieldNames ? '' : 'commit')
     ..aOS(11, _omitFieldNames ? '' : 'reviewId')
+    ..pPM<GitHubReaction>(12, _omitFieldNames ? '' : 'reactions',
+        subBuilder: GitHubReaction.$_createMessage)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -29670,6 +29674,232 @@ class GitHubComment extends $pb.GeneratedMessage {
   $core.bool hasReviewId() => $_has(9);
   @$pb.TagNumber(11)
   void clearReviewId() => $_clearField(11);
+
+  /// The kinds someone reacted with, in GitHub's order. API 131.
+  @$pb.TagNumber(12)
+  $pb.PbList<GitHubReaction> get reactions => $_getList(10);
+}
+
+/// One kind of emoji reaction: GitHub's content in lower case
+/// ("thumbs_up", "thumbs_down", "laugh", "hooray", "confused", "heart",
+/// "rocket", "eyes"), how many reacted so, and whether the user did.
+class GitHubReaction extends $pb.GeneratedMessage {
+  factory GitHubReaction({
+    $core.String? content,
+    $core.int? count,
+    $core.bool? mine,
+  }) {
+    final result = GitHubReaction._();
+    if (content != null) result.content = content;
+    if (count != null) result.count = count;
+    if (mine != null) result.mine = mine;
+    return result;
+  }
+
+  GitHubReaction._();
+
+  factory GitHubReaction.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GitHubReaction()..mergeFromBuffer(data, registry);
+  factory GitHubReaction.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GitHubReaction()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GitHubReaction',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: GitHubReaction.$_createMessage)
+    ..aOS(1, _omitFieldNames ? '' : 'content')
+    ..aI(2, _omitFieldNames ? '' : 'count')
+    ..aOB(3, _omitFieldNames ? '' : 'mine')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GitHubReaction clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GitHubReaction copyWith(void Function(GitHubReaction) updates) =>
+      super.copyWith((message) => updates(message as GitHubReaction))
+          as GitHubReaction;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use GitHubReaction() / GitHubReaction.new instead')
+  static GitHubReaction create() => GitHubReaction._();
+  static $pb.GeneratedMessage $_createMessage() => GitHubReaction._();
+  @$core.override
+  GitHubReaction createEmptyInstance() => GitHubReaction._();
+  @$core.pragma('dart2js:noInline')
+  static GitHubReaction getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GitHubReaction>(
+          GitHubReaction.$_createMessage);
+  static GitHubReaction? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get content => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set content($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasContent() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearContent() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get count => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set count($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCount() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCount() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get mine => $_getBF(2);
+  @$pb.TagNumber(3)
+  set mine($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasMine() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearMine() => $_clearField(3);
+}
+
+class ReactGitHubRequest extends $pb.GeneratedMessage {
+  factory ReactGitHubRequest({
+    $core.String? host,
+    $core.String? subject,
+    $core.String? content,
+    $core.bool? remove,
+  }) {
+    final result = ReactGitHubRequest._();
+    if (host != null) result.host = host;
+    if (subject != null) result.subject = subject;
+    if (content != null) result.content = content;
+    if (remove != null) result.remove = remove;
+    return result;
+  }
+
+  ReactGitHubRequest._();
+
+  factory ReactGitHubRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      ReactGitHubRequest()..mergeFromBuffer(data, registry);
+  factory ReactGitHubRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      ReactGitHubRequest()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ReactGitHubRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: ReactGitHubRequest.$_createMessage)
+    ..aOS(1, _omitFieldNames ? '' : 'host')
+    ..aOS(2, _omitFieldNames ? '' : 'subject')
+    ..aOS(3, _omitFieldNames ? '' : 'content')
+    ..aOB(4, _omitFieldNames ? '' : 'remove')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReactGitHubRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReactGitHubRequest copyWith(void Function(ReactGitHubRequest) updates) =>
+      super.copyWith((message) => updates(message as ReactGitHubRequest))
+          as ReactGitHubRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use ReactGitHubRequest() / ReactGitHubRequest.new instead')
+  static ReactGitHubRequest create() => ReactGitHubRequest._();
+  static $pb.GeneratedMessage $_createMessage() => ReactGitHubRequest._();
+  @$core.override
+  ReactGitHubRequest createEmptyInstance() => ReactGitHubRequest._();
+  @$core.pragma('dart2js:noInline')
+  static ReactGitHubRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ReactGitHubRequest>(
+          ReactGitHubRequest.$_createMessage);
+  static ReactGitHubRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get host => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set host($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasHost() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearHost() => $_clearField(1);
+
+  /// The comment's, review's or pull request's node id.
+  @$pb.TagNumber(2)
+  $core.String get subject => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set subject($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSubject() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSubject() => $_clearField(2);
+
+  /// One of GitHubReaction's contents.
+  @$pb.TagNumber(3)
+  $core.String get content => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set content($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasContent() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearContent() => $_clearField(3);
+
+  /// Takes the user's reaction away instead.
+  @$pb.TagNumber(4)
+  $core.bool get remove => $_getBF(3);
+  @$pb.TagNumber(4)
+  set remove($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasRemove() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearRemove() => $_clearField(4);
+}
+
+class ReactGitHubResponse extends $pb.GeneratedMessage {
+  factory ReactGitHubResponse() => ReactGitHubResponse._();
+
+  ReactGitHubResponse._();
+
+  factory ReactGitHubResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      ReactGitHubResponse()..mergeFromBuffer(data, registry);
+  factory ReactGitHubResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      ReactGitHubResponse()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ReactGitHubResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: ReactGitHubResponse.$_createMessage)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReactGitHubResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReactGitHubResponse copyWith(void Function(ReactGitHubResponse) updates) =>
+      super.copyWith((message) => updates(message as ReactGitHubResponse))
+          as ReactGitHubResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core
+      .Deprecated('Use ReactGitHubResponse() / ReactGitHubResponse.new instead')
+  static ReactGitHubResponse create() => ReactGitHubResponse._();
+  static $pb.GeneratedMessage $_createMessage() => ReactGitHubResponse._();
+  @$core.override
+  ReactGitHubResponse createEmptyInstance() => ReactGitHubResponse._();
+  @$core.pragma('dart2js:noInline')
+  static ReactGitHubResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ReactGitHubResponse>(
+          ReactGitHubResponse.$_createMessage);
+  static ReactGitHubResponse? _defaultInstance;
 }
 
 /// A review thread on line (from start_line) of path's side ("left", the
@@ -30331,6 +30561,7 @@ class GitHubPull extends $pb.GeneratedMessage {
     $core.Iterable<GitHubComment>? reviews,
     $core.String? bodySource,
     $core.bool? canEdit,
+    $core.Iterable<GitHubReaction>? reactions,
   }) {
     final result = GitHubPull._();
     if (item != null) result.item = item;
@@ -30360,6 +30591,7 @@ class GitHubPull extends $pb.GeneratedMessage {
     if (reviews != null) result.reviews.addAll(reviews);
     if (bodySource != null) result.bodySource = bodySource;
     if (canEdit != null) result.canEdit = canEdit;
+    if (reactions != null) result.reactions.addAll(reactions);
     return result;
   }
 
@@ -30411,6 +30643,8 @@ class GitHubPull extends $pb.GeneratedMessage {
         subBuilder: GitHubComment.$_createMessage)
     ..aOS(27, _omitFieldNames ? '' : 'bodySource')
     ..aOB(28, _omitFieldNames ? '' : 'canEdit')
+    ..pPM<GitHubReaction>(29, _omitFieldNames ? '' : 'reactions',
+        subBuilder: GitHubReaction.$_createMessage)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -30656,6 +30890,10 @@ class GitHubPull extends $pb.GeneratedMessage {
   $core.bool hasCanEdit() => $_has(26);
   @$pb.TagNumber(28)
   void clearCanEdit() => $_clearField(28);
+
+  /// The reactions on its description. API 131.
+  @$pb.TagNumber(29)
+  $pb.PbList<GitHubReaction> get reactions => $_getList(27);
 }
 
 /// A label: its name and color (six hex digits, no #, as GitHub gives it).
@@ -36441,6 +36679,13 @@ class NushiServiceApi {
           $pb.ClientContext? ctx, SetGitHubViewedRequest request) =>
       _client.invoke<SetGitHubViewedResponse>(ctx, 'NushiService',
           'SetGitHubViewed', request, SetGitHubViewedResponse());
+
+  /// Adds the user's emoji reaction to a comment, a review or a pull
+  /// request's description, or takes it away. API 131.
+  $async.Future<ReactGitHubResponse> reactGitHub(
+          $pb.ClientContext? ctx, ReactGitHubRequest request) =>
+      _client.invoke<ReactGitHubResponse>(
+          ctx, 'NushiService', 'ReactGitHub', request, ReactGitHubResponse());
 
   /// The end of a failed Actions job's log (16 KB).
   $async.Future<GetGitHubJobLogResponse> getGitHubJobLog(

@@ -45,6 +45,7 @@ type Client interface { //nolint:interfacebloat // the GitHub calls the feature 
 	Resolve(ctx context.Context, thread string, resolve bool) error
 	Viewed(ctx context.Context, repo string, number int) (viewed, changed []string, err error)
 	SetViewed(ctx context.Context, pull, path string, viewed bool) error
+	React(ctx context.Context, subject, kind string, on bool) error
 	Comment(ctx context.Context, subject, body string) error
 	EditPull(ctx context.Context, pull string, title, body *string) error
 	SubmitReview(ctx context.Context, r githubapi.Review) error

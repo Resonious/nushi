@@ -411,6 +411,9 @@ const (
 	// NushiServiceSetGitHubViewedProcedure is the fully-qualified name of the NushiService's
 	// SetGitHubViewed RPC.
 	NushiServiceSetGitHubViewedProcedure = "/nushi.v1.NushiService/SetGitHubViewed"
+	// NushiServiceReactGitHubProcedure is the fully-qualified name of the NushiService's ReactGitHub
+	// RPC.
+	NushiServiceReactGitHubProcedure = "/nushi.v1.NushiService/ReactGitHub"
 	// NushiServiceGetGitHubJobLogProcedure is the fully-qualified name of the NushiService's
 	// GetGitHubJobLog RPC.
 	NushiServiceGetGitHubJobLogProcedure = "/nushi.v1.NushiService/GetGitHubJobLog"
@@ -953,6 +956,9 @@ type NushiServiceClient interface {
 	// viewerViewedState), and marking one viewed or not. API 130.
 	GetGitHubViewed(context.Context, *connect.Request[v1.GetGitHubViewedRequest]) (*connect.Response[v1.GetGitHubViewedResponse], error)
 	SetGitHubViewed(context.Context, *connect.Request[v1.SetGitHubViewedRequest]) (*connect.Response[v1.SetGitHubViewedResponse], error)
+	// Adds the user's emoji reaction to a comment, a review or a pull
+	// request's description, or takes it away. API 131.
+	ReactGitHub(context.Context, *connect.Request[v1.ReactGitHubRequest]) (*connect.Response[v1.ReactGitHubResponse], error)
 	// The end of a failed Actions job's log (16 KB).
 	GetGitHubJobLog(context.Context, *connect.Request[v1.GetGitHubJobLogRequest]) (*connect.Response[v1.GetGitHubJobLogResponse], error)
 	// The user's writes.
@@ -1857,6 +1863,12 @@ func NewNushiServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(nushiServiceMethods.ByName("SetGitHubViewed")),
 			connect.WithClientOptions(opts...),
 		),
+		reactGitHub: connect.NewClient[v1.ReactGitHubRequest, v1.ReactGitHubResponse](
+			httpClient,
+			baseURL+NushiServiceReactGitHubProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("ReactGitHub")),
+			connect.WithClientOptions(opts...),
+		),
 		getGitHubJobLog: connect.NewClient[v1.GetGitHubJobLogRequest, v1.GetGitHubJobLogResponse](
 			httpClient,
 			baseURL+NushiServiceGetGitHubJobLogProcedure,
@@ -2132,6 +2144,7 @@ type nushiServiceClient struct {
 	getGitHubFiles          *connect.Client[v1.GetGitHubFilesRequest, v1.GetGitHubFilesResponse]
 	getGitHubViewed         *connect.Client[v1.GetGitHubViewedRequest, v1.GetGitHubViewedResponse]
 	setGitHubViewed         *connect.Client[v1.SetGitHubViewedRequest, v1.SetGitHubViewedResponse]
+	reactGitHub             *connect.Client[v1.ReactGitHubRequest, v1.ReactGitHubResponse]
 	getGitHubJobLog         *connect.Client[v1.GetGitHubJobLogRequest, v1.GetGitHubJobLogResponse]
 	replyGitHubThread       *connect.Client[v1.ReplyGitHubThreadRequest, v1.ReplyGitHubThreadResponse]
 	resolveGitHubThread     *connect.Client[v1.ResolveGitHubThreadRequest, v1.ResolveGitHubThreadResponse]
@@ -2846,6 +2859,11 @@ func (c *nushiServiceClient) SetGitHubViewed(ctx context.Context, req *connect.R
 	return c.setGitHubViewed.CallUnary(ctx, req)
 }
 
+// ReactGitHub calls nushi.v1.NushiService.ReactGitHub.
+func (c *nushiServiceClient) ReactGitHub(ctx context.Context, req *connect.Request[v1.ReactGitHubRequest]) (*connect.Response[v1.ReactGitHubResponse], error) {
+	return c.reactGitHub.CallUnary(ctx, req)
+}
+
 // GetGitHubJobLog calls nushi.v1.NushiService.GetGitHubJobLog.
 func (c *nushiServiceClient) GetGitHubJobLog(ctx context.Context, req *connect.Request[v1.GetGitHubJobLogRequest]) (*connect.Response[v1.GetGitHubJobLogResponse], error) {
 	return c.getGitHubJobLog.CallUnary(ctx, req)
@@ -3433,6 +3451,9 @@ type NushiServiceHandler interface {
 	// viewerViewedState), and marking one viewed or not. API 130.
 	GetGitHubViewed(context.Context, *connect.Request[v1.GetGitHubViewedRequest]) (*connect.Response[v1.GetGitHubViewedResponse], error)
 	SetGitHubViewed(context.Context, *connect.Request[v1.SetGitHubViewedRequest]) (*connect.Response[v1.SetGitHubViewedResponse], error)
+	// Adds the user's emoji reaction to a comment, a review or a pull
+	// request's description, or takes it away. API 131.
+	ReactGitHub(context.Context, *connect.Request[v1.ReactGitHubRequest]) (*connect.Response[v1.ReactGitHubResponse], error)
 	// The end of a failed Actions job's log (16 KB).
 	GetGitHubJobLog(context.Context, *connect.Request[v1.GetGitHubJobLogRequest]) (*connect.Response[v1.GetGitHubJobLogResponse], error)
 	// The user's writes.
@@ -4333,6 +4354,12 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(nushiServiceMethods.ByName("SetGitHubViewed")),
 		connect.WithHandlerOptions(opts...),
 	)
+	nushiServiceReactGitHubHandler := connect.NewUnaryHandler(
+		NushiServiceReactGitHubProcedure,
+		svc.ReactGitHub,
+		connect.WithSchema(nushiServiceMethods.ByName("ReactGitHub")),
+		connect.WithHandlerOptions(opts...),
+	)
 	nushiServiceGetGitHubJobLogHandler := connect.NewUnaryHandler(
 		NushiServiceGetGitHubJobLogProcedure,
 		svc.GetGitHubJobLog,
@@ -4743,6 +4770,8 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 			nushiServiceGetGitHubViewedHandler.ServeHTTP(w, r)
 		case NushiServiceSetGitHubViewedProcedure:
 			nushiServiceSetGitHubViewedHandler.ServeHTTP(w, r)
+		case NushiServiceReactGitHubProcedure:
+			nushiServiceReactGitHubHandler.ServeHTTP(w, r)
 		case NushiServiceGetGitHubJobLogProcedure:
 			nushiServiceGetGitHubJobLogHandler.ServeHTTP(w, r)
 		case NushiServiceReplyGitHubThreadProcedure:
@@ -5346,6 +5375,10 @@ func (UnimplementedNushiServiceHandler) GetGitHubViewed(context.Context, *connec
 
 func (UnimplementedNushiServiceHandler) SetGitHubViewed(context.Context, *connect.Request[v1.SetGitHubViewedRequest]) (*connect.Response[v1.SetGitHubViewedResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.SetGitHubViewed is not implemented"))
+}
+
+func (UnimplementedNushiServiceHandler) ReactGitHub(context.Context, *connect.Request[v1.ReactGitHubRequest]) (*connect.Response[v1.ReactGitHubResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.ReactGitHub is not implemented"))
 }
 
 func (UnimplementedNushiServiceHandler) GetGitHubJobLog(context.Context, *connect.Request[v1.GetGitHubJobLogRequest]) (*connect.Response[v1.GetGitHubJobLogResponse], error) {

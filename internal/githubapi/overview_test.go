@@ -50,6 +50,23 @@ func TestPullOverview(t *testing.T) {
 	if len(p.Threads) != 3 {
 		t.Fatalf("threads %+v", p.Threads)
 	}
+	// Reactions: the kinds used, in GitHub's order, mine marked; a kind
+	// Nushi doesn't know left out.
+	if want := []model.GitHubReaction{{Content: "hooray", Count: 2, Mine: true}}; !slices.Equal(p.Reactions, want) {
+		t.Fatalf("the description's reactions %+v", p.Reactions)
+	}
+	var comment model.GitHubComment
+	for _, c := range p.Conversation {
+		if c.ID == "IC_1" {
+			comment = c
+		}
+	}
+	if want := []model.GitHubReaction{{Content: "thumbs_up", Count: 3, Mine: true}, {Content: "eyes", Count: 1}}; !slices.Equal(comment.Reactions, want) {
+		t.Fatalf("a comment's reactions %+v", comment.Reactions)
+	}
+	if want := []model.GitHubReaction{{Content: "heart", Count: 1}}; !slices.Equal(p.Threads[0].Comments[0].Reactions, want) {
+		t.Fatalf("a thread comment's reactions %+v", p.Threads[0].Comments[0].Reactions)
+	}
 	first, outdated, onFile := p.Threads[0], p.Threads[1], p.Threads[2]
 	if first.Comments[0].ReviewID != "PRR_tomas_1" || first.Comments[1].ReviewID != "PRR_mira_reply" || outdated.Comments[0].ReviewID != "PRR_tomas_1" {
 		t.Fatalf("review ids %+v %+v", first.Comments, outdated.Comments)

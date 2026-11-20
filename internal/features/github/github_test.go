@@ -173,6 +173,11 @@ func (f *fakeClient) SetViewed(_ context.Context, _, path string, viewed bool) e
 	return nil
 }
 
+func (f *fakeClient) React(_ context.Context, subject, kind string, on bool) error {
+	f.written = append(f.written, fmt.Sprintf("react %s %s %v", subject, kind, on))
+	return nil
+}
+
 func (f *fakeClient) Comment(context.Context, string, string) error {
 	f.written = append(f.written, "comment")
 	return nil
@@ -569,6 +574,18 @@ func TestViewed(t *testing.T) {
 		t.Fatal(err)
 	}
 	if c := w.clients["gho_gh"]; !slices.Contains(c.written, "viewed a.go false") {
+		t.Fatalf("%v", c.written)
+	}
+}
+
+func TestReact(t *testing.T) {
+	w := newWorld(t)
+	ctx := t.Context()
+	_, _ = w.s.Inbox(ctx, "github.com", githubapi.InboxFilter{}, false)
+	if err := w.s.React(ctx, "github.com", "IC_1", "heart", true); err != nil {
+		t.Fatal(err)
+	}
+	if c := w.clients["gho_gh"]; !slices.Contains(c.written, "react IC_1 heart true") {
 		t.Fatalf("%v", c.written)
 	}
 }

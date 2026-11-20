@@ -1314,6 +1314,15 @@ abstract final class NushiService {
     nushiv1nushi.SetGitHubViewedResponse.new,
   );
 
+  /// Adds the user's emoji reaction to a comment, a review or a pull
+  /// request's description, or takes it away. API 131.
+  static const reactGitHub = connect.Spec(
+    '/$name/ReactGitHub',
+    connect.StreamType.unary,
+    nushiv1nushi.ReactGitHubRequest.new,
+    nushiv1nushi.ReactGitHubResponse.new,
+  );
+
   /// The end of a failed Actions job's log (16 KB).
   static const getGitHubJobLog = connect.Spec(
     '/$name/GetGitHubJobLog',

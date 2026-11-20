@@ -11,6 +11,7 @@ import 'package:nushi/github_review.dart';
 import 'package:nushi/github_text.dart';
 import 'package:nushi/keys.dart';
 import 'package:nushi/markdown.dart';
+import 'package:nushi/pull_reactions.dart';
 import 'package:nushi/run_state.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
@@ -332,7 +333,7 @@ class _PullDescriptionState extends _PullEdit<PullDescription> {
       );
     } else {
       final shown = saved ?? pull.body;
-      child = Row(
+      final body = Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
@@ -346,6 +347,26 @@ class _PullDescriptionState extends _PullEdit<PullDescription> {
                   ),
           ),
           if (pull.canEdit) ...[const SizedBox(width: 8), pencil()],
+        ],
+      );
+      // Its reactions under it, as GitHub's description has them.
+      child = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 10,
+        children: [
+          body,
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Reactions(
+              pull.item.id,
+              pull.reactions,
+              reacting: (
+                daemon: widget.daemon,
+                host: pull.item.ref.host,
+                onChanged: widget.onSaved,
+              ),
+            ),
+          ),
         ],
       );
     }
