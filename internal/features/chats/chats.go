@@ -45,6 +45,7 @@ type Service struct {
 	copies    Copies      // Options', if chats keep copies of their transcripts
 	copiesOn  func() bool // whether they write them now
 	timing    Timing      // Options'
+	meter     Meter       // Options', if usage is kept (usage.go)
 	begun     time.Time   // when it was made: the daemon's start (dormant)
 
 	// ctx ends with Close, and with it what the service started on its own:
@@ -249,6 +250,14 @@ type chat struct {
 	// waitedTitle that a turn ended without that title, for naming the
 	// chat's branch (branch.go).
 	titled, waitedTitle bool
+
+	// What its turns' usage needs (usage.go): costed says the agent has
+	// reported the session's cost (usage.Cost); usageModel is the model
+	// its usage reports last named (UsageReader); costFrom is the chat a
+	// fork's session forked from, whose cost its first figure may carry;
+	// project is the project folder of a side chat's chat, its turns'.
+	costed                        bool
+	usageModel, costFrom, project string
 }
 
 // emitLocked numbers and publishes one of the chat's events. Holding the

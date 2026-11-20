@@ -124,8 +124,10 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 		// with the cost: Claude sends one without after each model call
 		// in the turn too (claude-acp-go's contextUsed). An agent without a
 		// Transcript ends it with any.
+		var ownEnded, released bool // the turn that ends here, for the meter once the cost is in
 		if ends := c.kind.transcript == nil || u.Cost != nil; ends {
 			own := c.ownTurn
+			ownEnded = own
 			if own {
 				c.lookRelatedLocked()
 			}
@@ -141,6 +143,7 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 				c.steered = 0
 			case c.backgroundLocked(c.turnFrom): // the agent holds a turn for the subagents it started
 				c.releaseLocked()
+				released = true
 			}
 		}
 		// The end of the agent's own turn: its items have settled. During one of
@@ -148,9 +151,16 @@ func (c *chat) updateLocked(n *acp.SessionNotification, from *child) { //nolint:
 		c.copyLocked(c.started.IsZero())
 		c.usage.Used, c.usage.Size = int64(u.Used), int64(u.Size) //nolint:gosec // token counts, far below the limits
 		if u.Cost != nil {                                        // else the cost reported last still stands
-			c.usage.Cost, c.usage.Currency = u.Cost.Amount, u.Cost.Currency
+			c.usage.Cost, c.usage.Currency, c.costed = u.Cost.Amount, u.Cost.Currency, true
 		}
+		c.usageMetaLocked(u.Meta)
 		c.usageChangedLocked()
+		switch {
+		case released:
+			c.meterLocked(model.UsageReleased, nil)
+		case ownEnded:
+			c.meterLocked(model.UsageOwn, nil)
+		}
 	case "session_info_update":
 		var t string // a title cleared (null) is left as it was
 		if v := u.SessionInfoUpdate.Title.Value; v != nil {

@@ -51,7 +51,7 @@ func (s *Service) ForkAsChat(ctx context.Context, chatID, at string) (string, er
 		return "", err
 	}
 	c := s.newChat(p.kind)
-	c.id, c.issue = rand.Text(), of.Issue
+	c.id, c.issue, c.costFrom = rand.Text(), of.Issue, p.id
 	c.ultracode.Store(of.Ultracode)
 	// The fork's session is the new chat's to keep, even if the app went.
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Minute)
@@ -265,7 +265,7 @@ func (s *Service) keepSide(ctx context.Context, id string, archive bool) (string
 	}
 
 	c := s.newChat(p.kind)
-	c.id, c.sid, c.issue = rand.Text(), sid, of.Issue
+	c.id, c.sid, c.issue, c.costFrom = rand.Text(), sid, of.Issue, id // its session's cost was the side chat's (usage.go)
 	c.ultracode.Store(of.Ultracode)
 	s.adoptUploads(c.id, items)
 	c.mu.Lock()

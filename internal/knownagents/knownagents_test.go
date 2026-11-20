@@ -53,6 +53,7 @@ var capabilities = map[string]func(chats.Harness) bool{
 	"OpenFinder": has[chats.OpenFinder], "ForkFinder": has[chats.ForkFinder], "HistoryChecker": has[chats.HistoryChecker], "MessageDater": has[chats.MessageDater],
 	"TitleMaker": has[chats.TitleMaker], "TerminalCommands": has[chats.TerminalCommands], "WorktreeFinder": has[chats.WorktreeFinder],
 	"SessionSearcher": has[chats.SessionSearcher], "CommandHider": has[chats.CommandHider], "WorkflowReader": has[chats.WorkflowReader],
+	"UsageReader": has[chats.UsageReader],
 }
 
 // Every capability chats declares is in capabilities, so a harness can't
@@ -90,7 +91,7 @@ func listed(h chats.Harness) []string {
 // tests run Harness, so they can never read the owner's files.
 func TestEachHarnessHasWhatItHasAndNoMore(t *testing.T) {
 	want := map[string]struct{ harness, local []string }{
-		"claude": {[]string{"BackgroundTasks", "ContextCommander", "DefaultReader", "Forker", "GoneReader", "OtherReader", "ReadOnly", "SubagentMessages", "SubagentOutput", "Subagents", "TerminalCommands", "TitleMaker", "ToolReader", "Transcript"},
+		"claude": {[]string{"BackgroundTasks", "ContextCommander", "DefaultReader", "Forker", "GoneReader", "OtherReader", "ReadOnly", "SubagentMessages", "SubagentOutput", "Subagents", "TerminalCommands", "TitleMaker", "ToolReader", "Transcript", "UsageReader"},
 			[]string{"ForkFinder", "HistoryChecker", "MessageDater", "OpenFinder", "SessionSearcher", "WorkflowReader", "WorktreeFinder"}},
 		"codex":    {[]string{"Forker", "GoneReader", "OtherReader", "ReadOnly", "ToolReader"}, []string{"ForkFinder", "OpenFinder", "SessionSearcher"}},
 		"ante":     {[]string{"ContextAsker", "Forker", "OtherReader", "Subagents", "ToolReader"}, []string{"MessageDater", "OpenFinder"}},

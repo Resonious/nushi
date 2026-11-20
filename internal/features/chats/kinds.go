@@ -60,6 +60,7 @@ type kind struct {
 	messageDater   MessageDater
 	worktreeFinder WorktreeFinder
 	workflows      WorkflowReader
+	usageReader    UsageReader
 }
 
 // newKind asks k's harness what it can do, once: nothing else in this
@@ -70,7 +71,8 @@ func newKind(k Kind) *kind {
 		otherReader: can[OtherReader](h), defaultReader: can[DefaultReader](h), transcript: can[Transcript](h), subagents: can[Subagents](h), subOutput: can[SubagentOutput](h), toSubagents: can[SubagentMessages](h),
 		background: can[BackgroundTasks](h), contextCommand: can[ContextCommander](h), terminalCmds: can[TerminalCommands](h), commandHider: can[CommandHider](h), contextAsker: can[ContextAsker](h), titleMaker: can[TitleMaker](h), readOnly: can[ReadOnly](h), goneReader: can[GoneReader](h),
 		openFinder: can[OpenFinder](h), forkFinder: can[ForkFinder](h), searcher: can[SessionSearcher](h), historyChecker: can[HistoryChecker](h),
-		messageDater: can[MessageDater](h), worktreeFinder: can[WorktreeFinder](h), workflows: can[WorkflowReader](h)}
+		messageDater: can[MessageDater](h), worktreeFinder: can[WorktreeFinder](h), workflows: can[WorkflowReader](h),
+		usageReader: can[UsageReader](h)}
 }
 
 // can is h as a capability, a nil T when h hasn't it. Harnesses are values,
@@ -120,6 +122,8 @@ type Options struct {
 	// Timing is how long it waits and how often it looks; zero: the
 	// defaults.
 	Timing Timing
+	// Meter takes what each turn used; nil: nothing is told of it.
+	Meter Meter
 }
 
 // New makes the service for agents, the first of them the default. What
@@ -128,7 +132,7 @@ type Options struct {
 func New(ctx context.Context, agents []Kind, o Options) *Service {
 	s := &Service{remembered: o.Remembered, sessions: o.Sessions, worktrees: o.Worktrees,
 		scratch: o.Scratch, uploads: o.Uploads, publish: o.Publish, viewers: o.Viewers, procs: o.Processes, prefs: o.Sleep, copies: o.Copies, copiesOn: o.CopiesOn,
-		timing: o.Timing, begun: time.Now(), chats: map[string]*chat{}, live: map[Agent]bool{}, opening: map[string]bool{}}
+		timing: o.Timing, meter: o.Meter, begun: time.Now(), chats: map[string]*chat{}, live: map[Agent]bool{}, opening: map[string]bool{}}
 	s.ctx, s.cancel = context.WithCancel(ctx)
 	if s.publish == nil {
 		s.publish = func(model.Event) {}

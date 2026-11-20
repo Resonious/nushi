@@ -350,6 +350,7 @@ func (c *chat) run(agent Agent, req *acp.PromptRequest, n *notes, sent, done cha
 	if c.done != done || c.released { // released: its end was the chat's already
 		c.released = c.released && c.done != done
 		c.logLocked().Info("held prompt answered", "err", err)
+		c.meterLocked(model.UsageHeld, promptUsage(resp, err)) // its tokens: the turn's work was metered at its release
 		return
 	}
 	if log := c.logLocked().With("took", time.Since(c.started).Round(time.Millisecond)); err != nil {
@@ -366,6 +367,7 @@ func (c *chat) run(agent Agent, req *acp.PromptRequest, n *notes, sent, done cha
 		c.usage.CachedRead, c.usage.CachedWrite = tokens(u.CachedReadTokens), tokens(u.CachedWriteTokens)
 		c.usageChangedLocked()
 	}
+	c.meterLocked(model.UsageTurn, promptUsage(resp, err))
 	quit := errors.Is(err, acp.ErrClosed) // the agent's connection ended: watch says so
 	select {
 	case <-agent.Done():
