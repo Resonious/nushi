@@ -65,6 +65,7 @@ type daemon struct {
 	looks   *atomic.Int64 // the restart's looks (restart.Service.Looked)
 	lapsed  *atomic.Bool  // its ask lapsed, and it stopped looking
 	claudes *claudes      // the fake claudes Claude's Go agent ran
+	codexes *codexes      // the fake app-servers Codex's Go agent ran
 	tools   *tools.Service
 	hub     *events.Hub
 	dataDir string           // what it was started on, for reopen
@@ -215,6 +216,8 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		}
 	}
 	kinds = append(kinds, chats.Kind{Harness: claudeOnFake{projects: filepath.Join(dataDir, "claude", "projects")}, Launch: fake(""), MCP: true})
+	cxs := codexStores(dataDir)
+	kinds = append(kinds, chats.Kind{Harness: codexGo{}, Launch: launch(cxs.serve), MCP: true})
 	copies, err := transcripts.Open(filepath.Join(dataDir, "transcripts"))
 	if err != nil {
 		t.Fatal(err)
@@ -268,7 +271,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		_ = db.Close() // closed already when stopped twice: reopen's, then the cleanup's
 	}
 	t.Cleanup(stop)
-	return &daemon{url: srv.URL, devices: devices.URL, stop: stop, chats: svc, restart: restarts, looks: looks, lapsed: lapsed, claudes: cls, tools: toolSvc, hub: hub, dataDir: dataDir, history: history, kill: func() {
+	return &daemon{url: srv.URL, devices: devices.URL, stop: stop, chats: svc, restart: restarts, looks: looks, lapsed: lapsed, claudes: cls, codexes: cxs, tools: toolSvc, hub: hub, dataDir: dataDir, history: history, kill: func() {
 		mu.Lock()
 		defer mu.Unlock()
 		kill()
