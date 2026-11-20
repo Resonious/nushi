@@ -16960,6 +16960,7 @@ class Workflow extends $pb.GeneratedMessage {
     $core.bool? stalled,
     $fixnum.Int64? tokens,
     $core.Iterable<$core.int>? runningPhases,
+    $core.Iterable<WorkflowPhase>? planned,
   }) {
     final result = Workflow._();
     if (runId != null) result.runId = runId;
@@ -16980,6 +16981,7 @@ class Workflow extends $pb.GeneratedMessage {
     if (stalled != null) result.stalled = stalled;
     if (tokens != null) result.tokens = tokens;
     if (runningPhases != null) result.runningPhases.addAll(runningPhases);
+    if (planned != null) result.planned.addAll(planned);
     return result;
   }
 
@@ -17016,6 +17018,8 @@ class Workflow extends $pb.GeneratedMessage {
     ..aInt64(18, _omitFieldNames ? '' : 'tokens')
     ..p<$core.int>(
         19, _omitFieldNames ? '' : 'runningPhases', $pb.PbFieldType.K3)
+    ..pPM<WorkflowPhase>(20, _omitFieldNames ? '' : 'planned',
+        subBuilder: WorkflowPhase.$_createMessage)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -17201,6 +17205,12 @@ class Workflow extends $pb.GeneratedMessage {
   /// for none. API 132.
   @$pb.TagNumber(19)
   $pb.PbList<$core.int> get runningPhases => $_getList(17);
+
+  /// The phases its script plans and it hasn't reached, in the script's
+  /// order (Claude's meta.phases), with phases 32 at most; their counts are
+  /// 0. A phase leaves it for phases once reached. API 134.
+  @$pb.TagNumber(20)
+  $pb.PbList<WorkflowPhase> get planned => $_getList(18);
 }
 
 /// A phase of a workflow: its title, the agent's line on it, and how many

@@ -18,12 +18,13 @@ func TestWorkflowProto(t *testing.T) {
 	start := time.UnixMilli(1794798436066)
 	w := model.Workflow{RunID: "wf_1", TaskID: "t1", Name: "n", Description: "d", State: "done", End: "completed", Started: start,
 		Phases: []model.WorkflowPhase{{Title: "Map", Detail: "x", Started: 2, Done: 1, Failed: 1}}, Agents: 2, Done: 1, Failed: 1,
-		Running: []string{"a"}, RunningCount: 1, Summary: "s", Stalled: true}
+		Running: []string{"a"}, RunningCount: 1, Summary: "s", Stalled: true, Planned: []model.WorkflowPhase{{Title: "Verify", Detail: "y"}}}
 	it := itemProto(&model.Item{ID: "c", Kind: model.ToolCall, Workflow: &w}, false)
 	p := it.Workflow
 	if p.RunId != "wf_1" || p.Name != "n" || p.Description != "d" || p.State != "done" || p.End != "completed" ||
 		p.Started != 1794798436066 || p.Ended != 0 || p.Active != 0 || len(p.Phases) != 1 || p.Phases[0].Failed != 1 || p.Agents != 2 ||
-		p.Done != 1 || p.Failed != 1 || len(p.Running) != 1 || p.RunningCount != 1 || p.Summary != "s" || !p.Stalled {
+		p.Done != 1 || p.Failed != 1 || len(p.Running) != 1 || p.RunningCount != 1 || p.Summary != "s" || !p.Stalled ||
+		len(p.Planned) != 1 || p.Planned[0].Title != "Verify" || p.Planned[0].Detail != "y" {
 		t.Errorf("got %+v", p)
 	}
 	if itemProto(&model.Item{ID: "c"}, false).Workflow != nil {

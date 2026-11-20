@@ -15,7 +15,9 @@ import "time"
 //
 // Started is when the run started, Ended when it ended (zero while it
 // runs), Active when its files last changed. Phases are in the order
-// first reached (or the agent's own list, at the end), 32 at most. Agents
+// first reached (or the agent's own list, at the end), 32 at most;
+// Planned those its script plans (Claude's meta.phases) and it hasn't
+// reached, in the script's order, with Phases 32 at most. Agents
 // counts the run's agents, Done and Failed those that ended so; Running
 // holds the labels of up to 8 that run now, RunningPhases the index in
 // Phases of each one's phase (-1 for none), RunningCount how many do.
@@ -38,6 +40,7 @@ type Workflow struct {
 	Ended                            time.Time `json:",omitzero"`
 	Active                           time.Time `json:",omitzero"`
 	Phases                           []WorkflowPhase
+	Planned                          []WorkflowPhase `json:",omitempty"`
 	Agents, Done, Failed             int
 	Running                          []string
 	RunningPhases                    []int `json:",omitempty"`

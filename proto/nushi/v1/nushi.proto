@@ -2465,6 +2465,10 @@ message Workflow {
   // For each of running, the index in phases of the phase it runs in; -1
   // for none. API 132.
   repeated int32 running_phases = 19;
+  // The phases its script plans and it hasn't reached, in the script's
+  // order (Claude's meta.phases), with phases 32 at most; their counts are
+  // 0. A phase leaves it for phases once reached. API 134.
+  repeated WorkflowPhase planned = 20;
 }
 
 // A phase of a workflow: its title, the agent's line on it, and how many

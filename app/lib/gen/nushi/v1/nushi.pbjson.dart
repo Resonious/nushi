@@ -3984,6 +3984,14 @@ const Workflow$json = {
     {'1': 'stalled', '3': 17, '4': 1, '5': 8, '10': 'stalled'},
     {'1': 'tokens', '3': 18, '4': 1, '5': 3, '10': 'tokens'},
     {'1': 'running_phases', '3': 19, '4': 3, '5': 5, '10': 'runningPhases'},
+    {
+      '1': 'planned',
+      '3': 20,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.WorkflowPhase',
+      '10': 'planned'
+    },
   ],
   '9': [
     {'1': 2, '2': 3},
@@ -4001,8 +4009,9 @@ final $typed_data.Uint8List workflowDescriptor = $convert.base64Decode(
     '9uZRgMIAEoBVIEZG9uZRIWCgZmYWlsZWQYDSABKAVSBmZhaWxlZBIYCgdydW5uaW5nGA4gAygJ'
     'UgdydW5uaW5nEiMKDXJ1bm5pbmdfY291bnQYDyABKAVSDHJ1bm5pbmdDb3VudBIYCgdzdW1tYX'
     'J5GBAgASgJUgdzdW1tYXJ5EhgKB3N0YWxsZWQYESABKAhSB3N0YWxsZWQSFgoGdG9rZW5zGBIg'
-    'ASgDUgZ0b2tlbnMSJQoOcnVubmluZ19waGFzZXMYEyADKAVSDXJ1bm5pbmdQaGFzZXNKBAgCEA'
-    'NSB3Rhc2tfaWQ=');
+    'ASgDUgZ0b2tlbnMSJQoOcnVubmluZ19waGFzZXMYEyADKAVSDXJ1bm5pbmdQaGFzZXMSMQoHcG'
+    'xhbm5lZBgUIAMoCzIXLm51c2hpLnYxLldvcmtmbG93UGhhc2VSB3BsYW5uZWRKBAgCEANSB3Rh'
+    'c2tfaWQ=');
 
 @$core.Deprecated('Use workflowPhaseDescriptor instead')
 const WorkflowPhase$json = {
