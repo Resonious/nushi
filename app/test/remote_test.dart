@@ -1,6 +1,5 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/gen/nushi/v1/nushi.connect.client.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -80,16 +79,7 @@ void main() {
   });
 
   testWidgets('Pair a phone offers Copy link', (tester) async {
-    String? copied;
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied = (call.arguments as Map)['text'] as String;
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     remoteState.value = Remote(
       on: true,
       relay: 'wss://relay.example.com',
@@ -111,7 +101,7 @@ void main() {
     );
     await tester.tap(find.text('Copy link'));
     await tester.pumpAndSettle();
-    expect(copied, pairingLink(_qr));
+    expect(copied.last, pairingLink(_qr));
     expect(find.text('Copied'), findsOneWidget);
   });
 
