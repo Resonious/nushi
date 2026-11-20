@@ -11,6 +11,7 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/review.dart';
 import 'package:nushi/review_cards.dart';
 import 'package:nushi/run_state.dart';
+import 'package:nushi/sent_comments.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/syntax.dart';
 import 'package:nushi/theme/theme.dart';
@@ -338,9 +339,15 @@ class _DiffBoxState extends State<DiffBox> {
   /// Comments were made, changed or removed: they show as they are.
   void _commentsChanged() => _showComments();
 
+  /// The inlays of [SentComments]: its row above the new side's first
+  /// line, and the old side's room as high, so the sides stay level.
+  static const _sentId = 'sent';
+  static const _sentRoomId = 'sent:room';
+
   /// Puts the comments, and the box being written in, under their lines,
-  /// or above the file when they're gone. Changes has already moved each
-  /// with its lines for the files it shows ([filesRead]).
+  /// or above the file when they're gone; those sent whose lines changed
+  /// since go in one pill above it ([SentComments]). Changes has already
+  /// moved each with its lines for the files it shows ([filesRead]).
   void _showComments() {
     final c = _controller;
     if (c == null) return;
@@ -348,9 +355,14 @@ class _DiffBoxState extends State<DiffBox> {
     int below(int line, {required bool old}) =>
         min(line, (old ? doc.oldLineCount : doc.newLineCount)) - 1;
     final d = _draft;
+    final comments = _comments;
     c.inlays = [
-      for (final m in _comments)
-        if (m != _editing)
+      if (comments.any(sentAndChanged)) ...const [
+        InlaySpec(id: _sentId, side: PaneSide.neu, afterLine: -1),
+        InlaySpec(id: _sentRoomId, side: PaneSide.old, afterLine: -1),
+      ],
+      for (final m in comments)
+        if (m != _editing && !sentAndChanged(m))
           InlaySpec(
             id: m.id,
             side: m.old ? PaneSide.old : PaneSide.neu,
@@ -474,6 +486,15 @@ class _DiffBoxState extends State<DiffBox> {
         onCancel: _closeDraft,
       );
     }
+    if (spec.id == _sentRoomId) {
+      // A unified diff draws both sides' inlays in one column.
+      return SizedBox(height: _unified ? 0 : SentComments.height);
+    }
+    if (spec.id == _sentId) {
+      return SentComments([
+        ..._comments.where(sentAndChanged),
+      ], onRemove: (c) => _remove(r.chat, c));
+    }
     final c = _comments.where((c) => c.id == spec.id).firstOrNull;
     if (c == null) return const SizedBox.shrink(); // gone meanwhile
     return CommentCard(
@@ -489,12 +510,15 @@ class _DiffBoxState extends State<DiffBox> {
         _comment.text = c.text;
         _showComments();
       },
-      onRemove: () => setComments(r.chat, [
-        for (final m in commentsOf(r.chat))
-          if (m != c) m,
-      ]),
+      onRemove: () => _remove(r.chat, c),
     );
   }
+
+  /// Takes [c] out of [chat]'s comments.
+  static void _remove(String chat, ReviewComment c) => setComments(chat, [
+    for (final m in commentsOf(chat))
+      if (m != c) m,
+  ]);
 
   @override
   Widget build(BuildContext context) => ValueListenableBuilder(

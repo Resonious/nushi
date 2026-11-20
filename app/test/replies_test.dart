@@ -123,4 +123,68 @@ void main() {
     expect(got.single.quote, 'Check CI / lint\nfast: failure');
     expect(got.single.text, 'Fix it.');
   });
+
+  // The agent answers "#1 … #2 …" by the number in each card's mark, which
+  // the cards show from two up (ReplyNumber); the mark is the only
+  // structure, so no words of Nushi's reach the agent.
+  test('one, two and three cards: each mark numbered by its place', () {
+    const a = (quote: 'main.go, line 3', text: 'Rename it.', from: '');
+    const b = (quote: 'main.go, line 9', text: 'Drop it.', from: '');
+    const c = (quote: 'kept as a DateTime', text: 'Why?', from: '');
+    expect(
+      withReplies([a], ''),
+      '<!-- reply 1 -->\n> main.go, line 3\n\nRename it.',
+    );
+    expect(
+      withReplies([a, b], ''),
+      '<!-- reply 1 -->\n> main.go, line 3\n\nRename it.\n\n'
+      '<!-- reply 2 -->\n> main.go, line 9\n\nDrop it.',
+    );
+    final three = withReplies([a, b, c], 'Thanks.');
+    expect(
+      three,
+      '<!-- reply 1 -->\n> main.go, line 3\n\nRename it.\n\n'
+      '<!-- reply 2 -->\n> main.go, line 9\n\nDrop it.\n\n'
+      '<!-- reply 3 -->\n> kept as a DateTime\n\nWhy?\n\n'
+      '<!-- end of replies -->\n\nThanks.',
+    );
+    // Write, read, write: the same text; the numbers aren't kept on a
+    // card, its place gives them again.
+    final (got, rest) = splitReplies(three);
+    expect(got, [a, b, c]);
+    expect(withReplies(got, rest), three);
+    // A card taken out: the rest are numbered again from 1.
+    final two = withReplies([b, c], '');
+    expect(two, startsWith('<!-- reply 1 -->\n> main.go, line 9'));
+    expect(two, contains('<!-- reply 2 -->\n> kept as'));
+  });
+
+  test('marks whose numbers are out of step still read by place', () {
+    // Text written by hand, or an older message edited: each mark is a
+    // card, whatever its number.
+    const message =
+        '<!-- reply 4 -->\n> one\n\nfirst\n\n'
+        '<!-- reply 4 -->\n> two\n\nsecond\n\n'
+        '<!-- end of replies -->\n\nrest';
+    final (got, rest) = splitReplies(message);
+    expect([for (final r in got) r.quote], ['one', 'two']);
+    expect([for (final r in got) r.text], ['first', 'second']);
+    expect(rest, 'rest');
+    expect(withReplies(got, rest), contains('<!-- reply 2 -->\n> two'));
+  });
+
+  test("a card's own numbered lines stay its own", () {
+    const listed = (
+      quote: '1. parse the time\n2. sort by it\n10. done',
+      text: '1. Why parse?\n2. Why not sort strings?',
+      from: '',
+    );
+    const leading = (quote: '1.', text: '2. and this', from: '');
+    final message = withReplies([listed, leading], '3. and the rest');
+    expect(message, contains('> 1. parse the time\n> 2. sort by it'));
+    final (got, rest) = splitReplies(message);
+    expect(got, [listed, leading]);
+    expect(rest, '3. and the rest');
+    expect(withReplies(got, rest), message);
+  });
 }

@@ -142,7 +142,7 @@ Nushi's words, defined once. The UI, the code and the docs use them; a new user-
 
 | Term | Meaning | Code | ADR |
 |---|---|---|---|
-| **Review comment** | A comment you write on a line in Changes, for the agent: Add to review, then Send review comments to agent. | `ReviewComment` | |
+| **Review comment** | A comment you write on a line in Changes, for the agent: Add to review, then Send review comments to agent. Once sent and its lines changed, it leaves the code for the diff's "2 sent" pill. | `ReviewComment`, `SentComments` | |
 | **Send to agent** | Put a GitHub comment, thread or failed check into the box as a reply card, to send when you're ready. Never sends by itself. | `SendToAgent` | 0059 |
 | **Fix checks**, **Address** | Put the failed checks, or the review threads, into the box as reply cards: the Checks section's and the PR widget's buttons, in the send look. | `checkReplies`, `threadReplies` | 0059 |
 | **Re-run failed** | Ask GitHub to re-run the failed jobs of a pull request's failed checks' workflow runs. | `RerunGitHubChecks` | |
