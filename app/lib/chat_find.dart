@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:nushi/chat.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/motion.dart';
 import 'package:nushi/transcript_find.dart';
 
 /// The daemon's API that finds in a chat's whole history (FindInChat).
@@ -36,7 +37,7 @@ class ChatFind extends Find {
   String? Function(String item)? entryOf;
 
   /// How long typing pauses before the daemon is asked.
-  static const pause = Duration(milliseconds: 150);
+  static const Duration pause = Waits.typing;
 
   List<ChatMatch> _far = const [];
   List<String> _near = const [];
