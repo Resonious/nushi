@@ -3440,7 +3440,10 @@ message AddGitHubTokenRequest {
 }
 
 message AddGitHubTokenResponse {
-  string login = 1;
+  // The login the token signs in as: never read (the hosts are listed
+  // again).
+  reserved 1;
+  reserved "login";
 }
 
 message RemoveGitHubTokenRequest {

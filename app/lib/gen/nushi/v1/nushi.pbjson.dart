@@ -6330,15 +6330,15 @@ final $typed_data.Uint8List addGitHubTokenRequestDescriptor = $convert.base64Dec
 @$core.Deprecated('Use addGitHubTokenResponseDescriptor instead')
 const AddGitHubTokenResponse$json = {
   '1': 'AddGitHubTokenResponse',
-  '2': [
-    {'1': 'login', '3': 1, '4': 1, '5': 9, '10': 'login'},
+  '9': [
+    {'1': 1, '2': 2},
   ],
+  '10': ['login'],
 };
 
 /// Descriptor for `AddGitHubTokenResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List addGitHubTokenResponseDescriptor =
-    $convert.base64Decode(
-        'ChZBZGRHaXRIdWJUb2tlblJlc3BvbnNlEhQKBWxvZ2luGAEgASgJUgVsb2dpbg==');
+final $typed_data.Uint8List addGitHubTokenResponseDescriptor = $convert
+    .base64Decode('ChZBZGRHaXRIdWJUb2tlblJlc3BvbnNlSgQIARACUgVsb2dpbg==');
 
 @$core.Deprecated('Use removeGitHubTokenRequestDescriptor instead')
 const RemoveGitHubTokenRequest$json = {

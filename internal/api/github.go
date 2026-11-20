@@ -40,11 +40,10 @@ func (s *server) ListGitHubHosts(ctx context.Context, _ *connect.Request[nushiv1
 }
 
 func (s *server) AddGitHubToken(ctx context.Context, req *connect.Request[nushiv1.AddGitHubTokenRequest]) (*connect.Response[nushiv1.AddGitHubTokenResponse], error) {
-	u, err := s.GitHub.AddToken(ctx, req.Msg.Host, req.Msg.Token)
-	if err != nil {
+	if _, err := s.GitHub.AddToken(ctx, req.Msg.Host, req.Msg.Token); err != nil {
 		return nil, githubErr(err)
 	}
-	return connect.NewResponse(&nushiv1.AddGitHubTokenResponse{Login: u.Login}), nil
+	return connect.NewResponse(&nushiv1.AddGitHubTokenResponse{}), nil
 }
 
 func (s *server) RemoveGitHubToken(_ context.Context, req *connect.Request[nushiv1.RemoveGitHubTokenRequest]) (*connect.Response[nushiv1.RemoveGitHubTokenResponse], error) {

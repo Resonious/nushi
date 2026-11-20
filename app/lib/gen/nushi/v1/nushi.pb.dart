@@ -27448,13 +27448,7 @@ class AddGitHubTokenRequest extends $pb.GeneratedMessage {
 }
 
 class AddGitHubTokenResponse extends $pb.GeneratedMessage {
-  factory AddGitHubTokenResponse({
-    $core.String? login,
-  }) {
-    final result = AddGitHubTokenResponse._();
-    if (login != null) result.login = login;
-    return result;
-  }
+  factory AddGitHubTokenResponse() => AddGitHubTokenResponse._();
 
   AddGitHubTokenResponse._();
 
@@ -27469,7 +27463,6 @@ class AddGitHubTokenResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'AddGitHubTokenResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
       createEmptyInstance: AddGitHubTokenResponse.$_createMessage)
-    ..aOS(1, _omitFieldNames ? '' : 'login')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -27495,15 +27488,6 @@ class AddGitHubTokenResponse extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<AddGitHubTokenResponse>(
           AddGitHubTokenResponse.$_createMessage);
   static AddGitHubTokenResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get login => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set login($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasLogin() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearLogin() => $_clearField(1);
 }
 
 class RemoveGitHubTokenRequest extends $pb.GeneratedMessage {

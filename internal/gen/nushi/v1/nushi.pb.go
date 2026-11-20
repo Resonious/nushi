@@ -21158,7 +21158,6 @@ func (x *AddGitHubTokenRequest) GetToken() string {
 
 type AddGitHubTokenResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Login         string                 `protobuf:"bytes,1,opt,name=login,proto3" json:"login,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -21191,13 +21190,6 @@ func (x *AddGitHubTokenResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use AddGitHubTokenResponse.ProtoReflect.Descriptor instead.
 func (*AddGitHubTokenResponse) Descriptor() ([]byte, []int) {
 	return file_nushi_v1_nushi_proto_rawDescGZIP(), []int{334}
-}
-
-func (x *AddGitHubTokenResponse) GetLogin() string {
-	if x != nil {
-		return x.Login
-	}
-	return ""
 }
 
 type RemoveGitHubTokenRequest struct {
@@ -27479,9 +27471,8 @@ const file_nushi_v1_nushi_proto_rawDesc = "" +
 	"\x05hosts\x18\x01 \x03(\v2\x14.nushi.v1.GitHubHostR\x05hosts\"A\n" +
 	"\x15AddGitHubTokenRequest\x12\x12\n" +
 	"\x04host\x18\x01 \x01(\tR\x04host\x12\x14\n" +
-	"\x05token\x18\x02 \x01(\tR\x05token\".\n" +
-	"\x16AddGitHubTokenResponse\x12\x14\n" +
-	"\x05login\x18\x01 \x01(\tR\x05login\".\n" +
+	"\x05token\x18\x02 \x01(\tR\x05token\"%\n" +
+	"\x16AddGitHubTokenResponseJ\x04\b\x01\x10\x02R\x05login\".\n" +
 	"\x18RemoveGitHubTokenRequest\x12\x12\n" +
 	"\x04host\x18\x01 \x01(\tR\x04host\"\x1b\n" +
 	"\x19RemoveGitHubTokenResponse\"-\n" +

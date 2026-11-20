@@ -65,7 +65,7 @@ Future<(FakeDaemon, Daemon)> _open(
         ...list,
         GitHubHost(host: host, login: 'octo', source: 'token', pasted: true),
       ];
-      return AddGitHubTokenResponse(login: 'octo');
+      return AddGitHubTokenResponse();
     }(),
     _ => null,
   };
