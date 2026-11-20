@@ -345,7 +345,7 @@ void main() {
     width.value = 600;
     await tester.pump();
     expect(find.text('stopped'), findsOne);
-    expect(find.text('48.1k tokens · 3m 12s'), findsOne);
+    expect(find.text('· 48.1k tokens · 3m 12s'), findsOne);
   });
 
   for (final (size, label) in [
