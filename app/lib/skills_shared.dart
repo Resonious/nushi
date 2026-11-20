@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:nushi/agents.dart';
-import 'package:nushi/conventions.dart';
 import 'package:nushi/folder_button.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/menu.dart';
-import 'package:nushi/native.dart';
 import 'package:nushi/plain_text.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/skills_list.dart';
@@ -169,11 +167,7 @@ class _SharedRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        tooltip(
-          context,
-          'About what listing it costs every chat’s context',
-          Text('≈ ${skill.tokens} tokens', style: muted),
-        ),
+        skillTokens(context, skill, muted),
         if (mine == null)
           Padding(
             padding: const EdgeInsets.only(left: 6),
@@ -199,27 +193,14 @@ class _SharedRow extends StatelessWidget {
             why: switchWhy(list, mine.setIn),
             onChanged: ({required on}) => setSkillOn(list, skill, on: on),
           ),
-        MenuIcon.line(
-          LineIcon.more,
-          size: 15,
-          tooltip: 'More',
-          entries: [
-            MenuEntry(
-              openSkillLabel(skill),
-              onPick: () => openSkillFile(skill),
-            ),
-            MenuEntry(
-              conventions.reveal,
-              onPick: () => native.desktop.reveal(skill.path),
-            ),
-            // The daemon says what it would refuse to link or to move to
-            // the Trash (a file; for a link, one in a group too).
-            if (canLink && !skill.noLink)
-              MenuEntry('Link for $title…', onPick: () => _link(context)),
-            if (!skill.noTrash)
-              MenuEntry('Delete…', onPick: () => _delete(context)),
-          ],
-        ),
+        skillMenu(skill, [
+          // The daemon says what it would refuse to link or to move to the
+          // Trash (a file; for a link, one in a group too).
+          if (canLink && !skill.noLink)
+            MenuEntry('Link for $title…', onPick: () => _link(context)),
+          if (!skill.noTrash)
+            MenuEntry('Delete…', onPick: () => _delete(context)),
+        ]),
       ],
     );
   }

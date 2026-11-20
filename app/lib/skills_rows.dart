@@ -17,6 +17,30 @@ Widget skillRow(Widget row) => Padding(
   child: row,
 );
 
+/// What listing [skill] costs every chat's context, in a row's [muted]
+/// words.
+Widget skillTokens(BuildContext context, Skill skill, TextStyle muted) =>
+    tooltip(
+      context,
+      'About what listing it costs every chat’s context',
+      Text('≈ ${skill.tokens} tokens', style: muted),
+    );
+
+/// A skill row's ⋯: open its file, show it, then [more].
+Widget skillMenu(Skill skill, List<MenuEntry> more) => MenuIcon.line(
+  LineIcon.more,
+  size: 15,
+  tooltip: 'More',
+  entries: [
+    MenuEntry(openSkillLabel(skill), onPick: () => openSkillFile(skill)),
+    MenuEntry(
+      conventions.reveal,
+      onPick: () => native.desktop.reveal(skill.path),
+    ),
+    ...more,
+  ],
+);
+
 /// A switch for where it acts ([where]: "everywhere", "in this project"),
 /// disabled with [why] when it can't act; [onChanged] runs the change.
 class SkillSwitch extends StatelessWidget {
@@ -169,11 +193,7 @@ class _SkillRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        tooltip(
-          context,
-          'About what listing it costs every chat’s context',
-          Text('≈ ${skill.tokens} tokens', style: muted),
-        ),
+        skillTokens(context, skill, muted),
         if (plugin)
           Padding(
             padding: const EdgeInsets.only(left: 6),
@@ -186,26 +206,13 @@ class _SkillRow extends StatelessWidget {
             why: switchWhy(list, skill.setIn),
             onChanged: ({required on}) => setSkillOn(list, skill, on: on),
           ),
-        MenuIcon.line(
-          LineIcon.more,
-          size: 15,
-          tooltip: 'More',
-          entries: [
+        skillMenu(skill, [
+          if (deletable)
             MenuEntry(
-              openSkillLabel(skill),
-              onPick: () => openSkillFile(skill),
+              'Delete…',
+              onPick: () => deleteSkill(context, list, skill),
             ),
-            MenuEntry(
-              conventions.reveal,
-              onPick: () => native.desktop.reveal(skill.path),
-            ),
-            if (deletable)
-              MenuEntry(
-                'Delete…',
-                onPick: () => deleteSkill(context, list, skill),
-              ),
-          ],
-        ),
+        ]),
       ],
     );
   }
