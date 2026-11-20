@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
@@ -62,7 +61,7 @@ void main() {
     await endEditor(tester, d);
   }, variant: onMac);
 
-  testWidgets('counts every row\'s matches and the header\'s, case aside; '
+  testWidgets("counts every row's matches and the header's, case aside; "
       '⏎ and ⇧⏎ step, round, to rows not laid out; none said plainly', (
     tester,
   ) async {

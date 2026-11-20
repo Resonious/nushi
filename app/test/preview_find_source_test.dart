@@ -66,7 +66,7 @@ void main() {
     await endEditor(tester, d);
   }, variant: onMac);
 
-  testWidgets('counts every line\'s matches, case aside; ⏎ and ⇧⏎ step, '
+  testWidgets("counts every line's matches, case aside; ⏎ and ⇧⏎ step, "
       'round, to lines not laid out; none said plainly', (tester) async {
     final d = await _open(tester);
     await _openFind(tester);
