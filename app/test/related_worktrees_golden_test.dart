@@ -178,7 +178,7 @@ void main() {
         expect(chat.related.list, hasLength(5));
         // Every line's end at the line's edge, tagged or not.
         final ends = {
-          for (final e in find.byIcon(Icons.chevron_right).evaluate())
+          for (final e in find.byIcon(paneIcon).evaluate())
             if (e.findAncestorWidgetOfExactType<SubagentLine>() != null)
               tester.getTopRight(find.byElementPredicate((x) => x == e)).dx,
         };
