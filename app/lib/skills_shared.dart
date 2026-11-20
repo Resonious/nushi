@@ -5,6 +5,7 @@ import 'package:nushi/conventions.dart';
 import 'package:nushi/folder_button.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/menu.dart';
+import 'package:nushi/plain_text.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/skills_list.dart';
 import 'package:nushi/skills_rows.dart';
@@ -62,13 +63,6 @@ class SharedGroup extends StatelessWidget {
   }
 }
 
-/// "Codex, PiG and Claude": [names] as a sentence's list.
-String listed(List<String> names) => switch (names.length) {
-  0 => '',
-  1 => names.single,
-  _ => '${names.sublist(0, names.length - 1).join(', ')} and ${names.last}',
-};
-
 class _SharedRow extends StatelessWidget {
   const new(this.list, this.skill);
 
@@ -79,7 +73,7 @@ class _SharedRow extends StatelessWidget {
       skill.agents.where((a) => a.agent == list.agent).firstOrNull;
 
   Future<void> _delete(BuildContext context) async {
-    final losing = listed([for (final a in skill.agents) agentTitle(a.agent)]);
+    final losing = andList([for (final a in skill.agents) agentTitle(a.agent)]);
     final links = [
       for (final a in skill.agents)
         if (a.via.isNotEmpty)
@@ -91,7 +85,7 @@ class _SharedRow extends StatelessWidget {
       skill,
       more:
           '${losing.isEmpty ? 'No agent loads it here.' : '$losing lose it.'}'
-          '${links.isEmpty ? '' : '\n${listed(links)} go too.'}',
+          '${links.isEmpty ? '' : '\n${andList(links)} go too.'}',
     );
   }
 

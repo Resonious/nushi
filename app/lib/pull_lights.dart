@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/plain_text.dart';
 import 'package:nushi/theme/theme.dart';
 
 /// The parts of the pull request's page a status light jumps to.
@@ -70,14 +71,6 @@ List<GitHubReviewer> waitingOn(GitHubPull p) => [
     if (r.state == 'requested') r,
 ];
 
-/// Names joined as a sentence says them: "@a", "@a and @b", "@a, @b and
-/// @c".
-String names(Iterable<String> all) {
-  final l = all.toList();
-  if (l.length < 2) return l.join();
-  return '${l.take(l.length - 1).join(', ')} and ${l.last}';
-}
-
 /// One status light: its name, value, a line under it, its mood and icon,
 /// and the section it jumps to.
 typedef Light = ({
@@ -136,7 +129,7 @@ List<Light> pullLights(
       ? ''
       : waiting.any((r) => r.codeOwner)
       ? '${waiting.length == 1 ? 'code owner' : 'code owners'} waiting'
-      : '${names(waiting.map((r) => r.team ? '@${r.login}' : r.login))} '
+      : '${andList(waiting.map((r) => r.team ? '@${r.login}' : r.login))} '
             'waiting';
   List<String> by(String state) => [
     for (final r in p.reviewers)
@@ -236,7 +229,7 @@ const IconData _lock = Icons.lock_outline;
   ]) => (lead: lead, rest: rest, mood: mood, icon: icon);
   final it = p.item;
   final waiting = waitingOn(p);
-  final asked = names(waiting.map((r) => '@${r.login}'));
+  final asked = andList(waiting.map((r) => '@${r.login}'));
   final has = waiting.length == 1 ? 'has' : 'have';
   final things = todo == 1 ? '1 thing blocks' : '$todo things block';
   final n = countChecks(p);

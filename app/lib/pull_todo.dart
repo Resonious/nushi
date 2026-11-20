@@ -3,6 +3,7 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_agent.dart';
 import 'package:nushi/github_parts.dart';
+import 'package:nushi/plain_text.dart';
 import 'package:nushi/pull_lights.dart';
 import 'package:nushi/pull_merge_state.dart';
 import 'package:nushi/pull_todo_items.dart';
@@ -317,7 +318,7 @@ class _Next extends StatelessWidget {
     final (String? lead, String? who, String rest) = waiting.isNotEmpty
         ? (
             then,
-            names(waiting.map((r) => '@${r.login}')),
+            andList(waiting.map((r) => '@${r.login}')),
             waiting.any((r) => r.codeOwner)
                 ? ': approval required as code owner.'
                 : ': review requested.',
