@@ -26,3 +26,6 @@ A full CI run took 10–16 minutes (median 12) on 2026-11-16, and `make check` p
 - Per-test golden tags: both hosts would compile every golden file, and the tags need upkeep.
 - A paths-filter action: a third-party dependency for 30 lines of shell.
 - A nightly macOS run of every file, per-commit or daily Go caches, and dropping `-shuffle` for Go's test cache: `make check` covers the first; the others refill the cache quota or lose order checks.
+
+## Amendments
+- 2026-11-21 (a review found the Mac app first built once a release was public): **CI builds the Mac app**, as a release does (`tools/release.sh 0.0.0-ci app`: every Runner Swift file, the plugins, the bundle signed ad hoc and checked), in a macOS job of its own, beside the others so it adds nothing to the critical path. It runs only when a change touches what that build reads beyond the Dart and Go the other jobs compile (`app/macos`, `app/pubspec.*`, `cmd/`, and what runs everything: the Makefile, `tools/`, `packaging/`, CI), so most runs keep to four macOS jobs; one that runs everything takes the fifth slot, and a release then waits for it. Not in the release's call: the release's own app job is that build, and its check doesn't count this job skipped.

@@ -1,7 +1,8 @@
 #!/bin/sh
 # What a change can affect, for CI's jobs to skip what it can't (ADR 0129):
 # go=true when Go's jobs must run, app=true when the app's must, code=true
-# when either, one per line for $GITHUB_OUTPUT.
+# when either, mac=true when the Mac app's build must, one per line for
+# $GITHUB_OUTPUT.
 #
 #   tools/ci-changes.sh <event> <base> <head>
 #   tools/ci-changes.sh --self-test
@@ -17,12 +18,17 @@
 # Windows app's build reads); app/macos marks both, because the window's
 # Swift tests run in Go's macOS lint job. Anything else (CI, the
 # Makefile, tools, protos, packaging, a path not named here) marks both.
+# The Mac app's build is marked by what a release's build reads beyond the
+# Dart and Go the other jobs compile: app/macos, the app's plugins
+# (app/pubspec.*), cmd/ (the daemon packaged), and everything that marks
+# both (the Makefile, tools/, packaging/).
 set -u
 
-# kinds reads paths, one a line, and prints "<go> <app>".
+# kinds reads paths, one a line, and prints "<go> <app> <mac>".
 kinds() {
 	go=false
 	app=false
+	mac=false
 	while IFS= read -r path; do
 		case $path in
 		"" | docs/* | LICENSE) continue ;;
@@ -30,26 +36,29 @@ kinds() {
 		*.md) continue ;;
 		esac
 		case $path in
-		cmd/* | internal/* | relay/* | noiseconn/* | go.mod | go.sum | .golangci.yml) go=true ;;
-		app/macos/*) go=true app=true ;;
+		cmd/*) go=true mac=true ;;
+		internal/* | relay/* | noiseconn/* | go.mod | go.sum | .golangci.yml) go=true ;;
+		app/macos/*) go=true app=true mac=true ;;
+		app/pubspec.yaml | app/pubspec.lock) app=true mac=true ;;
 		app/* | packages/* | analysis_options.yaml) app=true ;;
-		*) go=true app=true ;;
+		*) go=true app=true mac=true ;;
 		esac
 	done
-	echo "$go $app"
+	echo "$go $app $mac"
 }
 
-# say prints the outputs for go and app.
+# say prints the outputs for go, app and mac.
 say() {
 	echo "go=$1"
 	echo "app=$2"
 	if [ "$1" = true ] || [ "$2" = true ]; then echo "code=true"; else echo "code=false"; fi
+	echo "mac=$3"
 }
 
 # everything is the safe answer, with why on stderr (the job's log).
 everything() {
 	echo "ci-changes: everything runs: $1" >&2
-	say true true
+	say true true true
 	exit 0
 }
 
@@ -62,35 +71,38 @@ self_test() {
 			failed=1
 		fi
 	}
-	check "false false" "docs/adr/0129-x.md"
-	check "false false" "README.md"
-	check "false false" "AGENTS.md
+	check "false false false" "docs/adr/0129-x.md"
+	check "false false false" "README.md"
+	check "false false false" "AGENTS.md
 CLAUDE.md
 LICENSE"
-	check "false true" "app/README.md"
-	check "true false" "internal/git/git.go"
-	check "true false" "cmd/nushid/main.go"
-	check "true false" "go.sum"
-	check "true false" "relay/relay.go
+	check "false true false" "app/README.md"
+	check "true false false" "internal/git/git.go"
+	check "true false true" "cmd/nushid/main.go"
+	check "true false false" "go.sum"
+	check "true false false" "relay/relay.go
 docs/remote.md"
-	check "false true" "app/lib/chat_view.dart"
-	check "false true" "app/test/timings.tsv"
-	check "false true" "packages/noise/lib/noise.dart"
-	check "false true" "app/windows/runner/web_views.cpp"
-	check "false true" "app/windows/runner/CMakeLists.txt"
-	check "true true" "app/macos/Runner/Placement.swift"
-	check "true true" ".github/workflows/ci.yml"
-	check "true true" "Makefile"
-	check "true true" "tools/test-shards/main.go"
-	check "true true" "proto/nushi/v1/nushi.proto"
-	check "true true" "packaging/homebrew/nushi.rb"
-	check "true true" "somewhere/new"
-	check "true true" "internal/x.go
+	check "false true false" "app/lib/chat_view.dart"
+	check "false true false" "app/test/timings.tsv"
+	check "false true true" "app/pubspec.yaml"
+	check "false true true" "app/pubspec.lock"
+	check "false true false" "packages/noise/lib/noise.dart"
+	check "false true false" "app/windows/runner/web_views.cpp"
+	check "false true false" "app/windows/runner/CMakeLists.txt"
+	check "true true true" "app/macos/Runner/Placement.swift"
+	check "true true true" "app/macos/Runner.xcodeproj/project.pbxproj"
+	check "true true true" ".github/workflows/ci.yml"
+	check "true true true" "Makefile"
+	check "true true true" "tools/test-shards/main.go"
+	check "true true true" "proto/nushi/v1/nushi.proto"
+	check "true true true" "packaging/homebrew/nushi.rb"
+	check "true true true" "somewhere/new"
+	check "true true false" "internal/x.go
 app/lib/x.dart"
-	check "false false" ""
+	check "false false false" ""
 	for args in "workflow_dispatch a b" "release a b" "push 0000000000000000000000000000000000000000 HEAD" "push '' HEAD" "push deadbeefdeadbeef HEAD" "pull_request deadbeefdeadbeef HEAD" "push HEAD HEAD"; do
 		got=$(eval "main $args" 2>/dev/null | tr '\n' ' ')
-		if [ "$got" != "go=true app=true code=true " ]; then
+		if [ "$got" != "go=true app=true code=true mac=true " ]; then
 			echo "ci-changes: $args: got $got, want everything" >&2
 			failed=1
 		fi
@@ -117,7 +129,7 @@ main() {
 	paths=$(git diff --no-renames --name-only "$base" "$head") || everything "no diff from $base"
 	[ -n "$paths" ] || everything "no change"
 	echo "ci-changes: $(printf '%s\n' "$paths" | wc -l | tr -d ' ') paths from $(printf %.12s "$base") to $(printf %.12s "$head")" >&2
-	# shellcheck disable=SC2046 # kinds prints two words
+	# shellcheck disable=SC2046 # kinds prints three words
 	say $(printf '%s\n' "$paths" | kinds)
 }
 

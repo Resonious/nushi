@@ -2,7 +2,8 @@
 # once, and a release or another repository's CI needs one too): the
 # daemon (proc_info, sandbox-exec, launchd, the keychain's cgo), so Go's lint and tests side by side, with the window's
 # placement maths (swiftc); and the app's test files that need a Mac, in three shards: those with goldens, drawn with
-# macOS's text rendering (on Linux a third of them differ by 1-4%), and those reading the Mac's own fonts. Linux for the
+# macOS's text rendering (on Linux a third of them differ by 1-4%), and those reading the Mac's own fonts; a fifth, the
+# Mac app packaged, only for a change to what it reads (macos-app). Linux for the
 # rest: the protos' and Dart's lint, the Dart packages' tests, the web app's end-to-end test (nushid with Chrome), and
 # the daemon on Linux (ADR 0101): every Go package's tests, and its lint, build and vet without cgo for Linux and
 # Windows; and the Linux app (ADR 0104): every other app test file, in three shards, and its package built on each
@@ -15,8 +16,9 @@
 #
 # A push or a pull request runs only the jobs its change can affect (the changes job, tools/ci-changes.sh): a docs-only
 # change none, a Go-only one all but the golden shards and the Windows app's build, an app-only one all but Go's four
-# jobs. Anything else, and any path it can't place, runs everything; the release counts only a run that skipped nothing
-# (release.yml).
+# jobs; the Mac app's build runs only for what it reads (app/macos, the app's plugins, cmd/, and what runs everything).
+# Anything else, and any path it can't place, runs everything; the release counts only a run that skipped nothing but
+# the Mac app's build, which it does itself (release.yml).
 #
 # Each job's timeout is two to three times its longest recent run with warm caches (2026-11-16: Go's tests on macOS 4.1
 # minutes, the web 2.4 on Linux, Linux's Go 3), room for a cold cache's downloads and builds: a hung test ends there, not
@@ -62,6 +64,7 @@ jobs:
       go: ${{ steps.paths.outputs.go }}
       app: ${{ steps.paths.outputs.app }}
       code: ${{ steps.paths.outputs.code }}
+      mac: ${{ steps.paths.outputs.mac }}
     steps:
       # The history without its files' contents: the diff needs only names.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -410,6 +413,33 @@ jobs:
           cache: true
       - working-directory: app
         run: flutter build windows
+
+  # The Mac app packaged as a release packages it (tools/release.sh's app part, make package: every Runner Swift file,
+  # the plugins, the bundle, signed ad hoc and checked by tools/check-bundle.sh), build only: otherwise first built
+  # once a release is public. Only when the change touches what that build reads beyond the Dart and Go the other
+  # jobs compile (app/macos, the app's plugins, cmd/, the Makefile, tools/, packaging/; tools/ci-changes.sh), and not
+  # in the release's call, whose own app job builds it the same way. As long as the release's app job (20): about 5
+  # minutes warm.
+  macos-app:
+    name: App build (macOS)
+    needs: changes
+    if: needs.changes.outputs.mac == 'true' && !inputs.ref
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.NUSHI_FLUTTER_VERSION }}
+          cache: true
+      - run: tools/release.sh 0.0.0-ci app
 
   linux-app:
     name: App tests (Linux, ${{ matrix.shard }}/${{ strategy.job-total }})
