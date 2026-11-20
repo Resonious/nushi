@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	acp "github.com/afrase/acp-go/unstable"
+	"github.com/afrase/codex-acp-go/codexacp"
 )
 
 // Forking at a message goes to codex-acp as the vendor meta it honors,
@@ -21,6 +22,9 @@ func TestForkAt(t *testing.T) {
 	}
 	if want := `{"jetbrains":{"air":{"fork":{"messageId":"m-1","version":1}}}}`; string(got) != want {
 		t.Errorf("meta %s, want %s", got, want)
+	}
+	if (Harness{}).ForkAt(&acp.InitializeResponse{AgentInfo: &acp.Implementation{Name: codexacp.Name}}) == nil {
+		t.Error("the Go agent can't fork at a message")
 	}
 	for _, init := range []*acp.InitializeResponse{{}, {AgentInfo: &acp.Implementation{Name: "codex-acp-fork"}}} {
 		if (Harness{}).ForkAt(init) != nil {

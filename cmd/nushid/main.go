@@ -25,6 +25,7 @@ import (
 	"github.com/afrase/nushi/internal/api"
 	"github.com/afrase/nushi/internal/claude"
 	"github.com/afrase/nushi/internal/claudehistory"
+	"github.com/afrase/nushi/internal/codex"
 	"github.com/afrase/nushi/internal/events"
 	"github.com/afrase/nushi/internal/features/chats"
 	"github.com/afrase/nushi/internal/features/memory"
@@ -63,6 +64,12 @@ func main() {
 	}
 	if len(os.Args) > 1 && os.Args[1] == claude.AgentCommand { // and Claude, through its Go agent (ADR 0066)
 		if runClaudeAgent() != nil {
+			os.Exit(1) // Main logged why
+		}
+		return
+	}
+	if len(os.Args) > 1 && os.Args[1] == codex.AgentCommand { // and Codex, through its Go agent (ADR 0142)
+		if runCodexAgent() != nil {
 			os.Exit(1) // Main logged why
 		}
 		return

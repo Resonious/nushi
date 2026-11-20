@@ -86,7 +86,7 @@ func All(projects string) []Agent {
 		{
 			Harness: codex.Harness{}, Local: codex.Local{},
 			Agent: agents.Agent{CLI: codex.CLI, Tested: codex.Tested,
-				Adapter: &agents.Adapter{Lock: codex.Adapter, Package: codex.AdapterPackage, Bin: codex.AdapterBin, Download: codex.AdapterDownload, Disk: codex.AdapterDisk}},
+				Adapter: codexAdapter()},
 			Skills: codexskills.Codex{}, Trust: codextrust.Trust{},
 		},
 		{
@@ -133,4 +133,13 @@ func piFlavor(f pi.Flavor) Agent {
 		Agent:  agents.Agent{CLI: f.CLI, Min: f.Min, Tested: []string{f.Version}},
 		Skills: piskills.Skills{Flavor: f}, Trust: pi.Trust{},
 	}
+}
+
+// codexAdapter is Codex's adapter to set up, codex-acp, or nil when the
+// daemon runs Codex through Nushi's Go agent (codex.GoAgent; ADR 0142).
+func codexAdapter() *agents.Adapter {
+	if codex.GoAgent() {
+		return nil
+	}
+	return &agents.Adapter{Lock: codex.Adapter, Package: codex.AdapterPackage, Bin: codex.AdapterBin, Download: codex.AdapterDownload, Disk: codex.AdapterDisk}
 }
