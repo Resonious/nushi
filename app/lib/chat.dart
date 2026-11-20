@@ -344,7 +344,7 @@ class ChatState extends ChangeNotifier {
   final sideHidden = ValueNotifier<bool>(false);
 
   /// ⌘F in its transcript (the Mac's).
-  final find = TranscriptFind();
+  final find = Find();
 
   /// ⌘F in its Changes view.
   final changesFind = ChangesFind();

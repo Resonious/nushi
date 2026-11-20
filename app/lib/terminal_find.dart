@@ -82,7 +82,7 @@ Future<void> openLink(
 /// highlights every match and scrolls to the current one, starting from
 /// the latest. ⏎ goes to the next one down (round from the latest to the
 /// first), ⇧⏎ up. A match is keyed by where it starts.
-class TerminalFind extends TranscriptFind {
+class TerminalFind extends Find {
   new(this.session);
 
   /// The session it finds in (its emulator is a new one after each attach).

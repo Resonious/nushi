@@ -11,7 +11,7 @@ import 'package:nushi/widgets.dart';
 /// ⌘F in a chat's transcript: what's looked for (null: the bar is closed),
 /// its matches as the transcript last laid them out ([TextMark.key]: each
 /// match in a text, each in what a row folds away) and which one is current.
-class TranscriptFind extends ChangeNotifier {
+class Find extends ChangeNotifier {
   String? _query;
   List<String> _hits = const [];
   int _at = 0;
@@ -103,7 +103,7 @@ class TranscriptFind extends ChangeNotifier {
 /// hits counted are those of the file shown (a diff isn't read for a file
 /// that isn't); going past either end of them goes on to the next file with
 /// [roll], which the view sets.
-class ChangesFind extends TranscriptFind {
+class ChangesFind extends Find {
   /// Goes to the next file listed (given 1) or the one before (-1), round.
   ValueChanged<int>? roll;
 
@@ -200,7 +200,7 @@ class FindBar extends StatefulWidget {
     this.loading = false,
   });
 
-  final TranscriptFind find;
+  final Find find;
   final String hint;
   final VoidCallback? loadAll;
   final bool loading;

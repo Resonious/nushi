@@ -13,7 +13,7 @@ import 'package:re_editor/re_editor.dart';
 /// so it stays selected when the bar closes and the editor takes the focus
 /// back. Only the bar's field takes the keys while it's open: nothing typed
 /// there reaches the file.
-class EditorFind extends TranscriptFind {
+class EditorFind extends Find {
   new(this.editor, this.editorFocus) {
     _code.addListener(_found);
   }
