@@ -22,17 +22,6 @@ import 'harness.dart';
 import 'settings_harness.dart';
 import 'spell_harness.dart' show FakeSpeller;
 
-Future<void> _key(
-  WidgetTester tester,
-  LogicalKeyboardKey key, {
-  bool meta = false,
-}) async {
-  if (meta) await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  if (meta) await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
-}
-
 /// A row of the sidebar's footer.
 Finder _footer(String label) =>
     find.descendant(of: find.byType(Sidebar), matching: find.text(label));
@@ -121,15 +110,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(d.settingsOpen, const SettingsAt(SettingsSection.jira));
     expect(find.text('acme.atlassian.net'), findsOneWidget);
-    await _key(tester, LogicalKeyboardKey.escape);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
     expect(d.settingsOpen, isNull);
     expect(d.place, const ChatPlace());
     expect(find.byType(SettingsView), findsNothing);
-    await _key(tester, LogicalKeyboardKey.comma, meta: true);
+    await cmdKey(tester, LogicalKeyboardKey.comma);
     expect(d.settingsOpen, const SettingsAt(SettingsSection.jira));
-    await _key(tester, LogicalKeyboardKey.comma, meta: true);
+    await cmdKey(tester, LogicalKeyboardKey.comma);
     expect(find.byType(SettingsView), findsNothing);
-    await _key(tester, LogicalKeyboardKey.comma, meta: true);
+    await cmdKey(tester, LogicalKeyboardKey.comma);
     await tester.tap(find.byTooltip('Close\u2002Esc'));
     await tester.pumpAndSettle();
     expect(find.byType(SettingsView), findsNothing);
@@ -151,7 +141,8 @@ void main() {
     await tester.tap(search);
     await tester.enterText(search, 'rel');
     await tester.pumpAndSettle();
-    await _key(tester, LogicalKeyboardKey.escape);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
     expect(d.settingsOpen, isNull);
     d.dispose();
   }, variant: onMac);

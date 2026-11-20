@@ -24,17 +24,6 @@ import 'settings_harness.dart';
 
 final Finder _modal = find.byKey(const ValueKey('settings-modal'));
 
-Future<void> _key(
-  WidgetTester tester,
-  LogicalKeyboardKey key, {
-  bool meta = false,
-}) async {
-  if (meta) await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  if (meta) await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
-}
-
 /// The composer's field of the chat that shows.
 Finder get _box => find.descendant(
   of: find.byType(Composer),
@@ -143,7 +132,10 @@ void main() {
     d.closeSettings();
     await tester.pumpAndSettle();
     final shut = <String, Future<void> Function()>{
-      'Esc': () => _key(tester, LogicalKeyboardKey.escape),
+      'Esc': () async {
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+      },
       'Close': () async {
         await tester.tap(
           find.descendant(
@@ -153,7 +145,7 @@ void main() {
         );
         await tester.pumpAndSettle();
       },
-      '⌘,': () => _key(tester, LogicalKeyboardKey.comma, meta: true),
+      '⌘,': () => cmdKey(tester, LogicalKeyboardKey.comma),
       'the dim': () async {
         await tester.tapAt(const Offset(20, 500));
         await tester.pumpAndSettle();
@@ -163,7 +155,7 @@ void main() {
       await tester.tap(_box);
       await tester.pumpAndSettle();
       final box = FocusManager.instance.primaryFocus;
-      await _key(tester, LogicalKeyboardKey.comma, meta: true);
+      await cmdKey(tester, LogicalKeyboardKey.comma);
       expect(d.settingsOpen, isNotNull, reason: how);
       expect(_focusInside(tester), isTrue, reason: how);
       await close();
@@ -193,11 +185,11 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.keyX);
     await tester.pumpAndSettle();
     expect(d.chats['a']!.draft.text.text, isEmpty);
-    await _key(tester, LogicalKeyboardKey.keyN, meta: true);
+    await cmdKey(tester, LogicalKeyboardKey.keyN);
     expect(find.byType(Dialog), findsNothing, reason: 'no New chat');
-    await _key(tester, LogicalKeyboardKey.keyK, meta: true);
+    await cmdKey(tester, LogicalKeyboardKey.keyK);
     expect(find.byType(Palette), findsNothing);
-    await _key(tester, LogicalKeyboardKey.digit2, meta: true);
+    await cmdKey(tester, LogicalKeyboardKey.digit2);
     expect(d.selectedId, 'a');
     expect(d.settingsOpen, isNotNull);
     d.dispose();
