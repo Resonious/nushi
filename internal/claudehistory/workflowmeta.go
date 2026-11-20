@@ -67,6 +67,9 @@ func readMeta(script string) (scriptMeta, error) {
 	return m, nil
 }
 
+// null is JavaScript's null or undefined, read as a value.
+type null struct{}
+
 // literal reads a JavaScript literal from s, from its start.
 type literal struct {
 	s string
@@ -128,7 +131,7 @@ func (p *literal) value(depth int) (any, error) {
 		case "false":
 			return false, nil
 		case "null", "undefined":
-			return nil, nil
+			return null{}, nil
 		}
 		return nil, errNoMeta
 	}
@@ -139,11 +142,11 @@ func (p *literal) object(depth int) (map[string]any, error) {
 	obj := map[string]any{}
 	for {
 		var key string
-		switch c := p.peek(); {
-		case c == '}':
+		switch p.peek() {
+		case '}':
 			p.i++
 			return obj, nil
-		case c == '\'' || c == '"':
+		case '\'', '"':
 			k, err := p.str()
 			if err != nil {
 				return nil, err
@@ -267,8 +270,7 @@ func (p *literal) escape(b *strings.Builder) error {
 		b.WriteByte('\t')
 	case 'r':
 		b.WriteByte('\r')
-	case 'b', 'f', 'v', '0':
-	case '\n': // a line continued
+	case 'b', 'f', 'v', '0', '\n': // controls left out; a line continued
 	case 'u':
 		hex := ""
 		if strings.HasPrefix(p.s[p.i:], "{") {
@@ -281,7 +283,7 @@ func (p *literal) escape(b *strings.Builder) error {
 			hex, p.i = p.s[p.i:p.i+4], p.i+4
 		}
 		r, err := strconv.ParseUint(hex, 16, 32)
-		if err != nil {
+		if err != nil || r > unicode.MaxRune {
 			return errNoMeta
 		}
 		b.WriteRune(rune(r))

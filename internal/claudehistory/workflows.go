@@ -94,7 +94,7 @@ type run struct {
 	// scripted says the script was read; meta is what it says of the run.
 	scripted bool
 	meta     scriptMeta
-	notes   notes     // the session's transcript, for the run's notification
+	notes    notes // the session's transcript, for the run's notification
 	// agentStat is how often the running agents' transcripts are looked
 	// at; snapshotWait how long an end its notification told waits for
 	// the snapshot.
@@ -231,23 +231,21 @@ func (r *run) readScript(root *os.Root, runID string) {
 	}
 	defer d.Close() //nolint:errcheck // read-only
 	names, _ := d.Readdirnames(4096)
-	for _, n := range names {
-		if !strings.HasSuffix(n, "-"+runID+".js") {
-			continue
-		}
-		f, fi, err := regularfile.OpenIn(root, path.Join("workflows", "scripts", n), false)
-		if err != nil {
-			return
-		}
-		defer f.Close() //nolint:errcheck // read-only
-		data, err := io.ReadAll(io.LimitReader(f, maxScript))
-		if err != nil {
-			return
-		}
-		r.scripted, r.started = true, fi.ModTime()
-		r.meta, _ = readMeta(string(data)) // none: no plan to show
+	i := slices.IndexFunc(names, func(n string) bool { return strings.HasSuffix(n, "-"+runID+".js") })
+	if i < 0 {
 		return
 	}
+	f, fi, err := regularfile.OpenIn(root, path.Join("workflows", "scripts", names[i]), false)
+	if err != nil {
+		return
+	}
+	defer f.Close() //nolint:errcheck // read-only
+	data, err := io.ReadAll(io.LimitReader(f, maxScript))
+	if err != nil {
+		return
+	}
+	r.scripted, r.started = true, fi.ModTime()
+	r.meta, _ = readMeta(string(data)) // none: no plan to show
 }
 
 func latest(a, b time.Time) time.Time {
