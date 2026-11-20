@@ -220,7 +220,7 @@ The fork opens, and a toast says **Forked into a new chat**. If you forked by mi
 
 ## Ask a side question
 
-Press **⇧⌘B** to open a **side chat** beside the main one. It knows the conversation but doesn't add to it, so you can ask "why did you do that?" without sidetracking the agent. ⇧⌘B hides it again. **Keep as chat** makes it a chat of its own.
+Press **⇧⌘B** to open a **side chat** beside the main one. It knows the conversation but doesn't add to it, so you can ask "why did you do that?" without sidetracking the agent; an empty one says so. ⇧⌘B hides it again. **Keep as chat** makes it a chat of its own.
 
 **×** ends it at once. If it has messages, Nushi archives it instead of deleting it, and a toast says **Archived side chat**:
 

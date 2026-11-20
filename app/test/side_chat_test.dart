@@ -22,9 +22,12 @@ Future<(Daemon, FakeDaemon, ChatState)> _app(
   bool talked = true,
   bool old = false,
   Size size = const Size(1400, 800),
+  String folder = '/Users/me/nushi',
 }) async {
   viewport(tester, size);
-  final fake = FakeDaemon([chat('c', 'claude', 'Fix the login redirect')]);
+  final fake = FakeDaemon([
+    chat('c', 'claude', 'Fix the login redirect', folder: folder),
+  ]);
   final d = await fake.connect(tester);
   d.select('c');
   await tester.pumpWidget(NushiApp(daemon: d));
@@ -260,6 +263,76 @@ void main() {
     expect((set.chatId, set.configId, set.value), ('s', 'mode', 'default'));
     await closeView(tester, d);
   }, variant: onMac);
+
+  testWidgets('an empty one says what it is for, until something is in it '
+      '(issue 61)', (tester) async {
+    final (d, _, side) = await _app(tester, talked: false);
+    final line = find.descendant(
+      of: find.byType(SideChat),
+      matching: find.text(sideChatEmpty),
+    );
+    expect(line, findsOne);
+    // In the pane, above its box.
+    final pane = tester.getRect(find.byType(SideChat));
+    final box = tester.getRect(
+      find.descendant(
+        of: find.byType(SideChat),
+        matching: find.byType(PlusButton),
+      ),
+    );
+    final at = tester.getRect(line);
+    expect(at.left, greaterThan(pane.left));
+    expect(at.right, lessThan(pane.right));
+    expect(at.bottom, lessThan(box.top));
+    side.items.add(
+      Item(id: 'u', kind: ItemKind.ITEM_KIND_USER_MESSAGE, text: 'Why?'),
+    );
+    side.notifyListeners();
+    await tester.pumpAndSettle();
+    expect(line, findsNothing);
+    await closeView(tester, d);
+  }, variant: onMac);
+
+  for (final (name, brightness) in [
+    ('light', Brightness.light),
+    ('dark', Brightness.dark),
+  ]) {
+    testWidgets('an empty side chat ($name)', (tester) async {
+      final (d, _, _) = await _app(tester, talked: false);
+      tester.platformDispatcher.platformBrightnessTestValue = brightness;
+      addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+      await tester.pumpAndSettle();
+      await expectLater(
+        find.byType(SideChat),
+        matchesGoldenFile('goldens/side_chat_empty_$name.png'),
+      );
+      await closeView(tester, d);
+    }, variant: onMac);
+
+    for (final (what, size) in [
+      ('wide', const Size(1700, 900)),
+      ('narrow', const Size(720, 800)),
+    ]) {
+      testWidgets('an empty side chat, $what ($name)', (tester) async {
+        final (d, _, _) = await _app(
+          tester,
+          talked: false,
+          size: size,
+          folder: '/Users/me/shop',
+        );
+        tester.platformDispatcher.platformBrightnessTestValue = brightness;
+        addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+        await tester.pumpAndSettle();
+        expectTextInside(tester, size.width);
+        await render(
+          tester,
+          find.byType(NushiApp),
+          'side_chat_empty_${what}_$name',
+        );
+        await closeView(tester, d);
+      }, variant: onMac);
+    }
+  }
 
   for (final (name, brightness) in [
     ('light', Brightness.light),
