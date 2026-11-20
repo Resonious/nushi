@@ -91,9 +91,9 @@ const vividLight = Tokens(
     Capture.parameter: CodeInk(Color(0xFFC37522)),
     Capture.meta: CodeInk(Color(0xFF9E880D)),
     Capture.tag: CodeInk(Color(0xFF0033B3)),
-    Capture.comment: CodeInk(Color(0xFF8C8C8C), italic: true),
+    Capture.comment: CodeInk(Color(0xFF8C8C8C)),
     // JetBrains underlines it; nothing here can.
-    Capture.docTag: CodeInk(Color(0xFF8C8C8C), italic: true, bold: true),
+    Capture.docTag: CodeInk(Color(0xFF8C8C8C), bold: true),
   },
   hover: Color.from(
     alpha: 0.12,

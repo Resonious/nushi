@@ -99,8 +99,8 @@ const solarizedDark = Tokens(
     Capture.parameter: CodeInk(Color(0xFF93A1A1)),
     Capture.meta: CodeInk(Color(0xFFCB4B16)),
     Capture.tag: CodeInk(Color(0xFF268BD2)),
-    Capture.comment: CodeInk(Color(0xFF586E75), italic: true),
-    Capture.docTag: CodeInk(Color(0xFF839496), italic: true, bold: true),
+    Capture.comment: CodeInk(Color(0xFF586E75)),
+    Capture.docTag: CodeInk(Color(0xFF839496), bold: true),
   },
   terminal: TerminalColors(
     black: Color(0xFF073642),
@@ -200,8 +200,8 @@ const solarizedLight = Tokens(
     Capture.parameter: CodeInk(Color(0xFF586E75)),
     Capture.meta: CodeInk(Color(0xFFCB4B16)),
     Capture.tag: CodeInk(Color(0xFF268BD2)),
-    Capture.comment: CodeInk(Color(0xFF93A1A1), italic: true),
-    Capture.docTag: CodeInk(Color(0xFF657B83), italic: true, bold: true),
+    Capture.comment: CodeInk(Color(0xFF93A1A1)),
+    Capture.docTag: CodeInk(Color(0xFF657B83), bold: true),
   },
   terminal: TerminalColors(
     black: Color(0xFF073642),

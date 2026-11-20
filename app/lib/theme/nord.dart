@@ -96,8 +96,8 @@ const nordDark = Tokens(
     Capture.parameter: CodeInk(Color(0xFFD8DEE9)),
     Capture.meta: CodeInk(Color(0xFFD08770)),
     Capture.tag: CodeInk(Color(0xFF81A1C1)),
-    Capture.comment: CodeInk(Color(0xFF616E88), italic: true),
-    Capture.docTag: CodeInk(Color(0xFF8FBCBB), italic: true, bold: true),
+    Capture.comment: CodeInk(Color(0xFF616E88)),
+    Capture.docTag: CodeInk(Color(0xFF8FBCBB), bold: true),
   },
   terminal: TerminalColors(
     black: Color(0xFF3B4252),
@@ -196,8 +196,8 @@ const nordLight = Tokens(
     Capture.parameter: CodeInk(Color(0xFF3B4252)),
     Capture.meta: CodeInk(Color(0xFF9E5439)),
     Capture.tag: CodeInk(Color(0xFF476A94)),
-    Capture.comment: CodeInk(Color(0xFF7A8599), italic: true),
-    Capture.docTag: CodeInk(Color(0xFF3C7A78), italic: true, bold: true),
+    Capture.comment: CodeInk(Color(0xFF7A8599)),
+    Capture.docTag: CodeInk(Color(0xFF3C7A78), bold: true),
   },
   terminal: TerminalColors(
     black: Color(0xFF3B4252),

@@ -108,8 +108,8 @@ const tokyoNightDark = Tokens(
     Capture.parameter: CodeInk(Color(0xFFE0AF68)),
     Capture.meta: CodeInk(Color(0xFF7DCFFF)),
     Capture.tag: CodeInk(Color(0xFFF7768E)),
-    Capture.comment: CodeInk(Color(0xFF565F89), italic: true),
-    Capture.docTag: CodeInk(Color(0xFFBB9AF7), italic: true, bold: true),
+    Capture.comment: CodeInk(Color(0xFF565F89)),
+    Capture.docTag: CodeInk(Color(0xFFBB9AF7), bold: true),
   },
   terminal: TerminalColors(
     black: Color(0xFF15161E),
@@ -234,8 +234,8 @@ const tokyoNightLight = Tokens(
     Capture.parameter: CodeInk(Color(0xFF8C6C3E)),
     Capture.meta: CodeInk(Color(0xFF007197)),
     Capture.tag: CodeInk(Color(0xFFF52A65)),
-    Capture.comment: CodeInk(Color(0xFF848CB5), italic: true),
-    Capture.docTag: CodeInk(Color(0xFF9854F1), italic: true, bold: true),
+    Capture.comment: CodeInk(Color(0xFF848CB5)),
+    Capture.docTag: CodeInk(Color(0xFF9854F1), bold: true),
   },
   terminal: TerminalColors(
     foreground: Color(0xFF3760BF),

@@ -93,8 +93,8 @@ const catppuccinDark = Tokens(
     Capture.parameter: CodeInk(Color(0xFFEBA0AC)),
     Capture.meta: CodeInk(Color(0xFFF9E2AF)),
     Capture.tag: CodeInk(Color(0xFF89B4FA)),
-    Capture.comment: CodeInk(Color(0xFF9399B2), italic: true),
-    Capture.docTag: CodeInk(Color(0xFFCBA6F7), italic: true, bold: true),
+    Capture.comment: CodeInk(Color(0xFF9399B2)),
+    Capture.docTag: CodeInk(Color(0xFFCBA6F7), bold: true),
   },
   terminal: TerminalColors(
     black: Color(0xFF45475A),
@@ -195,8 +195,8 @@ const catppuccinLight = Tokens(
     Capture.parameter: CodeInk(Color(0xFFE64553)),
     Capture.meta: CodeInk(Color(0xFFDF8E1D)),
     Capture.tag: CodeInk(Color(0xFF1E66F5)),
-    Capture.comment: CodeInk(Color(0xFF7C7F93), italic: true),
-    Capture.docTag: CodeInk(Color(0xFF8839EF), italic: true, bold: true),
+    Capture.comment: CodeInk(Color(0xFF7C7F93)),
+    Capture.docTag: CodeInk(Color(0xFF8839EF), bold: true),
   },
   terminal: TerminalColors(
     black: Color(0xFF5C5F77),
