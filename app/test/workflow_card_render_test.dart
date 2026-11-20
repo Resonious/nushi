@@ -2,10 +2,10 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
-import 'package:nushi/disclosure.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/motion.dart';
+import 'package:nushi/phone/phone_app.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/workflow_card.dart';
 
@@ -123,21 +123,59 @@ Future<void> _window(
   await frames(tester, 5, const Duration(milliseconds: 100));
   expectTextInside(tester, size.width);
   await render(tester, find.byType(NushiApp), '$name-collapsed');
-  // Opened in place, where the card can be (#103).
-  final folds = find.descendant(
-    of: find.byType(WorkflowCard),
-    matching: find.byType(TurnChevron),
-  );
-  if (folds.evaluate().isNotEmpty) {
-    for (final f in folds.evaluate().toList().reversed) {
-      await tester.tap(find.byWidget(f.widget));
-      await frames(tester, 5, const Duration(milliseconds: 100));
-    }
-    expectTextInside(tester, size.width);
-    await render(tester, find.byType(NushiApp), '$name-expanded');
+  // Opened in place by their chevrons (#103), which stay put.
+  for (final tip in ['Show its phases', 'Show its phases']) {
+    final at = tester.getRect(find.byTooltip(tip).first);
+    await tester.tap(find.byTooltip(tip).first);
+    await frames(tester, 5, const Duration(milliseconds: 100));
+    expect(tester.getRect(find.byTooltip('Hide its phases').last), at);
   }
+  expect(find.text('check:install, check:setup, check:themes'), findsOne);
+  expectTextInside(tester, size.width);
+  await render(tester, find.byType(NushiApp), '$name-expanded');
   await tester.pumpWidget(const SizedBox());
   d.dispose();
+}
+
+/// The phone's chat at [size], its cards as the Mac's, as far as they fit:
+/// no pane to open, so no pane chevron and no Stop; a tap opens a card in
+/// place.
+Future<void> _phone(
+  WidgetTester tester,
+  Size size,
+  Brightness brightness,
+  String name,
+) async {
+  viewport(tester, size, ratio: 3, brightness: brightness);
+  final c = chat('c', 'claude', 'Tidy the guides');
+  final fake = FakeDaemon([c])
+    ..answer = (input) => input is GetChatRequest
+        ? GetChatResponse(chat: c, items: _items())
+        : null;
+  final phone = await startPhone(tester, fake);
+  await tester.tap(find.text('Tidy the guides'));
+  await frames(tester, 10, const Duration(milliseconds: 100));
+  final cards = find.byType(WorkflowCard);
+  expect(cards, findsNWidgets(2));
+  final pane = find.descendant(
+    of: cards,
+    matching: find.byIcon(Icons.chevron_right),
+  );
+  // The chevrons that open it in place, at rest, are its only ones.
+  expect(pane, findsNWidgets(2));
+  expect(find.byTooltip('Stop'), findsNothing);
+  expect(find.textContaining('412k tokens'), findsOne);
+  expectTextInside(tester, size.width);
+  await render(tester, find.byType(PhoneApp), '$name-collapsed');
+  for (var i = 0; i < 2; i++) {
+    await tester.ensureVisible(cards.at(i));
+    await tester.tap(cards.at(i), warnIfMissed: false);
+    await frames(tester, 5, const Duration(milliseconds: 100));
+  }
+  expect(find.text('Tidy the guide pages in two passes'), findsOne);
+  expectTextInside(tester, size.width);
+  await render(tester, find.byType(PhoneApp), '$name-expanded');
+  await endPhone(tester, phone);
 }
 
 void main() {
@@ -160,6 +198,22 @@ void main() {
           'workflow-card-$label-${brightness.name}',
         );
       }, variant: onMac);
+    }
+  }
+  for (final (size, label) in [
+    (const Size(390, 844), 'phone-390'),
+    (const Size(430, 932), 'phone-430'),
+    (const Size(844, 390), 'phone-landscape'),
+  ]) {
+    for (final brightness in Brightness.values) {
+      testWidgets('on the phone, $label, ${brightness.name}', (tester) async {
+        await _phone(
+          tester,
+          size,
+          brightness,
+          'workflow-card-$label-${brightness.name}',
+        );
+      });
     }
   }
 }

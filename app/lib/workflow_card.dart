@@ -120,14 +120,25 @@ class _WorkflowCardState extends State<WorkflowCard> {
               final name = Row(
                 spacing: 8,
                 children: [
-                  IconTap.drawn(
-                    (size, color) =>
-                        TurnChevron(open: _open, size: size, color: color),
-                    tooltip: _open ? 'Hide its phases' : 'Show its phases',
-                    size: 14,
-                    padding: _chevronPad,
-                    onTap: _toggle,
-                  ),
+                  // On the phone the whole card takes the tap, so its
+                  // chevron is only drawn, in the same room (a button
+                  // there would grow to a finger's size).
+                  if (phone)
+                    SizedBox(
+                      width: _chevronRoom,
+                      child: Center(
+                        child: TurnChevron(open: _open, color: t.textSecondary),
+                      ),
+                    )
+                  else
+                    IconTap.drawn(
+                      (size, color) =>
+                          TurnChevron(open: _open, size: size, color: color),
+                      tooltip: _open ? 'Hide its phases' : 'Show its phases',
+                      size: 14,
+                      padding: _chevronPad,
+                      onTap: _toggle,
+                    ),
                   Icon(
                     Icons.account_tree_outlined,
                     size: 15,
