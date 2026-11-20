@@ -28,8 +28,6 @@ import 'fake_desktop.dart';
 import 'harness.dart';
 import 'settings_harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// A theme of the user's, a dim muted text that reads under AA, and the
 /// folder's gone after.
 void _custom() {
@@ -107,7 +105,7 @@ void main() {
     expect(d.settingsOpen, const SettingsAt(SettingsSection.appearance));
     expect(find.byType(ThemeGroup), findsOne);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Appearance and Chat width moved from General and still '
       'work', (tester) async {
@@ -138,7 +136,7 @@ void main() {
     );
     expect(chatFullWidth.value, isFalse);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Project rail is a switch, off at first, kept once set', (
     tester,
@@ -166,7 +164,7 @@ void main() {
     expect(projectRail.value, isFalse);
     expect(readSaved()['projectRailOn'], isFalse);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("Project rail says why it isn't shown while it's on", (
     tester,
@@ -191,7 +189,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(says('A column of project tiles beside the chats.'), findsOne);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the Theme group: Mode first, as System, Light and Dark; the '
       'cards draw the set the app shows; the picked theme shows once', (
@@ -250,7 +248,7 @@ void main() {
     );
     expect(appearance.value, ThemeMode.system);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('every font in one group: App, Code, and the terminal’s family '
       'and size, which Terminal shows too', (tester) async {
@@ -283,7 +281,7 @@ void main() {
       findsOne,
     );
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a user’s card says Yours, warns, and shows its file in '
       'Finder', (tester) async {
@@ -309,7 +307,7 @@ void main() {
     expect(opened.single, ['-R', '${themeFiles.dir.path}/Harbor.json']);
     expect(colorTheme.value, 'nushi', reason: 'Show in Finder picks nothing');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   // The page at full size, a theme of the user's among the cards.
   for (final (size, w) in [
@@ -336,7 +334,7 @@ void main() {
           'settings_appearance_${w}_${b.name}_yours',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 

@@ -12,8 +12,6 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 import 'settings_harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 final _comment = GitHubComment(author: 'octo', body: 'Please add a test.');
 
 final _thread = GitHubThread(path: 'sub.go', line: 10, comments: [_comment]);
@@ -256,7 +254,7 @@ void main() {
       CardAsk.thread.standard,
     );
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a row's words, and its editor's, start as saved", (
     tester,
@@ -302,7 +300,7 @@ void main() {
         find.byType(Scaffold),
         matchesGoldenFile('goldens/settings_card_asks_$theme.png'),
       );
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   // Settings › GitHub at the window's sizes, scrolled to the group.
@@ -332,7 +330,7 @@ void main() {
           'settings_card_asks_${name}_$theme',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

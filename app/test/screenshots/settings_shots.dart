@@ -205,7 +205,6 @@ Future<void> _tap(WidgetTester tester, Key key) async {
 
 void main() {
   setUpAll(loadFonts);
-  final macOS = TargetPlatformVariant.only(TargetPlatform.macOS);
 
   for (final s in SettingsSection.values) {
     for (final (size, width) in _sizes) {
@@ -219,7 +218,7 @@ void main() {
             '${s.name}-$width-$theme',
           );
           await closeView(tester, d);
-        }, variant: macOS);
+        }, variant: onMac);
       }
     }
     testWidgets('${s.name} whole', (tester) async {
@@ -232,7 +231,7 @@ void main() {
       );
       await render(tester, find.byType(MaterialApp), 'tall-${s.name}');
       await closeView(tester, d);
-    }, variant: macOS);
+    }, variant: onMac);
   }
 
   for (final MapEntry(key: name, value: (s, make, before)) in _states.entries) {
@@ -248,7 +247,7 @@ void main() {
             'state-$name-$width-$theme',
           );
           await closeView(tester, d);
-        }, variant: macOS);
+        }, variant: onMac);
       }
     }
   }
@@ -272,7 +271,7 @@ void main() {
           'github-ask-editor-$width-$theme',
         );
         await closeView(tester, d);
-      }, variant: macOS);
+      }, variant: onMac);
     }
   }
 }

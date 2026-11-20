@@ -863,10 +863,6 @@ final List<Sheet> sheets = [
   ),
 ];
 
-/// The Mac, where the gallery's controls are drawn: a menu's rows, a
-/// tooltip's wait and a field's look are the platform's.
-final mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// [sheet] drawn in [tokens] at its size, and what it opens, opened: on a
 /// pane, as `themed` draws a widget but without the debug banner, nothing
 /// moving.

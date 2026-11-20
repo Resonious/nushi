@@ -26,8 +26,6 @@ import 'harness.dart';
 import 'screenshots/demo.dart';
 import 'settings_harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The installed fonts a test says there are.
 class _Fonts implements Fonts {
   new({this.all, this.fixed = const ['Menlo', 'SF Mono'], this.system});
@@ -218,7 +216,7 @@ void main() {
     expect(codeFont.value, isNull);
     expect(terminalFont.value, isNull);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Code font lists the monospaced families only, sets and '
       'clears code’s font, and leaves the terminal’s', (tester) async {
@@ -257,7 +255,7 @@ void main() {
     expect(codeFont.value, isNull);
     expect(_theme(tester, view).codePicked, isNull);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('with no system font to name, there’s no System; with no '
       'answer, the bundled font alone', (tester) async {
@@ -278,7 +276,7 @@ void main() {
     await tester.tapAt(const Offset(5, 5));
     await tester.pumpAndSettle();
     e.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a picked family that isn’t installed stays listed, saying '
       'so, and the longest name fits its row', (tester) async {
@@ -319,7 +317,7 @@ void main() {
       await tester.pumpAndSettle();
       d.dispose();
     }
-  }, variant: _mac);
+  }, variant: onMac);
 
   // The owner's Mac has about 290 families. The menu filters as you type,
   // and opens on the picked family, wherever it is in the list. The one
@@ -371,7 +369,7 @@ void main() {
       expect(appFont.value, 'Avenir Next');
       expect(find.text('Filter'), findsNothing);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('a font picked while a chat shows redraws all of it, code '
@@ -440,7 +438,7 @@ void main() {
     expect(_drawn(tester), bundled);
     expect(diffFont(), 'JetBrains Mono');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the phone keeps the bundled fonts whatever the Mac picked', (
     tester,
@@ -492,7 +490,7 @@ void main() {
         await tester.tapAt(const Offset(5, 5));
         await tester.pumpAndSettle();
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

@@ -39,7 +39,6 @@ Finder _footer(String label) =>
 
 void main() {
   setUpAll(loadFonts);
-  final macOS = TargetPlatformVariant.only(TargetPlatform.macOS);
 
   // Every section, both themes, a wide window, a small one and a narrow
   // one (720, where the window's layout narrows); the general section,
@@ -83,7 +82,7 @@ void main() {
             await render(tester, find.byType(MaterialApp), name);
           }
           d.dispose();
-        }, variant: macOS);
+        }, variant: onMac);
       }
     }
   }
@@ -109,7 +108,7 @@ void main() {
     expect(group.width, greaterThan(680));
     expect(tester.getRect(find.text('Terminal').last).left, group.left);
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('the nav picks a section; Esc and Close shut it; ⌘, comes '
       'back to the last one and shuts it again', (tester) async {
@@ -135,7 +134,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(SettingsView), findsNothing);
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('Esc with the focus in a field inside still leaves', (
     tester,
@@ -155,7 +154,7 @@ void main() {
     await _key(tester, LogicalKeyboardKey.escape);
     expect(d.settingsOpen, isNull);
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('deep links: a chat’s MCP servers… and Skills… open their '
       'sections for its folder; the footer’s Settings opens it and is never '
@@ -231,7 +230,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(d.place, const GitHubPlace());
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets("two changes inside one round trip don't undo each other", (
     tester,
@@ -360,7 +359,7 @@ void main() {
     expect(find.byKey(const ValueKey('settings-nav-dot-github')), findsOne);
     expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsOne);
     await closeView(tester, d);
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('720 wide, Remote access stacks what would squeeze: the '
       'relay field under its label, a phone’s buttons under its words', (
@@ -387,7 +386,7 @@ void main() {
     expect(tester.getRect(find.text('Revoke')).top, greaterThan(words.bottom));
     expectTextInside(tester, 720);
     await closeView(tester, d);
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('Phones says why its buttons are off', (tester) async {
     final d = await pumpSettingsApp(
@@ -402,7 +401,7 @@ void main() {
       findsOne,
     );
     await closeView(tester, d);
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('900 wide, they stay beside', (tester) async {
     final d = await pumpSettingsApp(
@@ -421,7 +420,7 @@ void main() {
     expect(field.center.dy, closeTo(label.center.dy, 2));
     expect(field.width, 300);
     await closeView(tester, d);
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('opening Settings asks GitHub and Jira nothing: their pages '
       'do, as they show', (tester) async {
@@ -439,7 +438,7 @@ void main() {
     final d = await pumpSettingsApp(tester, fake, SettingsSection.appearance);
     expect(asked, isEmpty);
     await closeView(tester, d);
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('a Jira site whose token Jira turns down has no dot, though '
       'listed without a problem', (tester) async {
@@ -464,7 +463,7 @@ void main() {
     expect(find.text('Not connected'), findsOne);
     expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsNothing);
     await closeView(tester, d);
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('no dot on an integration without a working account, and one '
       'once its page finds it', (tester) async {
@@ -486,5 +485,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('settings-nav-dot-github')), findsOne);
     await closeView(tester, d);
-  }, variant: macOS);
+  }, variant: onMac);
 }

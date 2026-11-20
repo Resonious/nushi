@@ -7,6 +7,7 @@ import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
 import 'gallery/sheets.dart';
+import 'harness.dart';
 
 /// The sheets kept: the controls every view is built from.
 const _kept = {'buttons', 'small', 'fields'};
@@ -25,7 +26,7 @@ void main() {
           find.byType(Scaffold),
           matchesGoldenFile('goldens/$name.png'),
         );
-      }, variant: mac);
+      }, variant: onMac);
     }
   }
 }

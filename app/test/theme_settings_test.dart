@@ -21,8 +21,6 @@ import 'fake_desktop.dart';
 import 'harness.dart';
 import 'settings_harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The tokens the app paints [of] with.
 Tokens _painted(WidgetTester tester, Finder of) =>
     NushiTheme.of(tester.element(of)).t;
@@ -86,7 +84,7 @@ void main() {
     final again = await _app(tester);
     expect(_painted(tester, find.byType(SettingsView)), same(nord.dark));
     await closeView(tester, again);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Tokyo Night is picked from its card, and kept by its id', (
     tester,
@@ -109,7 +107,7 @@ void main() {
     expect(find.text('Tokyo Night Day'), findsOneWidget);
     expect(find.text('Catppuccin Latte'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a theme picked shows on the next frame, and rebuilding the '
       'app with the same theme changes nothing below it', (tester) async {
@@ -134,7 +132,7 @@ void main() {
     await tester.pump();
     expect(shown(), same(before));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   test('a theme made once is made again for another platform', () {
     // ThemeData takes its platform when it is made, so a theme cached
@@ -178,7 +176,7 @@ void main() {
     expectTextInside(tester, 720);
     await render(tester, find.byType(NushiApp), 'theme_picker_720_dark');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a theme file loads as a tile; a partial, a broken and a '
       'low-contrast file each say what they are', (tester) async {
@@ -258,7 +256,7 @@ void main() {
     expect(t.base, const Color(0xFF101820));
     expect(t.raised, builtInTheme('solarized')!.dark.raised);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a picked theme whose file goes shows Nushi’s, and is back '
       'with it', (tester) async {
@@ -276,7 +274,7 @@ void main() {
     expect(_painted(tester, find.byType(SettingsView)).base, Tokens.dark.base);
     expect(colorTheme.value, 'custom:Gone');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('editing a theme file reloads it, and the app repaints', (
     tester,
@@ -306,7 +304,7 @@ void main() {
     await untilReal(tester, () => find.text('Second').evaluate().isNotEmpty);
     await tester.runAsync(themeFiles.stop);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('New from writes the current theme whole, picks it and shows '
       'it in Finder; Show folder opens the folder', (tester) async {
@@ -338,7 +336,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(opened.last, [themeFiles.dir.path]);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),

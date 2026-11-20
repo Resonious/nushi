@@ -154,7 +154,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(asked, 1);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets(
     'Start at login heads Startup and updates, not the chats’ group',
@@ -190,6 +190,6 @@ void main() {
     // A dev run's own data folder shows no Start at login (it starts the
     // usual folder's daemon).
     skip: Platform.environment.containsKey('NUSHI_DATA'),
-    variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+    variant: onMac,
   );
 }

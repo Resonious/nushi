@@ -19,9 +19,8 @@ import 'package:nushi/theme/theme.dart';
 import 'package:nushi/trust_card.dart';
 
 import 'fake_daemon.dart';
+import 'harness.dart';
 import 'settings_harness.dart';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 final Finder _modal = find.byKey(const ValueKey('settings-modal'));
 
@@ -83,7 +82,7 @@ void main() {
       expect(find.byType(Composer), findsOne);
       expect(d.place, const ChatPlace());
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   // A title's actions end a clear gap before Close, at any width.
@@ -111,7 +110,7 @@ void main() {
         expect(action.top < close.bottom, isTrue, reason: 'on its line');
         expect(close.left - action.right, greaterThanOrEqualTo(12));
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 
@@ -132,7 +131,7 @@ void main() {
     );
     expect(d.settingsOpen, isNotNull, reason: 'a pick keeps Settings open');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Esc, Close, ⌘, and a click on the dim each shut it, the '
       'window as it was and the focus back in the chat’s box', (tester) async {
@@ -174,7 +173,7 @@ void main() {
       expect(FocusManager.instance.primaryFocus, same(box), reason: how);
     }
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the focus and the keys stay inside: Tab goes round '
       'Settings, typing never reaches the chat, ⌘N, ⌘K and ⌘1 do nothing', (
@@ -202,7 +201,7 @@ void main() {
     expect(d.selectedId, 'a');
     expect(d.settingsOpen, isNotNull);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a menu bar item shuts it first, then runs: New Chat…', (
     tester,
@@ -218,7 +217,7 @@ void main() {
     expect(d.settingsOpen, isNull);
     expect(find.byType(Dialog), findsOne, reason: 'New chat');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('opening a chat from Chat history shuts it and shows the chat', (
     tester,
@@ -233,7 +232,7 @@ void main() {
     expect(d.settingsOpen, isNull);
     expect(d.selectedId, 'b');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a trust card asking shuts it: the card is in the window', (
     tester,
@@ -254,5 +253,5 @@ void main() {
     d.trustAsk!.decide(start: false);
     expect(await started, isNull);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }
