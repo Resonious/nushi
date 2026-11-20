@@ -561,6 +561,24 @@ func TestStates(t *testing.T) {
 	}
 }
 
+// TestStatesDoneKept: a merged or closed pull request's state is current
+// for 10 minutes, an open one's for 30 s.
+func TestStatesDoneKept(t *testing.T) {
+	w := newWorld(t)
+	ctx := t.Context()
+	_, _ = w.s.Inbox(ctx, "github.com", githubapi.InboxFilter{}, false)
+	c := w.clients["gho_gh"]
+	minute := time.Now().Add(-time.Minute)
+	w.s.mu.Lock()
+	w.s.states["PR_1"] = stateCache{at: minute, item: model.GitHubItem{ID: "PR_1", State: "merged"}}
+	w.s.states["PR_2"] = stateCache{at: minute, item: model.GitHubItem{ID: "PR_2", State: "open"}}
+	w.s.mu.Unlock()
+	w.s.States(ctx, []model.ChatGitHub{{Host: "github.com", ID: "PR_1"}, {Host: "github.com", ID: "PR_2"}}, true)
+	if !slices.Contains(c.asked, "status PR_2") {
+		t.Fatalf("only the open one asked again: %v", c.asked)
+	}
+}
+
 func TestViewed(t *testing.T) {
 	w := newWorld(t)
 	ctx := t.Context()
