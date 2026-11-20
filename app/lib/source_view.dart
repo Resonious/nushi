@@ -100,6 +100,9 @@ class _SourceViewState extends State<SourceView> {
   /// What a list's selection holds, a right-click menu's place.
   final GlobalKey _content = GlobalKey();
 
+  /// The list's selection area (one list's at a time).
+  final GlobalKey<SelectionAreaState> _area = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -129,6 +132,7 @@ class _SourceViewState extends State<SourceView> {
   }
 
   void _read() {
+    _unselect();
     final text = widget.text;
     final read = ++_reads;
     _text = widget.path.toLowerCase().endsWith('.json')
@@ -143,11 +147,19 @@ class _SourceViewState extends State<SourceView> {
     if (sourceLanguage(widget.path, _text) case final language?) {
       highlightSides(language, '', _text).then((s) {
         if (mounted && read == _reads && s[1] != null) {
+          _unselect();
           setState(() => _spans = s[1]);
         }
       }).ignore();
     }
   }
+
+  /// Clears the selection before the lines' text changes under it (a new
+  /// read, the highlighting landing): a line's text laid out anew drops
+  /// its own selection, but the containers above it keep pointing at it,
+  /// and asking them for it then throws in Flutter's selection code
+  /// (issue 100). It would be gone from sight anyway.
+  void _unselect() => _area.currentState?.selectableRegion.clearSelection();
 
   /// Its lines' change marks against [SourceView.base]: none without one,
   /// or when the lines shown aren't the file's own (JSON pretty-printed;
@@ -329,6 +341,7 @@ class _SourceViewState extends State<SourceView> {
   /// A list's selection area, its menu inside it when it has one, so its
   /// right-click is the menu's.
   Widget _selectable(_Whole whole, Widget child) => SelectionArea(
+    key: _area,
     child: SelectionContainer(
       delegate: whole,
       child: switch (widget.menu) {
