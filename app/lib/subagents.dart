@@ -218,7 +218,7 @@ class SubagentState extends StatelessWidget {
         () {
           final states = subagentStatesNarrow(s);
           return states.firstWhere(
-            (t) => _liveWidth(context, t, style) <= box.maxWidth,
+            (t) => liveTextWidth(context, t, style) <= box.maxWidth,
             orElse: () => states.last,
           );
         },
@@ -231,7 +231,7 @@ class SubagentState extends StatelessWidget {
 
 /// How wide [text] sets on one line in [style] as [LiveText] sets it: in
 /// tabular figures.
-double _liveWidth(BuildContext context, String text, TextStyle style) =>
+double liveTextWidth(BuildContext context, String text, TextStyle style) =>
     textWidth(context, text, style.copyWith(fontFeatures: _tabular));
 
 const _tabular = [FontFeature.tabularFigures()];
@@ -371,7 +371,7 @@ class SubagentLine extends StatelessWidget {
                                 box.maxWidth < _timeApart
                                     ? math.min(
                                         box.maxWidth / 2,
-                                        _liveWidth(
+                                        liveTextWidth(
                                               context,
                                               subagentTime(s),
                                               state,

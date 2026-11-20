@@ -67,17 +67,26 @@ class WorkflowCard extends StatelessWidget {
           child: LayoutBuilder(
             builder: (context, box) {
               final narrow = box.maxWidth < WorkflowCard.narrow;
+              final style = theme.ui(
+                failed
+                    ? t.crashed
+                    : w.stalled
+                    ? t.needs
+                    : t.textSecondary,
+                size: 12,
+              );
+              // Narrow, the fullest that fits its line: its count, then
+              // its tokens give way, never where it is or its time.
+              final room = box.maxWidth - WorkflowCard.indent - _endRoom;
               final state = LiveText(
-                () => workflowState(w),
+                () => narrow
+                    ? workflowStates(w).firstWhere(
+                        (s) => liveTextWidth(context, s, style) <= room,
+                        orElse: () => workflowStates(w).last,
+                      )
+                    : workflowState(w),
                 live: live && !w.stalled && !still,
-                style: theme.ui(
-                  failed
-                      ? t.crashed
-                      : w.stalled
-                      ? t.needs
-                      : t.textSecondary,
-                  size: 12,
-                ),
+                style: style,
               );
               final name = Row(
                 spacing: 8,
@@ -184,6 +193,10 @@ class WorkflowCard extends StatelessWidget {
 
 /// The room of a card's mark, its Stop's size: Stop's 13 and its padding.
 const double _markRoom = 13 + 5 * 2;
+
+/// The room at a card's end past its words: the gaps, the mark's room and
+/// the chevron.
+const double _endRoom = 8 + _markRoom + 8 + 15;
 
 /// "Workflow: review-changes", the kind in bold and the subagents'
 /// accent, on one line: the card's and its pane's head, as [subagentName]

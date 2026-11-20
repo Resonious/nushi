@@ -1,3 +1,4 @@
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
@@ -58,6 +59,7 @@ Item workflowCall(String state, {bool stalled = false, String id = 'wf'}) {
       ],
       running: ended ? null : ['review:ui', 'review:perf', 'review:api'],
       runningCount: ended ? 0 : 3,
+      tokens: Int64(ended ? 96500 : 61200),
     ),
   );
 }
@@ -91,11 +93,11 @@ void main() {
   test('each state in words', () {
     expect(
       workflowState(workflowCall('running').workflow),
-      'Review 4/7 · 3 running · 4m 12s',
+      'Review 4/7 · 3 running · 61.2k tokens · 4m 12s',
     );
     expect(
       workflowState(workflowCall('done').workflow),
-      '12 agents · 4m 12s', // its check says done
+      '12 agents · 96.5k tokens · 4m 12s', // its check says done
     );
     expect(
       workflowState(workflowCall('failed').workflow),
@@ -111,12 +113,18 @@ void main() {
     );
     expect(
       workflowState(workflowCall('running', stalled: true).workflow),
-      'no activity for 1h · Review 4/7 · 3 running',
+      'no activity for 1h · Review 4/7 · 3 running · 61.2k tokens',
     );
     expect(
       workflowState(Workflow(state: 'running', started: msAgo(Duration.zero))),
       'starting · 0s',
     );
+    // A short line's choices: its count, then its tokens, give way.
+    expect(workflowStates(workflowCall('running').workflow), [
+      'Review 4/7 · 3 running · 61.2k tokens · 4m 12s',
+      'Review 4/7 · 61.2k tokens · 4m 12s',
+      'Review 4/7 · 4m 12s',
+    ]);
     expect(
       phasesLine(workflowCall('running').workflow),
       'Map 2/2 · Review 4/7',

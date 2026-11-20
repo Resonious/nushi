@@ -36,25 +36,30 @@ String phaseProgress(WorkflowPhase p) =>
     '${p.title} ${p.done + p.failed}/${p.started}';
 
 /// Its state line, in a subagent row's order (#103, #106): while it runs
-/// "Review 5/7 · 3 running · 4m 12s"; at its end "100 agents · 14m 05s"
-/// (done says no word: its check does; "failed", "stopped", "ended" when
-/// the agent didn't say how); stalled "no activity for 1h · Review 5/7 · 3
-/// running", without its time, which no longer ticks and would be cut
-/// first where the line is short (a phone's).
-String workflowState(Workflow w) {
+/// "Review 5/7 · 3 running · 412k tokens · 4m 12s"; at its end "100
+/// agents · 1.2M tokens · 14m 05s" (done says no word: its check does;
+/// "failed", "stopped", "ended" when the agent didn't say how); stalled
+/// "no activity for 1h · Review 5/7 · 3 running · 412k tokens", without
+/// its time, which no longer ticks and would be cut first where the line
+/// is short (a phone's). Its tokens show once the daemon read some (API
+/// 130); no cost, which the agent doesn't report for a workflow. Without
+/// [count] its count of agents goes, without [tokens] its tokens.
+String workflowState(Workflow w, {bool count = true, bool tokens = true}) {
   final time = ranFor(
     w.started.toInt(),
     w.ended.toInt(),
     runs: workflowLive(w),
   );
   final agents = '${w.agents} agent${w.agents == 1 ? '' : 's'}';
+  final used = tokens && w.tokens > 0 ? tokenCount(w.tokens.toInt()) : null;
   if (workflowLive(w)) {
     final phase = currentPhase(w);
     return [
       if (w.stalled) 'no activity for ${_quiet(w)}',
       if (phase != null) phaseProgress(phase),
-      if (w.runningCount > 0) '${w.runningCount} running',
+      if (w.runningCount > 0 && count) '${w.runningCount} running',
       if (phase == null && w.runningCount == 0) 'starting',
+      ?used,
       if (time.isNotEmpty && !w.stalled) time,
     ].join(' · ');
   }
@@ -65,10 +70,20 @@ String workflowState(Workflow w) {
       'stopped' => 'stopped',
       _ => 'ended',
     },
-    if (w.agents > 0) agents,
+    if (w.agents > 0 && count) agents,
+    ?used,
     if (time.isNotEmpty) time,
   ].join(' · ');
 }
+
+/// Its state for a short line, the fullest first: [workflowState], then
+/// without its count of agents, then without its tokens too, so where it
+/// is and how long stay whole (a phone's card takes the first that fits).
+List<String> workflowStates(Workflow w) => {
+  workflowState(w),
+  workflowState(w, count: false),
+  workflowState(w, count: false, tokens: false),
+}.toList();
 
 /// How long its files have been still, roughly: "1h", "2h".
 String _quiet(Workflow w) {
