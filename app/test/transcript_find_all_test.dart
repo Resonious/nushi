@@ -87,6 +87,59 @@ void main() {
     await closeView(tester, d);
   }, variant: onMac);
 
+  testWidgets('the bar’s line doesn’t come and go as a query is typed, '
+      'and a query the daemon finds nowhere counts None', (tester) async {
+    final (d, paged, _) = await _window(tester);
+    final c = _chat(d);
+    c.find
+      ..open()
+      ..query = 'needle';
+    await _settle(tester);
+    expect(c.find.count, '2 of 2');
+    // Each key typed while the daemon is asked: no line, no Load all.
+    final hold = paged.holdFind = Completer<void>();
+    for (final q in ['needles', 'needles in', 'needles in a haystack']) {
+      c.find.query = q;
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(ChatFind.pause ~/ 3);
+        expect(find.text('Searching loaded messages · '), findsNothing);
+        expect(find.text('Load all'), findsNothing);
+      }
+    }
+    expect(c.find.searching, isTrue);
+    expect(c.find.count, '', reason: 'nothing loaded matches; asking');
+    hold.complete();
+    await _settle(tester);
+    expect(c.find.searching, isFalse);
+    expect(c.find.count, 'None');
+    expect(find.text('None'), findsOneWidget);
+    expect(find.text('Load all'), findsNothing);
+    await closeView(tester, d);
+  }, variant: onMac);
+
+  testWidgets('an older daemon still gets the line and Load all, kept as '
+      'the query changes', (tester) async {
+    final (d, paged, _) = await _window(tester);
+    d.daemonApi = findInChatApi - 1;
+    final c = _chat(d);
+    c.find
+      ..open()
+      ..query = 'needle';
+    await _settle(tester);
+    expect(c.find.whole, isFalse);
+    expect(c.find.count, '1 of 1');
+    expect(find.text('Searching loaded messages · '), findsOneWidget);
+    expect(find.text('Load all'), findsOneWidget);
+    c.find.query = 'needles';
+    await tester.pump(ChatFind.pause ~/ 2);
+    expect(find.text('Load all'), findsOneWidget);
+    await _settle(tester);
+    expect(c.find.count, 'None');
+    expect(find.text('Load all'), findsOneWidget);
+    expect(paged.asked.whereType<FindInChatRequest>(), isEmpty);
+    await closeView(tester, d);
+  }, variant: onMac);
+
   testWidgets('a step to a match above loads its part, lands on it and '
       'shows it; stepping on wraps round', (tester) async {
     final (d, paged, _) = await _window(tester);

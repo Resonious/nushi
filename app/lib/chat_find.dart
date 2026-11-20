@@ -51,9 +51,11 @@ class ChatFind extends Find {
   /// The daemon is being asked.
   bool get searching => _wait != null || _asking != null;
 
-  /// The daemon searched what isn't loaded: no Load all.
+  /// The daemon searches what isn't loaded, as far as is known (its last
+  /// answer): no Load all. Kept from query to query, so the bar's line
+  /// doesn't come and go as each is typed.
   bool get whole => _whole;
-  bool _whole = false;
+  bool _whole = true;
 
   /// The daemon's search stopped at its bound: the count is a floor.
   bool get more => _more;
@@ -92,7 +94,7 @@ class ChatFind extends Find {
     _cancel();
     _far = const [];
     _near = const [];
-    _whole = _more = false;
+    _more = false;
     _pending = null;
     super.close();
   }
@@ -116,7 +118,7 @@ class ChatFind extends Find {
   void _askAbove() {
     _cancel();
     _far = const [];
-    _whole = _more = false;
+    _more = false;
     final q = query ?? '';
     if (q.isEmpty || ask == null || _chat.older == 0 || _chat.items.isEmpty) {
       _merge();
@@ -146,12 +148,15 @@ class ChatFind extends Find {
     }
     if (signal != _asking) return;
     _asking = null;
+    _whole = r != null;
     if (r != null) {
       _far = r.matches;
       _more = r.more;
-      _whole = true;
     }
     _merge();
+    // The bar's line and count follow, whether or not the hits changed
+    // (searching no more: "None" in place of nothing).
+    notifyListeners();
   }
 
   @override
