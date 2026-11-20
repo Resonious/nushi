@@ -65,6 +65,9 @@ const (
 	// NushiServiceRemoveAgentProcedure is the fully-qualified name of the NushiService's RemoveAgent
 	// RPC.
 	NushiServiceRemoveAgentProcedure = "/nushi.v1.NushiService/RemoveAgent"
+	// NushiServiceSignInAgentProcedure is the fully-qualified name of the NushiService's SignInAgent
+	// RPC.
+	NushiServiceSignInAgentProcedure = "/nushi.v1.NushiService/SignInAgent"
 	// NushiServiceListAgentSessionsProcedure is the fully-qualified name of the NushiService's
 	// ListAgentSessions RPC.
 	NushiServiceListAgentSessionsProcedure = "/nushi.v1.NushiService/ListAgentSessions"
@@ -537,6 +540,14 @@ type NushiServiceClient interface {
 	SetUpAgent(context.Context, *connect.Request[v1.SetUpAgentRequest]) (*connect.Response[v1.SetUpAgentResponse], error)
 	// Removes an agent's adapter; its awake chats sleep first.
 	RemoveAgent(context.Context, *connect.Request[v1.RemoveAgentRequest]) (*connect.Response[v1.RemoveAgentResponse], error)
+	// Signs an agent in through its own login (ACP authenticate), one of
+	// the ways an AgentSignIn offers: a short-lived process of the agent,
+	// started as a chat's would be, runs it (Codex opens the browser and
+	// waits) and is stopped after. Returns once the agent says it is signed
+	// in (10 minutes at most); a call cancelled stops it, and its login.
+	// One at a time for each agent. Nushi sees no credential (API 139, ADR
+	// 0145).
+	SignInAgent(context.Context, *connect.Request[v1.SignInAgentRequest]) (*connect.Response[v1.SignInAgentResponse], error)
 	// Lists an agent's sessions in a folder that aren't chats (started in a
 	// terminal, say), newest first, a page at a time. It starts the agent to
 	// ask (ACP session/list).
@@ -1119,6 +1130,12 @@ func NewNushiServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			httpClient,
 			baseURL+NushiServiceRemoveAgentProcedure,
 			connect.WithSchema(nushiServiceMethods.ByName("RemoveAgent")),
+			connect.WithClientOptions(opts...),
+		),
+		signInAgent: connect.NewClient[v1.SignInAgentRequest, v1.SignInAgentResponse](
+			httpClient,
+			baseURL+NushiServiceSignInAgentProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("SignInAgent")),
 			connect.WithClientOptions(opts...),
 		),
 		listAgentSessions: connect.NewClient[v1.ListAgentSessionsRequest, v1.ListAgentSessionsResponse](
@@ -2033,6 +2050,7 @@ type nushiServiceClient struct {
 	listAgents              *connect.Client[v1.ListAgentsRequest, v1.ListAgentsResponse]
 	setUpAgent              *connect.Client[v1.SetUpAgentRequest, v1.SetUpAgentResponse]
 	removeAgent             *connect.Client[v1.RemoveAgentRequest, v1.RemoveAgentResponse]
+	signInAgent             *connect.Client[v1.SignInAgentRequest, v1.SignInAgentResponse]
 	listAgentSessions       *connect.Client[v1.ListAgentSessionsRequest, v1.ListAgentSessionsResponse]
 	openAgentSession        *connect.Client[v1.OpenAgentSessionRequest, v1.OpenAgentSessionResponse]
 	searchAgentSessions     *connect.Client[v1.SearchAgentSessionsRequest, v1.SearchAgentSessionsResponse]
@@ -2247,6 +2265,11 @@ func (c *nushiServiceClient) SetUpAgent(ctx context.Context, req *connect.Reques
 // RemoveAgent calls nushi.v1.NushiService.RemoveAgent.
 func (c *nushiServiceClient) RemoveAgent(ctx context.Context, req *connect.Request[v1.RemoveAgentRequest]) (*connect.Response[v1.RemoveAgentResponse], error) {
 	return c.removeAgent.CallUnary(ctx, req)
+}
+
+// SignInAgent calls nushi.v1.NushiService.SignInAgent.
+func (c *nushiServiceClient) SignInAgent(ctx context.Context, req *connect.Request[v1.SignInAgentRequest]) (*connect.Response[v1.SignInAgentResponse], error) {
+	return c.signInAgent.CallUnary(ctx, req)
 }
 
 // ListAgentSessions calls nushi.v1.NushiService.ListAgentSessions.
@@ -3050,6 +3073,14 @@ type NushiServiceHandler interface {
 	SetUpAgent(context.Context, *connect.Request[v1.SetUpAgentRequest]) (*connect.Response[v1.SetUpAgentResponse], error)
 	// Removes an agent's adapter; its awake chats sleep first.
 	RemoveAgent(context.Context, *connect.Request[v1.RemoveAgentRequest]) (*connect.Response[v1.RemoveAgentResponse], error)
+	// Signs an agent in through its own login (ACP authenticate), one of
+	// the ways an AgentSignIn offers: a short-lived process of the agent,
+	// started as a chat's would be, runs it (Codex opens the browser and
+	// waits) and is stopped after. Returns once the agent says it is signed
+	// in (10 minutes at most); a call cancelled stops it, and its login.
+	// One at a time for each agent. Nushi sees no credential (API 139, ADR
+	// 0145).
+	SignInAgent(context.Context, *connect.Request[v1.SignInAgentRequest]) (*connect.Response[v1.SignInAgentResponse], error)
 	// Lists an agent's sessions in a folder that aren't chats (started in a
 	// terminal, say), newest first, a page at a time. It starts the agent to
 	// ask (ACP session/list).
@@ -3628,6 +3659,12 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 		NushiServiceRemoveAgentProcedure,
 		svc.RemoveAgent,
 		connect.WithSchema(nushiServiceMethods.ByName("RemoveAgent")),
+		connect.WithHandlerOptions(opts...),
+	)
+	nushiServiceSignInAgentHandler := connect.NewUnaryHandler(
+		NushiServiceSignInAgentProcedure,
+		svc.SignInAgent,
+		connect.WithSchema(nushiServiceMethods.ByName("SignInAgent")),
 		connect.WithHandlerOptions(opts...),
 	)
 	nushiServiceListAgentSessionsHandler := connect.NewUnaryHandler(
@@ -4552,6 +4589,8 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 			nushiServiceSetUpAgentHandler.ServeHTTP(w, r)
 		case NushiServiceRemoveAgentProcedure:
 			nushiServiceRemoveAgentHandler.ServeHTTP(w, r)
+		case NushiServiceSignInAgentProcedure:
+			nushiServiceSignInAgentHandler.ServeHTTP(w, r)
 		case NushiServiceListAgentSessionsProcedure:
 			nushiServiceListAgentSessionsHandler.ServeHTTP(w, r)
 		case NushiServiceOpenAgentSessionProcedure:
@@ -4909,6 +4948,10 @@ func (UnimplementedNushiServiceHandler) SetUpAgent(context.Context, *connect.Req
 
 func (UnimplementedNushiServiceHandler) RemoveAgent(context.Context, *connect.Request[v1.RemoveAgentRequest]) (*connect.Response[v1.RemoveAgentResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.RemoveAgent is not implemented"))
+}
+
+func (UnimplementedNushiServiceHandler) SignInAgent(context.Context, *connect.Request[v1.SignInAgentRequest]) (*connect.Response[v1.SignInAgentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.SignInAgent is not implemented"))
 }
 
 func (UnimplementedNushiServiceHandler) ListAgentSessions(context.Context, *connect.Request[v1.ListAgentSessionsRequest]) (*connect.Response[v1.ListAgentSessionsResponse], error) {

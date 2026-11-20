@@ -59,6 +59,14 @@ service NushiService {
   rpc SetUpAgent(SetUpAgentRequest) returns (SetUpAgentResponse);
   // Removes an agent's adapter; its awake chats sleep first.
   rpc RemoveAgent(RemoveAgentRequest) returns (RemoveAgentResponse);
+  // Signs an agent in through its own login (ACP authenticate), one of
+  // the ways an AgentSignIn offers: a short-lived process of the agent,
+  // started as a chat's would be, runs it (Codex opens the browser and
+  // waits) and is stopped after. Returns once the agent says it is signed
+  // in (10 minutes at most); a call cancelled stops it, and its login.
+  // One at a time for each agent. Nushi sees no credential (API 139, ADR
+  // 0145).
+  rpc SignInAgent(SignInAgentRequest) returns (SignInAgentResponse);
   // Lists an agent's sessions in a folder that aren't chats (started in a
   // terminal, say), newest first, a page at a time. It starts the agent to
   // ask (ACP session/list).
@@ -987,10 +995,18 @@ message SetUpAgentRequest {
 
 message SetUpAgentResponse {}
 
+message SignInAgentRequest {
+  string agent = 1;
+  // One of AgentSignIn.methods' ids.
+  string method_id = 2;
+}
+
+message SignInAgentResponse {}
+
 // A start the agent refused because it isn't signed in (ACP's
 // Authentication required): StartChat's and OpenAgentSession's error
 // carries it as a detail, beside the plain message. Its methods are the
-// ways the agent signs itself in that Nushi can run: the
+// ways the agent signs itself in that Nushi can run (SignInAgent): the
 // agent's own, none needing a key typed into Nushi; there is no detail
 // when it offers none. A chat whose reopen fails so says it in a notice of
 // status "sign_in" whose options are these methods (API 139, ADR 0145).

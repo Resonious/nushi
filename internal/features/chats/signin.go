@@ -1,8 +1,12 @@
 package chats
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"log/slog"
 	"slices"
+	"time"
 
 	acp "github.com/afrase/acp-go/unstable"
 
@@ -12,7 +16,7 @@ import (
 // SignInError is a start or reopen the agent refused because it isn't
 // signed in (ACP's Authentication required), with the ways it offers to
 // sign itself in that Nushi can run (signInMethods), never empty: the app
-// offers them. ADR 0145.
+// offers them, and SignIn runs the one picked. ADR 0145.
 type SignInError struct {
 	Agent   string         // the agent's name
 	Methods []model.Option // each one's ID, Name and Description, as the agent gives them
@@ -69,4 +73,101 @@ func (k *kind) signInMethods(init *acp.InitializeResponse) []model.Option {
 		out = append(out, model.Option{ID: string(a.ID), Name: a.Name, Description: a.Description})
 	}
 	return out
+}
+
+// SignInTimeout bounds a sign-in: the user is in a browser meanwhile.
+var SignInTimeout = 10 * time.Minute
+
+// authenticator is an agent that takes ACP's authenticate, as an agent's
+// process (agentproc.Agent) does.
+type authenticator interface {
+	Authenticate(ctx context.Context, req *acp.AuthenticateRequest) (*acp.AuthenticateResponse, error)
+}
+
+// signInClient is the client side of a sign-in's agent: it opens no
+// session, so it answers nothing.
+type signInClient struct{ acp.UnimplementedClient }
+
+// SignIn signs the agent named agent in through method, one of the ways
+// it offers (SignInError.Methods): a process of the agent, started as a
+// chat's is (the same Launch, so as its settings say now), is asked to
+// authenticate, and stopped, with its process group, once it has answered,
+// or when ctx ends or SignInTimeout passes, which ends its login. The agent
+// runs its own login: Codex opens the browser and waits for the user.
+// One sign-in at a time for each agent. Once it is signed in, its chats
+// whose reopen failed for want of it may reopen when next shown.
+func (s *Service) SignIn(ctx context.Context, agent, method string) error {
+	k, err := s.kindOf(agent)
+	if err != nil {
+		return err
+	}
+	s.mu.Lock()
+	if s.signingIn[k.Name] {
+		s.mu.Unlock()
+		return fmt.Errorf("%s is signing in already: finish in the browser, or cancel that first", k.Title)
+	}
+	if s.signingIn == nil {
+		s.signingIn = map[string]bool{}
+	}
+	s.signingIn[k.Name] = true
+	s.mu.Unlock()
+	defer func() {
+		s.mu.Lock()
+		delete(s.signingIn, k.Name)
+		s.mu.Unlock()
+	}()
+	ctx, cancel := context.WithTimeout(ctx, SignInTimeout)
+	defer cancel()
+	log := slog.With("agent", k.Name, "for", "sign-in")
+	a, init, err := initialize(ctx, k, signInClient{}, log)
+	if err != nil {
+		return k.explain(err)
+	}
+	defer func() { _ = a.Close() }() // its group, and with it a login still waiting
+	if !slices.ContainsFunc(k.signInMethods(init), func(o model.Option) bool { return o.ID == method }) {
+		return fmt.Errorf("%s doesn't offer that way to sign in", k.Title)
+	}
+	auth, ok := a.(authenticator)
+	if !ok {
+		return fmt.Errorf("%s can't be signed in from Nushi", k.Title)
+	}
+	log.Info("agent signing in", "method", method)
+	if _, err := auth.Authenticate(ctx, &acp.AuthenticateRequest{MethodID: acp.AuthMethodID(method)}); err != nil {
+		log.Warn("agent not signed in", "err", err)
+		return signInFailed(ctx, k.Title, err)
+	}
+	log.Info("agent signed in")
+	s.signedIn(k.Name)
+	return nil
+}
+
+// signInFailed is a sign-in's error in plain words: the agent's own
+// message without its code, or that it took too long; a cancelled call's
+// own error, as the API passes it on.
+func signInFailed(ctx context.Context, title string, err error) error {
+	switch {
+	case errors.Is(ctx.Err(), context.DeadlineExceeded):
+		return fmt.Errorf("%s didn't finish signing in within %v: %w", title, SignInTimeout, err)
+	case ctx.Err() != nil:
+		return ctx.Err()
+	}
+	if e, ok := errors.AsType[*acp.Error](err); ok && e.Message != "" {
+		return fmt.Errorf("%s didn't sign in: %s", title, e.Message)
+	}
+	return fmt.Errorf("%s didn't sign in: %w", title, err)
+}
+
+// signedIn is the agent named agent signed in: its chats whose reopen
+// failed for want of it may reopen, each when it's next shown (Reopen), as
+// AgentReady has them.
+func (s *Service) signedIn(agent string) {
+	for _, c := range s.openChats() {
+		c.mu.Lock()
+		if f := c.failureLocked(); c.kind.Name == agent && c.reopenFailed && f != nil && f.Status == "sign_in" {
+			c.reopenFailed = false
+			c.statusChangedLocked()
+			c.logLocked().Info("chat may reopen", "why", "agent signed in")
+		}
+		c.mu.Unlock()
+	}
 }

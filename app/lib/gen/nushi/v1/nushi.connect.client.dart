@@ -271,6 +271,30 @@ extension type NushiServiceClient(connect.Transport _transport) {
     );
   }
 
+  /// Signs an agent in through its own login (ACP authenticate), one of
+  /// the ways an AgentSignIn offers: a short-lived process of the agent,
+  /// started as a chat's would be, runs it (Codex opens the browser and
+  /// waits) and is stopped after. Returns once the agent says it is signed
+  /// in (10 minutes at most); a call cancelled stops it, and its login.
+  /// One at a time for each agent. Nushi sees no credential (API 139, ADR
+  /// 0145).
+  Future<nushiv1nushi.SignInAgentResponse> signInAgent(
+    nushiv1nushi.SignInAgentRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.signInAgent,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
   /// Lists an agent's sessions in a folder that aren't chats (started in a
   /// terminal, say), newest first, a page at a time. It starts the agent to
   /// ask (ACP session/list).

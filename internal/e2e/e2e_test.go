@@ -28,6 +28,7 @@ import (
 	"github.com/afrase/nushi/internal/ante/antetest"
 	"github.com/afrase/nushi/internal/api"
 	"github.com/afrase/nushi/internal/claude"
+	"github.com/afrase/nushi/internal/codex"
 	"github.com/afrase/nushi/internal/database"
 	"github.com/afrase/nushi/internal/events"
 	"github.com/afrase/nushi/internal/features/agents"
@@ -70,6 +71,7 @@ type daemon struct {
 	hub     *events.Hub
 	dataDir string           // what it was started on, for reopen
 	history *acptest.History // and the fake agent's sessions
+	signIn  *acptest.SignIn  // the login of the "signin" agent (signin_test.go)
 }
 
 // reopen stops d and starts it again in its place, on the same data folder
@@ -218,6 +220,12 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 	kinds = append(kinds, chats.Kind{Harness: claudeOnFake{projects: filepath.Join(dataDir, "claude", "projects")}, Launch: fake(""), MCP: true})
 	cxs := codexStores(dataDir)
 	kinds = append(kinds, chats.Kind{Harness: codexGo{}, Launch: launch(cxs.serve), MCP: true})
+	// "signin" is the fake agent behind a login, offering Codex's ways to
+	// sign in, which Nushi leaves out as it does Codex's.
+	signIn := &acptest.SignIn{Finish: make(chan error, 1), Begun: make(chan string, 4), Ended: make(chan struct{}, 4)}
+	kinds = append(kinds, chats.Kind{Harness: model.HarnessInfo{Name: "signin", Title: "Signin"}, NoSignIn: codex.NoSignIn, Launch: launch(func(r io.Reader, w io.Writer) {
+		(&acptest.Agent{History: history, SignIn: signIn}).Serve(r, w)
+	})})
 	copies, err := transcripts.Open(filepath.Join(dataDir, "transcripts"))
 	if err != nil {
 		t.Fatal(err)
@@ -271,7 +279,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		_ = db.Close() // closed already when stopped twice: reopen's, then the cleanup's
 	}
 	t.Cleanup(stop)
-	return &daemon{url: srv.URL, devices: devices.URL, stop: stop, chats: svc, restart: restarts, looks: looks, lapsed: lapsed, claudes: cls, codexes: cxs, tools: toolSvc, hub: hub, dataDir: dataDir, history: history, kill: func() {
+	return &daemon{url: srv.URL, devices: devices.URL, stop: stop, chats: svc, restart: restarts, looks: looks, lapsed: lapsed, claudes: cls, codexes: cxs, tools: toolSvc, hub: hub, dataDir: dataDir, history: history, signIn: signIn, kill: func() {
 		mu.Lock()
 		defer mu.Unlock()
 		kill()

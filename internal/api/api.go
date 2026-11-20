@@ -130,6 +130,9 @@ var macOnly = map[string]bool{
 	nushiv1connect.NushiServiceSendTestPushProcedure:   true,
 	// The Mac's app starts the new daemon.
 	nushiv1connect.NushiServiceRestartWhenIdleProcedure: true,
+	// An agent's login opens the Mac's browser, for whoever sits at the
+	// Mac (ADR 0145).
+	nushiv1connect.NushiServiceSignInAgentProcedure: true,
 	// The phone shows nothing of updates.
 	nushiv1connect.NushiServiceCheckForUpdatesProcedure: true,
 	// Homebrew replaces the app on the Mac, on the Mac's word only (ADR

@@ -49,10 +49,15 @@ func (s *server) SetUpAgent(ctx context.Context, req *connect.Request[nushiv1.Se
 	return done[nushiv1.SetUpAgentResponse](s.Agents.SetUp(ctx, req.Msg.Agent), refused)
 }
 
+func (s *server) SignInAgent(ctx context.Context, req *connect.Request[nushiv1.SignInAgentRequest]) (*connect.Response[nushiv1.SignInAgentResponse], error) {
+	err := s.Chats.SignIn(ctx, s.agent(req.Msg.Agent), req.Msg.MethodId)
+	return done[nushiv1.SignInAgentResponse](err, func(err error) error { return waitErr(ctx, err) })
+}
+
 // signInDetail is cerr, a start that failed with cause, carrying an
 // AgentSignIn when cause is the agent's refusal for want of a sign-in that
-// Nushi can run (chats.SignInError): the app offers the ways to sign in
-// (ADR 0145).
+// Nushi can run (chats.SignInError): the app offers to sign it in, and
+// starts again (ADR 0145).
 func signInDetail(cerr *connect.Error, cause error) *connect.Error {
 	in, ok := errors.AsType[*chats.SignInError](cause)
 	if !ok {

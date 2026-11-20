@@ -3380,10 +3380,122 @@ class SetUpAgentResponse extends $pb.GeneratedMessage {
   static SetUpAgentResponse? _defaultInstance;
 }
 
+class SignInAgentRequest extends $pb.GeneratedMessage {
+  factory SignInAgentRequest({
+    $core.String? agent,
+    $core.String? methodId,
+  }) {
+    final result = SignInAgentRequest._();
+    if (agent != null) result.agent = agent;
+    if (methodId != null) result.methodId = methodId;
+    return result;
+  }
+
+  SignInAgentRequest._();
+
+  factory SignInAgentRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      SignInAgentRequest()..mergeFromBuffer(data, registry);
+  factory SignInAgentRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      SignInAgentRequest()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SignInAgentRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: SignInAgentRequest.$_createMessage)
+    ..aOS(1, _omitFieldNames ? '' : 'agent')
+    ..aOS(2, _omitFieldNames ? '' : 'methodId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SignInAgentRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SignInAgentRequest copyWith(void Function(SignInAgentRequest) updates) =>
+      super.copyWith((message) => updates(message as SignInAgentRequest))
+          as SignInAgentRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use SignInAgentRequest() / SignInAgentRequest.new instead')
+  static SignInAgentRequest create() => SignInAgentRequest._();
+  static $pb.GeneratedMessage $_createMessage() => SignInAgentRequest._();
+  @$core.override
+  SignInAgentRequest createEmptyInstance() => SignInAgentRequest._();
+  @$core.pragma('dart2js:noInline')
+  static SignInAgentRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SignInAgentRequest>(
+          SignInAgentRequest.$_createMessage);
+  static SignInAgentRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get agent => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set agent($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasAgent() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAgent() => $_clearField(1);
+
+  /// One of AgentSignIn.methods' ids.
+  @$pb.TagNumber(2)
+  $core.String get methodId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set methodId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMethodId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMethodId() => $_clearField(2);
+}
+
+class SignInAgentResponse extends $pb.GeneratedMessage {
+  factory SignInAgentResponse() => SignInAgentResponse._();
+
+  SignInAgentResponse._();
+
+  factory SignInAgentResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      SignInAgentResponse()..mergeFromBuffer(data, registry);
+  factory SignInAgentResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      SignInAgentResponse()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SignInAgentResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nushi.v1'),
+      createEmptyInstance: SignInAgentResponse.$_createMessage)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SignInAgentResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SignInAgentResponse copyWith(void Function(SignInAgentResponse) updates) =>
+      super.copyWith((message) => updates(message as SignInAgentResponse))
+          as SignInAgentResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core
+      .Deprecated('Use SignInAgentResponse() / SignInAgentResponse.new instead')
+  static SignInAgentResponse create() => SignInAgentResponse._();
+  static $pb.GeneratedMessage $_createMessage() => SignInAgentResponse._();
+  @$core.override
+  SignInAgentResponse createEmptyInstance() => SignInAgentResponse._();
+  @$core.pragma('dart2js:noInline')
+  static SignInAgentResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SignInAgentResponse>(
+          SignInAgentResponse.$_createMessage);
+  static SignInAgentResponse? _defaultInstance;
+}
+
 /// A start the agent refused because it isn't signed in (ACP's
 /// Authentication required): StartChat's and OpenAgentSession's error
 /// carries it as a detail, beside the plain message. Its methods are the
-/// ways the agent signs itself in that Nushi can run: the
+/// ways the agent signs itself in that Nushi can run (SignInAgent): the
 /// agent's own, none needing a key typed into Nushi; there is no detail
 /// when it offers none. A chat whose reopen fails so says it in a notice of
 /// status "sign_in" whose options are these methods (API 139, ADR 0145).
@@ -36204,6 +36316,18 @@ class NushiServiceApi {
           $pb.ClientContext? ctx, RemoveAgentRequest request) =>
       _client.invoke<RemoveAgentResponse>(
           ctx, 'NushiService', 'RemoveAgent', request, RemoveAgentResponse());
+
+  /// Signs an agent in through its own login (ACP authenticate), one of
+  /// the ways an AgentSignIn offers: a short-lived process of the agent,
+  /// started as a chat's would be, runs it (Codex opens the browser and
+  /// waits) and is stopped after. Returns once the agent says it is signed
+  /// in (10 minutes at most); a call cancelled stops it, and its login.
+  /// One at a time for each agent. Nushi sees no credential (API 139, ADR
+  /// 0145).
+  $async.Future<SignInAgentResponse> signInAgent(
+          $pb.ClientContext? ctx, SignInAgentRequest request) =>
+      _client.invoke<SignInAgentResponse>(
+          ctx, 'NushiService', 'SignInAgent', request, SignInAgentResponse());
 
   /// Lists an agent's sessions in a folder that aren't chats (started in a
   /// terminal, say), newest first, a page at a time. It starts the agent to

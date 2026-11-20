@@ -47,6 +47,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
       $pb.ServerContext ctx, $0.SetUpAgentRequest request);
   $async.Future<$0.RemoveAgentResponse> removeAgent(
       $pb.ServerContext ctx, $0.RemoveAgentRequest request);
+  $async.Future<$0.SignInAgentResponse> signInAgent(
+      $pb.ServerContext ctx, $0.SignInAgentRequest request);
   $async.Future<$0.ListAgentSessionsResponse> listAgentSessions(
       $pb.ServerContext ctx, $0.ListAgentSessionsRequest request);
   $async.Future<$0.OpenAgentSessionResponse> openAgentSession(
@@ -374,6 +376,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return $0.SetUpAgentRequest();
       case 'RemoveAgent':
         return $0.RemoveAgentRequest();
+      case 'SignInAgent':
+        return $0.SignInAgentRequest();
       case 'ListAgentSessions':
         return $0.ListAgentSessionsRequest();
       case 'OpenAgentSession':
@@ -706,6 +710,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return setUpAgent(ctx, request as $0.SetUpAgentRequest);
       case 'RemoveAgent':
         return removeAgent(ctx, request as $0.RemoveAgentRequest);
+      case 'SignInAgent':
+        return signInAgent(ctx, request as $0.SignInAgentRequest);
       case 'ListAgentSessions':
         return listAgentSessions(ctx, request as $0.ListAgentSessionsRequest);
       case 'OpenAgentSession':

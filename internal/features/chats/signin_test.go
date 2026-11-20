@@ -19,17 +19,22 @@ import (
 // signInFake is fakeAgent behind a login, as Codex with none is: each of
 // its processes advertises codex-acp's auth methods (and a terminal one,
 // and a type acp-go doesn't know), and refuses session/new and load with
-// ACP's Authentication required until it is signed in.
+// ACP's Authentication required until authenticate has signed it in.
+// authenticate waits for finish (nil signs in), or for its call to end.
 type signInFake struct {
 	*fakeAgent
 	methods []acp.AuthMethod // advertised; nil: codexMethods
 
 	mu       sync.Mutex
 	signedIn bool
+	finish   chan error    // what each authenticate waits for
+	begun    chan string   // gets each authenticate's method as it begins (buffered)
+	closed   chan struct{} // closed as each process is killed (Close), in turn
+	asked    []string      // the methods authenticate was asked for
 }
 
 func newSignInFake() *signInFake {
-	return &signInFake{fakeAgent: &fakeAgent{}}
+	return &signInFake{fakeAgent: &fakeAgent{}, finish: make(chan error, 1), begun: make(chan string, 4), closed: make(chan struct{}, 8)}
 }
 
 // codexMethods are codex-acp's methods, as it advertises them (api-key and
@@ -97,6 +102,30 @@ func (p *signInProc) LoadSession(ctx context.Context, req *acp.LoadSessionReques
 	return p.proc.LoadSession(ctx, req)
 }
 
+func (p *signInProc) Authenticate(ctx context.Context, req *acp.AuthenticateRequest) (*acp.AuthenticateResponse, error) {
+	p.f.mu.Lock()
+	p.f.asked = append(p.f.asked, string(req.MethodID))
+	p.f.mu.Unlock()
+	p.f.begun <- string(req.MethodID)
+	select {
+	case err := <-p.f.finish:
+		if err != nil {
+			return nil, err
+		}
+		p.f.mu.Lock()
+		p.f.signedIn = true
+		p.f.mu.Unlock()
+		return &acp.AuthenticateResponse{}, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+}
+
+func (p *signInProc) Close() error {
+	p.f.closed <- struct{}{}
+	return p.proc.Close()
+}
+
 func (f *signInFake) signOut() {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -126,8 +155,8 @@ func TestStartWantsSignIn(t *testing.T) {
 }
 
 // A sleeping chat whose agent signed out says so as it wakes for a
-// message, which stays queued; once signed in, the chat reopens when shown
-// and the message goes.
+// message, which stays queued; once signed in (SignIn), the chat reopens
+// when shown and the message goes.
 func TestWakeWantsSignIn(t *testing.T) {
 	f := newSignInFake()
 	f.methods = codexMethods(t)
@@ -147,9 +176,8 @@ func TestWakeWantsSignIn(t *testing.T) {
 		t.Fatalf("notice %+v, %d queued", notice, queued)
 	}
 
-	f.mu.Lock()
-	f.signedIn = true
-	f.mu.Unlock()
+	f.finish <- nil
+	testcheck.NoErr(t, svc.SignIn(t.Context(), "fake", "chat-gpt"))
 	testcheck.NoErr(t, svc.Reopen(c.id))
 	eventually(t, c, func() bool { return c.agent != nil && len(c.queue) == 0 && !c.busy })
 	f.fakeAgent.mu.Lock()
@@ -158,4 +186,63 @@ func TestWakeWantsSignIn(t *testing.T) {
 	if !slices.Equal(prompts, []string{"one", "two"}) || !slices.Contains(texts(c), "user:two") {
 		t.Errorf("after signing in: prompts %q, %q", prompts, texts(c))
 	}
+}
+
+// SignIn runs the method in a process of its own, closed once the agent
+// has answered, whichever way: signed in, or its error in plain words.
+func TestSignIn(t *testing.T) {
+	f := newSignInFake()
+	f.methods = codexMethods(t)
+	svc := newService(t, []Kind{f.kindFor("chat-gpt-device-code")}, Options{})
+
+	f.finish <- &acp.Error{Code: acp.ErrorCodeAuthenticationRequired, Message: "Sign-in did not complete"}
+	if err := svc.SignIn(t.Context(), "fake", "chat-gpt"); err == nil || err.Error() != "Fake didn't sign in: Sign-in did not complete" {
+		t.Errorf("a failed sign-in = %v", err)
+	}
+	<-f.closed
+
+	f.finish <- nil
+	testcheck.NoErr(t, svc.SignIn(t.Context(), "fake", "chat-gpt"))
+	<-f.closed
+	if _, err := svc.Start(t.Context(), "", t.TempDir(), false); err != nil {
+		t.Errorf("Start once signed in = %v", err)
+	}
+
+	// Only a method it offers, and Nushi runs: never a key's.
+	for _, m := range []string{"api-key", "gateway", "chat-gpt-device-code", "tui", "nope"} {
+		if err := svc.SignIn(t.Context(), "fake", m); err == nil || !strings.Contains(err.Error(), "doesn't offer that way") {
+			t.Errorf("SignIn %s = %v", m, err)
+		}
+		<-f.closed
+	}
+	if err := svc.SignIn(t.Context(), "other", "chat-gpt"); err == nil {
+		t.Error("an unknown agent signed in")
+	}
+	if !slices.Equal(f.asked, []string{"chat-gpt", "chat-gpt"}) {
+		t.Errorf("authenticate asked %v", f.asked)
+	}
+}
+
+// A sign-in whose call ends (the app cancelled, or went) stops its agent,
+// and with it the login; a second one of the same agent meanwhile is
+// refused.
+func TestSignInCancelled(t *testing.T) {
+	f := newSignInFake()
+	f.methods = codexMethods(t)
+	svc := newService(t, []Kind{f.kindFor()}, Options{})
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan error, 1)
+	go func() { done <- svc.SignIn(ctx, "fake", "chat-gpt") }()
+	<-f.begun
+	if err := svc.SignIn(t.Context(), "fake", "chat-gpt"); err == nil || !strings.Contains(err.Error(), "signing in already") {
+		t.Errorf("a second sign-in = %v", err)
+	}
+	cancel()
+	if err := <-done; !errors.Is(err, context.Canceled) {
+		t.Errorf("a cancelled sign-in = %v", err)
+	}
+	<-f.closed // its process was killed
+	// And the next one may run.
+	f.finish <- nil
+	testcheck.NoErr(t, svc.SignIn(t.Context(), "fake", "chat-gpt"))
 }
