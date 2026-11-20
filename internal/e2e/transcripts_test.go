@@ -66,3 +66,21 @@ func TestTranscriptCopies(t *testing.T) {
 		t.Errorf("the agent's history alone:\n%s", got)
 	}
 }
+
+// Codex's Go agent is a setting: off by default, kept once set (across a
+// restart), and left as it is by an app that doesn't send it.
+func TestCodexGoAgentSetting(t *testing.T) {
+	ctx := context.Background()
+	d := startDaemon(t, t.TempDir(), &acptest.History{})
+	a := open(t, d)
+	if set := must(a.c.GetSettings(ctx, connect.NewRequest(&nushiv1.GetSettingsRequest{}))).Settings; set.CodexGoAgent == nil || set.GetCodexGoAgent() {
+		t.Fatalf("settings %v, want codex_go_agent off", set)
+	}
+	on := true
+	must(a.c.SetSettings(ctx, connect.NewRequest(&nushiv1.SetSettingsRequest{Settings: &nushiv1.Settings{SleepAfterMinutes: 30, CodexGoAgent: &on}})))
+	must(a.c.SetSettings(ctx, connect.NewRequest(&nushiv1.SetSettingsRequest{Settings: &nushiv1.Settings{SleepAfterMinutes: 30}})))
+	a = d.reopen(t)
+	if set := must(a.c.GetSettings(ctx, connect.NewRequest(&nushiv1.GetSettingsRequest{}))).Settings; !set.GetCodexGoAgent() {
+		t.Errorf("settings after a restart %v, want codex_go_agent on", set)
+	}
+}

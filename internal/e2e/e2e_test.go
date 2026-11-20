@@ -206,7 +206,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		"pig":      pis(pi.PiG),
 	}
 	kinds := []chats.Kind{{Harness: fakeHarness{}, Launch: fake("")}}
-	for _, a := range knownagents.All("") { // no projects folder: Local isn't used
+	for _, a := range knownagents.All("", nil) { // no projects folder: Local isn't used
 		if l := launches[a.Agent.Name]; l != nil {
 			h := a.Harness
 			if a.Agent.Name == "claude" {
@@ -254,7 +254,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		lapsed.Store(!waiting)
 	}
 	sv := api.Services{Chats: svc, Agents: agents.New(nil, nil, shellenv.Off(os.Environ()), "", nil), Terms: terms, Hub: hub, Memory: memory.New(svc), Transcripts: st, Restart: restarts,
-		Servers: srvs, Usage: meter}
+		Servers: srvs, Usage: meter, CodexGo: st}
 	socket, forDevices := api.Handlers(sv, toolSvc, "tok") // as main serves them
 	srv := httptest.NewServer(socket)
 	devices := httptest.NewServer(forDevices)

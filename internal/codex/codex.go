@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
-	"os"
 	"os/exec"
 	"slices"
 	"strings"
@@ -43,8 +42,8 @@ func (Harness) Info() model.HarnessInfo {
 // Start starts the adapter, as claude.Harness does Claude's, running r's
 // CLI, the user's Codex (codex-acp's CODEX_PATH): codex-acp set up in the
 // data folder, which runs it as it is, or Nushi's Go agent when r has no
-// adapter program (GoAgent; ADR 0142), which runs its native binary when
-// npm installed it (Native). Codex reads its own config and login
+// adapter program (the user's setting, agents.Agent.Own; ADR 0142), which
+// runs its native binary when npm installed it (Native). Codex reads its own config and login
 // ($CODEX_HOME, else ~/.codex); Nushi never does.
 func (Harness) Start(dir string, r model.AgentRun, client acp.Client, log *slog.Logger) (*agentproc.Agent, error) {
 	if r.Program == "" {
@@ -67,16 +66,6 @@ func adapterCommand(dir string, r model.AgentRun) *exec.Cmd {
 	cmd.Env = append(slices.Clone(r.Env), "CODEX_PATH="+r.CLI)
 	return cmd
 }
-
-// GoAgentVar is the daemon's variable that runs Codex through Nushi's Go
-// agent instead of codex-acp: NUSHI_CODEX_ADAPTER=go. Read when the
-// daemon starts; off by default until the Go agent has shown parity (ADR
-// 0142).
-const GoAgentVar = "NUSHI_CODEX_ADAPTER"
-
-// GoAgent says the daemon runs Codex through Nushi's Go agent: no Node
-// and no adapter to set up.
-func GoAgent() bool { return os.Getenv(GoAgentVar) == "go" }
 
 // Adapter is Codex's ACP adapter, as Nushi pins it: adapter/'s
 // package.json names the version, its lockfile every package's (make

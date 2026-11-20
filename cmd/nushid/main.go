@@ -162,7 +162,7 @@ func run() error {
 
 	hub := &events.Hub{}
 	st := store.New(dir)
-	known := knownagents.All(projects)
+	known := knownagents.All(projects, st.CodexGoAgent)
 	agentSvc := newAgents(dir, known)
 	st.HadMessages = func(s model.ChatRecord) bool { return claudehistory.Has(projects, s.SessionID, s.Folder) }
 	copies, err := transcripts.Open(filepath.Join(dir, "transcripts"))
@@ -204,6 +204,7 @@ func run() error {
 	sv.GitHub = newGitHub(st, dev)
 	chatSvc.UseGitHub(sv.GitHub)
 	sv.Updates = updateSvc
+	sv.CodexGo = st
 	sv.Usage = usageSvc
 	if err := usePush(st, sv.Remote, chatSvc, kinds); err != nil {
 		return err

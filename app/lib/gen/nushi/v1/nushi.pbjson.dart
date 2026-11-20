@@ -854,6 +854,7 @@ const Agent$json = {
     {'1': 'ready', '3': 12, '4': 1, '5': 8, '10': 'ready'},
     {'1': 'awake', '3': 13, '4': 1, '5': 5, '10': 'awake'},
     {'1': 'mcp_user_only', '3': 15, '4': 1, '5': 8, '10': 'mcpUserOnly'},
+    {'1': 'go_agent_switch', '3': 16, '4': 1, '5': 8, '10': 'goAgentSwitch'},
   ],
   '9': [
     {'1': 8, '2': 9},
@@ -870,7 +871,8 @@ final $typed_data.Uint8List agentDescriptor = $convert.base64Decode(
     'EoCVIHdmVyc2lvbhIYCgdwcm9ibGVtGAkgASgJUgdwcm9ibGVtEhsKCXNpZ25lZF9pbhgKIAEo'
     'CVIIc2lnbmVkSW4SKwoHYWRhcHRlchgLIAEoCzIRLm51c2hpLnYxLkFkYXB0ZXJSB2FkYXB0ZX'
     'ISFAoFcmVhZHkYDCABKAhSBXJlYWR5EhQKBWF3YWtlGA0gASgFUgVhd2FrZRIiCg1tY3BfdXNl'
-    'cl9vbmx5GA8gASgIUgttY3BVc2VyT25seUoECAgQCUoECA4QD1IEcGFnZVIIZ29fYWdlbnQ=');
+    'cl9vbmx5GA8gASgIUgttY3BVc2VyT25seRImCg9nb19hZ2VudF9zd2l0Y2gYECABKAhSDWdvQW'
+    'dlbnRTd2l0Y2hKBAgIEAlKBAgOEA9SBHBhZ2VSCGdvX2FnZW50');
 
 @$core.Deprecated('Use adapterDescriptor instead')
 const Adapter$json = {
@@ -1917,11 +1919,21 @@ const Settings$json = {
       '10': 'checkUpdates',
       '17': true
     },
+    {
+      '1': 'codex_go_agent',
+      '3': 7,
+      '4': 1,
+      '5': 8,
+      '9': 3,
+      '10': 'codexGoAgent',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_keep_transcripts'},
     {'1': '_transcript_days'},
     {'1': '_check_updates'},
+    {'1': '_codex_go_agent'},
   ],
   '9': [
     {'1': 6, '2': 7},
@@ -1935,8 +1947,9 @@ final $typed_data.Uint8List settingsDescriptor = $convert.base64Decode(
     'RlcxIbCglkZWJ1Z19sb2cYAiABKAhSCGRlYnVnTG9nEi4KEGtlZXBfdHJhbnNjcmlwdHMYAyAB'
     'KAhIAFIPa2VlcFRyYW5zY3JpcHRziAEBEiwKD3RyYW5zY3JpcHRfZGF5cxgEIAEoBUgBUg50cm'
     'Fuc2NyaXB0RGF5c4gBARIoCg1jaGVja191cGRhdGVzGAUgASgISAJSDGNoZWNrVXBkYXRlc4gB'
-    'AUITChFfa2VlcF90cmFuc2NyaXB0c0ISChBfdHJhbnNjcmlwdF9kYXlzQhAKDl9jaGVja191cG'
-    'RhdGVzSgQIBhAHUg9jbGF1ZGVfZ29fYWdlbnQ=');
+    'ARIpCg5jb2RleF9nb19hZ2VudBgHIAEoCEgDUgxjb2RleEdvQWdlbnSIAQFCEwoRX2tlZXBfdH'
+    'JhbnNjcmlwdHNCEgoQX3RyYW5zY3JpcHRfZGF5c0IQCg5fY2hlY2tfdXBkYXRlc0IRCg9fY29k'
+    'ZXhfZ29fYWdlbnRKBAgGEAdSD2NsYXVkZV9nb19hZ2VudA==');
 
 @$core.Deprecated('Use listTranscriptsRequestDescriptor instead')
 const ListTranscriptsRequest$json = {

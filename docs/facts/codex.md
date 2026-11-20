@@ -51,7 +51,7 @@ What the code depends on, and how the adapter behaves. Everything Nushi does abo
 
 ## The Go agent (codex-acp-go's `codexacp`)
 
-Built from codex-acp 2.2.2's source and the schema Codex 0.163.0 prints (`codex app-server generate-ts --experimental`), tested against a fake app-server and, on 2026-11-21, a real Codex 0.163.0 run (a model and its key named in a temp `CODEX_HOME`'s `config.toml`; the live tests now in `github.com/afrase/codex-acp-go`, `codexacp/live_test.go`, run in process and once as `nushid codex-acp`). The agent lives in that library; Nushi runs it as `nushid codex-acp`, off by default: `NUSHI_CODEX_ADAPTER=go` (ADR 0142).
+Built from codex-acp 2.2.2's source and the schema Codex 0.163.0 prints (`codex app-server generate-ts --experimental`), tested against a fake app-server and, on 2026-11-21, a real Codex 0.163.0 run (a model and its key named in a temp `CODEX_HOME`'s `config.toml`; the live tests now in `github.com/afrase/codex-acp-go`, `codexacp/live_test.go`, run in process and once as `nushid codex-acp`). The agent lives in that library; Nushi runs it as `nushid codex-acp`, off by default: Settings › Agents, Run Codex without Node (ADR 0142).
 
 **The app-server, as codex-acp speaks it**
 - `codex app-server` over stdio: one JSON object a line, no `"jsonrpc"` member either way; `initialize {clientInfo, capabilities: {experimentalApi: true, requestAttestation: false}}`, and no `initialized` notification (codex-acp sends none, though the schema has one; seen: the app-server works without it). It exits (status 0) as soon as its stdin closes.

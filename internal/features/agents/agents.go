@@ -35,6 +35,12 @@ type Agent struct {
 	// SignedIn says whether the CLI is signed in, "yes" or "no", or ""
 	// when it can't tell cheaply; run runs the CLI with args (Probe).
 	SignedIn func(run func(args ...string) ([]byte, error)) string
+	// Own says whether the agent runs, for now, through Nushi's own ACP
+	// agent rather than its Adapter: Codex through the Go agent, as the
+	// user's setting says (ADR 0142). It is asked each time, so a change
+	// needs no restart; while it says so, the agent has no Adapter. nil:
+	// never.
+	Own func() bool
 }
 
 // Probe runs a program and returns its stdout: Run's, or a test's.
@@ -116,13 +122,23 @@ func (s *Service) Environment(ctx context.Context, maxAge time.Duration) model.S
 	return s.env.Status()
 }
 
-// agent is the agent named name, and whether it is known.
+// agent is the agent named name as it runs now (Agent.Own), and whether
+// it is known.
 func (s *Service) agent(name string) (Agent, bool) {
 	i := slices.IndexFunc(s.agents, func(a Agent) bool { return a.Name == name })
 	if i < 0 {
 		return Agent{}, false
 	}
-	return s.agents[i], true
+	return now(s.agents[i]), true
+}
+
+// now is a as it runs now: through Nushi's own agent, with no adapter,
+// when its Own says so.
+func now(a Agent) Agent {
+	if a.Own != nil && a.Own() {
+		a.Adapter = nil
+	}
+	return a
 }
 
 // List finds every agent, all at once, and tells the chats which are ready.
@@ -130,7 +146,7 @@ func (s *Service) List(ctx context.Context) []Status {
 	out := make([]Status, len(s.agents))
 	var wg sync.WaitGroup
 	for i, a := range s.agents {
-		wg.Go(func() { out[i] = s.find(ctx, a) })
+		wg.Go(func() { out[i] = s.find(ctx, now(a)) })
 	}
 	wg.Wait()
 	s.logFound(out)
@@ -229,6 +245,8 @@ func numbers(v string) [3]int {
 
 // Run finds what starting the agent named name takes, or says why it
 // can't start. It asks no CLI anything, so it's quick.
+// An agent running through Nushi's own (Agent.Own) has no Program: its
+// Harness starts that agent instead, as Own said when Run asked it.
 func (s *Service) Run(name string) (model.AgentRun, error) {
 	a, ok := s.agent(name)
 	if !ok {

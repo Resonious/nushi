@@ -956,6 +956,10 @@ message Agent {
   // Its MCP servers are only yours, the user scope, with no off switch or
   // legacy SSE; others have Claude's scopes and those (API 97).
   bool mcp_user_only = 15;
+  // Nushi's Go agent can run it in place of its adapter, as
+  // Settings.codex_go_agent picks: Settings › Agents shows that switch
+  // under it (API 138, ADR 0142).
+  bool go_agent_switch = 16;
 }
 
 // An agent's adapter.
@@ -1424,6 +1428,13 @@ message Settings {
   // (ADR 0066).
   reserved 6;
   reserved "claude_go_agent";
+  // Codex's chats run through Nushi's Go agent (codex-acp-go's codexacp,
+  // ADR 0142), which needs no Node and nothing set up, instead of the
+  // codex-acp adapter; off by default. A Codex chat's agent reads it each
+  // time it starts (a new chat, a reopened or woken one), so chats already
+  // running keep theirs until then. SetSettings leaves it as it is when not
+  // given (API 138).
+  optional bool codex_go_agent = 7;
 }
 
 message ListTranscriptsRequest {}

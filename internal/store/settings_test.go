@@ -24,6 +24,29 @@ func TestTranscriptSettings(t *testing.T) {
 	}
 }
 
+// Codex's Go agent is off until turned on, and kept in settings.json
+// (codexGoAgent) once set, on and off again.
+func TestCodexGoAgentSetting(t *testing.T) {
+	dir := t.TempDir()
+	s := New(dir)
+	if s.CodexGoAgent() {
+		t.Fatal("on by default")
+	}
+	testcheck.NoErr(t, s.SetCodexGoAgent(true))
+	b, err := os.ReadFile(filepath.Join(dir, "settings.json"))
+	testcheck.NoErr(t, err)
+	if !strings.Contains(string(b), `"codexGoAgent": true`) {
+		t.Errorf("written: %s", b)
+	}
+	if !New(dir).CodexGoAgent() {
+		t.Error("not kept")
+	}
+	testcheck.NoErr(t, s.SetCodexGoAgent(false))
+	if New(dir).CodexGoAgent() {
+		t.Error("off not kept")
+	}
+}
+
 // A settings.json from when Claude's Go agent was a setting reads as
 // before, the old key ignored, and is gone once a change is written.
 func TestTheOldGoAgentSettingIsIgnored(t *testing.T) {

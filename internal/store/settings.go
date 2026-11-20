@@ -17,6 +17,7 @@ type settings struct {
 	KeepTranscripts   *bool `json:"keepTranscripts,omitempty"`
 	TranscriptDays    int   `json:"transcriptDays,omitempty"`
 	CheckUpdates      *bool `json:"checkUpdates,omitempty"`
+	CodexGoAgent      bool  `json:"codexGoAgent,omitempty"`
 }
 
 // defaultSleepAfter is how long chats idle before they sleep, until the
@@ -133,4 +134,17 @@ func (s *Store) CheckUpdates() bool {
 // SetCheckUpdates remembers whether the daemon checks for a newer release.
 func (s *Store) SetCheckUpdates(on bool) error {
 	return s.changeSettings(func(set *settings) { set.CheckUpdates = &on })
+}
+
+// CodexGoAgent says whether Codex's chats run through Nushi's Go agent
+// rather than the codex-acp adapter (ADR 0142); off until turned on.
+func (s *Store) CodexGoAgent() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.settingsLocked().CodexGoAgent
+}
+
+// SetCodexGoAgent remembers whether Codex runs through the Go agent.
+func (s *Store) SetCodexGoAgent(on bool) error {
+	return s.changeSettings(func(set *settings) { set.CodexGoAgent = on })
 }

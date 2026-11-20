@@ -25,18 +25,6 @@ func TestTheGoAgentsCommand(t *testing.T) {
 	}
 }
 
-// The Go agent runs only when the daemon's variable says so.
-func TestGoAgentIsOptIn(t *testing.T) {
-	t.Setenv(GoAgentVar, "")
-	if GoAgent() {
-		t.Error("on without the variable")
-	}
-	t.Setenv(GoAgentVar, "go")
-	if !GoAgent() {
-		t.Error("off with the variable")
-	}
-}
-
 // codex-acp runs the user's codex as it is, npm's launcher included,
 // which tells Codex how it was installed; only the Go agent runs the
 // native binary (Native).

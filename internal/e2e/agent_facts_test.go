@@ -23,6 +23,7 @@ import (
 	"github.com/afrase/nushi/internal/model"
 	"github.com/afrase/nushi/internal/shellenv"
 	"github.com/afrase/nushi/internal/store"
+	"github.com/afrase/nushi/internal/testcheck"
 )
 
 // noExtras is an agent's skills with no built-in ones or plugins.
@@ -56,7 +57,9 @@ func (builtInPlugins) PluginScope(string, model.Plugin) string                 {
 // it. Nothing runs: the probe is fake.
 func TestTheAppHearsWhatEachAgentHas(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	all := knownagents.All("")
+	data := t.TempDir()
+	st := store.New(data)
+	all := knownagents.All("", st.CodexGoAgent)
 	var kinds []chats.Kind
 	var found []agents.Agent
 	servers := map[string]*mcp.Service{}
@@ -67,8 +70,6 @@ func TestTheAppHearsWhatEachAgentHas(t *testing.T) {
 			servers[a.Agent.Name] = mcp.New(a.Agent.Name, a.MCP(nil), nil)
 		}
 	}
-	data := t.TempDir()
-	st := store.New(data)
 	svc := chats.New(t.Context(), kinds, chats.Options{Remembered: st, Sessions: st, Worktrees: git.Worktrees{}, Scratch: filepath.Join(data, "scratch")})
 	agentSvc := agents.New(found, func(context.Context, string, ...string) ([]byte, error) { return nil, nil }, shellenv.Off(os.Environ()), t.TempDir(), setUp{})
 	agentSvc.UseChats(svc)
@@ -86,6 +87,17 @@ func TestTheAppHearsWhatEachAgentHas(t *testing.T) {
 	for _, a := range listed {
 		if want := a.Name == "ante"; a.McpUserOnly != want {
 			t.Errorf("%s: mcp_user_only %v, want %v", a.Name, a.McpUserOnly, want)
+		}
+		if want := a.Name == "codex"; a.GoAgentSwitch != want || (want && a.Adapter == nil) {
+			t.Errorf("%s: go_agent_switch %v, want %v; adapter %v", a.Name, a.GoAgentSwitch, want, a.Adapter)
+		}
+	}
+	// Codex's Go agent on (Settings, TestCodexGoAgentSetting): Codex is
+	// listed with no adapter, its switch still there.
+	testcheck.NoErr(t, st.SetCodexGoAgent(true))
+	for _, a := range must(c.ListAgents(ctx, connect.NewRequest(&nushiv1.ListAgentsRequest{}))).Agents {
+		if a.Name == "codex" && (a.Adapter != nil || !a.GoAgentSwitch) {
+			t.Errorf("codex with its Go agent on: %v", a)
 		}
 	}
 	for agent, want := range map[string]bool{"claude": true, "codex": false} {

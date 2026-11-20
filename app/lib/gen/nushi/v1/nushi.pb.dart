@@ -2912,6 +2912,7 @@ class Agent extends $pb.GeneratedMessage {
     $core.bool? ready,
     $core.int? awake,
     $core.bool? mcpUserOnly,
+    $core.bool? goAgentSwitch,
   }) {
     final result = Agent._();
     if (name != null) result.name = name;
@@ -2927,6 +2928,7 @@ class Agent extends $pb.GeneratedMessage {
     if (ready != null) result.ready = ready;
     if (awake != null) result.awake = awake;
     if (mcpUserOnly != null) result.mcpUserOnly = mcpUserOnly;
+    if (goAgentSwitch != null) result.goAgentSwitch = goAgentSwitch;
     return result;
   }
 
@@ -2957,6 +2959,7 @@ class Agent extends $pb.GeneratedMessage {
     ..aOB(12, _omitFieldNames ? '' : 'ready')
     ..aI(13, _omitFieldNames ? '' : 'awake')
     ..aOB(15, _omitFieldNames ? '' : 'mcpUserOnly')
+    ..aOB(16, _omitFieldNames ? '' : 'goAgentSwitch')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3118,6 +3121,18 @@ class Agent extends $pb.GeneratedMessage {
   $core.bool hasMcpUserOnly() => $_has(12);
   @$pb.TagNumber(15)
   void clearMcpUserOnly() => $_clearField(15);
+
+  /// Nushi's Go agent can run it in place of its adapter, as
+  /// Settings.codex_go_agent picks: Settings › Agents shows that switch
+  /// under it (API 138, ADR 0142).
+  @$pb.TagNumber(16)
+  $core.bool get goAgentSwitch => $_getBF(13);
+  @$pb.TagNumber(16)
+  set goAgentSwitch($core.bool value) => $_setBool(13, value);
+  @$pb.TagNumber(16)
+  $core.bool hasGoAgentSwitch() => $_has(13);
+  @$pb.TagNumber(16)
+  void clearGoAgentSwitch() => $_clearField(16);
 }
 
 /// An agent's adapter.
@@ -7755,6 +7770,7 @@ class Settings extends $pb.GeneratedMessage {
     $core.bool? keepTranscripts,
     $core.int? transcriptDays,
     $core.bool? checkUpdates,
+    $core.bool? codexGoAgent,
   }) {
     final result = Settings._();
     if (sleepAfterMinutes != null) result.sleepAfterMinutes = sleepAfterMinutes;
@@ -7762,6 +7778,7 @@ class Settings extends $pb.GeneratedMessage {
     if (keepTranscripts != null) result.keepTranscripts = keepTranscripts;
     if (transcriptDays != null) result.transcriptDays = transcriptDays;
     if (checkUpdates != null) result.checkUpdates = checkUpdates;
+    if (codexGoAgent != null) result.codexGoAgent = codexGoAgent;
     return result;
   }
 
@@ -7783,6 +7800,7 @@ class Settings extends $pb.GeneratedMessage {
     ..aOB(3, _omitFieldNames ? '' : 'keepTranscripts')
     ..aI(4, _omitFieldNames ? '' : 'transcriptDays')
     ..aOB(5, _omitFieldNames ? '' : 'checkUpdates')
+    ..aOB(7, _omitFieldNames ? '' : 'codexGoAgent')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -7860,6 +7878,21 @@ class Settings extends $pb.GeneratedMessage {
   $core.bool hasCheckUpdates() => $_has(4);
   @$pb.TagNumber(5)
   void clearCheckUpdates() => $_clearField(5);
+
+  /// Codex's chats run through Nushi's Go agent (codex-acp-go's codexacp,
+  /// ADR 0142), which needs no Node and nothing set up, instead of the
+  /// codex-acp adapter; off by default. A Codex chat's agent reads it each
+  /// time it starts (a new chat, a reopened or woken one), so chats already
+  /// running keep theirs until then. SetSettings leaves it as it is when not
+  /// given (API 138).
+  @$pb.TagNumber(7)
+  $core.bool get codexGoAgent => $_getBF(5);
+  @$pb.TagNumber(7)
+  set codexGoAgent($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(7)
+  $core.bool hasCodexGoAgent() => $_has(5);
+  @$pb.TagNumber(7)
+  void clearCodexGoAgent() => $_clearField(7);
 }
 
 class ListTranscriptsRequest extends $pb.GeneratedMessage {
