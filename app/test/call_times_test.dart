@@ -107,7 +107,7 @@ Future<void> _window(
   expect(find.text('12s'), findsWidgets); // the run's and the running call's
   expect(find.text('1m 04s'), findsOne); // the run's span
   expect(
-    find.textContaining('3m 12s · 48.1k tokens', findRichText: true),
+    find.textContaining('48.1k tokens · 3m 12s', findRichText: true),
     findsOne,
   );
   expectTextInside(tester, size.width);
@@ -289,11 +289,17 @@ void main() {
     tester,
   ) async {
     viewport(tester, const Size(800, 400));
-    final sub = subagentsOf(_items()).single;
+    // A stopped one keeps its word; a done one has none (its check).
+    final done = subagentsOf(_items()).single;
+    expect(subagentStatesNarrow(done), ['48.1k tokens · 3m 12s', '3m 12s']);
+    final sub = (
+      call: done.call.deepCopy()..subagent.state = 'stopped',
+      items: done.items,
+    );
     final states = subagentStatesNarrow(sub);
     expect(states, [
-      '3m 12s · 48.1k tokens · done',
-      '3m 12s · 48.1k tokens',
+      'stopped · 48.1k tokens · 3m 12s',
+      '48.1k tokens · 3m 12s',
       '3m 12s',
     ]);
     final width = ValueNotifier(419.0);
@@ -314,7 +320,7 @@ void main() {
     );
     final seen = <String>{};
     // The word goes whole: in the room a third of the line gives, never
-    // "3m 12s · 48.1k tokens · d…".
+    // "stopped · 48.1k tokens · 3m 1…".
     for (var w = 419.0; w >= 200; w -= 1) {
       width.value = w;
       await tester.pump();
@@ -330,7 +336,7 @@ void main() {
           .didExceedMaxLines;
       expect(states, contains(text), reason: 'at $w');
       expect(cut, isFalse, reason: '"$text" cut at $w');
-      // Down to a chat's least (a side pane open), its time and tokens.
+      // Down to a chat's least (a side pane open), its tokens and time.
       if (w >= 276) expect(text, contains('48.1k tokens'), reason: 'at $w');
       seen.add(text);
     }
@@ -338,8 +344,8 @@ void main() {
     // Wide, the word stands apart, whole.
     width.value = 600;
     await tester.pump();
-    expect(find.text('done'), findsOne);
-    expect(find.text('3m 12s · 48.1k tokens'), findsOne);
+    expect(find.text('stopped'), findsOne);
+    expect(find.text('48.1k tokens · 3m 12s'), findsOne);
   });
 
   for (final (size, label) in [
