@@ -19,12 +19,14 @@ import 'package:nushi/native.dart';
 import 'package:nushi/remote.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/theme_files.dart';
+import 'package:nushi/usage_range.dart';
 
 import '../fake_app_install.dart';
 import '../fake_daemon.dart' show FakeDaemon, loadFonts;
 import '../harness.dart';
 import '../settings_harness.dart';
 import '../spell_harness.dart' show FakeSpeller;
+import '../usage_fixtures.dart';
 
 const _sizes = [
   (Size(1700, 1000), '1700'),
@@ -168,6 +170,29 @@ _states = {
     null,
   ),
   'appearance-yours': (SettingsSection.appearance, _yours, null),
+  'usage-busy': (
+    SettingsSection.usage,
+    () => settingsFake()..usage = busyUsage(),
+    null,
+  ),
+  'usage-quarter': (
+    SettingsSection.usage,
+    () {
+      usageRange.value = UsageRange.quarter;
+      return settingsFake()..usage = quarterUsage();
+    },
+    null,
+  ),
+  'usage-empty': (
+    SettingsSection.usage,
+    () => settingsFake()..usage = emptyUsage(),
+    null,
+  ),
+  'usage-nocost': (
+    SettingsSection.usage,
+    () => settingsFake()..usage = noCostUsage(),
+    null,
+  ),
 };
 
 /// A packaged daemon and its login item in [status], as the Mac answers.
@@ -245,6 +270,31 @@ void main() {
             tester,
             find.byType(MaterialApp),
             'state-$name-$width-$theme',
+          );
+          await closeView(tester, d);
+        }, variant: onMac);
+      }
+    }
+  }
+
+  // Usage's pages whole, as tall as their content, at both widths.
+  for (final name in ['usage-busy', 'usage-nocost']) {
+    for (final (size, width) in _sizes.take(2)) {
+      for (final (brightness, theme) in _themes) {
+        testWidgets('$name whole $width $theme', (tester) async {
+          final (s, make, _) = _states[name]!;
+          final d = await _open(
+            tester,
+            make(),
+            s,
+            Size(size.width, 2300),
+            brightness,
+          );
+          expect(tester.takeException(), isNull);
+          await render(
+            tester,
+            find.byType(MaterialApp),
+            'tall-$name-$width-$theme',
           );
           await closeView(tester, d);
         }, variant: onMac);
