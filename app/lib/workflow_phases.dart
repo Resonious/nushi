@@ -11,9 +11,11 @@ import 'package:nushi/workflows.dart';
 
 /// A workflow card opened in place (#103): its description, then each
 /// phase reached, a line each, with its mark, its title and progress, and
-/// the labels of its agents running now (cut, never how many more run).
-/// All of it from the run's summary on its item, so the phone shows it
-/// too; the Workflow pane keeps the whole tree.
+/// the labels of its agents running now (cut, never how many more run);
+/// then the phases it plans and hasn't reached, each with an empty ring,
+/// its title dimmed and "planned" (ADR 0141). All of it from the run's
+/// summary on its item, so the phone shows it too; the Workflow pane keeps
+/// the whole tree.
 class WorkflowPhases extends StatelessWidget {
   const new(this.w, {super.key, this.still = false});
 
@@ -73,6 +75,10 @@ List<PhaseRow> workflowPhaseRows(Workflow w) {
   }
   final rows = <PhaseRow>[];
   for (final (i, p) in w.phases.indexed) {
+    if (p.started == 0) {
+      rows.add(_planned(p, live: live)); // the snapshot's, never reached
+      continue;
+    }
     final ended = p.done + p.failed;
     final going = math.max(0, p.started - ended);
     final shown = live ? labels[i] ?? const <String>[] : const <String>[];
@@ -103,8 +109,19 @@ List<PhaseRow> workflowPhaseRows(Workflow w) {
       more: math.max(0, w.runningCount - inPhases - none.length),
     ));
   }
-  return rows;
+  // Then what it plans and hasn't reached, in the script's order.
+  return rows..addAll([for (final p in w.planned) _planned(p, live: live)]);
 }
+
+/// A phase the run plans and hasn't reached (ADR 0141): "planned" while
+/// it runs, "not reached" once it ended.
+PhaseRow _planned(WorkflowPhase p, {required bool live}) => (
+  title: p.title,
+  progress: plannedWords(live: live),
+  state: 'planned',
+  running: const [],
+  more: 0,
+);
 
 /// One phase's line: its mark (the running dot while its agents run, as
 /// the pane's rows), "Review 4/7", then who runs, muted, cut before a
@@ -121,21 +138,26 @@ class _PhaseLine extends StatelessWidget {
     final t = theme.t;
     final muted = theme.ui(t.textMuted, size: 12);
     final running = r.state == 'running';
+    final planned = r.state == 'planned';
     final title = Text.rich(
       TextSpan(
         children: [
           TextSpan(
             text: r.title.isEmpty ? 'No phase' : r.title,
             style: theme.ui(
-              r.state == 'failed' ? t.crashed : t.text,
+              switch (r.state) {
+                'failed' => t.crashed,
+                'planned' => t.textSecondary,
+                _ => t.text,
+              },
               size: 12,
-              weight: FontWeight.w600,
+              weight: planned ? FontWeight.w400 : FontWeight.w600,
             ),
           ),
           if (r.progress.isNotEmpty)
             TextSpan(
-              text: ' ${r.progress}',
-              style: theme.ui(t.textSecondary, size: 12),
+              text: planned ? ' · ${r.progress}' : ' ${r.progress}',
+              style: planned ? muted : theme.ui(t.textSecondary, size: 12),
             ),
         ],
       ),

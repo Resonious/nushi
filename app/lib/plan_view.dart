@@ -263,7 +263,7 @@ class _PlanStepState extends State<PlanStep> with ClockRun {
         halo: t.accentSoft,
         ringing: widget.working && !still && loopRepaint != null,
       ),
-      _ => _Ring(t.textMuted),
+      _ => StepRing(t.textMuted),
     };
     final one = widget.oneLine;
     return Row(
@@ -298,26 +298,6 @@ class _PlanStepState extends State<PlanStep> with ClockRun {
       ],
     );
   }
-}
-
-/// A step to come: a ring of [color].
-class _Ring extends CustomPainter {
-  new(this.color);
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) => canvas.drawCircle(
-    size.center(Offset.zero),
-    size.shortestSide / 2 - 3.5,
-    Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..color = color,
-  );
-
-  @override
-  bool shouldRepaint(_Ring old) => old.color != color;
 }
 
 /// Whether the agent works on [plan] now: its chat's turn runs and the

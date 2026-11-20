@@ -58,6 +58,8 @@ Item workflowCall(String state, {bool stalled = false, String id = 'wf'}) {
         ),
         if (ended) WorkflowPhase(title: 'Verify', started: 3, done: 3),
       ],
+      // What its script plans and it hasn't reached yet (ADR 0141).
+      planned: ended ? null : [WorkflowPhase(title: 'Verify')],
       running: ended ? null : ['review:ui', 'review:perf', 'review:api'],
       runningPhases: ended ? null : [1, 1, 1],
       runningCount: ended ? 0 : 3,
@@ -200,7 +202,11 @@ void main() {
     final rows = workflowPhaseRows(workflowCall('running').workflow);
     expect(
       [for (final r in rows) (r.title, r.progress, r.state)],
-      [('Map', '2/2', 'done'), ('Review', '4/7', 'running')],
+      [
+        ('Map', '2/2', 'done'),
+        ('Review', '4/7', 'running'),
+        ('Verify', 'planned', 'planned'),
+      ],
     );
     expect(rows[1].running, ['review:ui', 'review:perf', 'review:api']);
     expect(rows[1].more, 0);
@@ -208,6 +214,26 @@ void main() {
     final stopped = workflowCall('stopped').workflow
       ..phases.add(WorkflowPhase(title: 'Fix', started: 2, done: 1));
     expect(workflowPhaseRows(stopped).last.state, 'stopped');
+    // One its list has and it never reached isn't done (ADR 0141), nor
+    // where it is.
+    final unreached = workflowCall('stopped').workflow
+      ..phases.add(WorkflowPhase(title: 'Ship'))
+      ..planned.add(WorkflowPhase(title: 'Tidy'));
+    expect(
+      [
+        for (final r in workflowPhaseRows(unreached).skip(3))
+          (r.title, r.progress, r.state),
+      ],
+      [('Ship', 'not reached', 'planned'), ('Tidy', 'not reached', 'planned')],
+    );
+    final going = Workflow(
+      state: 'running',
+      phases: [
+        WorkflowPhase(title: 'Map', started: 2, done: 2),
+        WorkflowPhase(title: 'Ship'),
+      ],
+    );
+    expect(currentPhase(going)?.title, 'Map');
     // More run than the summary names; some in no phase.
     final many = Workflow(
       state: 'running',
