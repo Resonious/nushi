@@ -2911,6 +2911,7 @@ const RelatedWorktree$json = {
     {'1': 'call_id', '3': 5, '4': 1, '5': 9, '10': 'callId'},
     {'1': 'state', '3': 6, '4': 1, '5': 9, '10': 'state'},
     {'1': 'merged', '3': 7, '4': 1, '5': 8, '10': 'merged'},
+    {'1': 'pull_merged', '3': 8, '4': 1, '5': 8, '10': 'pullMerged'},
   ],
 };
 
@@ -2919,7 +2920,8 @@ final $typed_data.Uint8List relatedWorktreeDescriptor = $convert.base64Decode(
     'Cg9SZWxhdGVkV29ya3RyZWUSEgoEcGF0aBgBIAEoCVIEcGF0aBIWCgZicmFuY2gYAiABKAlSBm'
     'JyYW5jaBIfCgtiYXNlX2NvbW1pdBgDIAEoCVIKYmFzZUNvbW1pdBIbCglsYXN0X2hlYWQYBCAB'
     'KAlSCGxhc3RIZWFkEhcKB2NhbGxfaWQYBSABKAlSBmNhbGxJZBIUCgVzdGF0ZRgGIAEoCVIFc3'
-    'RhdGUSFgoGbWVyZ2VkGAcgASgIUgZtZXJnZWQ=');
+    'RhdGUSFgoGbWVyZ2VkGAcgASgIUgZtZXJnZWQSHwoLcHVsbF9tZXJnZWQYCCABKAhSCnB1bGxN'
+    'ZXJnZWQ=');
 
 @$core.Deprecated('Use getRelatedWorktreeStatsRequestDescriptor instead')
 const GetRelatedWorktreeStatsRequest$json = {

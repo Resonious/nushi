@@ -12330,6 +12330,7 @@ class RelatedWorktree extends $pb.GeneratedMessage {
     $core.String? callId,
     $core.String? state,
     $core.bool? merged,
+    $core.bool? pullMerged,
   }) {
     final result = RelatedWorktree._();
     if (path != null) result.path = path;
@@ -12339,6 +12340,7 @@ class RelatedWorktree extends $pb.GeneratedMessage {
     if (callId != null) result.callId = callId;
     if (state != null) result.state = state;
     if (merged != null) result.merged = merged;
+    if (pullMerged != null) result.pullMerged = pullMerged;
     return result;
   }
 
@@ -12362,6 +12364,7 @@ class RelatedWorktree extends $pb.GeneratedMessage {
     ..aOS(5, _omitFieldNames ? '' : 'callId')
     ..aOS(6, _omitFieldNames ? '' : 'state')
     ..aOB(7, _omitFieldNames ? '' : 'merged')
+    ..aOB(8, _omitFieldNames ? '' : 'pullMerged')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -12455,6 +12458,19 @@ class RelatedWorktree extends $pb.GeneratedMessage {
   $core.bool hasMerged() => $_has(6);
   @$pb.TagNumber(7)
   void clearMerged() => $_clearField(7);
+
+  /// GitHub has a merged pull request with branch as its head, opened in
+  /// the chat's life: a squash merge, which merged can't say. Asked once,
+  /// after it was removed with commits of its own that merged doesn't show
+  /// (API 135).
+  @$pb.TagNumber(8)
+  $core.bool get pullMerged => $_getBF(7);
+  @$pb.TagNumber(8)
+  set pullMerged($core.bool value) => $_setBool(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasPullMerged() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearPullMerged() => $_clearField(8);
 }
 
 class GetRelatedWorktreeStatsRequest extends $pb.GeneratedMessage {

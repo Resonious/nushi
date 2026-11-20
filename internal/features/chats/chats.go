@@ -38,7 +38,7 @@ type Service struct {
 
 	terminals Terminals   // set once at startup, if there are any
 	servers   Servers     // set once at startup, if there are any
-	gitHub    GitHubHosts // set once at startup
+	gitHub    GitHub      // set once at startup
 	viewers   Viewers     // Options', for chats done while nobody looked (seen.go)
 	procs     Processes   // Options', for stopping background commands
 	prefs     SleepPrefs  // Options', if chats sleep
@@ -111,15 +111,18 @@ type Servers interface {
 // to be made first.
 func (s *Service) UseServers(sv Servers) { s.servers = sv }
 
-// GitHubHosts are the GitHub hosts Nushi gives a token to
-// (internal/features/github): a pull request a chat's tool call opened on
-// one is linked to the chat (ADR 0117).
-type GitHubHosts interface {
+// GitHub is what the chats ask of GitHub (internal/features/github): the
+// hosts Nushi gives a token to, as a pull request a chat's tool call
+// opened on one is linked to the chat (ADR 0117); and whether a related
+// worktree's branch was merged by a pull request opened at or after since,
+// which a squash merge leaves git unable to see (issue 83).
+type GitHub interface {
 	Known(host string) bool
+	BranchMerged(ctx context.Context, folder, branch string, since time.Time) (bool, error)
 }
 
-// UseGitHub tells the chats about GitHub's hosts.
-func (s *Service) UseGitHub(g GitHubHosts) { s.gitHub = g }
+// UseGitHub tells the chats about GitHub.
+func (s *Service) UseGitHub(g GitHub) { s.gitHub = g }
 
 // gitHubHost is GitHubHosts.Known, false where there's none.
 func (s *Service) gitHubHost(host string) bool {
