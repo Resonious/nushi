@@ -46,7 +46,6 @@ void main() {
       "item's card in the box", () {
     final before = threadReply(_thread);
     cardAsks.value = {CardAsk.thread.name: 'Fix it and commit.'};
-    addTearDown(() => cardAsks.value = const {});
     final after = threadReply(_thread);
     expect(after.text, isNot(before.text), reason: 'the new words');
     expect(inBox([before], after), isTrue);

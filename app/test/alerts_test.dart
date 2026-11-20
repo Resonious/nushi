@@ -43,12 +43,6 @@ _Swift _fake() {
   return swift;
 }
 
-void _defaults() {
-  alertNeedsYou.value = alertFinished.value = alertFailed.value = true;
-  alertSound.value = false;
-  dockBadge.value = true;
-}
-
 EventsResponse _status(
   String id, {
   bool running = false,
@@ -96,8 +90,6 @@ Future<(FakeDaemon, Daemon, ChatAlerts)> _connect(
 }
 
 void main() {
-  setUp(_defaults);
-
   testWidgets('a permission prompt and a question are posted once, in the '
       "phone's words, the chat's title under them", (tester) async {
     final swift = _fake();

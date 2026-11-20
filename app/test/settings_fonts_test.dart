@@ -379,7 +379,6 @@ void main() {
     viewport(tester, const Size(1700, 1000), brightness: Brightness.dark);
     clock = () => demoNow;
     Collapsible.opened.add('e2');
-    addTearDown(Collapsible.opened.clear);
     final fake = FakeDaemon(demoChats())
       ..answer = (input) => switch (input) {
         GetChatRequest(:final chatId) when chatId == heroChat.id =>

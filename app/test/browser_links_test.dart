@@ -67,7 +67,6 @@ void main() {
   }) async {
     viewport(tester, Size(width, 900));
     showDetails.value = false;
-    paneWidths.value = {};
     final c = chat('c', 'claude', 'Build the tea shop');
     final fake = FakeDaemon([c])
       ..answer = (input) => input is GetChatRequest

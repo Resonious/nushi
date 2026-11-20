@@ -240,8 +240,6 @@ void main() {
     tester,
   ) async {
     final (_, d) = await _daemon(tester);
-    final known = agentList.value;
-    addTearDown(() => agentList.value = known);
     agentList.value = {};
     final list = McpServers.of(d, '/late-agents', agent: 'ante');
     await tester.pumpAndSettle();

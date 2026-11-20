@@ -343,7 +343,6 @@ void main() {
     // differently on CI's Mac than here (1% of a 220-wide card), and the
     // page's golden below holds the cards.
     testWidgets('golden, the page, $name', (tester) async {
-      colorTheme.value = 'nushi';
       final d = await FakeDaemon([]).connect(tester);
       await pumpSettings(
         tester,

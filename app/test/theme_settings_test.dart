@@ -341,7 +341,6 @@ void main() {
     ('light', Tokens.light),
   ]) {
     testWidgets('golden, the theme picker, $name', (tester) async {
-      colorTheme.value = 'nushi';
       final d = await FakeDaemon([]).connect(tester);
       await pumpSettings(
         tester,
