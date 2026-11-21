@@ -20,18 +20,19 @@ import 'long_chat.dart';
 import 'paged_chat.dart';
 
 /// The window on a long chat (100 turns, over a thousand items) whose
-/// fifth turn's reply, far above what's loaded, and 98th, loaded, say
-/// "needle".
+/// fifth turn's reply ([far]'s), far above what's loaded, and 98th, loaded,
+/// say "needle".
 Future<(Daemon, PagedChat, FakeDaemon)> _window(
   WidgetTester tester, {
   Size size = const Size(1400, 900),
   Brightness brightness = Brightness.dark,
+  int far = 5,
 }) async {
   viewport(tester, size, brightness: brightness);
   showDetails.value = false;
   final c = chat('c', 'claude', 'A long chat');
   final items = longChat('c', turns: 100);
-  for (final n in [5, 98]) {
+  for (final n in [far, 98]) {
     final i = items.indexWhere((it) => it.id == 'c-a$n');
     items[i] = items[i].deepCopy()
       ..text = 'Turn $n left a needle in the upload path.\n\n${items[i].text}';
@@ -164,6 +165,29 @@ void main() {
     expect(_shows(tester, 'Turn 98 left a needle'), isTrue);
     await closeView(tester, d);
   }, variant: onMac);
+
+  // Each a part that fills in over several frames once it's loaded: the
+  // match's entry is built before the find has looked in it.
+  for (final turn in [60, 70, 76, 77]) {
+    testWidgets('a step to a match in turn $turn, above what’s loaded, '
+        'lands on it', (tester) async {
+      final (d, _, _) = await _window(tester, far: turn);
+      final c = _chat(d);
+      c.find
+        ..open()
+        ..query = 'needle';
+      await _settle(tester);
+      expect(c.find.count, '2 of 2');
+      c.find.step(1);
+      expect(ChatFind.farItem(c.find.current), 'c-a$turn');
+      await _settle(tester);
+      await _settle(tester);
+      expect(c.find.count, '1 of 2');
+      expect(c.find.current, startsWith('c-a$turn '));
+      expect(_shows(tester, 'Turn $turn left a needle'), isTrue);
+      await closeView(tester, d);
+    }, variant: onMac);
+  }
 
   testWidgets('typing a word that is everywhere goes to its first match '
       'loaded and loads nothing; scrolling up from there loads the page '

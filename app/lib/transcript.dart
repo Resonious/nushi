@@ -900,12 +900,16 @@ class _TranscriptState extends State<Transcript> {
       _tail = null;
     }
     _laidOut = entries.sublist(from);
-    _entryOf = query.isEmpty
-        ? const {}
-        : {
-            for (final e in _laidOut)
-              for (final it in entryItems(e)) it.id: _key(e),
-          };
+    // As the find's marks (below): while it fills in, an entry built has
+    // no marks yet, and a step to a match in it would land nowhere.
+    if (query.isEmpty) {
+      _entryOf = const {};
+    } else if (_tail == null) {
+      _entryOf = {
+        for (final e in _laidOut)
+          for (final it in entryItems(e)) it.id: _key(e),
+      };
+    }
     _keepPlace(_laidOut, header: header != null);
     _planMoves();
     if (_goTo != null) {
