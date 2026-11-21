@@ -58,11 +58,16 @@ type Copies interface {
 	List() ([]model.TranscriptCopy, error)
 }
 
+// reopenNotices are the statuses of a failed reopen's notice, each of
+// failedLocked's reasons.
+var reopenNotices = []string{"reopen_failed", "not_ready", "folder_gone", "sign_in"}
+
 // shownOnly says an item is the chat's state rather than its history:
 // notices of how its reopen went, and those the merge of a copy and the
 // agent's replay draws. The copy never has them.
 func shownOnly(it model.Item) bool {
-	return it.Kind == model.Notice && slices.Contains([]string{"reopen_failed", "not_ready", "folder_gone", "session_gone", compactedNotice, differsNotice}, it.Status)
+	return it.Kind == model.Notice && (slices.Contains(reopenNotices, it.Status) ||
+		slices.Contains([]string{"session_gone", compactedNotice, differsNotice}, it.Status))
 }
 
 // settled says an item is as it will stay, as far as the transcript can
