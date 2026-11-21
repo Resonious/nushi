@@ -2,6 +2,10 @@ part of 'daemon.dart';
 
 /// Starting, opening and moving chats, past a folder's trust card.
 extension DaemonStart on Daemon {
+  /// [agent]'s sign-in through its own login, as it stands (ADR 0145).
+  SignInRun signInOf(String agent) =>
+      signIns[agent] ??= SignInRun(client, agent);
+
   /// Whether a chat with [agent] may start or move into [folder] (doing
   /// [action]): when the folder brings code for it to run that nobody trusted,
   /// [trustAsk] shows it and this waits for "Start anyway", which the

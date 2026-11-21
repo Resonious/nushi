@@ -32,6 +32,7 @@ List<Agent> readyAgents() => [
       ready: true,
       mcpUserOnly: name == 'ante',
       goAgentSwitch: name == 'codex',
+      signIn: name == 'codex' ? 'codex login' : '',
     ),
 ];
 
@@ -61,6 +62,16 @@ class FakeDaemon implements Transport {
   Settings settings = Settings(sleepAfterMinutes: 30);
   final setSettings = <Settings>[];
   String? startError;
+
+  /// The ways to sign in a [startError] carries, as a start the agent
+  /// refused for want of a sign-in does (API 139).
+  AgentSignIn? startSignIn;
+
+  /// Each SignInAgent asked for. One waits for [signInGate] when set, and
+  /// fails with the message it completes with (null: signed in), or as
+  /// Canceled once its call is cancelled.
+  final signIns = <SignInAgentRequest>[];
+  Completer<String?>? signInGate;
 
   /// Answers calls the fake doesn't know (Jira's, git's): an answer (or a
   /// Future of one, to answer later), or null for the empty one; a thrown
@@ -180,8 +191,32 @@ class FakeDaemon implements Transport {
           Code.failedPrecondition,
           e,
           metadata: Headers()..add('nushi-reason', 'agent_start'),
+          details: [
+            if (startSignIn case final s?)
+              ErrorDetail(s.info_.qualifiedMessageName, s.writeToBuffer()),
+          ],
         );
       }
+    }
+    if (input is SignInAgentRequest) {
+      signIns.add(input);
+      final waits = <Future<Object?>>[
+        if (signInGate case final g?) g.future,
+        if (options?.signal case final s?) s.future,
+      ];
+      final out = waits.isEmpty ? null : await Future.any(waits);
+      switch (out) {
+        case ConnectException():
+          throw ConnectException(Code.canceled, 'operation canceled');
+        case final String why:
+          throw ConnectException(Code.failedPrecondition, why);
+      }
+      return UnaryResponse(
+        spec,
+        Headers(),
+        SignInAgentResponse() as O,
+        Headers(),
+      );
     }
     if (input is WriteChatFileRequest && files.containsKey(input.path)) {
       calls.add(input);

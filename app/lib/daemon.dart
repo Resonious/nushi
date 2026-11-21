@@ -28,6 +28,7 @@ import 'package:nushi/project_icons.dart';
 import 'package:nushi/remote.dart';
 import 'package:nushi/review.dart';
 import 'package:nushi/settings.dart';
+import 'package:nushi/sign_in_run.dart';
 import 'package:nushi/terminals.dart';
 import 'package:nushi/trust_ask.dart';
 import 'package:nushi/visits.dart';
@@ -336,6 +337,10 @@ class Daemon extends ChangeNotifier {
   /// the daemon said ("couldn't start Ante: …"); a start that works clears
   /// it.
   final cantStart = <String, String>{};
+
+  /// Each agent's sign-in through its own login, by name, once one began
+  /// (`signInOf`, ADR 0145).
+  final signIns = <String, SignInRun>{};
 
   final _disposers = <VoidCallback>[];
 
