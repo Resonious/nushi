@@ -71,11 +71,26 @@ CheckPainter? _check(WidgetTester tester, Type under) => tester
     .whereType<CheckPainter>()
     .firstOrNull;
 
+/// How much of TurnStatus's line shows: 1 unless it's fading.
+double _shown(WidgetTester tester) =>
+    tester
+        .widgetList<Opacity>(
+          find.descendant(
+            of: find.byType(TurnStatus),
+            matching: find.byType(Opacity),
+          ),
+        )
+        .firstOrNull
+        ?.opacity ??
+    1;
+
 void main() {
   setUpAll(loadFonts);
 
   testWidgets('a long turn that ends while you watch leaves a receipt: the '
-      'check draws, sparks fly, then the line folds away', (tester) async {
+      'check draws, sparks fly, then the line fades, its room kept', (
+    tester,
+  ) async {
     final chat = _working(const Duration(seconds: 12));
     await tester.pumpWidget(_app(TurnStatus(chat)));
     expect(find.text('Writing'), findsOneWidget);
@@ -95,19 +110,29 @@ void main() {
     expect(check.drawn, 1);
     expect(check.sparks!.done, isTrue);
 
-    // Folding: shorter, then gone.
+    // Fading: fainter, then gone; its room stays, so nothing moves.
     await tester.pump(const Duration(milliseconds: 800));
-    expect(
-      tester.getSize(find.byType(TurnStatus)).height,
-      inExclusiveRange(0, line),
-    );
+    expect(_shown(tester), inExclusiveRange(0, 1));
+    expect(tester.getSize(find.byType(TurnStatus)).height, line);
     await tester.pumpAndSettle();
     expect(find.textContaining('Done in'), findsNothing);
+    expect(tester.getSize(find.byType(TurnStatus)).height, line);
+  });
+
+  testWidgets('in a short window the box needs the room: the line folds '
+      'away between turns', (tester) async {
+    viewport(tester, const Size(720, TurnStatus.roomFrom - 80));
+    final chat = _working(const Duration(seconds: 4));
+    await tester.pumpWidget(_app(TurnStatus(chat)));
+    expect(tester.getSize(find.byType(TurnStatus)).height, greaterThan(15));
+    _end(chat);
+    await tester.pump();
+    await tester.pumpAndSettle();
     expect(tester.getSize(find.byType(TurnStatus)).height, 0);
   });
 
   testWidgets('a short, stopped or failed turn, or one ending unseen, gets '
-      'no receipt: the line just folds', (tester) async {
+      'no receipt: the line just fades, its room kept', (tester) async {
     Future<void> noReceipt(ChatState chat, {bool stopped = false}) async {
       await tester.pumpWidget(_app(TurnStatus(chat)));
       _end(chat, stopped: stopped);
@@ -115,8 +140,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
       expect(find.textContaining('Done in'), findsNothing);
       expect(_check(tester, TurnStatus), isNull);
+      final line = tester.getSize(find.byType(TurnStatus)).height;
       await tester.pumpAndSettle();
-      expect(tester.getSize(find.byType(TurnStatus)).height, 0);
+      expect(find.text('Writing'), findsNothing);
+      expect(tester.getSize(find.byType(TurnStatus)).height, line);
       await tester.pumpWidget(const SizedBox());
     }
 
@@ -294,7 +321,9 @@ void main() {
     expect(find.textContaining('Done in'), findsNothing);
     expect(_check(tester, TurnStatus), isNull);
     expect(_check(tester, ChatDot), isNull);
+    final line = tester.getSize(find.byType(TurnStatus)).height;
     await tester.pumpAndSettle();
-    expect(tester.getSize(find.byType(TurnStatus)).height, 0);
+    expect(find.text('Opening the session'), findsNothing);
+    expect(tester.getSize(find.byType(TurnStatus)).height, line);
   });
 }

@@ -581,6 +581,13 @@ class ChatState extends ChangeNotifier {
   bool get fresh =>
       loaded && !items.any((i) => i.kind == ItemKind.ITEM_KIND_USER_MESSAGE);
 
+  /// Whether it has no messages yet, or (its snapshot not in yet) likely
+  /// has none: none was ever sent to it, by the daemon's word ([updated]
+  /// is still [created]). What only a chat without messages shows (the
+  /// bar under the box) takes its room from the first frame, not as the
+  /// snapshot comes.
+  bool get likelyFresh => loaded ? fresh : updated == created;
+
   /// Whether the snapshot is in; until then events wait in [_early].
   bool loaded = false;
   bool loading = false;
