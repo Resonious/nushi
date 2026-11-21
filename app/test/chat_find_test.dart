@@ -176,8 +176,8 @@ void main() {
       return FindInChatResponse();
     };
     await _type(tester, f, 'e');
-    f.found(['l1 0', 'l1 1', 'l2 0', 'l2 1']);
     f
+      ..found(['l1 0', 'l1 1', 'l2 0', 'l2 1'])
       ..step(1)
       ..step(1);
     final (current, count, ask) = (f.current, f.count, f.asked);
