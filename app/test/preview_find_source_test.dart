@@ -109,6 +109,16 @@ void main() {
     await endEditor(tester, d);
   }, variant: onMac);
 
+  testWidgets('closed while a step brings its match into view, nothing '
+      'throws', (tester) async {
+    final d = await _open(tester);
+    await _openFind(tester);
+    await look(tester, 'needle');
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter); // its reveal waits
+    await closeView(tester, d); // for the frame that closes it
+    expect(tester.takeException(), isNull);
+  }, variant: onMac);
+
   testWidgets('the right-click menu has Find…', (tester) async {
     final d = await _open(tester);
     await tester.tap(_line('line 10: hay'), buttons: kSecondaryButton);

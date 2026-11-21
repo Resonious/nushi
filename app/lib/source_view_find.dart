@@ -54,6 +54,7 @@ extension on _SourceViewState {
   /// lines laid out, and again after the frame, [tries] times at most.
   void _revealHit(_Hit hit, int tries) =>
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return; // closed meanwhile: its context is gone
         final s = _sliver(wrapped: widget.wrap);
         final view = context.findRenderObject();
         if (!mounted || !_down.hasClients || tries == 0) return;

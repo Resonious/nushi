@@ -185,6 +185,7 @@ class _CsvTableState extends State<CsvTable> with FindInSlot<CsvTable> {
   /// it's laid out, onto the match ([revealFound]), until then near it.
   void _reveal(_CellHit hit, int tries) =>
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return; // closed meanwhile: its context is gone
         final view = context.findRenderObject();
         if (!mounted || tries == 0 || view is! RenderBox) return;
         RenderParagraph? p;
