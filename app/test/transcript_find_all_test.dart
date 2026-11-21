@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:fixnum/fixnum.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
@@ -188,6 +189,37 @@ void main() {
       await closeView(tester, d);
     }, variant: onMac);
   }
+
+  testWidgets('a typed query whose first match is at the very top of '
+      'what’s loaded loads nothing; a wheel up there, which moves nothing, '
+      'loads the page before', (tester) async {
+    final (d, paged, _) = await _window(tester);
+    final c = _chat(d);
+    final older = c.older;
+    final first = c.items.firstWhere((it) => it.text.trim().isNotEmpty);
+    c.find
+      ..open()
+      ..query = first.text.trim().split('\n').first;
+    await _settle(tester);
+    expect(c.find.hits, isNotEmpty);
+    final p = tester.state<ScrollableState>(
+      find
+          .descendant(
+            of: find.byType(SelectionArea),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(p.position.pixels, 0, reason: 'the list is at its top');
+    expect(paged.pages, isEmpty);
+    final at = tester.getCenter(find.byType(SelectionArea));
+    final wheel = TestPointer(1, PointerDeviceKind.mouse)..hover(at);
+    await tester.sendEventToBinding(wheel.scroll(const Offset(0, -120)));
+    await _settle(tester);
+    expect(paged.pages, isNotEmpty);
+    expect(c.older, lessThan(older));
+    await closeView(tester, d);
+  }, variant: onMac);
 
   testWidgets('typing a word that is everywhere goes to its first match '
       'loaded and loads nothing; scrolling up from there loads the page '

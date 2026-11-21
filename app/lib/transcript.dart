@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:markdown_view/markdown_view.dart';
@@ -195,6 +196,10 @@ class _TranscriptState extends State<Transcript> {
     if (n is ScrollUpdateNotification && n.depth == 0 && !_follower.jumping) {
       _typedTo = false;
     }
+    // At the top the list can't move, so a drag up there is no scroll.
+    if (n is OverscrollNotification && n.depth == 0 && n.overscroll < 0) {
+      _pulledUp();
+    }
     if (near != null &&
         !_typedTo &&
         near.extentBefore < near.viewportDimension) {
@@ -293,6 +298,19 @@ class _TranscriptState extends State<Transcript> {
   }
 
   /// The user scrolled to within a screen of the top: the page before.
+  /// The user scrolls up with the list at its top, where no scroll tells
+  /// of it: where a typed find left the list no longer holds back the page
+  /// before.
+  void _pulledUp() {
+    if (!_typedTo) return;
+    final scroll = _follower.scroll;
+    if (!scroll.hasClients) return;
+    final p = scroll.position;
+    if (p.pixels > p.minScrollExtent) return;
+    _typedTo = false;
+    _nearTop();
+  }
+
   /// Not while the list fills in (its top isn't built yet).
   /// What shows stays put as items come in above it.
   void _nearTop() {
@@ -970,51 +988,59 @@ class _TranscriptState extends State<Transcript> {
               // chunk rebuilds only its message.
               child: NotificationListener(
                 onNotification: _onScroll,
-                // Unseen while it fills in up to a kept place, rather than
-                // showing each frame what came in above.
-                child: Opacity(
-                  opacity: _restore == null ? 1 : 0,
-                  child: _ownBar(
-                    context,
-                    SingleChildScrollView(
-                      controller: _follower.scroll,
-                      padding: EdgeInsets.only(
-                        top: _padTop = _roomAbove ? _findBarHeight + 8 : 2,
-                        bottom: 14,
-                      ),
-                      child: _codeBars(
-                        behavior,
-                        Column(
-                          key: _column,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (header case final h?)
-                              Padding(padding: sides, child: h),
-                            // A live card goes with its entry: the column's
-                            // children stay one an entry.
-                            for (final (i, e) in entries.indexed.skip(from))
-                              _withLiveCards(
-                                context,
-                                e,
-                                sides,
-                                _entry(
-                                  before,
+                // A wheel up at the top moves nothing and notifies nothing.
+                child: Listener(
+                  onPointerSignal: (e) {
+                    if (e is PointerScrollEvent && e.scrollDelta.dy < 0) {
+                      _pulledUp();
+                    }
+                  },
+                  // Unseen while it fills in up to a kept place, rather than
+                  // showing each frame what came in above.
+                  child: Opacity(
+                    opacity: _restore == null ? 1 : 0,
+                    child: _ownBar(
+                      context,
+                      SingleChildScrollView(
+                        controller: _follower.scroll,
+                        padding: EdgeInsets.only(
+                          top: _padTop = _roomAbove ? _findBarHeight + 8 : 2,
+                          bottom: 14,
+                        ),
+                        child: _codeBars(
+                          behavior,
+                          Column(
+                            key: _column,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (header case final h?)
+                                Padding(padding: sides, child: h),
+                              // A live card goes with its entry: the column's
+                              // children stay one an entry.
+                              for (final (i, e) in entries.indexed.skip(from))
+                                _withLiveCards(
+                                  context,
                                   e,
-                                  live: live && i == entries.length - 1,
-                                  still: chat.waiting,
-                                  top: entryGap(
-                                    entries,
-                                    i,
-                                    header: header != null,
-                                    phone: TouchTargets.of(context),
+                                  sides,
+                                  _entry(
+                                    before,
+                                    e,
+                                    live: live && i == entries.length - 1,
+                                    still: chat.waiting,
+                                    top: entryGap(
+                                      entries,
+                                      i,
+                                      header: header != null,
+                                      phone: TouchTargets.of(context),
+                                    ),
+                                    sides: sides,
+                                    rise: arrived.contains(_key(e)),
                                   ),
-                                  sides: sides,
-                                  rise: arrived.contains(_key(e)),
                                 ),
-                              ),
-                            if (widget.footer case final f?)
-                              Padding(padding: sides, child: f),
-                          ],
+                              if (widget.footer case final f?)
+                                Padding(padding: sides, child: f),
+                            ],
+                          ),
                         ),
                       ),
                     ),
