@@ -1,6 +1,8 @@
 package github
 
 import (
+	"context"
+	"errors"
 	"slices"
 	"testing"
 	"time"
@@ -124,5 +126,22 @@ func TestBranchMerged(t *testing.T) {
 	asked := len(c.asked)
 	if got, err := w.s.BranchMerged(ctx, "lab", "squashed", time.Time{}); err != nil || got || len(c.asked) != asked {
 		t.Errorf("not a host with a sign-in: %v %v %v", got, err, c.asked[asked:])
+	}
+}
+
+// A folder whose GitHub host couldn't be asked (the keychain waiting for
+// an OK) gets an error, not "not merged", so the question is asked again
+// later; one whose remotes couldn't be read too.
+func TestBranchMergedUnasked(t *testing.T) {
+	w := newWorld(t)
+	w.store.hosts = []string{"github.com"}
+	w.tokens.Items["github.com"] = "ghp_pasted"
+	w.tokens.Locked = true
+	if got, err := w.s.BranchMerged(t.Context(), "nushi", "squashed", time.Time{}); err == nil || got {
+		t.Errorf("a host that couldn't be asked: %v %v", got, err)
+	}
+	w.s.Remotes = func(context.Context, string) (map[string]string, error) { return nil, errors.New("git failed") }
+	if got, err := w.s.BranchMerged(t.Context(), "nushi", "squashed", time.Time{}); err == nil || got {
+		t.Errorf("remotes unread: %v %v", got, err)
 	}
 }

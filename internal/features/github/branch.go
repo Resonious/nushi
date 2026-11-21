@@ -51,7 +51,7 @@ func (s *Service) FindPull(ctx context.Context, folder string, poll bool, look f
 	if branch == "" {
 		return BranchPull{}, nil
 	}
-	repos := s.branchRepos(ctx, folder, pushed)
+	repos := s.branchRepos(ctx, folder, pushed, nil)
 	if len(repos) == 0 {
 		return BranchPull{}, nil
 	}
@@ -80,15 +80,21 @@ func (s *Service) FindPull(ctx context.Context, folder string, poll bool, look f
 // squash merge (issue 83). It's asked of folder's GitHub repositories as
 // FindPull asks, with the head owned by the one folder pushes to, else
 // origin's: the branch needn't be checked out, nor be the default
-// branch's. A folder with no repository on a host signed in to says false
-// without asking.
+// branch's. A folder with no repository on a GitHub host Nushi knows says
+// false without asking; one whose remotes couldn't be read, or whose
+// GitHub hosts couldn't be asked (no token yet, the keychain waiting for
+// an OK), says why, so the question is asked again later.
 func (s *Service) BranchMerged(ctx context.Context, folder, branch string, since time.Time) (bool, error) {
 	if branch == "" {
 		return false, nil
 	}
 	_, pushed := s.Head(ctx, folder)
-	repos := s.branchRepos(ctx, folder, pushed)
 	var errs []error
+	repos := s.branchRepos(ctx, folder, pushed, &errs)
+	if len(repos) == 0 && len(errs) > 0 {
+		return false, errors.Join(errs...)
+	}
+	errs = nil
 	for _, pulls := range s.branchHeads(ctx, repos, branch, false, &errs) {
 		if slices.ContainsFunc(pulls, func(p githubapi.HeadPull) bool { return p.State == "merged" && !p.Created.Before(since) }) {
 			return true, nil
@@ -102,10 +108,18 @@ type headRepo struct{ host, name string }
 
 // branchRepos are folder's GitHub repositories on a host signed in to:
 // its remotes, the one pushed to (pushed) first, then origin, upstream
-// and the rest by name.
-func (s *Service) branchRepos(ctx context.Context, folder, pushed string) []headRepo {
+// and the rest by name. Why a remote's repository couldn't be had, but
+// for a host that isn't GitHub's (unknownHost), goes in errs (nil: none
+// wanted).
+func (s *Service) branchRepos(ctx context.Context, folder, pushed string, errs *[]error) []headRepo {
+	failed := func(err error) {
+		if errs != nil {
+			*errs = append(*errs, err)
+		}
+	}
 	remotes, err := s.Remotes(ctx, folder)
 	if err != nil {
+		failed(err)
 		return nil // not a repository: nothing to find
 	}
 	names := slices.Collect(maps.Keys(remotes))
@@ -128,6 +142,9 @@ func (s *Service) branchRepos(ctx context.Context, folder, pushed string) []head
 			continue
 		}
 		if _, err := s.host(ctx, h, false); err != nil {
+			if _, ok := errors.AsType[unknownHost](err); !ok {
+				failed(err)
+			}
 			continue // no sign-in for it, or not a host Nushi gives a token to
 		}
 		repos = append(repos, headRepo{h, r})
