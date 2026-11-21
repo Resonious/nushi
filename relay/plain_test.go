@@ -6,6 +6,9 @@ import (
 	"net"
 	"net/http"
 	"testing"
+	"time"
+
+	"github.com/afrase/nushi/internal/testcheck"
 )
 
 // The plain connections' counts key an IPv6 address by its /64 (PlainPerIP)
@@ -51,7 +54,8 @@ func TestPlainPerNetBounds(t *testing.T) {
 
 // ask sends one request on a new connection to addr as if from client
 // (through the loopback proxy's X-Test-IP header) and gives its status,
-// keeping the connection open until the test ends.
+// keeping the connection open until the test ends; 0 is one closed
+// without an answer.
 func ask(t *testing.T, addr, path, client string) int {
 	t.Helper()
 	c, err := net.Dial("tcp", addr)
@@ -59,10 +63,11 @@ func ask(t *testing.T, addr, path, client string) int {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = c.Close() })
+	testcheck.NoErr(t, c.SetDeadline(time.Now().Add(30*time.Second)))
 	_, _ = fmt.Fprintf(c, "GET %s HTTP/1.1\r\nHost: relay\r\nX-Test-IP: %s\r\n\r\n", path, client) // a refusal may close it first: the status says
 	resp, err := http.ReadResponse(bufio.NewReader(c), nil)
 	if err != nil {
-		t.Fatal(err)
+		return 0
 	}
 	_ = resp.Body.Close()
 	return resp.StatusCode
