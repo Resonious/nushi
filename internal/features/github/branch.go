@@ -109,7 +109,7 @@ type headRepo struct{ host, name string }
 // branchRepos are folder's GitHub repositories on a host signed in to:
 // its remotes, the one pushed to (pushed) first, then origin, upstream
 // and the rest by name. Why a remote's repository couldn't be had, but
-// for a host that isn't GitHub's (unknownHost), goes in errs (nil: none
+// for a host that isn't GitHub's (unknownHostError), goes in errs (nil: none
 // wanted).
 func (s *Service) branchRepos(ctx context.Context, folder, pushed string, errs *[]error) []headRepo {
 	failed := func(err error) {
@@ -142,7 +142,7 @@ func (s *Service) branchRepos(ctx context.Context, folder, pushed string, errs *
 			continue
 		}
 		if _, err := s.host(ctx, h, false); err != nil {
-			if _, ok := errors.AsType[unknownHost](err); !ok {
+			if _, ok := errors.AsType[unknownHostError](err); !ok {
 				failed(err)
 			}
 			continue // no sign-in for it, or not a host Nushi gives a token to
