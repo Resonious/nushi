@@ -114,4 +114,56 @@ void main() {
     expect(f.current, 'far i4999 1999');
     expect(f.pending, 'far i4999 1999');
   });
+
+  testWidgets('letters typed one after another are looked for once, after '
+      'a pause; ⏎ looks at once, and so does clearing the field', (
+    tester,
+  ) async {
+    final asked = <String>[];
+    final (f, _) = _find(const []);
+    f
+      ..ask = (r, signal) async {
+        asked.add(r.text);
+        return FindInChatResponse();
+      }
+      ..open();
+    var looks = 0;
+    var was = f.query;
+    f.addListener(() {
+      if (f.query != was) looks++;
+      was = f.query;
+    });
+    for (final q in ['f', 'fo', 'foo']) {
+      f.query = q;
+      await tester.pump(ChatFind.pause ~/ 2);
+      expect(f.query, '', reason: 'nothing marked, nowhere gone to');
+      expect(f.looking, isTrue, reason: 'the chat keeps what it loaded');
+    }
+    await tester.pump(ChatFind.pause);
+    expect(f.query, 'foo');
+    expect(looks, 1);
+    expect(asked, ['foo']);
+
+    f
+      ..query = 'food'
+      ..step(1); // ⏎ before the pause is over
+    await tester.pump();
+    expect(f.query, 'food');
+    expect(asked, ['foo', 'food']);
+
+    f
+      ..query = 'foods'
+      ..query = '';
+    expect(f.query, '');
+    expect(f.looking, isFalse);
+    await tester.pump(ChatFind.pause * 2);
+    expect(asked, ['foo', 'food'], reason: 'what was typed and cleared');
+
+    f
+      ..query = 'x'
+      ..close();
+    await tester.pump(ChatFind.pause * 2);
+    expect(f.query, isNull);
+    expect(asked, ['foo', 'food']);
+  });
 }

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdown_view/markdown_view.dart';
 import 'package:nushi/chat.dart';
+import 'package:nushi/chat_find.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/diff_find.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -92,6 +93,7 @@ void main() {
       ),
       'relay',
     );
+    await tester.pump(ChatFind.pause); // typing pauses, then it looks
     await tester.pumpAndSettle();
     expect(find.text('1 of 2'), findsOne);
     expect(_marks(tester), hasLength(2));
@@ -135,6 +137,7 @@ void main() {
       ),
       'sub(',
     );
+    await tester.pump(ChatFind.pause); // typing pauses, then it looks
     await tester.pumpAndSettle();
     expect(find.text('1 of 2'), findsOne);
     expect(find.textContaining('add.go', findRichText: true), findsNothing);
@@ -160,6 +163,7 @@ void main() {
       ),
       'func',
     );
+    await tester.pump(ChatFind.pause); // typing pauses, then it looks
     await tester.pumpAndSettle();
     final find_ = chat.changesFind;
     expect(find.text('1 of 3 · file 1 of 2'), findsOne);

@@ -38,18 +38,24 @@ class ChatFind extends Find {
   AskAbove? ask;
   String? Function(String item)? entryOf;
 
-  /// How long typing pauses before the daemon is asked.
+  /// How long typing pauses before what is typed is looked for.
   static const Duration pause = Waits.typing;
 
   List<ChatMatch> _far = const [];
   List<String> _near = const [];
   Timer? _wait;
+  Timer? _typing; // what's typed ([_next]) waits to be looked for
+  String _next = '';
   CancelableSignal? _asking;
   bool _typed = false; // no step since the query changed
   int _stepAsk = -1;
 
-  /// The daemon is being asked.
-  bool get searching => _wait != null || _asking != null;
+  /// Something is looked for, or about to be (typed, in its pause): the
+  /// chat keeps what it has loaded.
+  bool get looking => _typing != null || (query ?? '').isNotEmpty;
+
+  /// The daemon is being asked, or about to be.
+  bool get searching => _typing != null || _wait != null || _asking != null;
 
   /// The daemon searches what isn't loaded, as far as is known (its last
   /// answer): no Load all. Kept from query to query, so the bar's line
@@ -80,18 +86,39 @@ class ChatFind extends Find {
     return _more && hits.isNotEmpty ? '$c+' : c;
   }
 
+  /// What's typed is looked for after a pause ([pause]), in what's loaded
+  /// and above it alike: a first letter matches most of a long chat, and
+  /// marking it all, going to its first match and asking the daemon are
+  /// work thrown away by the next. Cleared, or closed, at once.
   @override
   set query(String? q) {
-    if (q == query) return;
+    if (q == (_typing == null ? query : _next)) return;
+    _typing?.cancel();
+    _typing = null;
+    if (q == null || q.isEmpty) {
+      _look(q);
+      return;
+    }
+    _next = q;
+    _typing = Timer(pause, () {
+      _typing = null;
+      _look(q);
+    });
+  }
+
+  /// Looks for [q] now.
+  void _look(String? q) {
     _typed = true;
     _pending = null;
     super.query = q;
-    _askAbove();
+    _askAbove(now: true);
   }
 
   @override
   void close() {
     _cancel();
+    _typing?.cancel();
+    _typing = null;
     _far = const [];
     _near = const [];
     _more = false;
@@ -112,10 +139,10 @@ class ChatFind extends Find {
     _asking = null;
   }
 
-  /// Asks the daemon about what's above the loaded part, after a pause,
-  /// cancelling what it asked before. With nothing above, the loaded find
-  /// is all of it.
-  void _askAbove() {
+  /// Asks the daemon about what's above the loaded part, after a pause
+  /// (none with [now]: the typing has paused already), cancelling what it
+  /// asked before. With nothing above, the loaded find is all of it.
+  void _askAbove({bool now = false}) {
     _cancel();
     _far = const [];
     _more = false;
@@ -124,10 +151,14 @@ class ChatFind extends Find {
       _merge();
       return;
     }
-    _wait = Timer(pause, () {
-      _wait = null;
+    if (now) {
       unawaited(_askNow(q));
-    });
+    } else {
+      _wait = Timer(pause, () {
+        _wait = null;
+        unawaited(_askNow(q));
+      });
+    }
     _merge();
   }
 
@@ -167,6 +198,14 @@ class ChatFind extends Find {
 
   @override
   void step(int by) {
+    if (_typing != null) {
+      // ⏎ before the pause is over: what's typed is looked for now, which
+      // goes to its first match.
+      _typing!.cancel();
+      _typing = null;
+      _look(_next);
+      return;
+    }
     if (hits.isEmpty) return;
     // With nothing loaded to go to, typing made the nearest match above
     // current without loading it: the first step, either way, shows it.
@@ -239,6 +278,7 @@ class ChatFind extends Find {
   @override
   void dispose() {
     _cancel();
+    _typing?.cancel();
     super.dispose();
   }
 }

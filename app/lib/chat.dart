@@ -698,7 +698,7 @@ class ChatState extends ChangeNotifier {
   /// looks in what it has. Whether any went.
   bool trim(int n) {
     if (!loaded || outbox.sending.isNotEmpty) return false;
-    if ((find.query ?? '').isNotEmpty) return false;
+    if (find.looking) return false;
     var start = recentStart(items, items.length, n);
     if (pane.value case final id?) {
       final i = items.indexWhere((it) => it.id == id);

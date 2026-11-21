@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdown_view/markdown_view.dart';
+import 'package:nushi/chat_find.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
@@ -62,6 +63,7 @@ Future<void> _find(WidgetTester tester, String query) async {
     ),
     query,
   );
+  await tester.pump(ChatFind.pause); // typing pauses, then it looks
   await tester.pumpAndSettle();
 }
 
@@ -156,6 +158,7 @@ void main() {
       ),
       '**',
     );
+    await tester.pump(ChatFind.pause); // typing pauses, then it looks
     await tester.pumpAndSettle();
     expect(find.text('None'), findsOne, reason: "not the Markdown's syntax");
     await closeView(tester, d);
