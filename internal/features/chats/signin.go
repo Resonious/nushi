@@ -147,7 +147,7 @@ func (s *Service) SignIn(ctx context.Context, agent, method string) error {
 func signInFailed(ctx context.Context, title string, err error) error {
 	switch {
 	case errors.Is(ctx.Err(), context.DeadlineExceeded):
-		return fmt.Errorf("%s didn't finish signing in within %d minutes: %w", title, int(SignInTimeout.Minutes()), err)
+		return fmt.Errorf("%s didn't finish signing in within %s: %w", title, minutes(SignInTimeout), err)
 	case ctx.Err() != nil:
 		return ctx.Err()
 	}
@@ -162,6 +162,18 @@ func signInFailed(ctx context.Context, title string, err error) error {
 // (failedLocked).
 func wantsSignIn(it model.Item) bool {
 	return it.Kind == model.Notice && it.Status == "reopen_failed" && len(it.Options) > 0
+}
+
+// minutes is d in words: "10 minutes", or as Go writes it when under one.
+func minutes(d time.Duration) string {
+	switch m := int(d.Minutes()); m {
+	case 0:
+		return d.String()
+	case 1:
+		return "1 minute"
+	default:
+		return fmt.Sprintf("%d minutes", m)
+	}
 }
 
 // signedIn is the agent named agent signed in: its chats whose reopen

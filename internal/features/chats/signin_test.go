@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	acp "github.com/afrase/acp-go/unstable"
 
@@ -220,6 +221,25 @@ func TestSignIn(t *testing.T) {
 	}
 	if !slices.Equal(f.asked, []string{"chat-gpt", "chat-gpt"}) {
 		t.Errorf("authenticate asked %v", f.asked)
+	}
+}
+
+// A sign-in left waiting in the browser past SignInTimeout ends, saying
+// so, and its agent, and with it the login, is stopped.
+func TestSignInTimesOut(t *testing.T) {
+	old := SignInTimeout
+	SignInTimeout = 50 * time.Millisecond
+	t.Cleanup(func() { SignInTimeout = old })
+	f := newSignInFake()
+	f.methods = codexMethods(t)
+	svc := newService(t, []Kind{f.kindFor()}, Options{})
+	err := svc.SignIn(t.Context(), "fake", "chat-gpt")
+	if err == nil || err.Error() != "Fake didn't finish signing in within 50ms: context deadline exceeded" {
+		t.Errorf("a sign-in that ran out of time = %v", err)
+	}
+	<-f.closed
+	if got := minutes(10 * time.Minute); got != "10 minutes" {
+		t.Errorf("minutes(10m) = %q", got)
 	}
 }
 
