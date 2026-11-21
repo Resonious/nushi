@@ -42,12 +42,14 @@ Future<bool> signInDialog(
   BuildContext context,
   Daemon daemon,
   AgentSignIn s,
-) async =>
-    await showDialog<bool>(
-      context: context,
-      builder: (_) => _SignInDialog(daemon.signInOf(s.agent), s.methods),
-    ) ??
-    false;
+) async {
+  final run = daemon.signInOf(s.agent)..forget(); // a new refusal
+  return await showDialog<bool>(
+        context: context,
+        builder: (_) => _SignInDialog(run, s.methods),
+      ) ??
+      false;
+}
 
 class _SignInDialog extends StatefulWidget {
   const new(this.run, this.methods);

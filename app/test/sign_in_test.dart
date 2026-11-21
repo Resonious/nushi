@@ -163,6 +163,13 @@ void main() {
     expect(tester.getRect(_button), at);
     expect(_buttonOf(tester).onPressed, isNotNull);
     expect(fake.started, hasLength(1)); // nothing started again
+
+    // Closed, and the next start refused: its dialog starts afresh.
+    await tester.tap(find.widgetWithText(Button, 'Cancel'));
+    await tester.pumpAndSettle();
+    await _startRefused(tester, fake);
+    expect(find.text("Codex isn't signed in"), findsOneWidget);
+    expect(find.textContaining("Codex didn't sign in"), findsNothing);
     d.dispose();
   });
 

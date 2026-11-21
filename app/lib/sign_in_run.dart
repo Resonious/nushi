@@ -80,6 +80,14 @@ class SignInRun extends ChangeNotifier {
     }
   }
 
+  /// Forgets why the last one failed, unless one runs: a new refusal
+  /// starts afresh, and the user may have signed in elsewhere since.
+  void forget() {
+    if (waiting != null || failed == null) return;
+    failed = null;
+    notifyListeners();
+  }
+
   /// Gives up on the one running: the daemon stops the agent's login.
   void cancel() => _signal?.cancel();
 }
