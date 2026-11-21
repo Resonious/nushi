@@ -190,7 +190,14 @@ class _TranscriptState extends State<Transcript> {
         metrics,
       _ => null,
     };
-    if (near != null && near.extentBefore < near.viewportDimension) {
+    // The user's own scroll: where a typed find left the list no longer
+    // holds back the page before.
+    if (n is ScrollUpdateNotification && n.depth == 0 && !_follower.jumping) {
+      _typedTo = false;
+    }
+    if (near != null &&
+        !_typedTo &&
+        near.extentBefore < near.viewportDimension) {
       _nearTop();
     }
     // The list's height changed with no scroll and no build of all of it
@@ -634,6 +641,8 @@ class _TranscriptState extends State<Transcript> {
   // keys), and the last time the find asked for its current one to show.
   final _marks = TextMarks();
   int _shownAsk = -1;
+  // The list is where typing in the find took it, not scrolled since.
+  bool _typedTo = false;
   // What was above what's loaded as the find's query was asked.
   late int _findOlder = widget.chat.older;
   bool _roomAbove = false; // the list starts below the find bar
@@ -656,6 +665,9 @@ class _TranscriptState extends State<Transcript> {
     if (find.asked == _shownAsk) return;
     _shownAsk = find.asked;
     if (mark != null) {
+      // Typing loads nothing (ADR 0144): a match it goes to near the top
+      // of what's loaded isn't the user scrolling there for more.
+      _typedTo = !find.stepped;
       _reveal(mark);
     } else if (ChatFind.farItem(key) case final id? when find.stepped) {
       // A match above what's loaded: its part comes, and the find lands
@@ -875,7 +887,10 @@ class _TranscriptState extends State<Transcript> {
               )
             : null);
     _pageFills(entries);
-    if (chat.find.query == null) _roomAbove = false;
+    if (chat.find.query == null) {
+      _roomAbove = false;
+      _typedTo = false;
+    }
     // While it fills in, the entries above what's built wait.
     final tail = _tail;
     final from = tail == null ? 0 : max(0, entries.length - tail);

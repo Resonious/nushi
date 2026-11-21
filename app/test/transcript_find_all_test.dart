@@ -165,6 +165,41 @@ void main() {
     await closeView(tester, d);
   }, variant: onMac);
 
+  testWidgets('typing a word that is everywhere goes to its first match '
+      'loaded and loads nothing; scrolling up from there loads the page '
+      'before', (tester) async {
+    final (d, paged, _) = await _window(tester);
+    final c = _chat(d);
+    final older = c.older;
+    for (final q in ['t', 'tu', 'turn']) {
+      c.find
+        ..open()
+        ..query = q;
+      await _settle(tester);
+      expect(c.find.hits, isNotEmpty);
+      expect(paged.pages, isEmpty, reason: 'typing "$q" loaded a page');
+      expect(c.older, older);
+    }
+    final p = tester.state<ScrollableState>(
+      find
+          .descendant(
+            of: find.byType(SelectionArea),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(
+      p.position.extentBefore,
+      lessThan(p.position.viewportDimension),
+      reason: 'the first match loaded is at the top of what is loaded',
+    );
+    p.position.jumpTo(p.position.pixels - 1); // the user scrolls up
+    await _settle(tester);
+    expect(paged.pages, isNotEmpty);
+    expect(c.older, lessThan(older));
+    await closeView(tester, d);
+  }, variant: onMac);
+
   testWidgets('a page loaded by scrolling up keeps the count and the '
       'current match', (tester) async {
     final (d, _, _) = await _window(tester);
