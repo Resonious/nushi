@@ -1,4 +1,3 @@
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,8 +13,6 @@ import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
-
-Int64 _ago(Duration d) => Int64(fixtureNow.subtract(d).millisecondsSinceEpoch);
 
 GitHubItem ghItem(
   String repo,
@@ -41,8 +38,8 @@ GitHubItem ghItem(
   draft: draft,
   stateReason: reason,
   author: author,
-  createdMs: _ago(age),
-  updatedMs: _ago(age),
+  createdMs: msAgo(age),
+  updatedMs: msAgo(age),
   additions: adds,
   deletions: dels,
   changedFiles: files,
@@ -134,8 +131,6 @@ Future<(Daemon, FakeDaemon)> _app(
   await tester.pumpAndSettle();
   return (d, fake);
 }
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 void main() {
   setUpAll(loadFonts);
@@ -240,7 +235,7 @@ void main() {
           expect(find.byType(GitHubCard), findsNothing);
           await closeView(tester, d);
         },
-        variant: _mac,
+        variant: onMac,
       );
     }
   }

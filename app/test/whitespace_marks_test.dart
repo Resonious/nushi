@@ -39,16 +39,7 @@ class _Counting implements Canvas {
 
 /// The View menu's items' labels, and picks the one called [pick].
 List<String> _viewMenu(WidgetTester tester, {String? pick}) {
-  final view = tester
-      .widget<PlatformMenuBar>(find.byType(PlatformMenuBar))
-      .menus
-      .whereType<PlatformMenu>()
-      .firstWhere((m) => m.label == 'View');
-  Iterable<PlatformMenuItem> items(PlatformMenuItem m) => switch (m) {
-    PlatformMenuItemGroup(:final members) => members.expand(items),
-    _ => [m],
-  };
-  final all = view.menus.expand(items).toList();
+  final all = viewItems(tester);
   if (pick != null) all.firstWhere((m) => m.label == pick).onSelected!();
   return [for (final m in all) m.label];
 }
@@ -92,16 +83,7 @@ void main() {
       ['func main() {', '\tx := 1  ', '}'],
     );
     // ⌘A ⌘C: the file's own text.
-    final copied = <String>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied.add((call.arguments as Map)['text'] as String);
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     await tester.tap(find.textContaining('x :=', findRichText: true));
     await tester.pump();
     await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
@@ -261,7 +243,7 @@ void main() {
   ) async {
     final d = await FakeDaemon([]).connect(tester);
     await pumpSettings(tester, d, SettingsSection.appearance);
-    final row = find.text('Show whitespace');
+    final row = find.text('Show whitespace in files');
     expect(row, findsOneWidget);
     await tester.ensureVisible(row);
     await tester.pumpAndSettle();

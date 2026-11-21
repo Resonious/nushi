@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/settings.dart';
 
@@ -10,8 +9,6 @@ import 'view_options_fixture.dart';
 // The Files pane's view options (ADR 0123): each is one pref, and the ⋯,
 // the View menu and the palette all flip it and all show it, and it's
 // saved.
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 const PanesOpen _files = (
   side: false,
@@ -62,7 +59,7 @@ void main() {
       await tester.pumpAndSettle();
       await expectEverywhere(on: !start);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   for (final c in choiceWords) {
@@ -126,6 +123,6 @@ void main() {
       await tester.pumpAndSettle();
       await expectEverywhere(start);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

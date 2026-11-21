@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/browser_pane.dart';
 import 'package:nushi/chat.dart';
+import 'package:nushi/controls.dart' show Toggle;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
@@ -66,7 +67,6 @@ void main() {
   }) async {
     viewport(tester, Size(width, 900));
     showDetails.value = false;
-    paneWidths.value = {};
     final c = chat('c', 'claude', 'Build the tea shop');
     final fake = FakeDaemon([c])
       ..answer = (input) => input is GetChatRequest
@@ -202,7 +202,7 @@ void main() {
       matching: find.byType(Row),
     );
     await tester.tap(
-      find.descendant(of: row.first, matching: find.byType(Switch)).first,
+      find.descendant(of: row.first, matching: find.byType(Toggle)).first,
     );
     await tester.pumpAndSettle();
     expect(linksInBrowserTab.value, isFalse);

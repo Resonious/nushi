@@ -1,7 +1,6 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart' hide LiveText;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/call_times.dart';
 import 'package:nushi/chat.dart';
@@ -38,9 +37,6 @@ Item _call(String id, String title, num from, num? to) => Item(
   ended: to == null ? null : _ago(to),
 );
 
-Item _said(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
-
 /// A transcript with a call of under a second, one of 12 seconds, a run of
 /// three, a subagent that worked 3m 12s with its tokens, and a call that
 /// runs.
@@ -60,13 +56,13 @@ List<Item> _items() => [
     started: _ago(600),
     ended: _ago(599.6),
   ),
-  _said('m1', 'The tests first.'),
+  agentSays('m1', 'The tests first.'),
   _call('t', 'go test ./internal/store/...', 590, 578),
-  _said('m2', 'Now the lint, the vet and the build.'),
+  agentSays('m2', 'Now the lint, the vet and the build.'),
   _call('g1', 'make lint', 570, 540),
   _call('g2', 'go vet ./...', 538, 530),
   _call('g3', 'go build ./cmd/nushid', 528, 506),
-  _said('m3', 'An agent looks for the callers.'),
+  agentSays('m3', 'An agent looks for the callers.'),
   Item(
     id: 'x',
     kind: ItemKind.ITEM_KIND_TOOL_CALL,
@@ -81,7 +77,7 @@ List<Item> _items() => [
       tokens: Int64(48120),
     ),
   ),
-  _said('m4', 'And the whole suite, with a long name to see it give way.'),
+  agentSays('m4', 'And the whole suite, with a long name to see it give way.'),
   _call(
     'c',
     'go test -race -count=1 ./internal/features/chats/... ./internal/e2e/...',
@@ -107,13 +103,11 @@ Future<void> _window(
   final d = await fake.connect(tester);
   d.select('c');
   await tester.pumpWidget(NushiApp(daemon: d));
-  for (var i = 0; i < 5; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, 5, const Duration(milliseconds: 100));
   expect(find.text('12s'), findsWidgets); // the run's and the running call's
   expect(find.text('1m 04s'), findsOne); // the run's span
   expect(
-    find.textContaining('3m 12s · 48k tokens', findRichText: true),
+    find.textContaining('3m 12s · 48.1k tokens', findRichText: true),
     findsOne,
   );
   expectTextInside(tester, size.width);
@@ -124,30 +118,25 @@ Future<void> _window(
 
 void main() {
   setUpAll(loadFonts);
-  setUp(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        ),
-  );
 
   test('times read as a row shows them', () {
     expect(elapsed(const Duration(seconds: 12)), '12s');
     expect(elapsed(const Duration(seconds: 64)), '1m 04s');
     expect(tokenCount(950), '950 tokens');
-    expect(tokenCount(12400), '12k tokens');
+    expect(tokenCount(12400), '12.4k tokens');
+    expect(tokenCount(48000), '48k tokens');
+    expect(tokenCount(1000000), '1M tokens');
     expect(tokenCount(9400), '9.4k tokens');
     expect(tokenCount(1240000), '1.2M tokens');
     // Under a second, replayed (no times), or never ended: nothing.
-    expect(callTime(_call('a', 'ls', 1, 0.4)), isNull);
-    expect(callTime(Item(status: 'completed')), isNull);
-    expect(callTime(Item(status: 'failed', started: _ago(5))), isNull);
-    expect(callTime(_call('a', 'ls', 72, 8)), const Duration(seconds: 64));
+    expect(runTime([_call('a', 'ls', 1, 0.4)]), isNull);
+    expect(runTime([Item(status: 'completed')]), isNull);
+    expect(runTime([Item(status: 'failed', started: _ago(5))]), isNull);
+    expect(runTime([_call('a', 'ls', 72, 8)]), const Duration(seconds: 64));
     // Running, to now; its turn's end stops it.
-    expect(callTime(_call('a', 'ls', 12, null)), const Duration(seconds: 12));
+    expect(runTime([_call('a', 'ls', 12, null)]), const Duration(seconds: 12));
     expect(
-      callTime(_call('a', 'ls', 12, null)..ended = _ago(2)),
+      runTime([_call('a', 'ls', 12, null)..ended = _ago(2)]),
       const Duration(seconds: 10),
     );
   });
@@ -230,9 +219,7 @@ void main() {
     scroll.jumpTo(1000);
     await tester.pump();
     final hidden = built;
-    for (var i = 0; i < 4; i++) {
-      await tester.pump(const Duration(seconds: 1));
-    }
+    await frames(tester, 4, const Duration(seconds: 1));
     expect(built, hidden);
     scroll.jumpTo(0);
     await tester.pump(const Duration(seconds: 1));
@@ -296,7 +283,6 @@ void main() {
       width.value = 266;
       await tester.pump();
     }
-    Collapsible.opened.clear();
   });
 
   testWidgets("a narrow subagent line never cuts its state to a bare '…'", (
@@ -306,8 +292,8 @@ void main() {
     final sub = subagentsOf(_items()).single;
     final states = subagentStatesNarrow(sub);
     expect(states, [
-      '3m 12s · 48k tokens · done',
-      '3m 12s · 48k tokens',
+      '3m 12s · 48.1k tokens · done',
+      '3m 12s · 48.1k tokens',
       '3m 12s',
     ]);
     final width = ValueNotifier(419.0);
@@ -328,7 +314,7 @@ void main() {
     );
     final seen = <String>{};
     // The word goes whole: in the room a third of the line gives, never
-    // "3m 12s · 48k tokens · d…".
+    // "3m 12s · 48.1k tokens · d…".
     for (var w = 419.0; w >= 200; w -= 1) {
       width.value = w;
       await tester.pump();
@@ -345,7 +331,7 @@ void main() {
       expect(states, contains(text), reason: 'at $w');
       expect(cut, isFalse, reason: '"$text" cut at $w');
       // Down to a chat's least (a side pane open), its time and tokens.
-      if (w >= 266) expect(text, contains('48k tokens'), reason: 'at $w');
+      if (w >= 276) expect(text, contains('48.1k tokens'), reason: 'at $w');
       seen.add(text);
     }
     expect(seen, contains('3m 12s')); // narrower still, the time alone
@@ -353,7 +339,7 @@ void main() {
     width.value = 600;
     await tester.pump();
     expect(find.text('done'), findsOne);
-    expect(find.text('3m 12s · 48k tokens'), findsOne);
+    expect(find.text('3m 12s · 48.1k tokens'), findsOne);
   });
 
   for (final (size, label) in [
@@ -370,7 +356,7 @@ void main() {
           brightness,
           'call_times_${label}_${brightness.name}',
         );
-      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      }, variant: onMac);
     }
   }
 }

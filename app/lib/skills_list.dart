@@ -118,9 +118,6 @@ String openSkillLabel(Skill s) => 'Open ${skillFile(s).split('/').last}';
 /// as text, whatever the file turns out to be).
 Future<void> openSkillFile(Skill s) => native.desktop.openAsText(skillFile(s));
 
-/// Shows [path] in Finder ([Native.desktop]).
-Future<void> revealInFinder(String path) => native.desktop.reveal(path);
-
 /// Where a skill's switch acts, as the agent keeps it.
 String switchWhere(String agent, Skill s) => switch (agent) {
   'claude' when s.source == 'user' => 'everywhere',

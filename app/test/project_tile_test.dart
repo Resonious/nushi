@@ -1,9 +1,7 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/project_tile.dart';
 import 'package:nushi/theme/theme.dart';
@@ -17,10 +15,7 @@ import 'project_tile_fixture.dart';
 // colors; the icons asked of the daemon once.
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   test('initials are the first letters of two words, or a word’s first '
       'two', () {

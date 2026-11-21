@@ -57,7 +57,7 @@ _Setup _setup({String replay = _fishPrompt, String program = ''}) {
   final terms = Terminals(NushiServiceClient(fake));
   final runs = CodeRuns('c', ValueNotifier(const []));
   addTearDown(shells.close);
-  addTearDown(runs.dispose);
+  addTearDown(runs.close);
   return (shells, terms, runs);
 }
 

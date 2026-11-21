@@ -1,117 +1,132 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_checks.dart';
 import 'package:nushi/github_files.dart';
+import 'package:nushi/item_chats.dart';
+import 'package:nushi/pull_commits.dart';
 import 'package:nushi/pull_header.dart';
+import 'package:nushi/pull_merge_card.dart';
 
 import 'fake_daemon.dart';
+import 'harness.dart';
 import 'pull_fixture.dart';
+import 'pull_overview_fixture.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
-String _move(GitHubPull p, int todo) {
-  final m = moveWords(p, todo);
-  return '${m.lead} ${m.rest}'.trim();
-}
-
+/// The page's bar, head and tabs.
 void main() {
   setUpAll(loadFonts);
 
-  test('whose move it is', () {
-    final p = fixturePull();
-    expect(
-      _move(p, 5),
-      'Your move. 5 things block the merge. After them, @notes-reviewers '
-      'has to approve.',
-    );
-    p.reviewers.removeWhere((r) => r.team);
-    expect(_move(p, 1), 'Your move. 1 thing blocks the merge.');
-    // Nothing to do: the checks run, then the code owners approve.
-    final q = fixturePull()
-      ..checks.removeWhere((c) => c.failed)
-      ..checks.first.state = 'pending'
-      ..item.review = 'review_required'
-      ..reviewers.removeWhere((r) => !r.team);
-    expect(
-      _move(q, 0),
-      'Waiting on checks. 1 running. Then @notes-reviewers has to approve.',
-    );
-    q.checks.first.state = 'success';
-    expect(
-      _move(q, 0),
-      'Waiting on @notes-reviewers. Approval required as code owner.',
-    );
-    q
-      ..reviewers.clear()
-      ..mergeState = 'clean';
-    expect(_move(q, 0), 'Ready to merge.');
-    // GitHub's "unstable": checks fail that its base doesn't require.
-    q.mergeState = 'unstable';
-    expect(_move(q, 0), 'Ready to merge. Checks not passing (not required).');
-    q.mergeState = 'behind';
-    expect(_move(q, 0), 'Your move. The branch is behind main.');
-    q.item.draft = true;
-    expect(_move(q, 0), 'Draft. Mark it ready for review when it is.');
-    q.item.state = 'merged';
-    expect(_move(q, 0), 'Merged. Into main.');
-    q.item.state = 'closed';
-    expect(_move(q, 0), 'Closed. Without merging.');
+  test('the page: 1160 at most, centred; 32 at each side, 16 when narrow', () {
+    expect(pullPad(1700), 270);
+    expect(pullPad(1100), 32);
+    expect(pullPad(720), 16);
   });
 
-  test('the status lights', () {
-    final p = fixturePull();
-    final l = pullLights(p);
-    String say(Light l) => '${l.name}: ${l.value} (${l.sub})';
-    expect(l.map(say), [
-      'Checks: 3 failing (8 passed · 2 skipped)',
-      'Review: Changes requested (mona · code owner waiting)',
-      'Threads: 2 unresolved (1 resolved)',
-      'Branch: No conflicts (Merges into main)',
-    ]);
-    expect(l.map((l) => l.mood), [Mood.bad, Mood.bad, Mood.warn, Mood.ok]);
-    p
-      ..mergeable = 'conflicting'
-      ..checks.clear()
-      ..threads.clear()
-      ..reviewers.clear()
-      ..item.review = '';
-    expect(pullLights(p).map(say), [
-      'Checks: None (None yet)',
-      'Review: None yet (No reviewers asked)',
-      'Threads: None (No review threads)',
-      'Branch: Conflicts (With main)',
-    ]);
-  });
+  testWidgets('the head: title, state, who opened it and when, base ← '
+      'head, the size; Merge status and Submit review at the end of the '
+      "title's row; no Start work in a chat", (tester) async {
+    final (d, _) = await openPullTab(
+      tester,
+      overviewPull(),
+      size: const Size(1700, 1000),
+    );
+    expect(find.text('#218'), findsWidgets); // and the chat's chip
+    expect(
+      find.text('Fix login redirect loop after session expiry'),
+      findsOneWidget, // the head's; the slim bar shows once it's gone
+    );
+    expect(
+      find.textContaining('mira opened 3h ago', findRichText: true),
+      findsOneWidget,
+    );
+    expect(find.text('fix-login-redirect'), findsOneWidget);
+    expect(find.byTooltip('Open on GitHub'), findsOneWidget);
+    expect(find.text('Submit review'), findsOneWidget);
+    expect(find.text('Start work'), findsNothing);
+    expect(find.byType(ItemChats), findsNothing);
+    for (final t in [
+      'Overview',
+      'Commits  3',
+      'Checks  2 failing',
+      'Files changed  4',
+    ]) {
+      expect(find.text(t), findsOneWidget);
+    }
+    // The buttons end the title's row, in the page's column.
+    final tabs = find
+        .ancestor(
+          of: find.text('Overview'),
+          matching: find.byWidgetPredicate(
+            (w) => w is Column && w.key is GlobalKey,
+          ),
+        )
+        .first;
+    expect(
+      tester.getRect(find.byType(PullActions)).right,
+      tester.getRect(tabs).right,
+    );
+    d.dispose();
+  }, variant: onMac);
 
-  for (final (light, section) in [
-    ('3 failing', GitHubChecks),
-    ('No conflicts', GitHubFiles),
+  testWidgets('Merge status: back to Overview, scrolled to the card, its '
+      'first segment not met open', (tester) async {
+    final (d, _) = await openPullTab(
+      tester,
+      overviewPull(),
+      size: const Size(1700, 1000),
+    );
+    await tester.tap(find.text('Files changed  4'));
+    await tester.pumpAndSettle();
+    expect(find.byType(MergeCard), findsNothing);
+    // The slim bar's, the head having scrolled away with the tabs.
+    await tester.tap(find.text('Merge status').last);
+    await tester.pumpAndSettle();
+    expect(find.byType(MergeCard), findsOneWidget);
+    expect(
+      find.textContaining('Failing after 41s', findRichText: true),
+      findsOneWidget,
+    );
+    d.dispose();
+  }, variant: onMac);
+
+  for (final (tab, section) in [
+    ('Checks  3 failing', GitHubChecks),
+    ('Files changed  12', GitHubFiles),
+    ('Commits  1', PullCommitsList),
   ]) {
-    testWidgets('a light jumps to its section: $light', (tester) async {
+    testWidgets('a tab shows its own: $tab', (tester) async {
       final (d, _) = await openPullTab(tester, fixturePull());
       expect(find.byType(section), findsNothing);
-      await tester.tap(find.text(light));
+      await tester.tap(find.text(tab));
       await tester.pumpAndSettle();
       expect(find.byType(section), findsOneWidget);
-      // Scrolled to it: the section's tabs as near the top as it goes.
-      final tabs = tester.getRect(find.text('Files 12')).top;
-      expect(tabs, lessThan(section == GitHubFiles ? 100 : 600));
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
-  testWidgets('narrow: the buttons go under the branches', (tester) async {
-    // Opened wide (narrow, the tabs fold into a menu), then narrowed.
-    final (d, _) = await openPullTab(tester, fixturePull());
-    tester.view.physicalSize = const Size(720, 900);
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    final title = tester.getRect(
-      find.text("Ignore q params that aren't hashes in admin filters"),
+  testWidgets('narrow: the side column under the main one, nothing past '
+      'the window', (tester) async {
+    // Opened wide (narrow, the chat's tabs fold into a menu), then narrowed.
+    final (d, _) = await openPullTab(
+      tester,
+      overviewPull(),
+      size: const Size(1700, 1000),
+      commits: overviewCommits(),
     );
-    final review = tester.getRect(find.text('Review…'));
-    expect(review.top, greaterThan(title.bottom));
+    await narrowing(
+      tester,
+      from: 1100,
+      to: 720,
+      check: (width) {
+        expect(tester.takeException(), isNull);
+        expectTextInside(tester, width);
+      },
+      reopen: () async {},
+    );
+    expect(find.text('Status'), findsOneWidget);
+    final side = tester.getRect(find.byKey(const ValueKey('pull-side')));
+    final card = tester.getRect(find.byType(MergeCard));
+    expect(side.top, greaterThan(card.bottom));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

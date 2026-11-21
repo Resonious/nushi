@@ -18,7 +18,7 @@ class DiffBoxFind {
   /// current hit. [alive] says whether the box is still there once the
   /// frame ends, when the find is told its hits.
   void show(
-    TranscriptFind f,
+    Find f,
     SyntaxLines lines,
     DiffViewController c,
     bool Function() alive,
@@ -61,7 +61,7 @@ class DiffBoxFind {
   /// out. [current] says, once the frame ends, whether [c] is still the
   /// box's view.
   void keepHit(
-    TranscriptFind f,
+    Find f,
     DiffViewController c, {
     required bool unified,
     required bool Function() current,

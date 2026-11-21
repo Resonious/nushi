@@ -88,9 +88,10 @@ class _BackSwipeState extends State<BackSwipe> {
   void initState() {
     super.initState();
     _all.add(this);
-    if (!identical(_registered, native.swipes)) {
-      _registered = native.swipes;
-      native.swipes.onBack(_swiped);
+    final swipes = native.swipes;
+    if (swipes != null && !identical(_registered, swipes)) {
+      _registered = swipes;
+      swipes.onBack(_swiped);
     }
   }
 

@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/files_pane.dart';
 import 'package:nushi/settings.dart';
-import 'package:nushi/theme/theme.dart';
 
 import 'harness.dart';
 import 'panes_app.dart';
@@ -11,11 +10,6 @@ import 'panes_app.dart';
 // The Files pane squeezed (ADR 0123): in a narrow window the panes lie over
 // the transcript and narrow alike, well under their least, so the pane's
 // rows fold what they can't hold, and nothing overflows down to 100.
-
-const _both = TargetPlatformVariant({
-  TargetPlatform.macOS,
-  TargetPlatform.linux,
-});
 
 /// The errors reported while [body] runs, as text.
 Future<List<String>> _errors(Future<void> Function() body) async {
@@ -40,24 +34,21 @@ String _what(String error) => error
 /// [d]'s chat c's Files pane alone, [width] wide, with Expand.
 Future<void> _pane(WidgetTester tester, Daemon d, double width) async {
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: const NushiTheme(Tokens.dark).toThemeData(),
-      home: Scaffold(
-        body: Align(
-          alignment: Alignment.topLeft,
-          child: SizedBox(
-            width: width,
-            height: 500,
-            child: FilesPane(
-              chat: d.chats['c']!,
-              daemon: d,
-              onClose: () {},
-              onExpand: () {},
-            ),
+    themed(
+      Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: width,
+          height: 500,
+          child: FilesPane(
+            chat: d.chats['c']!,
+            daemon: d,
+            onClose: () {},
+            onExpand: () {},
           ),
         ),
       ),
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();
@@ -88,7 +79,7 @@ Future<List<String>> _sweep(WidgetTester tester, {String? file}) async {
     for (final open in _opens) {
       filesTree.value = shown;
       filesTreeSide.value = side;
-      c.files.closeAll();
+      c.files.tabs.value.toList().forEach(c.files.close);
       open.forEach(c.openInFiles);
       for (var w = 500.0; w >= 100; w -= 10) {
         final errors = await _errors(() => _pane(tester, d, w));
@@ -100,8 +91,6 @@ Future<List<String>> _sweep(WidgetTester tester, {String? file}) async {
       }
     }
   }
-  filesTree.value = true;
-  filesTreeSide.value = TreeSide.automatic;
   await closeView(tester, d);
   return found;
 }
@@ -109,17 +98,17 @@ Future<List<String>> _sweep(WidgetTester tester, {String? file}) async {
 void main() {
   testWidgets('the top row folds, and never overflows', (tester) async {
     expect(await _sweep(tester, file: 'files_top_row.dart'), isEmpty);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets('the second row folds, and never overflows', (tester) async {
     expect(await _sweep(tester, file: 'files_bar.dart'), isEmpty);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets('nothing in the pane overflows, the tree’s rows too', (
     tester,
   ) async {
     expect(await _sweep(tester), isEmpty);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets('squeezed, the source button is in the ⋯', (tester) async {
     final (d, _) = await panesApp(tester, width: 1700);
@@ -134,5 +123,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(d.chats['c']!.files.sources, contains('PLAN.md'));
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 }

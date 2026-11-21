@@ -24,26 +24,51 @@ class Disclosure extends StatefulWidget {
 }
 
 class _DisclosureState extends State<Disclosure>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, _Opening {
+  @override
+  bool _isOpen(Disclosure w) => w.open;
+
+  @override
+  Widget build(BuildContext context) {
+    // Folded, the child goes (the motion's end builds again); open, the
+    // clip goes.
+    if (!widget.open && _c.isDismissed) return const SizedBox.shrink();
+    return AnimatedBuilder(
+      animation: _eased,
+      builder: (context, child) =>
+          Fold(factor: _c.isCompleted ? 1 : _eased.value, child: child),
+      child: widget.child,
+    );
+  }
+}
+
+/// What [Disclosure] and [TurnChevron] share: [_c] runs to 1 as the widget
+/// opens and back as it closes, at once with Reduce Motion, eased by
+/// [_eased]; it builds again as the motion comes to rest.
+mixin _Opening<W extends StatefulWidget>
+    on State<W>, SingleTickerProviderStateMixin<W> {
+  /// Whether [w] is open.
+  bool _isOpen(W w);
+
   late final _c =
       AnimationController(
         vsync: this,
         duration: Motion.standard,
-        value: widget.open ? 1 : 0,
+        value: _isOpen(widget) ? 1 : 0,
       )..addStatusListener((s) {
-        // Folded: the child goes; open: the clip goes.
         if (!s.isAnimating) setState(() {});
       });
   late final _eased = CurvedAnimation(parent: _c, curve: Motion.size);
 
   @override
-  void didUpdateWidget(Disclosure old) {
+  void didUpdateWidget(W old) {
     super.didUpdateWidget(old);
-    if (old.open == widget.open) return;
+    final open = _isOpen(widget);
+    if (_isOpen(old) == open) return;
     if (reduceMotion(context)) {
-      _c.value = widget.open ? 1 : 0;
+      _c.value = open ? 1 : 0;
     } else {
-      (widget.open ? _c.forward() : _c.reverse()).ignore();
+      (open ? _c.forward() : _c.reverse()).ignore();
     }
   }
 
@@ -52,17 +77,6 @@ class _DisclosureState extends State<Disclosure>
     _eased.dispose();
     _c.dispose();
     super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!widget.open && _c.isDismissed) return const SizedBox.shrink();
-    return AnimatedBuilder(
-      animation: _eased,
-      builder: (context, child) =>
-          Fold(factor: _c.isCompleted ? 1 : _eased.value, child: child),
-      child: widget.child,
-    );
   }
 }
 
@@ -194,34 +208,9 @@ class TurnChevron extends StatefulWidget {
 }
 
 class _TurnChevronState extends State<TurnChevron>
-    with SingleTickerProviderStateMixin {
-  late final _c =
-      AnimationController(
-        vsync: this,
-        duration: Motion.standard,
-        value: widget.open ? 1 : 0,
-      )..addStatusListener((s) {
-        if (!s.isAnimating) setState(() {});
-      });
-  late final _eased = CurvedAnimation(parent: _c, curve: Motion.size);
-
+    with SingleTickerProviderStateMixin, _Opening {
   @override
-  void didUpdateWidget(TurnChevron old) {
-    super.didUpdateWidget(old);
-    if (old.open == widget.open) return;
-    if (reduceMotion(context)) {
-      _c.value = widget.open ? 1 : 0;
-    } else {
-      (widget.open ? _c.forward() : _c.reverse()).ignore();
-    }
-  }
-
-  @override
-  void dispose() {
-    _eased.dispose();
-    _c.dispose();
-    super.dispose();
-  }
+  bool _isOpen(TurnChevron w) => w.open;
 
   @override
   Widget build(BuildContext context) {

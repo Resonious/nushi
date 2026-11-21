@@ -112,9 +112,7 @@ class MenuField extends StatelessWidget {
               decoration: BoxDecoration(
                 color: compact
                     ? (look.hover ? _tint(t, look) : null)
-                    : (look.hover
-                          ? Color.alphaBlend(_tint(t, look), t.lifted)
-                          : t.lifted),
+                    : _over(t, look, t.lifted),
                 borderRadius: corners,
               ),
               foregroundDecoration: focusRing(t, look, radius: corners),
@@ -127,8 +125,7 @@ class MenuField extends StatelessWidget {
   }
 }
 
-/// A button that opens a menu of what it can do ("Start work ▾");
-/// [onOpener] takes the menu's opener (for a shortcut that opens it too).
+/// A button that opens a menu of what it can do ("Start work ▾").
 class MenuButton extends StatelessWidget {
   const new({
     required this.label,
@@ -137,7 +134,6 @@ class MenuButton extends StatelessWidget {
     this.kind = ButtonKind.secondary,
     this.icon,
     this.tooltip = '',
-    this.onOpener,
   });
 
   final String label;
@@ -146,23 +142,17 @@ class MenuButton extends StatelessWidget {
   final IconData? icon;
   final String tooltip;
 
-  /// Given the menu's opener on each build.
-  final void Function(OpenMenu open)? onOpener;
-
   @override
   Widget build(BuildContext context) => Menu(
     entries: entries,
-    builder: (context, open) {
-      onOpener?.call(open);
-      return Button(
-        label: label,
-        kind: kind,
-        icon: icon,
-        tooltip: tooltip,
-        menu: true,
-        onPressed: entries.isEmpty ? null : open,
-      );
-    },
+    builder: (context, open) => Button(
+      label: label,
+      kind: kind,
+      icon: icon,
+      tooltip: tooltip,
+      menu: true,
+      onPressed: entries.isEmpty ? null : open,
+    ),
   );
 }
 

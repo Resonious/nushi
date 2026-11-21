@@ -55,9 +55,7 @@ func TestTranscriptCopies(t *testing.T) {
 		t.Errorf("copied while off: %v", list)
 	}
 
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	set = must(a.c.GetSettings(ctx, connect.NewRequest(&nushiv1.GetSettingsRequest{}))).Settings
 	if set.GetKeepTranscripts() || set.GetTranscriptDays() != 30 {
 		t.Errorf("settings after a restart: %v", set)

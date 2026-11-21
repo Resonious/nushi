@@ -4,7 +4,7 @@ A **skill** is a short set of instructions an agent picks up when a task needs i
 
 ## Open them
 
-- Click **Settings** at the bottom of the sidebar (or press ⌘, — Ctrl+, on Linux), then **Skills** or **MCP servers**.
+- Click **Settings** at the bottom of the sidebar (or press ⌘,, or Ctrl+, on Linux), then **Skills** or **MCP servers**.
 - From a chat, open its **⋯** menu and pick **Skills…** or **MCP servers…**. The page opens on that chat's folder. **MCP servers…** shows only for Claude and Ante chats.
 
 ## See an agent's skills

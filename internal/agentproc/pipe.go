@@ -18,6 +18,22 @@ import (
 // wait for that child too, and the reader would never end.
 const waitDelay = time.Second
 
+// Program is a program a bridge talks to (Ante's host, pi): its stdin and
+// stdout, a way to kill it, and the last of what it wrote to stderr (nil:
+// nothing kept), which says why it stopped when it did. A Piped's, or a
+// test's fake.
+type Program struct {
+	In   io.WriteCloser
+	Out  io.Reader
+	Kill func()
+	Said func() string
+}
+
+// Program is p as a Program.
+func (p *Piped) Program() Program {
+	return Program{In: p.In, Out: p.Out, Kill: p.Kill, Said: p.Said}
+}
+
 // Piped is a program started by Pipe, which a bridge talks to over its
 // stdin and stdout in the program's own protocol: its process group lives
 // until Kill.

@@ -28,13 +28,7 @@ import 'update_fixtures.dart';
 void main() {
   setUpAll(loadFonts);
   setUp(() {
-    dismissedUpdate.value = null;
     brewCask = null;
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
   });
 
   test('versions order as semantic versioning does', () {

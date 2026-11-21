@@ -22,7 +22,6 @@ void main() {
 
   Future<void> pane(WidgetTester tester) async {
     viewport(tester, const Size(1200, 600));
-    paneWidths.value = {};
     told = [];
     locked.value = false;
     shown.value = true;

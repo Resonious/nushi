@@ -26,3 +26,5 @@ ADR 0125 got the app running on Windows with most capabilities off: each a stand
 - `TerminateProcess` by the pid: simpler, but the daemon would end without closing its agents' sessions and terminals; a console control event needs the app to attach to the daemon's hidden console, which its agents share too.
 - A web view rendered into a Flutter texture (as `webview_windows` does, through Windows.Graphics.Capture): Flutter could draw over it, but it's several times the C++, and capture has its own permissions and frame lag. A child window is what WebView2 does natively.
 - `package:win32`'s COM bindings: a large dependency for the five methods the checker needs.
+
+**Amendment (2026-11-20):** `AppInstall.canStop`, named under Consequences, is gone: with the stop event every platform stops its daemon, so it answered true everywhere, and Restart daemon now shows wherever the app has a packaged daemon (`restartsDaemon`; [ADR 0125](0125-the-app-runs-on-windows.md)'s amendment).

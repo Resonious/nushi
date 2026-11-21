@@ -84,6 +84,10 @@ class FakeDaemon implements Transport {
   /// another folder has none.
   final projectIcons = <String, List<int>>{};
 
+  /// What GetUsage answers (ADR 0136), whatever the range: nothing used
+  /// until a test sets it.
+  GetUsageResponse usage = GetUsageResponse();
+
   /// While set the daemon is gone: every call fails as the transport says
   /// when none answers, pings too.
   bool down = false;
@@ -227,20 +231,17 @@ class FakeDaemon implements Transport {
           ForkAsChatRequest() => ForkAsChatResponse(chatId: chats.last.id),
           KeepSideChatRequest() => KeepSideChatResponse(chatId: 'kept'),
           GetChatImageRequest(:final sha256) => switch (chatImages[sha256]) {
-            final i? => GetChatImageResponse(
-              mimeType: i.mimeType,
-              data: i.data,
-            ),
+            final i? => GetChatImageResponse(data: i.data),
             null => throw ConnectException(Code.notFound, 'no such image'),
           },
           GetProjectIconRequest(:final folder) =>
             switch (projectIcons[folder]) {
-              final data? => GetProjectIconResponse(
-                mimeType: 'image/png',
-                data: data,
-              ),
+              final data? => GetProjectIconResponse(data: data),
               null => GetProjectIconResponse(),
             },
+          GetUsageRequest() => usage,
+          // Saved: the pull request is read again for what it says now.
+          EditGitHubPullRequest() => EditGitHubPullResponse(),
           _ => spec.outputFactory(),
         };
     return UnaryResponse(spec, Headers(), out as O, Headers());
@@ -495,6 +496,14 @@ Chat chat(
   status: status ?? ChatStatus(),
 );
 
+/// The agent's message [text], item [id] of a transcript.
+Item agentSays(String id, String text) =>
+    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
+
+/// The user's message [text], item [id] of a transcript.
+Item userSays(String id, String text) =>
+    Item(id: id, kind: ItemKind.ITEM_KIND_USER_MESSAGE, text: text);
+
 /// Loads the app's fonts (the bundled ones and Material's icons), so
 /// goldens show text rather than boxes.
 Future<void> loadFonts() async {
@@ -521,4 +530,12 @@ Widget enlarged(Size size, double scale, Widget child) => RepaintBoundary(
       child: SizedBox.fromSize(size: size, child: child),
     ),
   ),
+);
+
+/// The daemon's refusal of an edit of a pull request whose text GitHub
+/// changed since the edit began (API 128, reason changed_since).
+ConnectException changedSinceRefusal() => ConnectException(
+  Code.failedPrecondition,
+  'it changed on GitHub since you opened it, so nothing was saved',
+  metadata: Headers()..add('nushi-reason', 'changed_since'),
 );

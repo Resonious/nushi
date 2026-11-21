@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:nushi/agents.dart';
-import 'package:nushi/conventions.dart';
 import 'package:nushi/folder_button.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/menu.dart';
+import 'package:nushi/plain_text.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/skills_list.dart';
 import 'package:nushi/skills_rows.dart';
@@ -51,25 +51,16 @@ class SharedGroup extends StatelessWidget {
     final title = agentTitle(list.agent);
     final link = list.list.readsShared
         ? ''
-        : ' $title doesn’t read .agents/skills yet: link a skill to give it '
-              'to $title.';
+        : ' $title doesn’t read .agents/skills yet: link a skill.';
     return SettingsGroup(
       title: 'Shared',
-      about:
-          'In .agents/skills, which several agents read: the project’s, and '
-          'yours in ~/.agents/skills.$link',
+      // The project's .agents/skills and ~/.agents/skills.
+      about: 'In .agents/skills, which several agents read.$link',
       empty: 'None',
       children: [for (final s in skills) skillRow(_SharedRow(list, s))],
     );
   }
 }
-
-/// "Codex, PiG and Claude": [names] as a sentence's list.
-String listed(List<String> names) => switch (names.length) {
-  0 => '',
-  1 => names.single,
-  _ => '${names.sublist(0, names.length - 1).join(', ')} and ${names.last}',
-};
 
 class _SharedRow extends StatelessWidget {
   const new(this.list, this.skill);
@@ -81,7 +72,7 @@ class _SharedRow extends StatelessWidget {
       skill.agents.where((a) => a.agent == list.agent).firstOrNull;
 
   Future<void> _delete(BuildContext context) async {
-    final losing = listed([for (final a in skill.agents) agentTitle(a.agent)]);
+    final losing = andList([for (final a in skill.agents) agentTitle(a.agent)]);
     final links = [
       for (final a in skill.agents)
         if (a.via.isNotEmpty)
@@ -93,7 +84,7 @@ class _SharedRow extends StatelessWidget {
       skill,
       more:
           '${losing.isEmpty ? 'No agent loads it here.' : '$losing lose it.'}'
-          '${links.isEmpty ? '' : '\n${listed(links)} go too.'}',
+          '${links.isEmpty ? '' : '\n${andList(links)} go too.'}',
     );
   }
 
@@ -176,11 +167,7 @@ class _SharedRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        tooltip(
-          context,
-          'About what listing it costs every chat’s context',
-          Text('≈ ${skill.tokens} tokens', style: muted),
-        ),
+        skillTokens(context, skill, muted),
         if (mine == null)
           Padding(
             padding: const EdgeInsets.only(left: 6),
@@ -206,27 +193,14 @@ class _SharedRow extends StatelessWidget {
             why: switchWhy(list, mine.setIn),
             onChanged: ({required on}) => setSkillOn(list, skill, on: on),
           ),
-        MenuIcon.line(
-          LineIcon.more,
-          size: 15,
-          tooltip: 'More',
-          entries: [
-            MenuEntry(
-              openSkillLabel(skill),
-              onPick: () => openSkillFile(skill),
-            ),
-            MenuEntry(
-              conventions.reveal,
-              onPick: () => revealInFinder(skill.path),
-            ),
-            // The daemon says what it would refuse to link or to move to
-            // the Trash (a file; for a link, one in a group too).
-            if (canLink && !skill.noLink)
-              MenuEntry('Link for $title…', onPick: () => _link(context)),
-            if (!skill.noTrash)
-              MenuEntry('Delete…', onPick: () => _delete(context)),
-          ],
-        ),
+        skillMenu(skill, [
+          // The daemon says what it would refuse to link or to move to the
+          // Trash (a file; for a link, one in a group too).
+          if (canLink && !skill.noLink)
+            MenuEntry('Link for $title…', onPick: () => _link(context)),
+          if (!skill.noTrash)
+            MenuEntry('Delete…', onPick: () => _delete(context)),
+        ]),
       ],
     );
   }

@@ -102,7 +102,7 @@ func TestListenProbeMissesListener(t *testing.T) {
 			t.Logf("other on %s: a listen on %q:%s bound beside it", c.other, c.probe, p)
 			_ = l.Close()
 		}
-		other := ofPid(OnPort(ls, ports[i]), pid)
+		other := ofPid(onPort(ls, ports[i]), pid)
 		if len(other) != 1 {
 			t.Fatalf("other on %s: listed %v for the helper on port %s", c.other, other, p)
 		}

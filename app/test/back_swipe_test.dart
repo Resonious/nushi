@@ -118,7 +118,7 @@ void main() {
           : null,
     );
     await _openPull(tester);
-    await tester.tap(find.text('Files 3'));
+    await tester.tap(find.text('Files changed  3'));
     await tester.pumpAndSettle();
     final diff = find.byType(SideBySideDiff);
     final horizontal = tester

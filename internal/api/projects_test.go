@@ -33,10 +33,10 @@ func TestGetProjectIcon(t *testing.T) {
 		return r.Msg, nil
 	}
 	mac := client(t, New(Services{}))
-	if r, err := get(mac, with); err != nil || r.MimeType != "image/png" || !bytes.Equal(r.Data, b.Bytes()) {
+	if r, err := get(mac, with); err != nil || !bytes.Equal(r.Data, b.Bytes()) {
 		t.Errorf("a folder with a logo: %v, %v", r, err)
 	}
-	if r, err := get(mac, without); err != nil || r.MimeType != "" || len(r.Data) != 0 {
+	if r, err := get(mac, without); err != nil || len(r.Data) != 0 {
 		t.Errorf("a folder without: %v, %v", r, err)
 	}
 	if _, err := get(mac, "logo"); connect.CodeOf(err) != connect.CodeInvalidArgument {

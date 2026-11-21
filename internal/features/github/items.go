@@ -28,6 +28,19 @@ func (s *Service) Pull(ctx context.Context, ref model.GitHubRef, poll bool) (mod
 	return c.Pull(ctx, ref.Repo, ref.Number)
 }
 
+// Commits are a pull request's newest 100 commits, oldest first, and how
+// many it has.
+func (s *Service) Commits(ctx context.Context, ref model.GitHubRef, poll bool) ([]model.GitHubCommit, int, error) {
+	c, err := s.client(ctx, ref.Host)
+	if err != nil {
+		return nil, 0, err
+	}
+	if poll {
+		ctx = githubapi.Poll(ctx)
+	}
+	return c.Commits(ctx, ref.Repo, ref.Number)
+}
+
 // Issue is an issue whole.
 func (s *Service) Issue(ctx context.Context, ref model.GitHubRef, poll bool) (model.GitHubIssue, error) {
 	c, err := s.client(ctx, ref.Host)
@@ -215,17 +228,17 @@ func (b *blobCache) keep(repo string, at githubapi.BlobAt, blob githubapi.Blob) 
 }
 
 // Reply adds the user's reply to a review thread.
-func (s *Service) Reply(ctx context.Context, name, thread, body string) (model.GitHubComment, error) {
+func (s *Service) Reply(ctx context.Context, name, thread, body string) error {
 	if strings.TrimSpace(body) == "" {
-		return model.GitHubComment{}, errors.New("an empty reply")
+		return errors.New("an empty reply")
 	}
 	c, err := s.writer(ctx, name)
 	if err != nil {
-		return model.GitHubComment{}, err
+		return err
 	}
-	cm, err := c.Reply(ctx, thread, body)
+	err = c.Reply(ctx, thread, body)
 	s.wrote(name, "reply", err)
-	return cm, err
+	return err
 }
 
 // Resolve resolves a review thread, or unresolves it.
@@ -253,17 +266,17 @@ func (s *Service) RerunFailed(ctx context.Context, ref model.GitHubRef, jobs []i
 
 // Comment adds the user's comment to a pull request's or an issue's
 // conversation (subject is its node id).
-func (s *Service) Comment(ctx context.Context, name, subject, body string) (model.GitHubComment, error) {
+func (s *Service) Comment(ctx context.Context, name, subject, body string) error {
 	if strings.TrimSpace(body) == "" {
-		return model.GitHubComment{}, errors.New("an empty comment")
+		return errors.New("an empty comment")
 	}
 	c, err := s.writer(ctx, name)
 	if err != nil {
-		return model.GitHubComment{}, err
+		return err
 	}
-	cm, err := c.Comment(ctx, subject, body)
+	err = c.Comment(ctx, subject, body)
 	s.wrote(name, "comment", err)
-	return cm, err
+	return err
 }
 
 // Review submits the user's review with its inline comments.

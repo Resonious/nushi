@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nushi/background_commands.dart';
 import 'package:nushi/chat.dart';
-import 'package:nushi/clock.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/panel_widgets.dart';
@@ -132,12 +131,9 @@ Widget _time(
 }) {
   final theme = NushiTheme.of(context);
   final t = theme.t;
-  String text() {
-    final since = msTime(started);
-    final end = runs ? clock() : msTime(ended);
-    if (!runs && state != 'done' && state != 'completed') return state;
-    return since == null || end == null ? '' : elapsed(end.difference(since));
-  }
+  String text() => !runs && state != 'done' && state != 'completed'
+      ? state
+      : ranFor(started, ended, runs: runs);
 
   return LiveText(
     text,

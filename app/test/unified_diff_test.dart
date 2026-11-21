@@ -22,8 +22,6 @@ import 'harness.dart';
 // column for an added file and a narrow view, and what works on a diff
 // working in the unified view.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const _old = '''
 package calc
 
@@ -236,16 +234,7 @@ void main() {
     await tester.pumpWidget(NushiApp(daemon: d));
     await tester.pumpAndSettle();
     List<String> viewMenu({String? pick}) {
-      final view = tester
-          .widget<PlatformMenuBar>(find.byType(PlatformMenuBar))
-          .menus
-          .whereType<PlatformMenu>()
-          .firstWhere((m) => m.label == 'View');
-      Iterable<PlatformMenuItem> items(PlatformMenuItem m) => switch (m) {
-        PlatformMenuItemGroup(:final members) => members.expand(items),
-        _ => [m],
-      };
-      final all = view.menus.expand(items).toList();
+      final all = viewItems(tester);
       if (pick != null) all.firstWhere((m) => m.label == pick).onSelected!();
       return [for (final m in all) m.label];
     }
@@ -263,7 +252,7 @@ void main() {
     act.run();
     expect(diffUnified.value, isFalse);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   test('unified rows stand for lines of one side, as a comment is', () {
     final doc = TextDiff.compute('a\nb\nc\nd\n', 'a\nB\nC\nd\n').document;
@@ -339,29 +328,17 @@ void main() {
     tester,
   ) async {
     diffUnified.value = true;
-    final copied = <String>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied.add((call.arguments as Map)['text'] as String);
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     await tester.pumpWidget(themed(DiffBox(_addedFile, fit: false)));
     await tester.pumpAndSettle();
     await _dragRows(tester, 2, 4);
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
+    await cmdKey(tester, LogicalKeyboardKey.keyC, settle: false);
     expect(
       copied.single,
       '// Neg returns minus a.\nfunc Neg(a int) int {\n'
       '\treturn -a\n',
     );
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a finding opens the unified view at its line, selected', (
     tester,
@@ -439,7 +416,7 @@ void main() {
         }
         await closeView(tester, d);
       },
-      variant: _mac,
+      variant: onMac,
       skip: rendersDir == null,
     );
   }

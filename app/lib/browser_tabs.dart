@@ -31,7 +31,7 @@ final class BrowserTabs {
   /// it. Browser tabs are never matched up: each open is its own.
   BrowserTab open([String address = '']) {
     final tab = BrowserTab(address);
-    _show(tab);
+    showTab(tab);
     return tab;
   }
 
@@ -50,7 +50,7 @@ final class BrowserTabs {
       open(url);
       return;
     }
-    _show(at);
+    showTab(at);
     at.view?.retry();
   }
 
@@ -68,7 +68,7 @@ final class BrowserTabs {
       open(url);
       return;
     }
-    _show(tab);
+    showTab(tab);
     tab.view?.retry();
   }
 
@@ -80,7 +80,7 @@ final class BrowserTabs {
     if (last == null) {
       open();
     } else {
-      _show(last);
+      showTab(last);
     }
   }
 
@@ -88,9 +88,7 @@ final class BrowserTabs {
   void hide() => shown.value = null;
 
   /// Shows [tab], one of the tabs, adding it last if it isn't.
-  void showTab(BrowserTab tab) => _show(tab);
-
-  void _show(BrowserTab tab) {
+  void showTab(BrowserTab tab) {
     if (!tabs.value.contains(tab)) tabs.value = [...tabs.value, tab];
     shown.value = tab;
   }

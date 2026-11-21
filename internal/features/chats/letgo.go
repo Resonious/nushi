@@ -52,7 +52,7 @@ func (s *Service) letGoUnseen() {
 // nothing needs them (canLetGoLocked), when it's asleep or no client shows
 // it.
 func (c *chat) letGoLocked() {
-	if c.inCopy || !c.canLetGoLocked() || !c.asleep && c.viewers != nil && c.viewers.Shown(c.id) {
+	if c.inCopy || !c.canLetGoLocked() || !c.asleep && c.svc.viewers != nil && c.svc.viewers.Shown(c.id) {
 		return
 	}
 	var aside []asideItem

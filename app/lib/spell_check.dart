@@ -52,11 +52,11 @@ class ComposerText extends TextEditingController {
     return true;
   }
 
-  List<CodeRun> _code = const [];
+  List<CodeSpan> _code = const [];
   String? _codeText;
 
   /// The code in the text ([codeRuns]), found again only when it changes.
-  List<CodeRun> get code {
+  List<CodeSpan> get code {
     if (_codeText != text) {
       _codeText = text;
       _code = codeRuns(text);

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:nushi/line_icons.dart';
 import 'package:nushi/menu.dart';
+import 'package:nushi/motion.dart';
 import 'package:nushi/theme/theme.dart';
 
 export 'package:nushi/line_icons.dart';
@@ -14,6 +15,7 @@ part 'controls_press.dart';
 part 'controls_segmented.dart';
 part 'controls_slider.dart';
 part 'controls_small.dart';
+part 'controls_toggle.dart';
 
 // The app's controls: one look for each kind of thing that can be
 // pressed, so what's clickable looks it. [Button] for an action,
@@ -25,7 +27,7 @@ part 'controls_small.dart';
 // `controls_buttons`, `controls_menus`, `controls_small` (links, icons,
 // swatches, grips, key hints and caps), `controls_slider` ([LineSlider]),
 // `controls_segmented`
-// ([Segmented]) and `controls_pills` ([PillButton] and [RoundButton], a
+// ([Segmented]), `controls_toggle` ([Toggle], an on/off) and `controls_pills` ([PillButton] and [RoundButton], a
 // card's own buttons); what they share is here.
 
 // A control's height, padding, type and corners come from its place: a

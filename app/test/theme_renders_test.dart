@@ -13,7 +13,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/clock.dart';
@@ -30,8 +29,6 @@ import 'package:nushi/theme/theme.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 import 'screenshots/demo.dart';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 /// Code in a block, for its colors: keywords, a type, strings, numbers, a
 /// comment.
@@ -98,19 +95,12 @@ Object? _demo(Object input) => switch (input) {
 };
 
 Future<void> _pump(WidgetTester tester, [int times = 8]) async {
-  for (var i = 0; i < times; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, times, const Duration(milliseconds: 100));
 }
 
 /// The Mac app at [size] in [b], on the demo's chats, the hero's open.
 Future<Daemon> _window(WidgetTester tester, Size size, Brightness b) async {
   viewport(tester, size, brightness: b);
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-        const MethodChannel('nushi/fonts'),
-        (_) async => <String>[],
-      );
   clock = () => demoNow;
   final open = <StreamController<Object>>[];
   addTearDown(() {
@@ -161,7 +151,7 @@ void main() {
           await render(tester, find.byType(NushiApp), 'theme_${name}_1700');
           await closeView(tester, d);
         },
-        variant: _mac,
+        variant: onMac,
         skip: sameLayout,
       );
 
@@ -179,7 +169,7 @@ void main() {
         expectTextInside(tester, 1100);
         await render(tester, find.byType(NushiApp), 'theme_${name}_chat');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets(
         '${theme.name}, ${b.name}: Changes, a diff',
@@ -197,7 +187,7 @@ void main() {
           await render(tester, find.byType(NushiApp), 'theme_${name}_changes');
           await closeView(tester, d);
         },
-        variant: _mac,
+        variant: onMac,
         skip: sameLayout,
       );
 
@@ -213,7 +203,7 @@ void main() {
           await render(tester, find.byType(NushiApp), 'theme_${name}_720');
           await closeView(tester, d);
         },
-        variant: _mac,
+        variant: onMac,
         skip: sameLayout,
       );
 
@@ -228,7 +218,7 @@ void main() {
           await render(tester, find.byType(NushiApp), 'theme_${name}_settings');
           await closeView(tester, d);
         },
-        variant: _mac,
+        variant: onMac,
         skip: sameLayout,
       );
 

@@ -47,9 +47,6 @@ Item _show(
       : '{\n  "path": ${jsonEncode(path)}\n}',
 );
 
-Item _say(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
-
 Item _ask(String title, String input) => Item(
   id: 'ask',
   kind: ItemKind.ITEM_KIND_PERMISSION,
@@ -106,8 +103,6 @@ Future<(FakeDaemon, Daemon)> _app(
 }) async {
   viewport(tester, size);
   showDetails.value = false;
-  paneWidths.value = {};
-  Collapsible.opened.clear();
   final fake = _fake(items: items, asked: asked);
   final d = await fake.connect(tester);
   d.select(chat);
@@ -127,8 +122,6 @@ Future<void> _shows(
 }
 
 ChatState _chat(Daemon d) => d.chats['c']!;
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 void main() {
   setUpAll(loadFonts);
@@ -187,11 +180,11 @@ void main() {
         tester,
         items: [
           _show('a', 'docs/report.html'),
-          _say('m', 'And now.'),
+          agentSays('m', 'And now.'),
           _show('b', 'docs/report.html', codex: true),
-          _say('n', 'And then.'),
+          agentSays('n', 'And then.'),
           _show('f', 'main.go', status: 'failed', text: 'not a type'),
-          _say('p', 'And last.'),
+          agentSays('p', 'And last.'),
           _show('r', 'docs/live.html', status: 'in_progress'),
         ],
       );
@@ -202,7 +195,7 @@ void main() {
       expect(find.textContaining(r'$ mcp'), findsNothing);
       expect(find.text('Preview'), findsNWidgets(2));
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('its card says which file, and that a page runs', (
       tester,
@@ -217,7 +210,7 @@ void main() {
         findsOneWidget,
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('Codex’s card too; Markdown runs nothing', (tester) async {
       final (_, d) = await _app(
@@ -232,7 +225,7 @@ void main() {
       expect(find.text('Show r.md'), findsOneWidget);
       expect(find.textContaining('A page runs'), findsNothing);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the event', () {
@@ -255,7 +248,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(FileView), findsNothing);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a narrow window keeps the transcript; the row opens it', (
       tester,
@@ -275,7 +268,7 @@ void main() {
       expect(find.byType(FileView), findsOneWidget);
       expect(FocusManager.instance.primaryFocus, same(box));
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     // A laptop's chat area, 1460 wide, holds the preview beside the Files
     // pane, the details tucking away for it (ADR 0123), but not beside the
@@ -322,7 +315,7 @@ void main() {
       expect(find.byType(FileView), findsOneWidget);
       expect(filesChats.value, {'c'});
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     for (final (area, opens) in [(861.0, true), (859.0, false)]) {
       testWidgets('Files closed, a chat of ${area.toInt()}: '
@@ -338,7 +331,7 @@ void main() {
         expect(find.byType(FileView), opens ? findsOneWidget : findsNothing);
         expect(_chat(d).showAsked.value, isNull);
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('Files open over the transcript (a narrow window): it still '
@@ -355,7 +348,7 @@ void main() {
       expect(find.byType(FileView), findsOneWidget);
       expect(tester.getRect(find.byType(FilesPane)), pane);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('leaves another chat alone; the latest opens on coming back', (
       tester,
@@ -379,7 +372,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(FileView), findsNothing);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a rewind past the call forgets the ask', (tester) async {
       final (fake, d) = await _app(tester, chat: 'o');
@@ -391,7 +384,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(FileView), findsNothing);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('leaves Settings open over the chat', (tester) async {
       final (fake, d) = await _app(tester);
@@ -404,7 +397,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(FileView), findsOneWidget);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('adds a tab to what’s open, or shows the one it has', (
       tester,
@@ -419,7 +412,7 @@ void main() {
       expect(c.fileNames, ['docs/first.md', 'docs/report.md']);
       expect(c.shownFile, 'docs/first.md');
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('waits on Changes with tabs open, and adds none in a narrow '
         'window', (tester) async {
@@ -437,7 +430,7 @@ void main() {
       expect(c.showAsked.value, isNull, reason: 'the ask is spent');
       expect(c.fileNames, ['docs/first.md']);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('leaves Changes alone, until the transcript shows again', (
       tester,
@@ -452,7 +445,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(FileView), findsOneWidget);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('its Preview is marked while its file shows, by either name', (
       tester,
@@ -477,14 +470,14 @@ void main() {
       expect(_chat(d).shownFile, 'docs/report.md');
       expect(lit(), isTrue);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a chat the app doesn’t know is nothing', (tester) async {
       final (fake, d) = await _app(tester);
       await _shows(tester, fake, 'docs/report.md', chat: 'nope');
       expect(find.byType(FileView), findsNothing);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the phone stays where it is; its row offers Preview', (
       tester,
@@ -493,12 +486,11 @@ void main() {
       tester.platformDispatcher.accessibilityFeaturesTestValue =
           const FakeAccessibilityFeatures(disableAnimations: true);
       addTearDown(tester.platformDispatcher.clearAllTestValues);
-      Collapsible.opened.clear();
       final fake = _fake(
         items: [
-          _say('m', 'The report is written.'),
+          agentSays('m', 'The report is written.'),
           _show('a', 'docs/report.md'),
-          _say('n', 'And the page.'),
+          agentSays('n', 'And the page.'),
           _ask('mcp__nushi__show', '{\n  "path": "docs/report.html"\n}'),
         ],
       );
@@ -527,20 +519,20 @@ void main() {
               kind: ItemKind.ITEM_KIND_USER_MESSAGE,
               text: 'Write the release report and show it to me.',
             ),
-            _say('m', 'The report is written.'),
+            agentSays('m', 'The report is written.'),
             _show(
               'a',
               'docs/report.md',
               text: 'The preview pane beside the chat has the file.',
             ),
-            _say('n', 'Now the numbers, as a page.'),
+            agentSays('n', 'Now the numbers, as a page.'),
             _show(
               'f',
               'internal/api/api.go',
               status: 'failed',
               text: 'the preview doesn’t open this type of file',
             ),
-            _say('o', 'That was the wrong file; the page is this one.'),
+            agentSays('o', 'That was the wrong file; the page is this one.'),
             _ask(
               'mcp__nushi__show',
               '{\n  "path": "docs/history/release-timings.html"\n}',
@@ -564,7 +556,7 @@ void main() {
           'show_${name}_${brightness.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

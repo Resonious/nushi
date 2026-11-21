@@ -32,8 +32,7 @@ func (noExtras) List(context.Context, string) (model.Skills, error) { return mod
 func (noExtras) SetSkillOn(context.Context, string, string, string, bool) error {
 	return nil
 }
-func (noExtras) CanTrash(context.Context, string, string) error { return nil }
-func (noExtras) Trash(context.Context, string, string) error    { return nil }
+func (noExtras) Own(string) (project, yours []string) { return nil, nil }
 
 // fileSkill is an agent's skills with one, a shared skill in one file.
 type fileSkill struct{ noExtras }

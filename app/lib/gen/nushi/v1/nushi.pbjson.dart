@@ -359,7 +359,6 @@ const Chat$json = {
     {'1': 'agent', '3': 2, '4': 1, '5': 9, '10': 'agent'},
     {'1': 'folder', '3': 3, '4': 1, '5': 9, '10': 'folder'},
     {'1': 'title', '3': 4, '4': 1, '5': 9, '10': 'title'},
-    {'1': 'mode', '3': 5, '4': 1, '5': 9, '10': 'mode'},
     {'1': 'created_unix_ms', '3': 6, '4': 1, '5': 3, '10': 'createdUnixMs'},
     {
       '1': 'status',
@@ -421,24 +420,28 @@ const Chat$json = {
     },
     {'1': 'archived_unix_ms', '3': 23, '4': 1, '5': 3, '10': 'archivedUnixMs'},
   ],
+  '9': [
+    {'1': 5, '2': 6},
+  ],
+  '10': ['mode'],
 };
 
 /// Descriptor for `Chat`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List chatDescriptor = $convert.base64Decode(
     'CgRDaGF0Eg4KAmlkGAEgASgJUgJpZBIUCgVhZ2VudBgCIAEoCVIFYWdlbnQSFgoGZm9sZGVyGA'
-    'MgASgJUgZmb2xkZXISFAoFdGl0bGUYBCABKAlSBXRpdGxlEhIKBG1vZGUYBSABKAlSBG1vZGUS'
-    'JgoPY3JlYXRlZF91bml4X21zGAYgASgDUg1jcmVhdGVkVW5peE1zEiwKBnN0YXR1cxgHIAEoCz'
-    'IULm51c2hpLnYxLkNoYXRTdGF0dXNSBnN0YXR1cxIaCghhcmNoaXZlZBgIIAEoCFIIYXJjaGl2'
-    'ZWQSHQoKc2Vzc2lvbl9pZBgJIAEoCVIJc2Vzc2lvbklkEi4KCHdvcmt0cmVlGAogASgLMhIubn'
-    'VzaGkudjEuV29ya3RyZWVSCHdvcmt0cmVlEhgKB3NjcmF0Y2gYCyABKAhSB3NjcmF0Y2gSGwoJ'
-    'amlyYV9zaXRlGAwgASgJUghqaXJhU2l0ZRIZCghqaXJhX2tleRgNIAEoCVIHamlyYUtleRIsCg'
-    'ZnaXRodWIYDiABKAsyFC5udXNoaS52MS5HaXRIdWJMaW5rUgZnaXRodWISEgoEZG9uZRgPIAEo'
-    'CFIEZG9uZRIoCgRwdWxsGBAgASgLMhQubnVzaGkudjEuR2l0SHViTGlua1IEcHVsbBIQCgNwaW'
-    '4YESABKAVSA3BpbhIUCgVjb2xvchgSIAEoCVIFY29sb3ISJwoPcGlubmVkX21lc3NhZ2VzGBMg'
-    'AygJUg5waW5uZWRNZXNzYWdlcxImCg91cGRhdGVkX3VuaXhfbXMYFCABKANSDXVwZGF0ZWRVbm'
-    'l4TXMSNwoMbWVzc2FnZV9waW5zGBUgAygLMhQubnVzaGkudjEuTWVzc2FnZVBpblILbWVzc2Fn'
-    'ZVBpbnMSKgoFcHVsbHMYFiADKAsyFC5udXNoaS52MS5HaXRIdWJMaW5rUgVwdWxscxIoChBhcm'
-    'NoaXZlZF91bml4X21zGBcgASgDUg5hcmNoaXZlZFVuaXhNcw==');
+    'MgASgJUgZmb2xkZXISFAoFdGl0bGUYBCABKAlSBXRpdGxlEiYKD2NyZWF0ZWRfdW5peF9tcxgG'
+    'IAEoA1INY3JlYXRlZFVuaXhNcxIsCgZzdGF0dXMYByABKAsyFC5udXNoaS52MS5DaGF0U3RhdH'
+    'VzUgZzdGF0dXMSGgoIYXJjaGl2ZWQYCCABKAhSCGFyY2hpdmVkEh0KCnNlc3Npb25faWQYCSAB'
+    'KAlSCXNlc3Npb25JZBIuCgh3b3JrdHJlZRgKIAEoCzISLm51c2hpLnYxLldvcmt0cmVlUgh3b3'
+    'JrdHJlZRIYCgdzY3JhdGNoGAsgASgIUgdzY3JhdGNoEhsKCWppcmFfc2l0ZRgMIAEoCVIIamly'
+    'YVNpdGUSGQoIamlyYV9rZXkYDSABKAlSB2ppcmFLZXkSLAoGZ2l0aHViGA4gASgLMhQubnVzaG'
+    'kudjEuR2l0SHViTGlua1IGZ2l0aHViEhIKBGRvbmUYDyABKAhSBGRvbmUSKAoEcHVsbBgQIAEo'
+    'CzIULm51c2hpLnYxLkdpdEh1YkxpbmtSBHB1bGwSEAoDcGluGBEgASgFUgNwaW4SFAoFY29sb3'
+    'IYEiABKAlSBWNvbG9yEicKD3Bpbm5lZF9tZXNzYWdlcxgTIAMoCVIOcGlubmVkTWVzc2FnZXMS'
+    'JgoPdXBkYXRlZF91bml4X21zGBQgASgDUg11cGRhdGVkVW5peE1zEjcKDG1lc3NhZ2VfcGlucx'
+    'gVIAMoCzIULm51c2hpLnYxLk1lc3NhZ2VQaW5SC21lc3NhZ2VQaW5zEioKBXB1bGxzGBYgAygL'
+    'MhQubnVzaGkudjEuR2l0SHViTGlua1IFcHVsbHMSKAoQYXJjaGl2ZWRfdW5peF9tcxgXIAEoA1'
+    'IOYXJjaGl2ZWRVbml4TXNKBAgFEAZSBG1vZGU=');
 
 @$core.Deprecated('Use messagePinDescriptor instead')
 const MessagePin$json = {
@@ -600,15 +603,18 @@ final $typed_data.Uint8List getChatImageRequestDescriptor = $convert.base64Decod
 const GetChatImageResponse$json = {
   '1': 'GetChatImageResponse',
   '2': [
-    {'1': 'mime_type', '3': 1, '4': 1, '5': 9, '10': 'mimeType'},
     {'1': 'data', '3': 2, '4': 1, '5': 12, '10': 'data'},
   ],
+  '9': [
+    {'1': 1, '2': 2},
+  ],
+  '10': ['mime_type'],
 };
 
 /// Descriptor for `GetChatImageResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getChatImageResponseDescriptor = $convert.base64Decode(
-    'ChRHZXRDaGF0SW1hZ2VSZXNwb25zZRIbCgltaW1lX3R5cGUYASABKAlSCG1pbWVUeXBlEhIKBG'
-    'RhdGEYAiABKAxSBGRhdGE=');
+    'ChRHZXRDaGF0SW1hZ2VSZXNwb25zZRISCgRkYXRhGAIgASgMUgRkYXRhSgQIARACUgltaW1lX3'
+    'R5cGU=');
 
 @$core.Deprecated('Use getChatItemsResponseDescriptor instead')
 const GetChatItemsResponse$json = {
@@ -784,7 +790,6 @@ const Agent$json = {
     {'1': 'delete_archives', '3': 5, '4': 1, '5': 8, '10': 'deleteArchives'},
     {'1': 'path', '3': 6, '4': 1, '5': 9, '10': 'path'},
     {'1': 'version', '3': 7, '4': 1, '5': 9, '10': 'version'},
-    {'1': 'page', '3': 8, '4': 1, '5': 9, '10': 'page'},
     {'1': 'problem', '3': 9, '4': 1, '5': 9, '10': 'problem'},
     {'1': 'signed_in', '3': 10, '4': 1, '5': 9, '10': 'signedIn'},
     {
@@ -800,9 +805,10 @@ const Agent$json = {
     {'1': 'mcp_user_only', '3': 15, '4': 1, '5': 8, '10': 'mcpUserOnly'},
   ],
   '9': [
+    {'1': 8, '2': 9},
     {'1': 14, '2': 15},
   ],
-  '10': ['go_agent'],
+  '10': ['page', 'go_agent'],
 };
 
 /// Descriptor for `Agent`. Decode as a `google.protobuf.DescriptorProto`.
@@ -810,11 +816,10 @@ final $typed_data.Uint8List agentDescriptor = $convert.base64Decode(
     'CgVBZ2VudBISCgRuYW1lGAEgASgJUgRuYW1lEhQKBXRpdGxlGAIgASgJUgV0aXRsZRIWCgZyZX'
     'N1bWUYAyABKAlSBnJlc3VtZRIQCgNtY3AYBCABKAhSA21jcBInCg9kZWxldGVfYXJjaGl2ZXMY'
     'BSABKAhSDmRlbGV0ZUFyY2hpdmVzEhIKBHBhdGgYBiABKAlSBHBhdGgSGAoHdmVyc2lvbhgHIA'
-    'EoCVIHdmVyc2lvbhISCgRwYWdlGAggASgJUgRwYWdlEhgKB3Byb2JsZW0YCSABKAlSB3Byb2Js'
-    'ZW0SGwoJc2lnbmVkX2luGAogASgJUghzaWduZWRJbhIrCgdhZGFwdGVyGAsgASgLMhEubnVzaG'
-    'kudjEuQWRhcHRlclIHYWRhcHRlchIUCgVyZWFkeRgMIAEoCFIFcmVhZHkSFAoFYXdha2UYDSAB'
-    'KAVSBWF3YWtlEiIKDW1jcF91c2VyX29ubHkYDyABKAhSC21jcFVzZXJPbmx5SgQIDhAPUghnb1'
-    '9hZ2VudA==');
+    'EoCVIHdmVyc2lvbhIYCgdwcm9ibGVtGAkgASgJUgdwcm9ibGVtEhsKCXNpZ25lZF9pbhgKIAEo'
+    'CVIIc2lnbmVkSW4SKwoHYWRhcHRlchgLIAEoCzIRLm51c2hpLnYxLkFkYXB0ZXJSB2FkYXB0ZX'
+    'ISFAoFcmVhZHkYDCABKAhSBXJlYWR5EhQKBWF3YWtlGA0gASgFUgVhd2FrZRIiCg1tY3BfdXNl'
+    'cl9vbmx5GA8gASgIUgttY3BVc2VyT25seUoECAgQCUoECA4QD1IEcGFnZVIIZ29fYWdlbnQ=');
 
 @$core.Deprecated('Use adapterDescriptor instead')
 const Adapter$json = {
@@ -1099,14 +1104,6 @@ const StartChatResponse$json = {
   '2': [
     {'1': 'chat_id', '3': 1, '4': 1, '5': 9, '10': 'chatId'},
     {
-      '1': 'config',
-      '3': 2,
-      '4': 3,
-      '5': 11,
-      '6': '.nushi.v1.ConfigOption',
-      '10': 'config'
-    },
-    {
       '1': 'head_runs',
       '3': 3,
       '4': 3,
@@ -1117,14 +1114,18 @@ const StartChatResponse$json = {
     {'1': 'head_folder', '3': 4, '4': 1, '5': 9, '10': 'headFolder'},
     {'1': 'head_runs_key', '3': 5, '4': 1, '5': 9, '10': 'headRunsKey'},
   ],
+  '9': [
+    {'1': 2, '2': 3},
+  ],
+  '10': ['config'],
 };
 
 /// Descriptor for `StartChatResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List startChatResponseDescriptor = $convert.base64Decode(
-    'ChFTdGFydENoYXRSZXNwb25zZRIXCgdjaGF0X2lkGAEgASgJUgZjaGF0SWQSLgoGY29uZmlnGA'
-    'IgAygLMhYubnVzaGkudjEuQ29uZmlnT3B0aW9uUgZjb25maWcSMAoJaGVhZF9ydW5zGAMgAygL'
-    'MhMubnVzaGkudjEuRm9sZGVyUnVuUghoZWFkUnVucxIfCgtoZWFkX2ZvbGRlchgEIAEoCVIKaG'
-    'VhZEZvbGRlchIiCg1oZWFkX3J1bnNfa2V5GAUgASgJUgtoZWFkUnVuc0tleQ==');
+    'ChFTdGFydENoYXRSZXNwb25zZRIXCgdjaGF0X2lkGAEgASgJUgZjaGF0SWQSMAoJaGVhZF9ydW'
+    '5zGAMgAygLMhMubnVzaGkudjEuRm9sZGVyUnVuUghoZWFkUnVucxIfCgtoZWFkX2ZvbGRlchgE'
+    'IAEoCVIKaGVhZEZvbGRlchIiCg1oZWFkX3J1bnNfa2V5GAUgASgJUgtoZWFkUnVuc0tleUoECA'
+    'IQA1IGY29uZmln');
 
 @$core.Deprecated('Use sendPromptRequestDescriptor instead')
 const SendPromptRequest$json = {
@@ -2993,16 +2994,19 @@ final $typed_data.Uint8List getProjectIconRequestDescriptor =
 const GetProjectIconResponse$json = {
   '1': 'GetProjectIconResponse',
   '2': [
-    {'1': 'mime_type', '3': 1, '4': 1, '5': 9, '10': 'mimeType'},
     {'1': 'data', '3': 2, '4': 1, '5': 12, '10': 'data'},
   ],
+  '9': [
+    {'1': 1, '2': 2},
+  ],
+  '10': ['mime_type'],
 };
 
 /// Descriptor for `GetProjectIconResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getProjectIconResponseDescriptor =
     $convert.base64Decode(
-        'ChZHZXRQcm9qZWN0SWNvblJlc3BvbnNlEhsKCW1pbWVfdHlwZRgBIAEoCVIIbWltZVR5cGUSEg'
-        'oEZGF0YRgCIAEoDFIEZGF0YQ==');
+        'ChZHZXRQcm9qZWN0SWNvblJlc3BvbnNlEhIKBGRhdGEYAiABKAxSBGRhdGFKBAgBEAJSCW1pbW'
+        'VfdHlwZQ==');
 
 @$core.Deprecated('Use getFolderStatusRequestDescriptor instead')
 const GetFolderStatusRequest$json = {
@@ -3956,7 +3960,6 @@ const Workflow$json = {
   '1': 'Workflow',
   '2': [
     {'1': 'run_id', '3': 1, '4': 1, '5': 9, '10': 'runId'},
-    {'1': 'task_id', '3': 2, '4': 1, '5': 9, '10': 'taskId'},
     {'1': 'name', '3': 3, '4': 1, '5': 9, '10': 'name'},
     {'1': 'description', '3': 4, '4': 1, '5': 9, '10': 'description'},
     {'1': 'state', '3': 5, '4': 1, '5': 9, '10': 'state'},
@@ -3980,19 +3983,23 @@ const Workflow$json = {
     {'1': 'summary', '3': 16, '4': 1, '5': 9, '10': 'summary'},
     {'1': 'stalled', '3': 17, '4': 1, '5': 8, '10': 'stalled'},
   ],
+  '9': [
+    {'1': 2, '2': 3},
+  ],
+  '10': ['task_id'],
 };
 
 /// Descriptor for `Workflow`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List workflowDescriptor = $convert.base64Decode(
-    'CghXb3JrZmxvdxIVCgZydW5faWQYASABKAlSBXJ1bklkEhcKB3Rhc2tfaWQYAiABKAlSBnRhc2'
-    'tJZBISCgRuYW1lGAMgASgJUgRuYW1lEiAKC2Rlc2NyaXB0aW9uGAQgASgJUgtkZXNjcmlwdGlv'
-    'bhIUCgVzdGF0ZRgFIAEoCVIFc3RhdGUSEAoDZW5kGAYgASgJUgNlbmQSGAoHc3RhcnRlZBgHIA'
-    'EoA1IHc3RhcnRlZBIUCgVlbmRlZBgIIAEoA1IFZW5kZWQSFgoGYWN0aXZlGAkgASgDUgZhY3Rp'
-    'dmUSLwoGcGhhc2VzGAogAygLMhcubnVzaGkudjEuV29ya2Zsb3dQaGFzZVIGcGhhc2VzEhYKBm'
-    'FnZW50cxgLIAEoBVIGYWdlbnRzEhIKBGRvbmUYDCABKAVSBGRvbmUSFgoGZmFpbGVkGA0gASgF'
-    'UgZmYWlsZWQSGAoHcnVubmluZxgOIAMoCVIHcnVubmluZxIjCg1ydW5uaW5nX2NvdW50GA8gAS'
-    'gFUgxydW5uaW5nQ291bnQSGAoHc3VtbWFyeRgQIAEoCVIHc3VtbWFyeRIYCgdzdGFsbGVkGBEg'
-    'ASgIUgdzdGFsbGVk');
+    'CghXb3JrZmxvdxIVCgZydW5faWQYASABKAlSBXJ1bklkEhIKBG5hbWUYAyABKAlSBG5hbWUSIA'
+    'oLZGVzY3JpcHRpb24YBCABKAlSC2Rlc2NyaXB0aW9uEhQKBXN0YXRlGAUgASgJUgVzdGF0ZRIQ'
+    'CgNlbmQYBiABKAlSA2VuZBIYCgdzdGFydGVkGAcgASgDUgdzdGFydGVkEhQKBWVuZGVkGAggAS'
+    'gDUgVlbmRlZBIWCgZhY3RpdmUYCSABKANSBmFjdGl2ZRIvCgZwaGFzZXMYCiADKAsyFy5udXNo'
+    'aS52MS5Xb3JrZmxvd1BoYXNlUgZwaGFzZXMSFgoGYWdlbnRzGAsgASgFUgZhZ2VudHMSEgoEZG'
+    '9uZRgMIAEoBVIEZG9uZRIWCgZmYWlsZWQYDSABKAVSBmZhaWxlZBIYCgdydW5uaW5nGA4gAygJ'
+    'UgdydW5uaW5nEiMKDXJ1bm5pbmdfY291bnQYDyABKAVSDHJ1bm5pbmdDb3VudBIYCgdzdW1tYX'
+    'J5GBAgASgJUgdzdW1tYXJ5EhgKB3N0YWxsZWQYESABKAhSB3N0YWxsZWRKBAgCEANSB3Rhc2tf'
+    'aWQ=');
 
 @$core.Deprecated('Use workflowPhaseDescriptor instead')
 const WorkflowPhase$json = {
@@ -5005,16 +5012,19 @@ final $typed_data.Uint8List deviceDescriptor = $convert.base64Decode(
 const Pairing$json = {
   '1': 'Pairing',
   '2': [
-    {'1': 'expires', '3': 1, '4': 1, '5': 3, '10': 'expires'},
     {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
     {'1': 'code', '3': 3, '4': 1, '5': 9, '10': 'code'},
   ],
+  '9': [
+    {'1': 1, '2': 2},
+  ],
+  '10': ['expires'],
 };
 
 /// Descriptor for `Pairing`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List pairingDescriptor = $convert.base64Decode(
-    'CgdQYWlyaW5nEhgKB2V4cGlyZXMYASABKANSB2V4cGlyZXMSEgoEbmFtZRgCIAEoCVIEbmFtZR'
-    'ISCgRjb2RlGAMgASgJUgRjb2Rl');
+    'CgdQYWlyaW5nEhIKBG5hbWUYAiABKAlSBG5hbWUSEgoEY29kZRgDIAEoCVIEY29kZUoECAEQAl'
+    'IHZXhwaXJlcw==');
 
 @$core.Deprecated('Use getRemoteRequestDescriptor instead')
 const GetRemoteRequest$json = {
@@ -5082,14 +5092,16 @@ const StartPairingResponse$json = {
   '1': 'StartPairingResponse',
   '2': [
     {'1': 'qr', '3': 1, '4': 1, '5': 9, '10': 'qr'},
-    {'1': 'expires', '3': 2, '4': 1, '5': 3, '10': 'expires'},
   ],
+  '9': [
+    {'1': 2, '2': 3},
+  ],
+  '10': ['expires'],
 };
 
 /// Descriptor for `StartPairingResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List startPairingResponseDescriptor = $convert.base64Decode(
-    'ChRTdGFydFBhaXJpbmdSZXNwb25zZRIOCgJxchgBIAEoCVICcXISGAoHZXhwaXJlcxgCIAEoA1'
-    'IHZXhwaXJlcw==');
+    'ChRTdGFydFBhaXJpbmdSZXNwb25zZRIOCgJxchgBIAEoCVICcXJKBAgCEANSB2V4cGlyZXM=');
 
 @$core.Deprecated('Use confirmPairingRequestDescriptor instead')
 const ConfirmPairingRequest$json = {
@@ -5892,15 +5904,17 @@ const GetJiraJqlResponse$json = {
       '10': 'fields'
     },
     {'1': 'functions', '3': 2, '4': 3, '5': 9, '10': 'functions'},
-    {'1': 'words', '3': 3, '4': 3, '5': 9, '10': 'words'},
   ],
+  '9': [
+    {'1': 3, '2': 4},
+  ],
+  '10': ['words'],
 };
 
 /// Descriptor for `GetJiraJqlResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getJiraJqlResponseDescriptor = $convert.base64Decode(
     'ChJHZXRKaXJhSnFsUmVzcG9uc2USLgoGZmllbGRzGAEgAygLMhYubnVzaGkudjEuSmlyYUpxbE'
-    'ZpZWxkUgZmaWVsZHMSHAoJZnVuY3Rpb25zGAIgAygJUglmdW5jdGlvbnMSFAoFd29yZHMYAyAD'
-    'KAlSBXdvcmRz');
+    'ZpZWxkUgZmaWVsZHMSHAoJZnVuY3Rpb25zGAIgAygJUglmdW5jdGlvbnNKBAgDEARSBXdvcmRz');
 
 @$core.Deprecated('Use jiraJqlFieldDescriptor instead')
 const JiraJqlField$json = {
@@ -6117,23 +6131,15 @@ final $typed_data.Uint8List addJiraCommentRequestDescriptor = $convert.base64Dec
 @$core.Deprecated('Use addJiraCommentResponseDescriptor instead')
 const AddJiraCommentResponse$json = {
   '1': 'AddJiraCommentResponse',
-  '2': [
-    {
-      '1': 'comment',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.nushi.v1.JiraComment',
-      '10': 'comment'
-    },
+  '9': [
+    {'1': 1, '2': 2},
   ],
+  '10': ['comment'],
 };
 
 /// Descriptor for `AddJiraCommentResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List addJiraCommentResponseDescriptor =
-    $convert.base64Decode(
-        'ChZBZGRKaXJhQ29tbWVudFJlc3BvbnNlEi8KB2NvbW1lbnQYASABKAsyFS5udXNoaS52MS5KaX'
-        'JhQ29tbWVudFIHY29tbWVudA==');
+final $typed_data.Uint8List addJiraCommentResponseDescriptor = $convert
+    .base64Decode('ChZBZGRKaXJhQ29tbWVudFJlc3BvbnNlSgQIARACUgdjb21tZW50');
 
 @$core.Deprecated('Use getJiraAttachmentRequestDescriptor instead')
 const GetJiraAttachmentRequest$json = {
@@ -6141,15 +6147,18 @@ const GetJiraAttachmentRequest$json = {
   '2': [
     {'1': 'site', '3': 1, '4': 1, '5': 9, '10': 'site'},
     {'1': 'id', '3': 2, '4': 1, '5': 9, '10': 'id'},
-    {'1': 'thumbnail', '3': 3, '4': 1, '5': 8, '10': 'thumbnail'},
   ],
+  '9': [
+    {'1': 3, '2': 4},
+  ],
+  '10': ['thumbnail'],
 };
 
 /// Descriptor for `GetJiraAttachmentRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getJiraAttachmentRequestDescriptor =
     $convert.base64Decode(
         'ChhHZXRKaXJhQXR0YWNobWVudFJlcXVlc3QSEgoEc2l0ZRgBIAEoCVIEc2l0ZRIOCgJpZBgCIA'
-        'EoCVICaWQSHAoJdGh1bWJuYWlsGAMgASgIUgl0aHVtYm5haWw=');
+        'EoCVICaWRKBAgDEARSCXRodW1ibmFpbA==');
 
 @$core.Deprecated('Use getJiraAttachmentResponseDescriptor instead')
 const GetJiraAttachmentResponse$json = {
@@ -6321,15 +6330,15 @@ final $typed_data.Uint8List addGitHubTokenRequestDescriptor = $convert.base64Dec
 @$core.Deprecated('Use addGitHubTokenResponseDescriptor instead')
 const AddGitHubTokenResponse$json = {
   '1': 'AddGitHubTokenResponse',
-  '2': [
-    {'1': 'login', '3': 1, '4': 1, '5': 9, '10': 'login'},
+  '9': [
+    {'1': 1, '2': 2},
   ],
+  '10': ['login'],
 };
 
 /// Descriptor for `AddGitHubTokenResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List addGitHubTokenResponseDescriptor =
-    $convert.base64Decode(
-        'ChZBZGRHaXRIdWJUb2tlblJlc3BvbnNlEhQKBWxvZ2luGAEgASgJUgVsb2dpbg==');
+final $typed_data.Uint8List addGitHubTokenResponseDescriptor = $convert
+    .base64Decode('ChZBZGRHaXRIdWJUb2tlblJlc3BvbnNlSgQIARACUgVsb2dpbg==');
 
 @$core.Deprecated('Use removeGitHubTokenRequestDescriptor instead')
 const RemoveGitHubTokenRequest$json = {
@@ -6815,6 +6824,7 @@ const GitHubComment$json = {
     {'1': 'created_ms', '3': 8, '4': 1, '5': 3, '10': 'createdMs'},
     {'1': 'review', '3': 9, '4': 1, '5': 9, '10': 'review'},
     {'1': 'commit', '3': 10, '4': 1, '5': 9, '10': 'commit'},
+    {'1': 'review_id', '3': 11, '4': 1, '5': 9, '10': 'reviewId'},
   ],
   '9': [
     {'1': 3, '2': 4},
@@ -6827,8 +6837,8 @@ final $typed_data.Uint8List gitHubCommentDescriptor = $convert.base64Decode(
     'Cg1HaXRIdWJDb21tZW50Eg4KAmlkGAEgASgJUgJpZBIWCgZhdXRob3IYAiABKAlSBmF1dGhvch'
     'IYCgdvdXRzaWRlGAQgASgIUgdvdXRzaWRlEhAKA2JvdBgFIAEoCFIDYm90EhIKBGJvZHkYBiAB'
     'KAlSBGJvZHkSEAoDdXJsGAcgASgJUgN1cmwSHQoKY3JlYXRlZF9tcxgIIAEoA1IJY3JlYXRlZE'
-    '1zEhYKBnJldmlldxgJIAEoCVIGcmV2aWV3EhYKBmNvbW1pdBgKIAEoCVIGY29tbWl0SgQIAxAE'
-    'Ugthc3NvY2lhdGlvbg==');
+    '1zEhYKBnJldmlldxgJIAEoCVIGcmV2aWV3EhYKBmNvbW1pdBgKIAEoCVIGY29tbWl0EhsKCXJl'
+    'dmlld19pZBgLIAEoCVIIcmV2aWV3SWRKBAgDEARSC2Fzc29jaWF0aW9u');
 
 @$core.Deprecated('Use gitHubThreadDescriptor instead')
 const GitHubThread$json = {
@@ -6861,6 +6871,7 @@ const GitHubThread$json = {
       '6': '.nushi.v1.GitHubComment',
       '10': 'comments'
     },
+    {'1': 'diff_hunk', '3': 15, '4': 1, '5': 9, '10': 'diffHunk'},
   ],
 };
 
@@ -6873,7 +6884,8 @@ final $typed_data.Uint8List gitHubThreadDescriptor = $convert.base64Decode(
     'CFIGb25GaWxlEhoKCG91dGRhdGVkGAkgASgIUghvdXRkYXRlZBIaCghyZXNvbHZlZBgKIAEoCF'
     'IIcmVzb2x2ZWQSGwoJY2FuX3JlcGx5GAsgASgIUghjYW5SZXBseRIfCgtjYW5fcmVzb2x2ZRgM'
     'IAEoCFIKY2FuUmVzb2x2ZRIjCg1jYW5fdW5yZXNvbHZlGA0gASgIUgxjYW5VbnJlc29sdmUSMw'
-    'oIY29tbWVudHMYDiADKAsyFy5udXNoaS52MS5HaXRIdWJDb21tZW50Ughjb21tZW50cw==');
+    'oIY29tbWVudHMYDiADKAsyFy5udXNoaS52MS5HaXRIdWJDb21tZW50Ughjb21tZW50cxIbCglk'
+    'aWZmX2h1bmsYDyABKAlSCGRpZmZIdW5r');
 
 @$core.Deprecated('Use gitHubAnnotationDescriptor instead')
 const GitHubAnnotation$json = {
@@ -7018,6 +7030,25 @@ const GitHubPull$json = {
       '6': '.nushi.v1.GitHubMerge',
       '10': 'merge'
     },
+    {
+      '1': 'labels',
+      '3': 24,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.GitHubLabel',
+      '10': 'labels'
+    },
+    {'1': 'assignees', '3': 25, '4': 3, '5': 9, '10': 'assignees'},
+    {
+      '1': 'reviews',
+      '3': 26,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.GitHubComment',
+      '10': 'reviews'
+    },
+    {'1': 'body_source', '3': 27, '4': 1, '5': 9, '10': 'bodySource'},
+    {'1': 'can_edit', '3': 28, '4': 1, '5': 8, '10': 'canEdit'},
   ],
   '9': [
     {'1': 3, '2': 4},
@@ -7041,7 +7072,88 @@ final $typed_data.Uint8List gitHubPullDescriptor = $convert.base64Decode(
     'l0SHViQ2hlY2tSBmNoZWNrcxIlCg5wZW5kaW5nX3JldmlldxgUIAEoCVINcGVuZGluZ1Jldmll'
     'dxIpChBwZW5kaW5nX2NvbW1lbnRzGBUgASgFUg9wZW5kaW5nQ29tbWVudHMSGAoHY29tbWl0cx'
     'gWIAEoBVIHY29tbWl0cxIrCgVtZXJnZRgXIAEoCzIVLm51c2hpLnYxLkdpdEh1Yk1lcmdlUgVt'
-    'ZXJnZUoECAMQBFILYXNzb2NpYXRpb24=');
+    'ZXJnZRItCgZsYWJlbHMYGCADKAsyFS5udXNoaS52MS5HaXRIdWJMYWJlbFIGbGFiZWxzEhwKCW'
+    'Fzc2lnbmVlcxgZIAMoCVIJYXNzaWduZWVzEjEKB3Jldmlld3MYGiADKAsyFy5udXNoaS52MS5H'
+    'aXRIdWJDb21tZW50UgdyZXZpZXdzEh8KC2JvZHlfc291cmNlGBsgASgJUgpib2R5U291cmNlEh'
+    'kKCGNhbl9lZGl0GBwgASgIUgdjYW5FZGl0SgQIAxAEUgthc3NvY2lhdGlvbg==');
+
+@$core.Deprecated('Use gitHubLabelDescriptor instead')
+const GitHubLabel$json = {
+  '1': 'GitHubLabel',
+  '2': [
+    {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
+    {'1': 'color', '3': 2, '4': 1, '5': 9, '10': 'color'},
+  ],
+};
+
+/// Descriptor for `GitHubLabel`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List gitHubLabelDescriptor = $convert.base64Decode(
+    'CgtHaXRIdWJMYWJlbBISCgRuYW1lGAEgASgJUgRuYW1lEhQKBWNvbG9yGAIgASgJUgVjb2xvcg'
+    '==');
+
+@$core.Deprecated('Use gitHubCommitDescriptor instead')
+const GitHubCommit$json = {
+  '1': 'GitHubCommit',
+  '2': [
+    {'1': 'oid', '3': 1, '4': 1, '5': 9, '10': 'oid'},
+    {'1': 'headline', '3': 2, '4': 1, '5': 9, '10': 'headline'},
+    {'1': 'author', '3': 3, '4': 1, '5': 9, '10': 'author'},
+    {'1': 'author_name', '3': 4, '4': 1, '5': 9, '10': 'authorName'},
+    {'1': 'committed_ms', '3': 5, '4': 1, '5': 3, '10': 'committedMs'},
+    {'1': 'checks', '3': 6, '4': 1, '5': 9, '10': 'checks'},
+  ],
+};
+
+/// Descriptor for `GitHubCommit`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List gitHubCommitDescriptor = $convert.base64Decode(
+    'CgxHaXRIdWJDb21taXQSEAoDb2lkGAEgASgJUgNvaWQSGgoIaGVhZGxpbmUYAiABKAlSCGhlYW'
+    'RsaW5lEhYKBmF1dGhvchgDIAEoCVIGYXV0aG9yEh8KC2F1dGhvcl9uYW1lGAQgASgJUgphdXRo'
+    'b3JOYW1lEiEKDGNvbW1pdHRlZF9tcxgFIAEoA1ILY29tbWl0dGVkTXMSFgoGY2hlY2tzGAYgAS'
+    'gJUgZjaGVja3M=');
+
+@$core.Deprecated('Use getGitHubCommitsRequestDescriptor instead')
+const GetGitHubCommitsRequest$json = {
+  '1': 'GetGitHubCommitsRequest',
+  '2': [
+    {
+      '1': 'ref',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.nushi.v1.GitHubRef',
+      '10': 'ref'
+    },
+    {'1': 'quiet', '3': 2, '4': 1, '5': 8, '10': 'quiet'},
+  ],
+};
+
+/// Descriptor for `GetGitHubCommitsRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getGitHubCommitsRequestDescriptor =
+    $convert.base64Decode(
+        'ChdHZXRHaXRIdWJDb21taXRzUmVxdWVzdBIlCgNyZWYYASABKAsyEy5udXNoaS52MS5HaXRIdW'
+        'JSZWZSA3JlZhIUCgVxdWlldBgCIAEoCFIFcXVpZXQ=');
+
+@$core.Deprecated('Use getGitHubCommitsResponseDescriptor instead')
+const GetGitHubCommitsResponse$json = {
+  '1': 'GetGitHubCommitsResponse',
+  '2': [
+    {
+      '1': 'commits',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.GitHubCommit',
+      '10': 'commits'
+    },
+    {'1': 'total', '3': 2, '4': 1, '5': 5, '10': 'total'},
+  ],
+};
+
+/// Descriptor for `GetGitHubCommitsResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getGitHubCommitsResponseDescriptor =
+    $convert.base64Decode(
+        'ChhHZXRHaXRIdWJDb21taXRzUmVzcG9uc2USMAoHY29tbWl0cxgBIAMoCzIWLm51c2hpLnYxLk'
+        'dpdEh1YkNvbW1pdFIHY29tbWl0cxIUCgV0b3RhbBgCIAEoBVIFdG90YWw=');
 
 @$core.Deprecated('Use gitHubMergeDescriptor instead')
 const GitHubMerge$json = {
@@ -7344,23 +7456,15 @@ final $typed_data.Uint8List replyGitHubThreadRequestDescriptor =
 @$core.Deprecated('Use replyGitHubThreadResponseDescriptor instead')
 const ReplyGitHubThreadResponse$json = {
   '1': 'ReplyGitHubThreadResponse',
-  '2': [
-    {
-      '1': 'comment',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.nushi.v1.GitHubComment',
-      '10': 'comment'
-    },
+  '9': [
+    {'1': 1, '2': 2},
   ],
+  '10': ['comment'],
 };
 
 /// Descriptor for `ReplyGitHubThreadResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List replyGitHubThreadResponseDescriptor =
-    $convert.base64Decode(
-        'ChlSZXBseUdpdEh1YlRocmVhZFJlc3BvbnNlEjEKB2NvbW1lbnQYASABKAsyFy5udXNoaS52MS'
-        '5HaXRIdWJDb21tZW50Ugdjb21tZW50');
+final $typed_data.Uint8List replyGitHubThreadResponseDescriptor = $convert
+    .base64Decode('ChlSZXBseUdpdEh1YlRocmVhZFJlc3BvbnNlSgQIARACUgdjb21tZW50');
 
 @$core.Deprecated('Use resolveGitHubThreadRequestDescriptor instead')
 const ResolveGitHubThreadRequest$json = {
@@ -7798,26 +7902,55 @@ final $typed_data.Uint8List addGitHubCommentRequestDescriptor =
         'ChdBZGRHaXRIdWJDb21tZW50UmVxdWVzdBISCgRob3N0GAEgASgJUgRob3N0EhgKB3N1YmplY3'
         'QYAiABKAlSB3N1YmplY3QSEgoEYm9keRgDIAEoCVIEYm9keQ==');
 
-@$core.Deprecated('Use addGitHubCommentResponseDescriptor instead')
-const AddGitHubCommentResponse$json = {
-  '1': 'AddGitHubCommentResponse',
+@$core.Deprecated('Use editGitHubPullRequestDescriptor instead')
+const EditGitHubPullRequest$json = {
+  '1': 'EditGitHubPullRequest',
   '2': [
     {
-      '1': 'comment',
+      '1': 'ref',
       '3': 1,
       '4': 1,
       '5': 11,
-      '6': '.nushi.v1.GitHubComment',
-      '10': 'comment'
+      '6': '.nushi.v1.GitHubRef',
+      '10': 'ref'
     },
+    {'1': 'title', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'title', '17': true},
+    {'1': 'body', '3': 3, '4': 1, '5': 9, '9': 1, '10': 'body', '17': true},
+    {'1': 'was', '3': 4, '4': 1, '5': 9, '10': 'was'},
+  ],
+  '8': [
+    {'1': '_title'},
+    {'1': '_body'},
   ],
 };
 
+/// Descriptor for `EditGitHubPullRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List editGitHubPullRequestDescriptor = $convert.base64Decode(
+    'ChVFZGl0R2l0SHViUHVsbFJlcXVlc3QSJQoDcmVmGAEgASgLMhMubnVzaGkudjEuR2l0SHViUm'
+    'VmUgNyZWYSGQoFdGl0bGUYAiABKAlIAFIFdGl0bGWIAQESFwoEYm9keRgDIAEoCUgBUgRib2R5'
+    'iAEBEhAKA3dhcxgEIAEoCVIDd2FzQggKBl90aXRsZUIHCgVfYm9keQ==');
+
+@$core.Deprecated('Use editGitHubPullResponseDescriptor instead')
+const EditGitHubPullResponse$json = {
+  '1': 'EditGitHubPullResponse',
+};
+
+/// Descriptor for `EditGitHubPullResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List editGitHubPullResponseDescriptor =
+    $convert.base64Decode('ChZFZGl0R2l0SHViUHVsbFJlc3BvbnNl');
+
+@$core.Deprecated('Use addGitHubCommentResponseDescriptor instead')
+const AddGitHubCommentResponse$json = {
+  '1': 'AddGitHubCommentResponse',
+  '9': [
+    {'1': 1, '2': 2},
+  ],
+  '10': ['comment'],
+};
+
 /// Descriptor for `AddGitHubCommentResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List addGitHubCommentResponseDescriptor =
-    $convert.base64Decode(
-        'ChhBZGRHaXRIdWJDb21tZW50UmVzcG9uc2USMQoHY29tbWVudBgBIAEoCzIXLm51c2hpLnYxLk'
-        'dpdEh1YkNvbW1lbnRSB2NvbW1lbnQ=');
+final $typed_data.Uint8List addGitHubCommentResponseDescriptor = $convert
+    .base64Decode('ChhBZGRHaXRIdWJDb21tZW50UmVzcG9uc2VKBAgBEAJSB2NvbW1lbnQ=');
 
 @$core.Deprecated('Use gitHubDraftDescriptor instead')
 const GitHubDraft$json = {
@@ -7873,6 +8006,221 @@ const SubmitGitHubReviewResponse$json = {
 /// Descriptor for `SubmitGitHubReviewResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List submitGitHubReviewResponseDescriptor =
     $convert.base64Decode('ChpTdWJtaXRHaXRIdWJSZXZpZXdSZXNwb25zZQ==');
+
+@$core.Deprecated('Use getUsageRequestDescriptor instead')
+const GetUsageRequest$json = {
+  '1': 'GetUsageRequest',
+  '2': [
+    {'1': 'from', '3': 1, '4': 1, '5': 3, '10': 'from'},
+    {'1': 'to', '3': 2, '4': 1, '5': 3, '10': 'to'},
+    {'1': 'time_zone', '3': 3, '4': 1, '5': 9, '10': 'timeZone'},
+  ],
+};
+
+/// Descriptor for `GetUsageRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getUsageRequestDescriptor = $convert.base64Decode(
+    'Cg9HZXRVc2FnZVJlcXVlc3QSEgoEZnJvbRgBIAEoA1IEZnJvbRIOCgJ0bxgCIAEoA1ICdG8SGw'
+    'oJdGltZV96b25lGAMgASgJUgh0aW1lWm9uZQ==');
+
+@$core.Deprecated('Use getUsageResponseDescriptor instead')
+const GetUsageResponse$json = {
+  '1': 'GetUsageResponse',
+  '2': [
+    {
+      '1': 'totals',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.nushi.v1.UsageTotals',
+      '10': 'totals'
+    },
+    {
+      '1': 'days',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.UsageGroup',
+      '10': 'days'
+    },
+    {
+      '1': 'agents',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.UsageGroup',
+      '10': 'agents'
+    },
+    {
+      '1': 'models',
+      '3': 4,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.UsageGroup',
+      '10': 'models'
+    },
+    {
+      '1': 'folders',
+      '3': 5,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.UsageGroup',
+      '10': 'folders'
+    },
+    {
+      '1': 'chats',
+      '3': 6,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.UsageChat',
+      '10': 'chats'
+    },
+    {'1': 'no_cost', '3': 7, '4': 3, '5': 9, '10': 'noCost'},
+    {'1': 'earliest', '3': 8, '4': 1, '5': 3, '10': 'earliest'},
+    {
+      '1': 'limits',
+      '3': 9,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.UsageLimit',
+      '10': 'limits'
+    },
+  ],
+};
+
+/// Descriptor for `GetUsageResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getUsageResponseDescriptor = $convert.base64Decode(
+    'ChBHZXRVc2FnZVJlc3BvbnNlEi0KBnRvdGFscxgBIAEoCzIVLm51c2hpLnYxLlVzYWdlVG90YW'
+    'xzUgZ0b3RhbHMSKAoEZGF5cxgCIAMoCzIULm51c2hpLnYxLlVzYWdlR3JvdXBSBGRheXMSLAoG'
+    'YWdlbnRzGAMgAygLMhQubnVzaGkudjEuVXNhZ2VHcm91cFIGYWdlbnRzEiwKBm1vZGVscxgEIA'
+    'MoCzIULm51c2hpLnYxLlVzYWdlR3JvdXBSBm1vZGVscxIuCgdmb2xkZXJzGAUgAygLMhQubnVz'
+    'aGkudjEuVXNhZ2VHcm91cFIHZm9sZGVycxIpCgVjaGF0cxgGIAMoCzITLm51c2hpLnYxLlVzYW'
+    'dlQ2hhdFIFY2hhdHMSFwoHbm9fY29zdBgHIAMoCVIGbm9Db3N0EhoKCGVhcmxpZXN0GAggASgD'
+    'UghlYXJsaWVzdBIsCgZsaW1pdHMYCSADKAsyFC5udXNoaS52MS5Vc2FnZUxpbWl0UgZsaW1pdH'
+    'M=');
+
+@$core.Deprecated('Use usageTotalsDescriptor instead')
+const UsageTotals$json = {
+  '1': 'UsageTotals',
+  '2': [
+    {
+      '1': 'cost',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.nushi.v1.UsageCost',
+      '10': 'cost'
+    },
+    {'1': 'input_tokens', '3': 2, '4': 1, '5': 3, '10': 'inputTokens'},
+    {'1': 'output_tokens', '3': 3, '4': 1, '5': 3, '10': 'outputTokens'},
+    {'1': 'cache_read_tokens', '3': 4, '4': 1, '5': 3, '10': 'cacheReadTokens'},
+    {
+      '1': 'cache_write_tokens',
+      '3': 5,
+      '4': 1,
+      '5': 3,
+      '10': 'cacheWriteTokens'
+    },
+    {'1': 'turns', '3': 6, '4': 1, '5': 3, '10': 'turns'},
+  ],
+};
+
+/// Descriptor for `UsageTotals`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List usageTotalsDescriptor = $convert.base64Decode(
+    'CgtVc2FnZVRvdGFscxInCgRjb3N0GAEgAygLMhMubnVzaGkudjEuVXNhZ2VDb3N0UgRjb3N0Ei'
+    'EKDGlucHV0X3Rva2VucxgCIAEoA1ILaW5wdXRUb2tlbnMSIwoNb3V0cHV0X3Rva2VucxgDIAEo'
+    'A1IMb3V0cHV0VG9rZW5zEioKEWNhY2hlX3JlYWRfdG9rZW5zGAQgASgDUg9jYWNoZVJlYWRUb2'
+    'tlbnMSLAoSY2FjaGVfd3JpdGVfdG9rZW5zGAUgASgDUhBjYWNoZVdyaXRlVG9rZW5zEhQKBXR1'
+    'cm5zGAYgASgDUgV0dXJucw==');
+
+@$core.Deprecated('Use usageCostDescriptor instead')
+const UsageCost$json = {
+  '1': 'UsageCost',
+  '2': [
+    {'1': 'currency', '3': 1, '4': 1, '5': 9, '10': 'currency'},
+    {'1': 'amount', '3': 2, '4': 1, '5': 1, '10': 'amount'},
+  ],
+};
+
+/// Descriptor for `UsageCost`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List usageCostDescriptor = $convert.base64Decode(
+    'CglVc2FnZUNvc3QSGgoIY3VycmVuY3kYASABKAlSCGN1cnJlbmN5EhYKBmFtb3VudBgCIAEoAV'
+    'IGYW1vdW50');
+
+@$core.Deprecated('Use usageGroupDescriptor instead')
+const UsageGroup$json = {
+  '1': 'UsageGroup',
+  '2': [
+    {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
+    {
+      '1': 'totals',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.nushi.v1.UsageTotals',
+      '10': 'totals'
+    },
+  ],
+};
+
+/// Descriptor for `UsageGroup`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List usageGroupDescriptor = $convert.base64Decode(
+    'CgpVc2FnZUdyb3VwEhAKA2tleRgBIAEoCVIDa2V5Ei0KBnRvdGFscxgCIAEoCzIVLm51c2hpLn'
+    'YxLlVzYWdlVG90YWxzUgZ0b3RhbHM=');
+
+@$core.Deprecated('Use usageChatDescriptor instead')
+const UsageChat$json = {
+  '1': 'UsageChat',
+  '2': [
+    {'1': 'chat_id', '3': 1, '4': 1, '5': 9, '10': 'chatId'},
+    {'1': 'title', '3': 2, '4': 1, '5': 9, '10': 'title'},
+    {'1': 'agent', '3': 3, '4': 1, '5': 9, '10': 'agent'},
+    {
+      '1': 'totals',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.nushi.v1.UsageTotals',
+      '10': 'totals'
+    },
+  ],
+};
+
+/// Descriptor for `UsageChat`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List usageChatDescriptor = $convert.base64Decode(
+    'CglVc2FnZUNoYXQSFwoHY2hhdF9pZBgBIAEoCVIGY2hhdElkEhQKBXRpdGxlGAIgASgJUgV0aX'
+    'RsZRIUCgVhZ2VudBgDIAEoCVIFYWdlbnQSLQoGdG90YWxzGAQgASgLMhUubnVzaGkudjEuVXNh'
+    'Z2VUb3RhbHNSBnRvdGFscw==');
+
+@$core.Deprecated('Use usageLimitDescriptor instead')
+const UsageLimit$json = {
+  '1': 'UsageLimit',
+  '2': [
+    {'1': 'agent', '3': 1, '4': 1, '5': 9, '10': 'agent'},
+    {'1': 'kind', '3': 2, '4': 1, '5': 9, '10': 'kind'},
+    {'1': 'status', '3': 3, '4': 1, '5': 9, '10': 'status'},
+    {
+      '1': 'utilization',
+      '3': 4,
+      '4': 1,
+      '5': 1,
+      '9': 0,
+      '10': 'utilization',
+      '17': true
+    },
+    {'1': 'resets_at', '3': 5, '4': 1, '5': 3, '10': 'resetsAt'},
+    {'1': 'seen', '3': 6, '4': 1, '5': 3, '10': 'seen'},
+  ],
+  '8': [
+    {'1': '_utilization'},
+  ],
+};
+
+/// Descriptor for `UsageLimit`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List usageLimitDescriptor = $convert.base64Decode(
+    'CgpVc2FnZUxpbWl0EhQKBWFnZW50GAEgASgJUgVhZ2VudBISCgRraW5kGAIgASgJUgRraW5kEh'
+    'YKBnN0YXR1cxgDIAEoCVIGc3RhdHVzEiUKC3V0aWxpemF0aW9uGAQgASgBSABSC3V0aWxpemF0'
+    'aW9uiAEBEhsKCXJlc2V0c19hdBgFIAEoA1IIcmVzZXRzQXQSEgoEc2VlbhgGIAEoA1IEc2Vlbk'
+    'IOCgxfdXRpbGl6YXRpb24=');
 
 const $core.Map<$core.String, $core.dynamic> NushiServiceBase$json = {
   '1': 'NushiService',
@@ -8544,6 +8892,11 @@ const $core.Map<$core.String, $core.dynamic> NushiServiceBase$json = {
       '3': '.nushi.v1.GetGitHubIssueResponse'
     },
     {
+      '1': 'GetGitHubCommits',
+      '2': '.nushi.v1.GetGitHubCommitsRequest',
+      '3': '.nushi.v1.GetGitHubCommitsResponse'
+    },
+    {
       '1': 'GetGitHubFiles',
       '2': '.nushi.v1.GetGitHubFilesRequest',
       '3': '.nushi.v1.GetGitHubFilesResponse'
@@ -8572,6 +8925,11 @@ const $core.Map<$core.String, $core.dynamic> NushiServiceBase$json = {
       '1': 'SubmitGitHubReview',
       '2': '.nushi.v1.SubmitGitHubReviewRequest',
       '3': '.nushi.v1.SubmitGitHubReviewResponse'
+    },
+    {
+      '1': 'EditGitHubPull',
+      '2': '.nushi.v1.EditGitHubPullRequest',
+      '3': '.nushi.v1.EditGitHubPullResponse'
     },
     {
       '1': 'RerunGitHubChecks',
@@ -8642,6 +9000,11 @@ const $core.Map<$core.String, $core.dynamic> NushiServiceBase$json = {
       '1': 'LinkChatPull',
       '2': '.nushi.v1.LinkChatPullRequest',
       '3': '.nushi.v1.LinkChatPullResponse'
+    },
+    {
+      '1': 'GetUsage',
+      '2': '.nushi.v1.GetUsageRequest',
+      '3': '.nushi.v1.GetUsageResponse'
     },
     {
       '1': 'Events',
@@ -9019,9 +9382,13 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.nushi.v1.GitHubMerge': GitHubMerge$json,
   '.nushi.v1.GitHubAutoMerge': GitHubAutoMerge$json,
   '.nushi.v1.GitHubQueueEntry': GitHubQueueEntry$json,
+  '.nushi.v1.GitHubLabel': GitHubLabel$json,
   '.nushi.v1.GetGitHubIssueRequest': GetGitHubIssueRequest$json,
   '.nushi.v1.GetGitHubIssueResponse': GetGitHubIssueResponse$json,
   '.nushi.v1.GitHubIssue': GitHubIssue$json,
+  '.nushi.v1.GetGitHubCommitsRequest': GetGitHubCommitsRequest$json,
+  '.nushi.v1.GetGitHubCommitsResponse': GetGitHubCommitsResponse$json,
+  '.nushi.v1.GitHubCommit': GitHubCommit$json,
   '.nushi.v1.GetGitHubFilesRequest': GetGitHubFilesRequest$json,
   '.nushi.v1.GetGitHubFilesResponse': GetGitHubFilesResponse$json,
   '.nushi.v1.GetGitHubJobLogRequest': GetGitHubJobLogRequest$json,
@@ -9035,6 +9402,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.nushi.v1.SubmitGitHubReviewRequest': SubmitGitHubReviewRequest$json,
   '.nushi.v1.GitHubDraft': GitHubDraft$json,
   '.nushi.v1.SubmitGitHubReviewResponse': SubmitGitHubReviewResponse$json,
+  '.nushi.v1.EditGitHubPullRequest': EditGitHubPullRequest$json,
+  '.nushi.v1.EditGitHubPullResponse': EditGitHubPullResponse$json,
   '.nushi.v1.RerunGitHubChecksRequest': RerunGitHubChecksRequest$json,
   '.nushi.v1.RerunGitHubChecksResponse': RerunGitHubChecksResponse$json,
   '.nushi.v1.GetGitHubMergeTextRequest': GetGitHubMergeTextRequest$json,
@@ -9064,6 +9433,13 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.nushi.v1.FindChatPullResponse': FindChatPullResponse$json,
   '.nushi.v1.LinkChatPullRequest': LinkChatPullRequest$json,
   '.nushi.v1.LinkChatPullResponse': LinkChatPullResponse$json,
+  '.nushi.v1.GetUsageRequest': GetUsageRequest$json,
+  '.nushi.v1.GetUsageResponse': GetUsageResponse$json,
+  '.nushi.v1.UsageTotals': UsageTotals$json,
+  '.nushi.v1.UsageCost': UsageCost$json,
+  '.nushi.v1.UsageGroup': UsageGroup$json,
+  '.nushi.v1.UsageChat': UsageChat$json,
+  '.nushi.v1.UsageLimit': UsageLimit$json,
   '.nushi.v1.EventsRequest': EventsRequest$json,
   '.nushi.v1.EventsResponse': EventsResponse$json,
   '.nushi.v1.ItemEvent': ItemEvent$json,
@@ -9271,39 +9647,43 @@ final $typed_data.Uint8List nushiServiceDescriptor = $convert.base64Decode(
     'SHViSXRlbXNSZXF1ZXN0GiAubnVzaGkudjEuR2V0R2l0SHViSXRlbXNSZXNwb25zZRJQCg1HZX'
     'RHaXRIdWJQdWxsEh4ubnVzaGkudjEuR2V0R2l0SHViUHVsbFJlcXVlc3QaHy5udXNoaS52MS5H'
     'ZXRHaXRIdWJQdWxsUmVzcG9uc2USUwoOR2V0R2l0SHViSXNzdWUSHy5udXNoaS52MS5HZXRHaX'
-    'RIdWJJc3N1ZVJlcXVlc3QaIC5udXNoaS52MS5HZXRHaXRIdWJJc3N1ZVJlc3BvbnNlElMKDkdl'
-    'dEdpdEh1YkZpbGVzEh8ubnVzaGkudjEuR2V0R2l0SHViRmlsZXNSZXF1ZXN0GiAubnVzaGkudj'
-    'EuR2V0R2l0SHViRmlsZXNSZXNwb25zZRJWCg9HZXRHaXRIdWJKb2JMb2cSIC5udXNoaS52MS5H'
-    'ZXRHaXRIdWJKb2JMb2dSZXF1ZXN0GiEubnVzaGkudjEuR2V0R2l0SHViSm9iTG9nUmVzcG9uc2'
-    'USXAoRUmVwbHlHaXRIdWJUaHJlYWQSIi5udXNoaS52MS5SZXBseUdpdEh1YlRocmVhZFJlcXVl'
-    'c3QaIy5udXNoaS52MS5SZXBseUdpdEh1YlRocmVhZFJlc3BvbnNlEmIKE1Jlc29sdmVHaXRIdW'
-    'JUaHJlYWQSJC5udXNoaS52MS5SZXNvbHZlR2l0SHViVGhyZWFkUmVxdWVzdBolLm51c2hpLnYx'
-    'LlJlc29sdmVHaXRIdWJUaHJlYWRSZXNwb25zZRJZChBBZGRHaXRIdWJDb21tZW50EiEubnVzaG'
-    'kudjEuQWRkR2l0SHViQ29tbWVudFJlcXVlc3QaIi5udXNoaS52MS5BZGRHaXRIdWJDb21tZW50'
-    'UmVzcG9uc2USXwoSU3VibWl0R2l0SHViUmV2aWV3EiMubnVzaGkudjEuU3VibWl0R2l0SHViUm'
-    'V2aWV3UmVxdWVzdBokLm51c2hpLnYxLlN1Ym1pdEdpdEh1YlJldmlld1Jlc3BvbnNlElwKEVJl'
-    'cnVuR2l0SHViQ2hlY2tzEiIubnVzaGkudjEuUmVydW5HaXRIdWJDaGVja3NSZXF1ZXN0GiMubn'
-    'VzaGkudjEuUmVydW5HaXRIdWJDaGVja3NSZXNwb25zZRJfChJHZXRHaXRIdWJNZXJnZVRleHQS'
-    'Iy5udXNoaS52MS5HZXRHaXRIdWJNZXJnZVRleHRSZXF1ZXN0GiQubnVzaGkudjEuR2V0R2l0SH'
-    'ViTWVyZ2VUZXh0UmVzcG9uc2USVgoPTWVyZ2VHaXRIdWJQdWxsEiAubnVzaGkudjEuTWVyZ2VH'
-    'aXRIdWJQdWxsUmVxdWVzdBohLm51c2hpLnYxLk1lcmdlR2l0SHViUHVsbFJlc3BvbnNlEmgKFU'
-    'VuYWJsZUdpdEh1YkF1dG9NZXJnZRImLm51c2hpLnYxLkVuYWJsZUdpdEh1YkF1dG9NZXJnZVJl'
-    'cXVlc3QaJy5udXNoaS52MS5FbmFibGVHaXRIdWJBdXRvTWVyZ2VSZXNwb25zZRJrChZEaXNhYm'
-    'xlR2l0SHViQXV0b01lcmdlEicubnVzaGkudjEuRGlzYWJsZUdpdEh1YkF1dG9NZXJnZVJlcXVl'
-    'c3QaKC5udXNoaS52MS5EaXNhYmxlR2l0SHViQXV0b01lcmdlUmVzcG9uc2USXAoRRW5xdWV1ZU'
-    'dpdEh1YlB1bGwSIi5udXNoaS52MS5FbnF1ZXVlR2l0SHViUHVsbFJlcXVlc3QaIy5udXNoaS52'
-    'MS5FbnF1ZXVlR2l0SHViUHVsbFJlc3BvbnNlElwKEURlcXVldWVHaXRIdWJQdWxsEiIubnVzaG'
-    'kudjEuRGVxdWV1ZUdpdEh1YlB1bGxSZXF1ZXN0GiMubnVzaGkudjEuRGVxdWV1ZUdpdEh1YlB1'
-    'bGxSZXNwb25zZRJHCgpHZXRDbGVhblVwEhsubnVzaGkudjEuR2V0Q2xlYW5VcFJlcXVlc3QaHC'
-    '5udXNoaS52MS5HZXRDbGVhblVwUmVzcG9uc2USXwoSUmVtb3ZlQ2hhdFdvcmt0cmVlEiMubnVz'
-    'aGkudjEuUmVtb3ZlQ2hhdFdvcmt0cmVlUmVxdWVzdBokLm51c2hpLnYxLlJlbW92ZUNoYXRXb3'
-    'JrdHJlZVJlc3BvbnNlElkKEERlbGV0ZUNoYXRCcmFuY2gSIS5udXNoaS52MS5EZWxldGVDaGF0'
-    'QnJhbmNoUmVxdWVzdBoiLm51c2hpLnYxLkRlbGV0ZUNoYXRCcmFuY2hSZXNwb25zZRJfChJEZW'
-    'xldGVHaXRIdWJCcmFuY2gSIy5udXNoaS52MS5EZWxldGVHaXRIdWJCcmFuY2hSZXF1ZXN0GiQu'
-    'bnVzaGkudjEuRGVsZXRlR2l0SHViQnJhbmNoUmVzcG9uc2USYgoTUmVzdG9yZUdpdEh1YkJyYW'
-    '5jaBIkLm51c2hpLnYxLlJlc3RvcmVHaXRIdWJCcmFuY2hSZXF1ZXN0GiUubnVzaGkudjEuUmVz'
-    'dG9yZUdpdEh1YkJyYW5jaFJlc3BvbnNlEk0KDEZpbmRDaGF0UHVsbBIdLm51c2hpLnYxLkZpbm'
-    'RDaGF0UHVsbFJlcXVlc3QaHi5udXNoaS52MS5GaW5kQ2hhdFB1bGxSZXNwb25zZRJNCgxMaW5r'
-    'Q2hhdFB1bGwSHS5udXNoaS52MS5MaW5rQ2hhdFB1bGxSZXF1ZXN0Gh4ubnVzaGkudjEuTGlua0'
-    'NoYXRQdWxsUmVzcG9uc2USPQoGRXZlbnRzEhcubnVzaGkudjEuRXZlbnRzUmVxdWVzdBoYLm51'
-    'c2hpLnYxLkV2ZW50c1Jlc3BvbnNlMAE=');
+    'RIdWJJc3N1ZVJlcXVlc3QaIC5udXNoaS52MS5HZXRHaXRIdWJJc3N1ZVJlc3BvbnNlElkKEEdl'
+    'dEdpdEh1YkNvbW1pdHMSIS5udXNoaS52MS5HZXRHaXRIdWJDb21taXRzUmVxdWVzdBoiLm51c2'
+    'hpLnYxLkdldEdpdEh1YkNvbW1pdHNSZXNwb25zZRJTCg5HZXRHaXRIdWJGaWxlcxIfLm51c2hp'
+    'LnYxLkdldEdpdEh1YkZpbGVzUmVxdWVzdBogLm51c2hpLnYxLkdldEdpdEh1YkZpbGVzUmVzcG'
+    '9uc2USVgoPR2V0R2l0SHViSm9iTG9nEiAubnVzaGkudjEuR2V0R2l0SHViSm9iTG9nUmVxdWVz'
+    'dBohLm51c2hpLnYxLkdldEdpdEh1YkpvYkxvZ1Jlc3BvbnNlElwKEVJlcGx5R2l0SHViVGhyZW'
+    'FkEiIubnVzaGkudjEuUmVwbHlHaXRIdWJUaHJlYWRSZXF1ZXN0GiMubnVzaGkudjEuUmVwbHlH'
+    'aXRIdWJUaHJlYWRSZXNwb25zZRJiChNSZXNvbHZlR2l0SHViVGhyZWFkEiQubnVzaGkudjEuUm'
+    'Vzb2x2ZUdpdEh1YlRocmVhZFJlcXVlc3QaJS5udXNoaS52MS5SZXNvbHZlR2l0SHViVGhyZWFk'
+    'UmVzcG9uc2USWQoQQWRkR2l0SHViQ29tbWVudBIhLm51c2hpLnYxLkFkZEdpdEh1YkNvbW1lbn'
+    'RSZXF1ZXN0GiIubnVzaGkudjEuQWRkR2l0SHViQ29tbWVudFJlc3BvbnNlEl8KElN1Ym1pdEdp'
+    'dEh1YlJldmlldxIjLm51c2hpLnYxLlN1Ym1pdEdpdEh1YlJldmlld1JlcXVlc3QaJC5udXNoaS'
+    '52MS5TdWJtaXRHaXRIdWJSZXZpZXdSZXNwb25zZRJTCg5FZGl0R2l0SHViUHVsbBIfLm51c2hp'
+    'LnYxLkVkaXRHaXRIdWJQdWxsUmVxdWVzdBogLm51c2hpLnYxLkVkaXRHaXRIdWJQdWxsUmVzcG'
+    '9uc2USXAoRUmVydW5HaXRIdWJDaGVja3MSIi5udXNoaS52MS5SZXJ1bkdpdEh1YkNoZWNrc1Jl'
+    'cXVlc3QaIy5udXNoaS52MS5SZXJ1bkdpdEh1YkNoZWNrc1Jlc3BvbnNlEl8KEkdldEdpdEh1Yk'
+    '1lcmdlVGV4dBIjLm51c2hpLnYxLkdldEdpdEh1Yk1lcmdlVGV4dFJlcXVlc3QaJC5udXNoaS52'
+    'MS5HZXRHaXRIdWJNZXJnZVRleHRSZXNwb25zZRJWCg9NZXJnZUdpdEh1YlB1bGwSIC5udXNoaS'
+    '52MS5NZXJnZUdpdEh1YlB1bGxSZXF1ZXN0GiEubnVzaGkudjEuTWVyZ2VHaXRIdWJQdWxsUmVz'
+    'cG9uc2USaAoVRW5hYmxlR2l0SHViQXV0b01lcmdlEiYubnVzaGkudjEuRW5hYmxlR2l0SHViQX'
+    'V0b01lcmdlUmVxdWVzdBonLm51c2hpLnYxLkVuYWJsZUdpdEh1YkF1dG9NZXJnZVJlc3BvbnNl'
+    'EmsKFkRpc2FibGVHaXRIdWJBdXRvTWVyZ2USJy5udXNoaS52MS5EaXNhYmxlR2l0SHViQXV0b0'
+    '1lcmdlUmVxdWVzdBooLm51c2hpLnYxLkRpc2FibGVHaXRIdWJBdXRvTWVyZ2VSZXNwb25zZRJc'
+    'ChFFbnF1ZXVlR2l0SHViUHVsbBIiLm51c2hpLnYxLkVucXVldWVHaXRIdWJQdWxsUmVxdWVzdB'
+    'ojLm51c2hpLnYxLkVucXVldWVHaXRIdWJQdWxsUmVzcG9uc2USXAoRRGVxdWV1ZUdpdEh1YlB1'
+    'bGwSIi5udXNoaS52MS5EZXF1ZXVlR2l0SHViUHVsbFJlcXVlc3QaIy5udXNoaS52MS5EZXF1ZX'
+    'VlR2l0SHViUHVsbFJlc3BvbnNlEkcKCkdldENsZWFuVXASGy5udXNoaS52MS5HZXRDbGVhblVw'
+    'UmVxdWVzdBocLm51c2hpLnYxLkdldENsZWFuVXBSZXNwb25zZRJfChJSZW1vdmVDaGF0V29ya3'
+    'RyZWUSIy5udXNoaS52MS5SZW1vdmVDaGF0V29ya3RyZWVSZXF1ZXN0GiQubnVzaGkudjEuUmVt'
+    'b3ZlQ2hhdFdvcmt0cmVlUmVzcG9uc2USWQoQRGVsZXRlQ2hhdEJyYW5jaBIhLm51c2hpLnYxLk'
+    'RlbGV0ZUNoYXRCcmFuY2hSZXF1ZXN0GiIubnVzaGkudjEuRGVsZXRlQ2hhdEJyYW5jaFJlc3Bv'
+    'bnNlEl8KEkRlbGV0ZUdpdEh1YkJyYW5jaBIjLm51c2hpLnYxLkRlbGV0ZUdpdEh1YkJyYW5jaF'
+    'JlcXVlc3QaJC5udXNoaS52MS5EZWxldGVHaXRIdWJCcmFuY2hSZXNwb25zZRJiChNSZXN0b3Jl'
+    'R2l0SHViQnJhbmNoEiQubnVzaGkudjEuUmVzdG9yZUdpdEh1YkJyYW5jaFJlcXVlc3QaJS5udX'
+    'NoaS52MS5SZXN0b3JlR2l0SHViQnJhbmNoUmVzcG9uc2USTQoMRmluZENoYXRQdWxsEh0ubnVz'
+    'aGkudjEuRmluZENoYXRQdWxsUmVxdWVzdBoeLm51c2hpLnYxLkZpbmRDaGF0UHVsbFJlc3Bvbn'
+    'NlEk0KDExpbmtDaGF0UHVsbBIdLm51c2hpLnYxLkxpbmtDaGF0UHVsbFJlcXVlc3QaHi5udXNo'
+    'aS52MS5MaW5rQ2hhdFB1bGxSZXNwb25zZRJBCghHZXRVc2FnZRIZLm51c2hpLnYxLkdldFVzYW'
+    'dlUmVxdWVzdBoaLm51c2hpLnYxLkdldFVzYWdlUmVzcG9uc2USPQoGRXZlbnRzEhcubnVzaGku'
+    'djEuRXZlbnRzUmVxdWVzdBoYLm51c2hpLnYxLkV2ZW50c1Jlc3BvbnNlMAE=');

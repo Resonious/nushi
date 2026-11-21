@@ -73,9 +73,8 @@ type Remote struct {
 	Key []byte
 }
 
-// Pairing is a phone being paired: waiting for it until Expires, then,
-// once it has connected, its name and the code both screens show.
+// Pairing is a phone being paired: once it has connected, its name and
+// the code both screens show.
 type Pairing struct {
-	Expires    time.Time
 	Name, Code string
 }

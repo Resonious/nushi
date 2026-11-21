@@ -42,14 +42,7 @@ import 'right_panes_fixture.dart';
 // rail; the terminal under those two. Narrower, the rail tucks away;
 // narrower still, the panes lie over the transcript, under the header.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// Linux too: the same layout (ADR 0123).
-const _both = TargetPlatformVariant({
-  TargetPlatform.macOS,
-  TargetPlatform.linux,
-});
-
 /// Whether a row of the layout's matrix runs on Linux too: at 1700 and
 /// 720, the sidebar shown and hidden, the terminal shut (ADR 0123).
 bool _onLinux(double width, {required bool terminal}) =>
@@ -144,172 +137,176 @@ void main() {
         for (final terminal in [false, true]) {
           final where = sidebar ? 'the sidebar shown' : 'the sidebar hidden';
           final term = terminal ? ', the terminal open' : '';
-          testWidgets('${kind.name} at ${width.toInt()}, $where$term', (
-            tester,
-          ) async {
-            browserFakes();
-            final (d, _) = await panesApp(
-              tester,
-              width: width,
-              sidebar: sidebar,
-              terminal: terminal,
-              open: kind.open,
-            );
-            expect(tester.takeException(), isNull);
-            expectTextInside(tester, width);
-            final area = _rect(tester, find.byType(Pane));
-            final fit = chatFit(
-              room: area.width,
-              panes: kind.specs,
-              saved: const {},
-              wantRail: true,
-            );
-            final panes = [
-              for (final t in kind.types) _rect(tester, find.byType(t)),
-            ];
-            final header = _rect(tester, find.byType(ChatHeader));
-            final menu = _rect(tester, find.byTooltip('Chat menu'));
-            final transcript = _rect(tester, _transcript());
-            final bottom = terminal
-                ? _rect(tester, find.byType(TerminalPanel)).top
-                : area.bottom;
-            // Left to right, touching, the last at the window's margin.
-            for (var i = 1; i < panes.length; i++) {
-              expect(panes[i].left, panes[i - 1].right);
-            }
-            expect(panes.last.right, width - NushiTheme.windowPad);
-            expect(header.top, area.top);
-            expect(header.left, area.left);
-            expect(header.height, PaneHeader.height);
-            if (!sidebar) {
-              // The sidebar's button past the Mac's lights or at Linux's
-              // inset, and the title past the buttons.
-              expect(
-                _rect(tester, find.byType(SidebarButton)).left,
-                NushiTheme.windowPad + lightsInset - SidebarButton.reach,
+          testWidgets(
+            '${kind.name} at ${width.toInt()}, $where$term',
+            (tester) async {
+              browserFakes();
+              final (d, _) = await panesApp(
+                tester,
+                width: width,
+                sidebar: sidebar,
+                terminal: terminal,
+                open: kind.open,
               );
-              final title = find.descendant(
-                of: find.byType(ChatHeader),
-                matching: find.text('Fix the login redirect'),
+              expect(tester.takeException(), isNull);
+              expectTextInside(tester, width);
+              final area = _rect(tester, find.byType(Pane));
+              final fit = chatFit(
+                room: area.width,
+                panes: kind.specs,
+                saved: const {},
+                wantRail: true,
               );
-              expect(
-                _rect(tester, title).left,
-                greaterThanOrEqualTo(NushiTheme.windowPad + hiddenHeaderStart),
-              );
-            }
-            final first = panes.first;
-            // Beside the transcript or over it, the panes run the pane's
-            // full height, the terminal or not, each top row level with
-            // the chat's header, which spans the transcript and the rail
-            // and never the panes.
-            for (final p in panes) {
-              expect(p.top, area.top);
-              expect(p.bottom, area.bottom);
-            }
-            for (final t in kind.types) {
-              final row = _rect(tester, _topRow(find.byType(t)));
-              expect(row.top, header.top);
-              expect(row.bottom, header.bottom);
-            }
-            expect(header.width, fit.left);
-            expect(menu.right, header.right - ChatHeader.end);
-            if (!fit.over) {
-              expect(first.left, area.left + fit.left);
-              expect(header.right, first.left);
-              expect(menu.right, first.left - ChatHeader.end);
-              if (terminal) {
-                final term = _rect(tester, find.byType(TerminalPanel));
-                expect(term.left, area.left);
-                expect(term.right, first.left);
+              final panes = [
+                for (final t in kind.types) _rect(tester, find.byType(t)),
+              ];
+              final header = _rect(tester, find.byType(ChatHeader));
+              final menu = _rect(tester, find.byTooltip('Chat menu'));
+              final transcript = _rect(tester, _transcript());
+              final bottom = terminal
+                  ? _rect(tester, find.byType(TerminalPanel)).top
+                  : area.bottom;
+              // Left to right, touching, the last at the window's margin.
+              for (var i = 1; i < panes.length; i++) {
+                expect(panes[i].left, panes[i - 1].right);
               }
-              if (fit.rail) {
-                final rail = _rect(tester, find.byType(DetailsPanel));
-                expect(transcript.right, rail.left);
-                expect(rail.right, first.left);
-                expect(rail.top, header.bottom);
-                expect(rail.bottom, bottom);
+              expect(panes.last.right, width - NushiTheme.windowPad);
+              expect(header.top, area.top);
+              expect(header.left, area.left);
+              expect(header.height, PaneHeader.height);
+              if (!sidebar) {
+                // The sidebar's button past the Mac's lights or at Linux's
+                // inset, and the title past the buttons.
+                expect(
+                  _rect(tester, find.byType(SidebarButton)).left,
+                  NushiTheme.windowPad + lightsInset - SidebarButton.reach,
+                );
+                final title = find.descendant(
+                  of: find.byType(ChatHeader),
+                  matching: find.text('Fix the login redirect'),
+                );
+                expect(
+                  _rect(tester, title).left,
+                  greaterThanOrEqualTo(
+                    NushiTheme.windowPad + hiddenHeaderStart,
+                  ),
+                );
+              }
+              final first = panes.first;
+              // Beside the transcript or over it, the panes run the pane's
+              // full height, the terminal or not, each top row level with
+              // the chat's header, which spans the transcript and the rail
+              // and never the panes.
+              for (final p in panes) {
+                expect(p.top, area.top);
+                expect(p.bottom, area.bottom);
+              }
+              for (final t in kind.types) {
+                final row = _rect(tester, _topRow(find.byType(t)));
+                expect(row.top, header.top);
+                expect(row.bottom, header.bottom);
+              }
+              expect(header.width, fit.left);
+              expect(menu.right, header.right - ChatHeader.end);
+              if (!fit.over) {
+                expect(first.left, area.left + fit.left);
+                expect(header.right, first.left);
+                expect(menu.right, first.left - ChatHeader.end);
+                if (terminal) {
+                  final term = _rect(tester, find.byType(TerminalPanel));
+                  expect(term.left, area.left);
+                  expect(term.right, first.left);
+                }
+                if (fit.rail) {
+                  final rail = _rect(tester, find.byType(DetailsPanel));
+                  expect(transcript.right, rail.left);
+                  expect(rail.right, first.left);
+                  expect(rail.top, header.bottom);
+                  expect(rail.bottom, bottom);
+                } else {
+                  expect(find.byType(DetailsPanel), findsNothing);
+                  expect(transcript.right, first.left);
+                }
               } else {
+                // Over the transcript, which keeps its least under them, the
+                // header and the terminal as wide; the panes cover its right.
+                expect(header.right, greaterThan(first.left));
+                expect(transcript.left, area.left);
+                expect(transcript.right, header.right);
                 expect(find.byType(DetailsPanel), findsNothing);
-                expect(transcript.right, first.left);
+                if (terminal) {
+                  final term = _rect(tester, find.byType(TerminalPanel));
+                  expect(term.left, area.left);
+                  expect(term.right, header.right);
+                }
               }
-            } else {
-              // Over the transcript, which keeps its least under them, the
-              // header and the terminal as wide; the panes cover its right.
-              expect(header.right, greaterThan(first.left));
-              expect(transcript.left, area.left);
-              expect(transcript.right, header.right);
-              expect(find.byType(DetailsPanel), findsNothing);
-              if (terminal) {
-                final term = _rect(tester, find.byType(TerminalPanel));
-                expect(term.left, area.left);
-                expect(term.right, header.right);
+              // Each pane's buttons in its own top row, none of them in the
+              // chat's header; one top row each, nothing under it a header.
+              for (final t in kind.types) {
+                final pane = find.byType(t);
+                final row = _rect(tester, _topRow(pane));
+                expect(row.top, _rect(tester, pane).top);
+                final heads = find.descendant(
+                  of: pane,
+                  matching: find.byType(PaneHeader),
+                );
+                expect(heads, findsOneWidget);
+                final close = find.descendant(
+                  of: pane,
+                  matching: find.byWidgetPredicate(
+                    (w) =>
+                        w is Tooltip &&
+                        {'Close', 'End the side chat'}.contains(w.message),
+                  ),
+                );
+                expect(close, findsAtLeast(1));
+                for (final e in close.evaluate()) {
+                  final r = tester.getRect(find.byWidget(e.widget));
+                  expect(row.contains(r.center), isTrue, reason: '$t');
+                }
               }
-            }
-            // Each pane's buttons in its own top row, none of them in the
-            // chat's header; one top row each, nothing under it a header.
-            for (final t in kind.types) {
-              final pane = find.byType(t);
-              final row = _rect(tester, _topRow(pane));
-              expect(row.top, _rect(tester, pane).top);
-              final heads = find.descendant(
-                of: pane,
-                matching: find.byType(PaneHeader),
-              );
-              expect(heads, findsOneWidget);
-              final close = find.descendant(
-                of: pane,
-                matching: find.byWidgetPredicate(
-                  (w) =>
-                      w is Tooltip &&
-                      {'Close', 'End the side chat'}.contains(w.message),
+              expect(
+                find.descendant(
+                  of: find.byType(ChatHeader),
+                  matching: find.byTooltip('Close'),
                 ),
+                findsNothing,
               );
-              expect(close, findsAtLeast(1));
-              for (final e in close.evaluate()) {
-                final r = tester.getRect(find.byWidget(e.widget));
-                expect(row.contains(r.center), isTrue, reason: '$t');
+              // The tabs in the top row; the address, or the Files pane's bar
+              // with the path, under it.
+              if (kind.name == '3 files' || kind.types.contains(BrowserPane)) {
+                final pane = find.byType(kind.types.last);
+                final row = _rect(tester, _topRow(pane));
+                final tabs = find.descendant(
+                  of: pane,
+                  matching: find.byType(PaneTabs),
+                );
+                // Each kind here has two tabs or more, or a browser's.
+                expect(tabs, findsOneWidget);
+                final plus = find.descendant(
+                  of: pane,
+                  matching: find.byType(NewBrowserTab),
+                );
+                // A browser squeezed under a few chips' room keeps its tabs
+                // and buttons, and leaves out its +.
+                if (kind.types.last == BrowserPane &&
+                    _rect(tester, pane).width >= 200) {
+                  expect(plus, findsOneWidget);
+                }
+                for (final f in [tabs, if (plus.evaluate().isNotEmpty) plus]) {
+                  final r = _rect(tester, f);
+                  expect(r.top, greaterThanOrEqualTo(row.top), reason: '$f');
+                  expect(r.bottom, lessThanOrEqualTo(row.bottom), reason: '$f');
+                }
+                final below = kind.types.last == BrowserPane
+                    ? find.byType(BrowserBar)
+                    : find.byType(FilesBar);
+                expect(_rect(tester, below).top, row.bottom);
               }
-            }
-            expect(
-              find.descendant(
-                of: find.byType(ChatHeader),
-                matching: find.byTooltip('Close'),
-              ),
-              findsNothing,
-            );
-            // The tabs in the top row; the address, or the Files pane's bar
-            // with the path, under it.
-            if (kind.name == '3 files' || kind.types.contains(BrowserPane)) {
-              final pane = find.byType(kind.types.last);
-              final row = _rect(tester, _topRow(pane));
-              final tabs = find.descendant(
-                of: pane,
-                matching: find.byType(PaneTabs),
-              );
-              // Each kind here has two tabs or more, or a browser's.
-              expect(tabs, findsOneWidget);
-              final plus = find.descendant(
-                of: pane,
-                matching: find.byType(NewBrowserTab),
-              );
-              // A browser squeezed under a few chips' room keeps its tabs
-              // and buttons, and leaves out its +.
-              if (kind.types.last == BrowserPane &&
-                  _rect(tester, pane).width >= 200) {
-                expect(plus, findsOneWidget);
-              }
-              for (final f in [tabs, if (plus.evaluate().isNotEmpty) plus]) {
-                final r = _rect(tester, f);
-                expect(r.top, greaterThanOrEqualTo(row.top), reason: '$f');
-                expect(r.bottom, lessThanOrEqualTo(row.bottom), reason: '$f');
-              }
-              final below = kind.types.last == BrowserPane
-                  ? find.byType(BrowserBar)
-                  : find.byType(FilesBar);
-              expect(_rect(tester, below).top, row.bottom);
-            }
-            await closeView(tester, d);
-          }, variant: _onLinux(width, terminal: terminal) ? _both : _mac);
+              await closeView(tester, d);
+            },
+            variant: _onLinux(width, terminal: terminal) ? macAndLinux : onMac,
+          );
         }
       }
     }
@@ -366,7 +363,7 @@ void main() {
         image.dispose();
       });
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('a header 360 wide, with a long title and every chip, '
@@ -466,7 +463,7 @@ void main() {
     await tester.tapAt(Offset.zero);
     await tester.pumpAndSettle();
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a header narrowed by a pane folds only what doesn't fit: "
       "Claude's short name leaves the browser's button and the whole title "
@@ -493,7 +490,7 @@ void main() {
     expect(title.didExceedMaxLines, isFalse);
     expect(tester.takeException(), isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("a chat narrower than its panes' least widths narrows them, "
       'Files first, none past its left edge', (tester) async {
@@ -535,7 +532,7 @@ void main() {
     );
     expect(tester.takeException(), isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a notice takes a row under the chat header, as wide as it, '
       'a pane open beside the chat: the pane and its address row stay '
@@ -570,7 +567,7 @@ void main() {
       greaterThanOrEqualTo(bar.bottom),
     );
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   // The window with its panes, compared (macOS only; CI within
   // golden_tolerance.dart): the hairlines' seams, the tabs in the top row
@@ -654,7 +651,7 @@ void main() {
           ),
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

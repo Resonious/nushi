@@ -7,6 +7,7 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/motion.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/tool_calls.dart';
+import 'package:nushi/usage.dart';
 
 /// A dot of [color]; [ringing], a soft ring grows out of it and fades,
 /// again every 1.6 seconds, from the shared clock. Given [halo], the dot
@@ -202,40 +203,27 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
       case .failed:
         return Icon(Icons.error_outline, size: size * 1.6, color: t.crashed);
       case .working:
-        final mark = CustomPaint(
-          size: const Size.square(size * 1.6),
-          painter: StatusMark(t.running, ringing: !still),
-        );
+        final mark = _mark(StatusMark(t.running, ringing: !still));
         // A turn needs no words; work the user didn't start does.
         return chat.busy ? mark : tooltip(context, workingWords(chat), mark);
       case .background:
         return tooltip(
           context,
           backgroundWords(chat.background),
-          CustomPaint(
-            size: const Size.square(size * 1.6),
-            painter: _Ring(t.running, pulsing: !still),
-          ),
+          _mark(_Ring(t.running, pulsing: !still)),
         );
       case .archived || .waiting || .done || .fresh || .idle:
         break;
     }
-    final doneDot = Padding(
-      padding: const EdgeInsets.all(size * 0.3),
-      child: DecoratedBox(
-        decoration: BoxDecoration(color: t.done, shape: BoxShape.circle),
-        child: const SizedBox.square(dimension: size),
-      ),
-    );
+    final doneDot = _dot(fill: t.done);
     if (_check case final check? when check.isAnimating && !chat.waiting) {
       return AnimatedBuilder(
         animation: check,
         builder: (context, _) {
           final ms = check.value * _checkFor.inMilliseconds;
           final out = still ? 0.0 : ((ms - 2400) / 300).clamp(0.0, 1.0);
-          final mark = CustomPaint(
-            size: const Size.square(size * 1.6),
-            painter: CheckPainter(
+          final mark = _mark(
+            CheckPainter(
               t.done,
               still ? 1 : Curves.easeOut.transform((ms / 350).clamp(0, 1)),
               1 - out,
@@ -261,18 +249,7 @@ class _ChatDotState extends State<ChatDot> with TickerProviderStateMixin {
       );
     }
     if (isDone) return doneDot;
-    final dot = chat.waiting
-        ? _waitingDot(t)
-        : Padding(
-            padding: const EdgeInsets.all(size * 0.3),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: t.idle, width: 1.5),
-              ),
-              child: const SizedBox.square(dimension: size),
-            ),
-          );
+    final dot = chat.waiting ? _waitingDot(t) : _dot(ring: t.idle);
     final hop = _hop;
     if (hop == null || !chat.waiting) return dot;
     return AnimatedBuilder(
@@ -326,6 +303,23 @@ String workingWords(ChatState chat) => chat.workflows > 0
           ? 'Running a workflow'
           : 'Running ${chat.workflows} workflows'
     : 'Working on its own, after a background task';
+
+/// [painter]'s mark in a chat's dot's room.
+Widget _mark(CustomPainter painter) =>
+    CustomPaint(size: const Size.square(ChatDot.size * 1.6), painter: painter);
+
+/// A chat's dot in its room: of [fill], or a ring of [ring].
+Widget _dot({Color? fill, Color? ring}) => Padding(
+  padding: const EdgeInsets.all(ChatDot.size * 0.3),
+  child: DecoratedBox(
+    decoration: BoxDecoration(
+      color: fill,
+      shape: BoxShape.circle,
+      border: ring == null ? null : Border.all(color: ring, width: 1.5),
+    ),
+    child: const SizedBox.square(dimension: ChatDot.size),
+  ),
+);
 
 /// The dot of a chat that needs the user: a size up from the others, in a
 /// wider soft ring, in the same room.
@@ -389,26 +383,13 @@ class PhaseDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const size = ChatDot.size;
     final t = NushiTheme.of(context).t;
     final (word, color) = phaseWord(phase, t);
     return tooltip(context, word, switch (phase) {
-      .working => CustomPaint(
-        size: const Size.square(size * 1.6),
-        painter: StatusMark(color, ringing: !reduceMotion(context)),
-      ),
-      .background => CustomPaint(
-        size: const Size.square(size * 1.6),
-        painter: _Ring(color, pulsing: !reduceMotion(context)),
-      ),
+      .working => _mark(StatusMark(color, ringing: !reduceMotion(context))),
+      .background => _mark(_Ring(color, pulsing: !reduceMotion(context))),
       .waiting => _waitingDot(t),
-      _ => Padding(
-        padding: const EdgeInsets.all(size * 0.3),
-        child: DecoratedBox(
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          child: const SizedBox.square(dimension: size),
-        ),
-      ),
+      _ => _dot(fill: color),
     });
   }
 }
@@ -443,20 +424,6 @@ String phaseName(ChatPhase p) => switch (p) {
   .archived => 'archived',
 };
 
-/// What a chat is doing, in a word ([phaseWord]).
-class ChatStatusWord extends StatelessWidget {
-  const new(this.chat, {required this.style, super.key});
-
-  final ChatState chat;
-  final TextStyle style;
-
-  @override
-  Widget build(BuildContext context) {
-    final (word, color) = phaseWord(chat.phase, NushiTheme.of(context).t);
-    return Text(word, style: style.copyWith(color: color));
-  }
-}
-
 /// A time the daemon sent in milliseconds since the epoch; null for 0
 /// (it didn't see it).
 DateTime? msTime(int ms) =>
@@ -465,14 +432,18 @@ DateTime? msTime(int ms) =>
 /// "12s", "1m 04s".
 String elapsed(Duration d) => d.inMinutes == 0
     ? '${d.inSeconds}s'
-    : '${d.inMinutes}m ${(d.inSeconds % 60).toString().padLeft(2, '0')}s';
+    : '${d.inMinutes}m ${two(d.inSeconds % 60)}s';
 
-/// "950 tokens", "12.4k tokens", "48k tokens", "1.2M tokens".
-String tokenCount(int n) => n < 1000
-    ? '$n tokens'
-    : n < 1000000
-    ? '${(n / 1000).toStringAsFixed(n < 10000 ? 1 : 0)}k tokens'
-    : '${(n / 1000000).toStringAsFixed(1)}M tokens';
+/// How long something ran, or runs while [runs]: from [started] to
+/// [ended], or to now (ms since the epoch, 0 when not seen); '' unknown.
+String ranFor(int started, int ended, {required bool runs}) {
+  final since = msTime(started);
+  final end = runs ? clock() : msTime(ended);
+  return since == null || end == null ? '' : elapsed(end.difference(since));
+}
+
+/// "950 tokens", "12.4k tokens", "1M tokens": [tokens]' short count.
+String tokenCount(int n) => '${tokens(n)} tokens';
 
 /// Whether [c] is busy with no turn running: the daemon reopening its
 /// session (opened after a restart or a sleep, reloaded, moved, rewound),

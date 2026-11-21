@@ -53,7 +53,7 @@ void main() {
       ..handleAppLifecycleStateChanged(AppLifecycleState.inactive)
       ..handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('the phone’s page hidden: the draft is saved at once', (
     tester,

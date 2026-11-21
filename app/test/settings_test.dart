@@ -136,7 +136,6 @@ List<ValueNotifier<Object?>> get _all => [
 void main() {
   setUpAll(() {
     // Written before anything reads it: as the app finds it at launch.
-    Directory(dataDir).createSync(recursive: true); // the tests' own
     _appJson.writeAsStringSync(jsonEncode(_saved));
   });
 

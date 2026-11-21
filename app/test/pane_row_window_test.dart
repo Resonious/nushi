@@ -42,11 +42,6 @@ class _Window implements AppWindow {
   Future<void> zoom() async => calls.add('zoom');
 }
 
-const _both = TargetPlatformVariant({
-  TargetPlatform.macOS,
-  TargetPlatform.linux,
-});
-
 void main() {
   setUpAll(loadFonts);
 
@@ -88,5 +83,5 @@ void main() {
     expect(window.calls.where((c) => c == 'zoom'), hasLength(mac ? 1 : 0));
     expect(window.calls.contains('arm'), mac);
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 }

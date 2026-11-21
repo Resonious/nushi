@@ -38,6 +38,25 @@ Color badgeColor(
     ? t.needs
     : t.done;
 
+/// The badge's face: its dot, [dot] across, and passed/total in code
+/// type of [size] (the phone's sheet draws it a size up).
+Widget badgeFace(
+  NushiTheme theme,
+  ({int passed, int total, int failed, int running}) n, {
+  double dot = 7,
+  double size = 11.5,
+}) => Row(
+  mainAxisSize: MainAxisSize.min,
+  spacing: 5,
+  children: [
+    CheckDot(badgeColor(theme.t, n), size: dot),
+    Text(
+      '${n.passed}/${n.total}',
+      style: theme.code(theme.t.textSecondary, size: size),
+    ),
+  ],
+);
+
 /// The checks' state as words: "2 of 3 checks passed", "Checks running",
 /// "1 check failing" (the transcript's card).
 String checksSentence(({int passed, int total, int failed, int running}) n) {
@@ -290,7 +309,7 @@ class ChecksBadge extends StatelessWidget {
     final skipped = item.checkCounts.skipped;
     Widget count(String label, int v, Color c) => Row(
       children: [
-        _Dot(c),
+        CheckDot(c),
         const SizedBox(width: 8),
         Expanded(child: Text(label, style: theme.ui(t.text, size: 12))),
         Text('$v', style: theme.code(t.textSecondary, size: 12)),
@@ -329,18 +348,8 @@ class ChecksBadge extends StatelessWidget {
         onTap: open,
         tooltip: 'Checks: ${checksSentence(n)}',
         radius: NushiTheme.tag,
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          spacing: 5,
-          children: [
-            _Dot(badgeColor(t, n)),
-            Text(
-              '${n.passed}/${n.total}',
-              style: theme.code(t.textSecondary, size: 11.5),
-            ),
-          ],
-        ),
+        padding: _badgePadding,
+        child: badgeFace(theme, n),
       ),
     );
   }
@@ -358,15 +367,20 @@ class ChecksBadge extends StatelessWidget {
   }
 }
 
-class _Dot extends StatelessWidget {
-  const new(this.color);
+/// The badge's padding, round its face.
+const _badgePadding = EdgeInsets.symmetric(horizontal: 5, vertical: 2);
+
+/// A checks' dot of [color], [size] across.
+class CheckDot extends StatelessWidget {
+  const new(this.color, {super.key, this.size = 7});
 
   final Color color;
+  final double size;
 
   @override
   Widget build(BuildContext context) => Container(
-    width: 7,
-    height: 7,
+    width: size,
+    height: size,
     decoration: BoxDecoration(color: color, shape: BoxShape.circle),
   );
 }
@@ -474,7 +488,11 @@ class _PullRowState extends State<PullRow> {
               padding: const EdgeInsets.only(bottom: 14, left: 4),
               child: widget.menu
                   ? ChecksBadge(cp, l, it, onShow: widget.onShow)
-                  : _StillBadge(it),
+                  // The badge without its popover (the header chip's hover).
+                  : Padding(
+                      padding: _badgePadding,
+                      child: badgeFace(theme, badgeCounts(it)!),
+                    ),
             ),
           if (widget.menu)
             Padding(
@@ -516,35 +534,6 @@ class _PullRowState extends State<PullRow> {
             child: row,
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// The badge without its popover (the header chip's hover).
-class _StillBadge extends StatelessWidget {
-  const new(this.item);
-
-  final GitHubItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = NushiTheme.of(context);
-    final t = theme.t;
-    final n = badgeCounts(item);
-    if (n == null) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        spacing: 5,
-        children: [
-          _Dot(badgeColor(t, n)),
-          Text(
-            '${n.passed}/${n.total}',
-            style: theme.code(t.textSecondary, size: 11.5),
-          ),
-        ],
       ),
     );
   }
@@ -594,7 +583,7 @@ Widget pullsFolded(NushiTheme theme, List<GitHubItem?> items) {
         ),
       ),
       if (worst case (final w, final c)) ...[
-        _Dot(c),
+        CheckDot(c),
         Text(w, style: theme.code(t.textSecondary, size: 11.5)),
       ],
     ],

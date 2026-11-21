@@ -9,12 +9,15 @@ import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 
 /// A comment under its lines in the diff: a card with a comment's mark,
-/// its lines and its text, Edit (while unsent) and Remove on hover; dimmed
-/// once sent, and saying so in a pill. An outdated one (its lines are gone)
-/// shows above the file with the lines it was on, its mark a clock's and
-/// "Outdated" an amber pill; one away from its file ([place]: where it was
-/// made) shows them too. What it is and how it stands are a mark and a
-/// pill, never a stripe down its side (ADR 0111).
+/// its lines and its text, Edit (while unsent) and Remove on hover (their
+/// room kept, so the card doesn't move under the pointer); dimmed
+/// once sent, and saying so in a pill. An outdated one not sent (its lines
+/// are gone) shows above the file with the lines it was on, its mark a
+/// clock's and "Outdated" an amber pill; one away from its file ([place]:
+/// where it was made) shows them too. A sent one whose lines are gone
+/// isn't a card in the diff: its "sent" pill lists it (`SentComments`).
+/// What it is and how it stands are a mark and a pill, never a stripe down
+/// its side (ADR 0111).
 class CommentCard extends StatelessWidget {
   const new(
     this.comment, {
@@ -70,20 +73,32 @@ class CommentCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (hover && !c.sent)
-                    IconTap(
-                      Icons.edit_outlined,
-                      tooltip: 'Edit',
-                      size: 13,
-                      onTap: onEdit,
+                  // Its buttons keep their room while hidden, so the
+                  // card's header is as high with the pointer away.
+                  Visibility(
+                    visible: hover,
+                    maintainSize: true,
+                    maintainAnimation: true,
+                    maintainState: true,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (!c.sent)
+                          IconTap(
+                            Icons.edit_outlined,
+                            tooltip: 'Edit',
+                            size: 13,
+                            onTap: onEdit,
+                          ),
+                        IconTap(
+                          Icons.close,
+                          tooltip: 'Remove',
+                          size: 13,
+                          onTap: onRemove,
+                        ),
+                      ],
                     ),
-                  if (hover)
-                    IconTap(
-                      Icons.close,
-                      tooltip: 'Remove',
-                      size: 13,
-                      onTap: onRemove,
-                    ),
+                  ),
                 ],
               ),
               if (c.outdated || place != null)

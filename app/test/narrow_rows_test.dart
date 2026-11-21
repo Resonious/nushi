@@ -1,6 +1,5 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -84,9 +83,7 @@ List<Item> _items() => [
 ];
 
 Future<void> _pump(WidgetTester tester) async {
-  for (var i = 0; i < 5; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, 5, const Duration(milliseconds: 100));
 }
 
 /// The run's title: its words, as wide as the row gives them.
@@ -97,13 +94,6 @@ Finder get _runTitle => find.descendant(
 
 void main() {
   setUpAll(loadFonts);
-  setUp(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        ),
-  );
 
   for (final width in [264.0, 220.0]) {
     testWidgets("a subagent's pane at $width: its run keeps its title and "
@@ -153,7 +143,7 @@ void main() {
       );
       await render(tester, find.byType(NushiApp), 'narrow_rows_pane_$width');
       d.dispose();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   testWidgets('a run and its rows fit from a narrow pane up, with big '

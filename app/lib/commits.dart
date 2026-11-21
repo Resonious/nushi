@@ -84,7 +84,7 @@ String ago(Duration age, DateTime when) => switch (age) {
   _ when age.inHours < 1 => '${age.inMinutes}m ago',
   _ when age.inDays < 1 => '${age.inHours}h ago',
   _ when age.inDays < 30 => '${age.inDays}d ago',
-  _ => '${when.year}-${_two(when.month)}-${_two(when.day)}',
+  _ => '${when.year}-${two(when.month)}-${two(when.day)}',
 };
 
 /// How long ago [when] (ms since the epoch, as GitHub's and the daemon's
@@ -115,7 +115,5 @@ const agoShortLongest = '11mo';
 
 /// A time as a hover says it: "2026-09-16 14:05".
 String dateTime(DateTime when) =>
-    '${when.year}-${_two(when.month)}-${_two(when.day)} '
-    '${_two(when.hour)}:${_two(when.minute)}';
-
-String _two(int n) => '$n'.padLeft(2, '0');
+    '${when.year}-${two(when.month)}-${two(when.day)} '
+    '${two(when.hour)}:${two(when.minute)}';

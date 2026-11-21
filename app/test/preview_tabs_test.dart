@@ -39,6 +39,7 @@ import 'browser_fixture.dart' show browserFakes;
 import 'fake_daemon.dart';
 import 'fake_web_views.dart';
 import 'harness.dart';
+import 'preview_fixture.dart';
 
 const _three = ['docs/report.md', 'docs/plan.md', 'site/notes.md'];
 
@@ -57,8 +58,6 @@ const _many = [
   'docs/seven.md',
   'docs/eight.md',
 ];
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 Item _wrote(String id, String path) => Item(
   id: id,
@@ -168,9 +167,6 @@ Future<Daemon> _app(
   return d;
 }
 
-Finder _inPane(Finder f) =>
-    find.descendant(of: find.byType(FilesPane), matching: f);
-
 Finder _tab(String label) => find.ancestor(
   of: find.descendant(of: find.byType(PaneTabs), matching: find.text(label)),
   matching: find.byWidgetPredicate(
@@ -215,14 +211,14 @@ Map<String, Rect> _marks(WidgetTester tester) {
   Rect? folds(Finder f) => f.evaluate().isEmpty ? null : at(f);
   return {
     'pane': at(find.byType(FilesPane)),
-    'title row': at(_inPane(find.byType(PaneHeader))),
-    'kind icon': at(_inPane(find.byType(Icon)).first),
-    'path line': at(_inPane(find.byType(PathLine))),
-    'source button': at(_inPane(find.byType(SourceButton))),
-    'Live': at(_inPane(find.byType(LiveMark))),
-    'Show in Finder': ?folds(_inPane(find.byTooltip('Show in Finder'))),
-    'Close': at(_inPane(find.byTooltip('Close'))),
-    'body': at(_inPane(find.byType(PreviewBody))),
+    'title row': at(inPane(find.byType(PaneHeader))),
+    'kind icon': at(inPane(find.byType(Icon)).first),
+    'path line': at(inPane(find.byType(PathLine))),
+    'source button': at(inPane(find.byType(SourceButton))),
+    'Live': at(inPane(find.byType(LiveMark))),
+    'Show in Finder': ?folds(inPane(find.byTooltip('Show in Finder'))),
+    'Close': at(inPane(find.byTooltip('Close'))),
+    'body': at(inPane(find.byType(PreviewBody))),
     'transcript': at(find.byType(Transcript)),
     'chat header': at(find.byType(ChatHeader)),
     'header’s tabs': ?folds(find.byType(Segmented<ChatTab>)),
@@ -349,7 +345,7 @@ void main() {
     tester,
   ) async {
     var d = await _app(tester, files: const [bidi]);
-    expect(_inPane(find.text(shown)), findsOneWidget);
+    expect(inPane(find.text(shown)), findsOneWidget);
     expect(
       find.byTooltip('/Users/me/nushi/docs/invoice\ufffdfdp.sh'),
       findsOneWidget,
@@ -359,17 +355,17 @@ void main() {
     expect(_tab(shown), findsOneWidget);
     expect(find.byTooltip('docs/invoice\ufffdfdp.sh'), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   group('the pane', () {
     testWidgets('one file: its name, plain, its path in a tooltip; no tabs, '
         'no menu', (tester) async {
       final d = await _app(tester, files: _three.take(1).toList());
       expect(find.byType(PaneTabs), findsNothing);
-      expect(_inPane(find.text('report.md')), findsOneWidget);
+      expect(inPane(find.text('report.md')), findsOneWidget);
       expect(
         find.descendant(
-          of: _inPane(find.byType(PaneHeader)),
+          of: inPane(find.byType(PaneHeader)),
           matching: find.byIcon(Icons.keyboard_arrow_down),
         ),
         findsNothing,
@@ -383,7 +379,7 @@ void main() {
       );
       expect(find.byTooltip('/Users/me/nushi/docs/report.md'), findsOneWidget);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     for (final (name, brightness) in [
       ('light', Brightness.light),
@@ -402,7 +398,7 @@ void main() {
           () => FocusManager.instance.highlightStrategy =
               FocusHighlightStrategy.automatic,
         );
-        final label = _inPane(find.text('report.md'));
+        final label = inPane(find.text('report.md'));
         Container box() => tester.widget<Container>(
           find.ancestor(of: label, matching: find.byType(Container)).first,
         );
@@ -416,7 +412,7 @@ void main() {
           (box().foregroundDecoration! as BoxDecoration).border,
           Border.all(color: t.focus, width: 2),
         );
-        final row = _inPane(find.byType(PaneHeader));
+        final row = inPane(find.byType(PaneHeader));
         await render(tester, row, 'preview_name_focus_$name');
         final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
         await mouse.addPointer(location: Offset.zero);
@@ -426,7 +422,7 @@ void main() {
         expect((box().decoration! as BoxDecoration).color, t.hover);
         await render(tester, row, 'preview_name_hover_$name');
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     for (final width in [1700.0, 720.0]) {
@@ -440,18 +436,18 @@ void main() {
         final c = d.chats['c']!;
         // The live mark is lit by each file's first answer, in both.
         final one = _marks(tester);
-        final name = tester.getRect(_inPane(find.text('report.md')));
+        final name = tester.getRect(inPane(find.text('report.md')));
         _three.forEach(c.openInFiles);
         c.openInFiles(_three.first);
         await tester.pumpAndSettle();
         expect(find.byType(PaneTabs), findsOneWidget);
         expect(_marks(tester), one);
         // The name it had is the first tab's, to the pixel.
-        final first = tester.getRect(_inPane(find.text('report.md')));
+        final first = tester.getRect(inPane(find.text('report.md')));
         expect(first.left, name.left);
         expect(first.center.dy, name.center.dy);
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('each tab leads with its own file’s kind, not the shown '
@@ -468,7 +464,7 @@ void main() {
       );
       // The icon nearest the label on its left, in the row.
       IconData? before(String label) {
-        final text = tester.getRect(_inPane(find.text(label)));
+        final text = tester.getRect(inPane(find.text(label)));
         Rect? best;
         IconData? kind;
         for (final e in icons.evaluate()) {
@@ -488,7 +484,7 @@ void main() {
       expect(before('b.go'), PreviewKind.code.icon);
       expect(before('c.md'), PreviewKind.markdown.icon);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     // The pane lies beside the chat header, its top row level with it (ADR
     // 0123): the two rows share a height and a line, and each row's lines
@@ -498,7 +494,7 @@ void main() {
           '$count open', (tester) async {
         final d = await _app(tester, files: _three.take(count).toList());
         final header = tester.getRect(find.byType(ChatHeader));
-        final row = tester.getRect(_inPane(find.byType(PaneHeader)));
+        final row = tester.getRect(inPane(find.byType(PaneHeader)));
         expect(header.height, 56);
         expect(row.height, 56);
         expect(row.top, header.top);
@@ -517,7 +513,7 @@ void main() {
           expect(bottom, row.bottom - 1);
         }
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('no file in the chat header', (tester) async {
@@ -531,21 +527,16 @@ void main() {
           findsNothing,
         );
       }
-      // The tabs aren't saved: no open file's name is anywhere in app.json
-      // (the Preview tabs option, a pref, is).
-      for (final name in ['report.md', 'plan.md', 'notes.md']) {
-        expect(jsonEncode(readSaved()), isNot(contains(name)));
-      }
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a tab shows its file, and its ✕ closes it', (tester) async {
       final d = await _app(tester, files: _three);
       final c = d.chats['c']!;
-      await _tap(tester, _inPane(find.text('plan.md')));
+      await _tap(tester, inPane(find.text('plan.md')));
       expect(c.shownFile, 'docs/plan.md');
       expect(
-        _inPane(find.textContaining('Title of plan.md', findRichText: true)),
+        inPane(find.textContaining('Title of plan.md', findRichText: true)),
         findsOneWidget,
       );
       await _tap(tester, _closeOf('plan.md'));
@@ -553,9 +544,9 @@ void main() {
       expect(c.shownFile, 'site/notes.md');
       await _tap(tester, _closeOf('notes.md'));
       expect(find.byType(PaneTabs), findsNothing, reason: 'one left');
-      expect(_inPane(find.text('report.md')), findsOneWidget);
+      expect(inPane(find.text('report.md')), findsOneWidget);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the ✕ shows on the tab showing and under the pointer', (
       tester,
@@ -576,12 +567,12 @@ void main() {
       expect(close('plan.md'), 1);
       expect(close('notes.md'), 0);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the pane’s × hides it and keeps its tabs', (tester) async {
       final d = await _app(tester, files: _three);
       final c = d.chats['c']!;
-      await _tap(tester, _inPane(find.byTooltip('Close')));
+      await _tap(tester, inPane(find.byTooltip('Close')));
       expect(find.byType(FilesPane), findsNothing);
       expect(c.fileNames, hasLength(3));
       showOrHideFiles(c);
@@ -589,7 +580,7 @@ void main() {
       expect(find.byType(PaneTabs), findsOneWidget);
       expect(c.shownFile, 'docs/report.md');
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('its width is one, across tabs', (tester) async {
       final d = await _app(tester, files: _three);
@@ -597,30 +588,30 @@ void main() {
       await tester.pumpAndSettle();
       double width() => tester.getSize(find.byType(FilesPane)).width;
       expect(width(), 1000);
-      await _tap(tester, _inPane(find.text('notes.md')));
+      await _tap(tester, inPane(find.text('notes.md')));
       expect(width(), 1000);
       await _tap(tester, _closeOf('notes.md'));
       expect(width(), 1000);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('Source is remembered per file', (tester) async {
       final d = await _app(tester, files: _three);
       Finder source(String name) =>
-          _inPane(find.textContaining('# Title of $name', findRichText: true));
-      await _tap(tester, _inPane(find.text('plan.md')));
-      await _tap(tester, _inPane(find.byType(SourceButton)));
+          inPane(find.textContaining('# Title of $name', findRichText: true));
+      await _tap(tester, inPane(find.text('plan.md')));
+      await _tap(tester, inPane(find.byType(SourceButton)));
       expect(source('plan.md'), findsOneWidget);
-      await _tap(tester, _inPane(find.text('report.md')));
+      await _tap(tester, inPane(find.text('report.md')));
       expect(source('report.md'), findsNothing);
-      await _tap(tester, _inPane(find.text('plan.md')));
+      await _tap(tester, inPane(find.text('plan.md')));
       expect(source('plan.md'), findsOneWidget);
       expect(
-        tester.widget<SourceButton>(_inPane(find.byType(SourceButton))).source,
+        tester.widget<SourceButton>(inPane(find.byType(SourceButton))).source,
         isTrue,
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a file’s view is made again as it shows, one at a time', (
       tester,
@@ -635,12 +626,12 @@ void main() {
       );
       expect(live.value, 1);
       final before = made.value;
-      await _tap(tester, _inPane(find.text('a.html')));
-      await _tap(tester, _inPane(find.text('b.html')));
+      await _tap(tester, inPane(find.text('a.html')));
+      await _tap(tester, inPane(find.text('b.html')));
       expect(live.value, 1);
       expect(made.value, before + 2);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('every way in', () {
@@ -662,7 +653,7 @@ void main() {
       expect(c.fileNames, hasLength(2));
       expect(c.shownFile, 'docs/report.md');
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the Files list opens a tab', (tester) async {
       final d = await _app(tester, details: true, width: 2400);
@@ -685,7 +676,7 @@ void main() {
       expect(c.fileNames, ['docs/plan.md', 'docs/report.md']);
       expect(c.shownFile, 'docs/report.md');
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('⌘W', () {
@@ -703,7 +694,7 @@ void main() {
       expect(c.files.shown.value, isNull);
       expect(find.byType(FilesPane), findsOneWidget);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('with a file and a browser tab open, closes the one shown '
         "last, then the other; in a pane, that pane's", (tester) async {
@@ -734,7 +725,7 @@ void main() {
       expect(c.files.shown.value, isNull);
       expect(c.browser.shown.value, isNotNull);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('leaves the files of a hidden Files pane', (tester) async {
       final d = await _app(tester, files: _three.take(2).toList());
@@ -745,7 +736,7 @@ void main() {
       await _key(tester, LogicalKeyboardKey.keyW, meta: true);
       expect(c.fileNames, hasLength(2));
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('leaves a preview out of sight', (tester) async {
       final d = await _app(tester, files: _three.take(2).toList());
@@ -754,7 +745,7 @@ void main() {
       await _key(tester, LogicalKeyboardKey.keyW, meta: true);
       expect(c.fileNames, hasLength(2));
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a focused terminal keeps it', (tester) async {
       terminalChats.value = {'c'};
@@ -763,7 +754,7 @@ void main() {
       await _key(tester, LogicalKeyboardKey.keyW, meta: true);
       expect(d.chats['c']!.fileNames, hasLength(2));
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('leaves the tab under a dialog; the menu bar’s too', (
       tester,
@@ -784,7 +775,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(c.fileNames, ['docs/plan.md']);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('too many tabs', () {
@@ -808,10 +799,10 @@ void main() {
       // The row doesn't run under the pane's controls.
       expect(
         rect.right,
-        lessThanOrEqualTo(tester.getTopLeft(_inPane(find.byType(LiveMark))).dx),
+        lessThanOrEqualTo(tester.getTopLeft(inPane(find.byType(LiveMark))).dx),
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the pane at its narrowest: nothing overflows or overlaps', (
       tester,
@@ -826,11 +817,11 @@ void main() {
       expect(
         row.right,
         lessThanOrEqualTo(
-          tester.getTopLeft(_inPane(find.byType(PaneEndButtons))).dx,
+          tester.getTopLeft(inPane(find.byType(PaneEndButtons))).dx,
         ),
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('names that fit aren’t cut; those that don’t are', (
       tester,
@@ -840,40 +831,40 @@ void main() {
       paneWidths.value = {'filesPane': 560};
       await tester.pumpAndSettle();
       bool cut(String label) => tester
-          .renderObject<RenderParagraph>(_inPane(find.text(label)))
+          .renderObject<RenderParagraph>(inPane(find.text(label)))
           .didExceedMaxLines;
       expect(_row(tester).maxScrollExtent, lessThan(1), reason: 'they fit');
       expect(cut('release-report-week-of-october-26.md'), isTrue);
       expect(cut('plan.md'), isFalse);
       expect(cut('notes.md'), isFalse);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('three short names fit the pane as it starts', (tester) async {
       final d = await _app(tester, files: _three);
       for (final name in ['report.md', 'plan.md', 'notes.md']) {
         expect(
           tester
-              .renderObject<RenderParagraph>(_inPane(find.text(name)).first)
+              .renderObject<RenderParagraph>(inPane(find.text(name)).first)
               .didExceedMaxLines,
           isFalse,
           reason: name,
         );
       }
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('picking a tab keeps the row where it is', (tester) async {
       final d = await _app(tester, files: _many, last: true);
       final before = tester.state(find.byType(PaneTabs));
       final at = _row(tester).pixels;
       expect(at, greaterThan(0));
-      await _tap(tester, _inPane(find.text('seven.md')));
+      await _tap(tester, inPane(find.text('seven.md')));
       expect(d.chats['c']!.shownFile, 'docs/seven.md');
       expect(tester.state(find.byType(PaneTabs)), same(before));
       expect(_row(tester).pixels, at);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a file opened brings its tab into view', (tester) async {
       final d = await _app(tester, files: _many, last: true);
@@ -888,7 +879,7 @@ void main() {
         lessThanOrEqualTo(rect.right + 0.5),
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a wheel scrolls it sideways', (tester) async {
       final d = await _app(tester, files: _many, last: true);
@@ -903,7 +894,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(row.pixels, at - 120);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the window', () {
@@ -936,7 +927,7 @@ void main() {
               'preview_pane_${count}_${name}_${width.toInt()}',
             );
             d.dispose();
-          }, variant: _mac);
+          }, variant: onMac);
         }
       }
     }

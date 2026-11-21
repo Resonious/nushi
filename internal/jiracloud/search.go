@@ -116,12 +116,11 @@ func (c *Client) JQL(ctx context.Context) (model.JiraJQL, error) {
 		Functions []struct {
 			Value string `json:"value"`
 		} `json:"visibleFunctionNames"`
-		Words []string `json:"jqlReservedWords"`
 	}
 	if err := c.do(ctx, http.MethodGet, "/rest/api/3/jql/autocompletedata", nil, nil, nil, &raw); err != nil {
 		return model.JiraJQL{}, err
 	}
-	out := model.JiraJQL{Words: raw.Words}
+	var out model.JiraJQL
 	for _, f := range raw.Fields {
 		out.Fields = append(out.Fields, model.JiraJQLField{Name: f.Value, Display: f.DisplayName, Operators: f.Operators})
 	}

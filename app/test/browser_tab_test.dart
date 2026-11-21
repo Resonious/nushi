@@ -305,9 +305,9 @@ void main() {
       await tester.pumpAndSettle();
       final host = fakes.hosts.single;
       expect(addressEditable(tester).widget.focusNode.hasFocus, isFalse);
-      await pressMeta(tester, LogicalKeyboardKey.keyR);
+      await cmdKey(tester, LogicalKeyboardKey.keyR);
       expect(host.reloads, 1);
-      await pressMeta(tester, LogicalKeyboardKey.keyL);
+      await cmdKey(tester, LogicalKeyboardKey.keyL);
       final field = addressEditable(tester).widget;
       expect(field.focusNode.hasFocus, isTrue);
       expect(
@@ -317,7 +317,7 @@ void main() {
           extentOffset: 'http://localhost:3000'.length,
         ),
       );
-      await pressMeta(tester, LogicalKeyboardKey.keyW);
+      await cmdKey(tester, LogicalKeyboardKey.keyW);
       expect(c.browser.shown.value, isNull);
       // With no browser tab they do nothing.
       final acts = appActions(tester.element(find.byType(Scaffold).first), d);
@@ -370,7 +370,7 @@ void main() {
       final field = addressEditable(tester).widget;
       expect(field.focusNode.hasFocus, isTrue);
       tester.testTextInput.log.clear();
-      await pressMeta(tester, LogicalKeyboardKey.keyL);
+      await cmdKey(tester, LogicalKeyboardKey.keyL);
       expect(field.focusNode.hasFocus, isTrue);
       final calls = tester.testTextInput.log.map((c) => c.method);
       expect(calls, containsAllInOrder(['TextInput.setClient']));
@@ -405,7 +405,7 @@ void main() {
       Focus.of(tester.element(inView)).requestFocus();
       await tester.pump();
       _reloadOff(tester, d, inView);
-      await pressMeta(tester, LogicalKeyboardKey.keyR);
+      await cmdKey(tester, LogicalKeyboardKey.keyR);
       expect(asked(), before + 1);
       expect(fakes.hosts, isEmpty);
       await closeView(tester, d);
@@ -430,7 +430,7 @@ void main() {
       tester.widget<Focus>(inView).focusNode!.requestFocus();
       await tester.pump();
       _reloadOff(tester, d, inView);
-      await pressMeta(tester, LogicalKeyboardKey.keyR);
+      await cmdKey(tester, LogicalKeyboardKey.keyR);
       expect(asked(), greaterThan(before));
       expect(fakes.hosts, isEmpty);
       await closeView(tester, d);
@@ -447,9 +447,9 @@ void main() {
       d.chats['c']!.openBrowserTab();
       await tester.pumpAndSettle();
       expect(addressEditable(tester).widget.focusNode.hasFocus, isTrue);
-      await pressMeta(tester, LogicalKeyboardKey.bracketLeft);
+      await cmdKey(tester, LogicalKeyboardKey.bracketLeft);
       expect(d.selectedId, 'd');
-      await pressMeta(tester, LogicalKeyboardKey.bracketRight);
+      await cmdKey(tester, LogicalKeyboardKey.bracketRight);
       expect(d.selectedId, 'c');
       await closeView(tester, d);
     }, variant: macOnly);

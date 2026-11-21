@@ -1,5 +1,7 @@
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 
+import 'fake_daemon.dart';
+
 // What the pinned plan's tests share (pinned_plan_test.dart, its rules and
 // parts; pinned_plan_look_test.dart, the window drawn whole): a turn that
 // made a plan and worked on after it.
@@ -50,9 +52,6 @@ Item _tool(String id, String title) => Item(
   status: 'completed',
 );
 
-Item _say(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
-
 /// A turn: the prompt, some reading, [plan] (a running one unless given),
 /// and work after it.
 List<Item> planItems({Item? plan}) => [
@@ -65,7 +64,7 @@ List<Item> planItems({Item? plan}) => [
   ),
   _tool('r1', 'Read internal/store/posts.go'),
   _tool('r2', 'Read internal/feed/handler.go'),
-  _say(
+  agentSays(
     'm1',
     '`ListPosts` reads the whole table in one query. I’ll give it a keyset '
         'cursor on `(published, id)`, so a post published while someone '
@@ -74,13 +73,13 @@ List<Item> planItems({Item? plan}) => [
   plan ?? runningPlan(),
   _tool('r3', 'Read internal/store/posts_test.go'),
   _tool('r4', 'Read templates/feed.html'),
-  _say(
+  agentSays(
     'm2',
     'The cursor and the handler are done. Now the templates: the feed '
         'renders in three of them, and each needs its Older posts link.',
   ),
   _tool('r5', 'Read templates/mobile/feed.html'),
-  _say(
+  agentSays(
     'm3',
     'The mobile template builds its list in a partial of its own, so the '
         'link goes there, under the last post, and only when a cursor came '
@@ -88,7 +87,7 @@ List<Item> planItems({Item? plan}) => [
   ),
   _tool('r6', 'Read templates/mobile/_posts.html'),
   _tool('r7', 'Read templates/amp/feed.html'),
-  _say(
+  agentSays(
     'm4',
     'The AMP one can’t run the script the others use for the link’s '
         'prefetch, so it gets a plain anchor. Writing all three now.',

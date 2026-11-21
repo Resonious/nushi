@@ -7,6 +7,8 @@ import 'package:nushi/motion.dart';
 import 'package:nushi/question_card.dart';
 import 'package:nushi/theme/theme.dart';
 
+import 'harness.dart';
+
 // An answered permission or question settles into its answered line: the
 // height eases (the fluidity review's idea 4), on the same card's fill
 // (ADR 0111: waiting is the card's mark and pill, not its box).
@@ -44,24 +46,21 @@ Item _question(String status) => Item(
   ],
 );
 
-Widget _card(Item item) => MaterialApp(
-  theme: const NushiTheme(Tokens.dark).toThemeData(),
-  home: Scaffold(
-    // In a scroll, as in a transcript: the card takes its own height.
-    body: SingleChildScrollView(
-      child: Align(
-        alignment: Alignment.topLeft,
-        child: SizedBox(
-          width: 560,
-          child: item.kind == ItemKind.ITEM_KIND_PERMISSION
-              ? PermissionCard(item, onAnswer: (_) async {})
-              : QuestionCard(
-                  item,
-                  agent: 'Claude',
-                  draft: QuestionDraft(),
-                  onAnswer: (_) async {},
-                ),
-        ),
+// In a scroll, as in a transcript: the card takes its own height.
+Widget _card(Item item) => themed(
+  SingleChildScrollView(
+    child: Align(
+      alignment: Alignment.topLeft,
+      child: SizedBox(
+        width: 560,
+        child: item.kind == ItemKind.ITEM_KIND_PERMISSION
+            ? PermissionCard(item, onAnswer: (_) async {})
+            : QuestionCard(
+                item,
+                agent: 'Claude',
+                draft: QuestionDraft(),
+                onAnswer: (_) async {},
+              ),
       ),
     ),
   ),

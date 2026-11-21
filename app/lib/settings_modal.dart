@@ -22,8 +22,9 @@ final Map<ShortcutActivator, Intent> _stopped = {
 };
 
 /// [app], with Settings over it while [open] (ADR 0087): the app dimmed
-/// and out of the focus's and the keys' reach, Settings at most [maxSize],
-/// at least [inset] from the window's edges, centered. A click on the dim
+/// and out of the focus's and the keys' reach, Settings growing with the
+/// window up to [maxSize] (as tall as the window allows), at least
+/// [inset] from the window's edges, centered. A click on the dim
 /// shuts it, and the focus goes back where it was before it opened.
 class SettingsModal extends StatefulWidget {
   const new({
@@ -37,8 +38,10 @@ class SettingsModal extends StatefulWidget {
   final bool open;
   final Widget app;
 
-  /// The modal's largest size.
-  static const maxSize = Size(960, 720);
+  /// The modal's largest size: past this width a page's column (at most
+  /// `SettingsPage.maxWidth`) would only leave empty space; no limit on
+  /// its height, so a long page shows more of itself in a tall window.
+  static const maxSize = Size(1120, double.infinity);
 
   /// Its least distance from the window's edges.
   static const inset = 40.0;

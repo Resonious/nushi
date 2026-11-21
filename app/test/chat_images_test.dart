@@ -108,9 +108,7 @@ Future<void> _decode(WidgetTester tester) async {
 
 /// Frames enough for a fetch, without settling (a spinner never does).
 Future<void> _frames(WidgetTester tester) async {
-  for (var i = 0; i < 6; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, 6, const Duration(milliseconds: 100));
 }
 
 /// The phone on a [size] screen in chat c, whose agent message has
@@ -398,7 +396,7 @@ void main() {
     final (phone, _, _, asked) = await _phone(
       tester,
       images: [_ref(), small],
-      image: (_) => GetChatImageResponse(mimeType: 'image/png', data: _png),
+      image: (_) => GetChatImageResponse(data: _png),
     );
     await _decode(tester); // the spinner until it has
     expect(_loading, findsNothing);
@@ -455,7 +453,7 @@ void main() {
             images: [_ref(sha(i))],
           ),
       ],
-      image: (_) => GetChatImageResponse(mimeType: 'image/png', data: _png),
+      image: (_) => GetChatImageResponse(data: _png),
     );
     // It opens at its end: those on the screen and a screen above it.
     final first = [for (final r in asked) r.sha256];
@@ -488,7 +486,7 @@ void main() {
       tester,
       image: (_) => fail
           ? throw connect.ConnectException(connect.Code.unavailable, 'gone')
-          : GetChatImageResponse(mimeType: 'image/png', data: _png),
+          : GetChatImageResponse(data: _png),
     );
     expect(_failed, findsOneWidget);
     expect(_again, findsOneWidget);
@@ -606,11 +604,6 @@ void main() {
 
   testWidgets('the Mac asks for references too, and shows a small image '
       'inline', (tester) async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
     viewport(tester, const Size(1700, 900));
     final events = <EventsRequest>[];
     final fake = FakeDaemon([_chat])
@@ -637,15 +630,10 @@ void main() {
     expect(find.byType(ClickableImage), findsOneWidget);
     expect(fake.calls.whereType<GetChatImageRequest>(), isEmpty);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('on the Mac a row far off the screen lets its image go, in '
       'its place, and takes it back from what is kept', (tester) async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
     viewport(tester, const Size(1700, 900));
     String sha(int i) => '$i'.padLeft(64, '0');
     final shot = await _picture(tester, 800, 500);
@@ -702,15 +690,10 @@ void main() {
     expect(shown, findsOneWidget);
     expect(fetched(), before); // kept, not fetched again
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('an image that failed while the daemon was away is asked '
       'again once it is back', (tester) async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
     viewport(tester, const Size(1700, 900));
     var away = true;
     var fetched = 0;
@@ -728,7 +711,7 @@ void main() {
             'daemon unavailable: dial failed',
           );
         }
-        return GetChatImageResponse(mimeType: 'image/png', data: _png);
+        return GetChatImageResponse(data: _png);
       });
     final d = await fake.connect(tester)
       ..select('c');
@@ -749,7 +732,7 @@ void main() {
     expect(find.byType(ClickableImage), findsOneWidget);
     await tester.pump(const Duration(seconds: 5)); // "Reconnected" goes
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a row keeps its place until its image decodes, fetched or '
       'taken back, and lets go at that size', (tester) async {
@@ -799,11 +782,6 @@ void main() {
   for (final width in [1700.0, 720.0]) {
     testWidgets('on the Mac at $width wide, an image coming, one failed and '
         'one shown', (tester) async {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-            const MethodChannel('nushi/fonts'),
-            (_) async => <String>[],
-          );
       viewport(tester, Size(width, 900), ratio: 2);
       final shot = await _picture(tester, 800, 500);
       final waits = Completer<GetChatImageResponse>();
@@ -817,10 +795,7 @@ void main() {
             waits.future,
           GetChatImageRequest(sha256: final s) when s == 'b' * 64 =>
             throw connect.ConnectException(connect.Code.notFound, 'gone'),
-          GetChatImageRequest() => GetChatImageResponse(
-            mimeType: 'image/png',
-            data: shot,
-          ),
+          GetChatImageRequest() => GetChatImageResponse(data: shot),
           _ => null,
         });
       final d = await fake.connect(tester)
@@ -833,7 +808,7 @@ void main() {
       expect(find.byType(ClickableImage), findsOneWidget);
       await render(tester, find.byType(NushiApp), 'mac_images_${width ~/ 1}');
       await closeView(tester, d);
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   testWidgets('Try again on a failed turn sends the message’s images whole', (

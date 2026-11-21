@@ -18,11 +18,11 @@ func (s *server) SetRemote(_ context.Context, req *connect.Request[nushiv1.SetRe
 }
 
 func (s *server) StartPairing(context.Context, *connect.Request[nushiv1.StartPairingRequest]) (*connect.Response[nushiv1.StartPairingResponse], error) {
-	qr, expires, err := s.Remote.StartPairing()
+	qr, err := s.Remote.StartPairing()
 	if err != nil {
 		return nil, refused(err)
 	}
-	return connect.NewResponse(&nushiv1.StartPairingResponse{Qr: qr, Expires: expires.UnixMilli()}), nil
+	return connect.NewResponse(&nushiv1.StartPairingResponse{Qr: qr}), nil
 }
 
 func (s *server) ConfirmPairing(_ context.Context, req *connect.Request[nushiv1.ConfirmPairingRequest]) (*connect.Response[nushiv1.ConfirmPairingResponse], error) {
@@ -44,7 +44,7 @@ func remoteProto(r model.Remote) *nushiv1.Remote {
 			LastSeen: unixMs(d.LastSeen), Connected: d.Connected, Kind: d.Kind, Push: d.Push != nil})
 	}
 	if p := r.Pairing; p != nil {
-		out.Pairing = &nushiv1.Pairing{Expires: p.Expires.UnixMilli(), Name: p.Name, Code: p.Code}
+		out.Pairing = &nushiv1.Pairing{Name: p.Name, Code: p.Code}
 	}
 	return out
 }

@@ -260,9 +260,7 @@ func TestSubagentsEndOnReopenAfterTheDaemonWent(t *testing.T) {
 	sessions := &memSessions{}
 	kinds := []Kind{{Harness: testHarness{Name: "claude", Title: "Claude"}, Launch: agent.launch}}
 	svc := newService(t, kinds, Options{Sessions: sessions, Scratch: t.TempDir(), Copies: store, CopiesOn: on.Load})
-	id, err := svc.Start(context.Background(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, t.TempDir())
 	feed(c, recorded(t, "stop_then_start.jsonl"))
 	feed(c, recorded(t, "stops.jsonl"))
 	c.mu.Lock()
@@ -274,10 +272,10 @@ func TestSubagentsEndOnReopenAfterTheDaemonWent(t *testing.T) {
 	sessions.stored = []model.ChatRecord{sessions.saved[len(sessions.saved)-1]}
 	agent.replay = recorded(t, "restart_load.jsonl")
 	svc = newService(t, kinds, Options{Sessions: sessions, Scratch: t.TempDir(), Copies: store, CopiesOn: on.Load})
-	_, err = svc.Get(id)
+	_, err = svc.Get(c.id)
 	testcheck.NoErr(t, err)
-	testcheck.NoErr(t, svc.Reopen(id))
-	c = svc.chats[id]
+	testcheck.NoErr(t, svc.Reopen(c.id))
+	c = svc.chats[c.id]
 	eventually(t, c, func() bool { return c.agent != nil && !c.reopeningLocked() })
 	want := map[string]string{countSlowly: "stopped", countSlowlyV2: "done", counterA: "stopped", counterB: "stopped",
 		counterC: "stopped", counterD: "stopped"}
@@ -286,11 +284,4 @@ func TestSubagentsEndOnReopenAfterTheDaemonWent(t *testing.T) {
 			t.Errorf("%s: %+v, want %s", call, sa, state)
 		}
 	}
-}
-
-// wired is what reached the agent: prompts and cancels, in order.
-func (f *fakeAgent) wired() []string {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	return slices.Clone(f.wire)
 }

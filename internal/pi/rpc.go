@@ -16,17 +16,7 @@ import (
 )
 
 // Spawn starts `pi --mode rpc` with args in cwd.
-type Spawn func(cwd string, args ...string) (Program, error)
-
-// Program is a pi started: its stdin and stdout, a way to kill it, and the
-// last of what it wrote to stderr (nil: nothing kept), which says why it
-// stopped when it did.
-type Program struct {
-	In   io.WriteCloser
-	Out  io.Reader
-	Kill func()
-	Said func() string
-}
+type Spawn func(cwd string, args ...string) (agentproc.Program, error)
 
 // proc is one `pi --mode rpc`: commands go in as JSON lines, responses
 // (matched by id) and events (everything else) come out.
@@ -133,19 +123,14 @@ func (p *proc) stopped() error {
 // call sends a command and waits for its response; its data goes into out
 // (unless nil).
 func (p *proc) call(ctx context.Context, cmd map[string]any, out any) error {
-	_, err := p.callAfter(ctx, cmd, out)
+	_, err := p.callWritten(ctx, cmd, out, func() {})
 	return err
 }
 
-// callAfter is call, and says how many events pi sent before its
-// response.
-func (p *proc) callAfter(ctx context.Context, cmd map[string]any, out any) (after int, err error) {
-	return p.callWritten(ctx, cmd, out, func() {})
-}
-
-// callWritten is callAfter, and calls written once cmd has gone to pi (or
-// failed to): what must reach pi after it waits for that (a Stop's abort
-// after its turn's prompt).
+// callWritten is call, and says how many events pi sent before its
+// response, and calls written once cmd has gone to pi (or failed to):
+// what must reach pi after it waits for that (a Stop's abort after its
+// turn's prompt).
 func (p *proc) callWritten(ctx context.Context, cmd map[string]any, out any, written func()) (after int, err error) {
 	p.mu.Lock()
 	p.next++

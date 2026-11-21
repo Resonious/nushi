@@ -6,6 +6,7 @@ import 'package:nushi/menu.dart';
 import 'package:nushi/native.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/settings_rows.dart';
+import 'package:nushi/settings_terminal.dart';
 import 'package:nushi/theme/theme.dart';
 
 /// The installed families [ask] answers with, as a font menu lists them
@@ -98,9 +99,11 @@ class FontField extends StatelessWidget {
   );
 }
 
-/// Settings › Appearance's Fonts (ADR 0114): the family the app's text is
-/// set in, of every installed one and the system's own, and the one code
-/// is set in, of the monospaced ones. The terminal's is its own setting.
+/// Settings › Appearance's Fonts (ADR 0114), every font in one place: the
+/// family the app's text is set in, of every installed one and the
+/// system's own; the one code is set in, of the monospaced ones; and the
+/// terminal's family and size (Settings › Terminal has them too, beside
+/// its preview: the same two settings).
 class FontsGroup extends StatefulWidget {
   const new({super.key});
 
@@ -123,7 +126,7 @@ class _FontsGroupState extends State<FontsGroup> {
     title: 'Fonts',
     children: [
       SettingsRow(
-        'App font',
+        'App',
         control: FontField(
           key: const ValueKey('app-font'),
           picked: appFont,
@@ -133,15 +136,29 @@ class _FontsGroupState extends State<FontsGroup> {
         ),
       ),
       SettingsRow(
-        'Code font',
-        description:
-            'Code in chats, diffs and files. The terminal has its '
-            'own.',
+        'Code',
+        description: 'Chats, diffs and files.',
         control: FontField(
           key: const ValueKey('code-font'),
           picked: codeFont,
           bundled: NushiTheme.codeFont,
           families: _monospaced,
+        ),
+      ),
+      SettingsRow(
+        'Terminal',
+        control: Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 8,
+          children: [
+            FontField(
+              key: const ValueKey('terminal-font'),
+              picked: terminalFont,
+              bundled: NushiTheme.codeFont,
+              families: _monospaced,
+            ),
+            const TerminalSizeField(),
+          ],
         ),
       ),
     ],

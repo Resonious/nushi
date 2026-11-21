@@ -19,13 +19,12 @@ const _keep = 64;
 Future<GetJiraAttachmentResponse> _fetch(
   NushiServiceClient client,
   String site,
-  String id, {
-  required bool thumbnail,
-}) {
-  final key = '$site $id $thumbnail';
+  String id,
+) {
+  final key = '$site $id';
   if (_fetched[key] case final kept?) return kept;
   final f = _fetched[key] = client.getJiraAttachment(
-    GetJiraAttachmentRequest(site: site, id: id, thumbnail: thumbnail),
+    GetJiraAttachmentRequest(site: site, id: id),
   );
   unawaited(_dropIfFailed(key, f));
   if (_fetched.length > _keep) {
@@ -72,7 +71,7 @@ class AttachmentImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => FutureBuilder(
-    future: _fetch(client, site, id, thumbnail: false),
+    future: _fetch(client, site, id),
     builder: (context, r) => switch (r) {
       AsyncSnapshot(:final data?) when data.mimeType.startsWith('image/') =>
         ClickableImage(image: MemoryImage(bytesOf(data.data)), size: size),

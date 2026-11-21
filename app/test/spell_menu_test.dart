@@ -78,11 +78,7 @@ double _menuBottom(WidgetTester tester) => _menuPanel(tester).bottom;
 
 /// A widget test on a fake Mac that ends what it opened itself.
 void spellTestApp(String name, Future<void> Function(WidgetTester) body) =>
-    testWidgets(
-      name,
-      body,
-      variant: TargetPlatformVariant.only(TargetPlatform.macOS),
-    );
+    testWidgets(name, body, variant: onMac);
 
 bool _open(WidgetTester tester, ChatState chat) =>
     chat.draft.text.spell!.menu.controller.isOpen;
@@ -468,10 +464,7 @@ void main() {
     await _key(tester, LogicalKeyboardKey.enter);
     expect(chat.draft.text.text, 'please check this ');
     await tester.pump(const Duration(seconds: 1));
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyZ);
     expect(chat.draft.text.text, 'please chekc this ');
   });
 
@@ -568,10 +561,7 @@ void main() {
     }
 
     Future<void> command(WidgetTester tester, LogicalKeyboardKey key) async {
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-      await tester.sendKeyEvent(key);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-      await tester.pumpAndSettle();
+      await cmdKey(tester, key);
     }
 
     spellTestApp('the real ⌘; reaches Next Typo from the box', (tester) async {

@@ -45,7 +45,7 @@ class PillButton extends StatelessWidget {
           height: small ? smallHeight : height,
           padding: EdgeInsets.symmetric(horizontal: small ? 10 : 12),
           decoration: BoxDecoration(
-            color: look.hover ? Color.alphaBlend(_tint(t, look), fill) : fill,
+            color: _over(t, look, fill),
             borderRadius: round,
           ),
           foregroundDecoration: focusRing(t, look, radius: round),
@@ -125,9 +125,7 @@ class RoundButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: look.pressed && kind == RoundKind.primary
                 ? t.accentPressed
-                : look.hover
-                ? Color.alphaBlend(_tint(t, look), fill)
-                : fill,
+                : _over(t, look, fill),
             borderRadius: round,
           ),
           foregroundDecoration: kind == RoundKind.primary
@@ -147,8 +145,10 @@ enum NoteTone { quiet, accent, done, needs, crashed }
 /// A short note in a pill, as `PhasePill` draws a chat's state: [label] in
 /// its [tone]'s ink on that ink's soft fill, never a faint word. With
 /// [onTap] it's a button (the hover and press tints, the focus ring, the
-/// hand) and [trailing] says where it goes; [tip] is its tooltip. A file's
-/// change marks' word on the Files pane's path row (ADR 0131).
+/// hand) and [trailing] says where it goes; [tip] is its tooltip; [icon],
+/// given, leads it in the same ink. A file's change marks' word on the
+/// Files pane's path row (ADR 0131); a diff's sent comments whose lines
+/// changed (`SentComments`).
 class NotePill extends StatelessWidget {
   const new(
     this.label, {
@@ -157,9 +157,11 @@ class NotePill extends StatelessWidget {
     this.onTap,
     this.tip = '',
     this.trailing,
+    this.icon,
   });
 
   final String label;
+  final IconData? icon;
   final NoteTone tone;
   final VoidCallback? onTap;
   final String tip;
@@ -185,11 +187,12 @@ class NotePill extends StatelessWidget {
     final round = BorderRadius.circular(NushiTheme.pill);
     Widget pill(ControlLook? look) => Container(
       height: height,
-      padding: EdgeInsets.only(left: 9, right: trailing == null ? 9 : 5),
+      padding: EdgeInsets.only(
+        left: icon == null ? 9 : 7,
+        right: trailing == null ? 9 : 5,
+      ),
       decoration: BoxDecoration(
-        color: look != null && look.hover
-            ? Color.alphaBlend(_tint(t, look), fill)
-            : fill,
+        color: look == null ? fill : _over(t, look, fill),
         borderRadius: round,
       ),
       foregroundDecoration: look == null
@@ -199,6 +202,10 @@ class NotePill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         spacing: 2,
         children: [
+          if (icon case final lead?) ...[
+            Icon(lead, size: 13, color: ink),
+            const SizedBox(width: 2),
+          ],
           Flexible(
             child: Text(
               label,

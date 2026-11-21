@@ -20,7 +20,7 @@ void main() {
       testWidgets('gallery $name', (tester) async {
         await drawSheet(tester, sheet, tokens);
         await render(tester, find.byType(MaterialApp), name);
-      }, variant: mac);
+      }, variant: onMac);
     }
   }
 }

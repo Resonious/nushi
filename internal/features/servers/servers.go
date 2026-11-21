@@ -41,9 +41,9 @@ type Process interface {
 	Close()
 }
 
-// Spawn starts argv in dir with env on a terminal; exited is called when
-// the program ends.
-type Spawn func(argv []string, dir string, env []string, exited func()) (Process, error)
+// Spawn starts argv in dir with env on a terminal; the Process's Done
+// says when the program ends.
+type Spawn func(argv []string, dir string, env []string) (Process, error)
 
 // Procs reads and stops processes (proctree.Tree).
 type Procs interface {
@@ -269,7 +269,7 @@ func (s *Service) Start(ctx context.Context, chatID string, pick Pick) (Row, err
 			s.showAsked(chatID, row.URL)
 		}
 		return row, nil // a start of one that runs: the same server
-	case s.count(folder) >= PerFolder:
+	case inFolder(s.alive, folder) >= PerFolder:
 		s.mu.Unlock()
 		return Row{}, refuse("the folder runs its most", fmt.Errorf("%d servers already run in this folder: stop one first", PerFolder))
 	}
@@ -287,17 +287,6 @@ func (s *Service) Start(ctx context.Context, chatID string, pick Pick) (Row, err
 	s.mu.Unlock()
 	row.Index = i
 	return row, nil
-}
-
-// count is how many servers live in folder.
-func (s *Service) count(folder string) int {
-	n := 0
-	for _, sv := range s.alive {
-		if sv.folder == folder {
-			n++
-		}
-	}
-	return n
 }
 
 // Stop stops a server of a chat's folder, the user's doing.

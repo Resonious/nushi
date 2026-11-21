@@ -5,9 +5,8 @@ import 'package:nushi/settings.dart';
 // header's button, ⇧⌘E, View › Files, and every way a file opens.
 
 /// Opens [chat]'s Files pane, or closes it (keeping its file tabs): the
-/// pane's own way, so open it's saved ([filesPassing]).
+/// pane's own way.
 void toggleFiles(ChatState chat) {
-  filesPassing.remove(chat.id);
   final open = {...filesChats.value};
   if (!open.remove(chat.id)) open.add(chat.id);
   filesChats.value = open;

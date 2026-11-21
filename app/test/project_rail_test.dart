@@ -214,22 +214,19 @@ void main() {
     final shown = ValueNotifier(true);
     addTearDown(shown.dispose);
     await tester.pumpWidget(
-      MaterialApp(
-        theme: const NushiTheme(Tokens.dark).toThemeData(),
-        home: Scaffold(
-          body: Align(
-            alignment: Alignment.topLeft,
-            child: SizedBox(
-              width: 260,
-              child: ValueListenableBuilder(
-                valueListenable: shown,
-                builder: (context, show, _) => show
-                    ? ListenableBuilder(
-                        listenable: d,
-                        builder: (context, _) => Sidebar(daemon: d),
-                      )
-                    : const SizedBox.shrink(),
-              ),
+      themed(
+        Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 260,
+            child: ValueListenableBuilder(
+              valueListenable: shown,
+              builder: (context, show, _) => show
+                  ? ListenableBuilder(
+                      listenable: d,
+                      builder: (context, _) => Sidebar(daemon: d),
+                    )
+                  : const SizedBox.shrink(),
             ),
           ),
         ),

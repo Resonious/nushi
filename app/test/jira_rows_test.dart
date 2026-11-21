@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -203,10 +201,7 @@ void _expectColumns(WidgetTester tester) {
 }
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   test('initials, colors and plain names', () {
     expect(initials('Ann Lee'), 'AL');
@@ -332,10 +327,7 @@ void main() {
     expect(find.byIcon(Icons.play_arrow_outlined), findsOneWidget);
     await mouse.removePointer();
     // ⌘⏎ opens the selected row's folders.
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.enter);
     expect(
       find.textContaining('Choose folder', findRichText: true),
       findsOneWidget,

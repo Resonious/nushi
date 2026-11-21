@@ -1,7 +1,6 @@
 import 'package:connectrpc/connect.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/controls.dart';
 import 'package:nushi/daemon.dart';
@@ -69,13 +68,6 @@ Future<(FakeDaemon, Daemon)> _open(
 
 void main() {
   setUpAll(loadFonts);
-  setUp(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        ),
-  );
 
   test('a token close to its end is warned about', () {
     JiraSite inDays(int d) => JiraSite(
@@ -93,7 +85,15 @@ void main() {
   ) async {
     final (fake, d) = await _open(tester);
     expect(find.text('acme.atlassian.net'), findsOneWidget);
-    expect(find.text('Connected as Test User'), findsOneWidget);
+    // Who the token is beside its email, and its state in a pill.
+    expect(find.text('Test User · me@acme.com'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('account-state-acme.atlassian.net')),
+        matching: find.text('Connected'),
+      ),
+      findsOne,
+    );
     expect(find.textContaining('The token expires in'), findsOneWidget);
     expect(find.text('me@side.dev · scoped token'), findsOneWidget);
     expect(find.textContaining('needs your OK to read'), findsOneWidget);
@@ -107,7 +107,11 @@ void main() {
       fake.calls.whereType<AllowJiraTokenRequest>().single.site,
       'side.atlassian.net',
     );
-    await tester.tap(find.text('Remove').first);
+    await tester.tap(
+      find.byKey(const ValueKey('account-more-acme.atlassian.net')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Remove site…'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(Button, 'Remove').last);
     await tester.pumpAndSettle();
@@ -184,7 +188,7 @@ void main() {
       DateTime(2027, 1, 2),
     );
     expect(find.text('new.atlassian.net'), findsOneWidget);
-    expect(find.text('Connected as Test User'), findsOneWidget);
+    expect(find.textContaining('Test User · '), findsOneWidget);
     expect(find.text('Add a site'), findsOneWidget);
     d.dispose();
   });

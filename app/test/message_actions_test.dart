@@ -1,7 +1,6 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/daemon.dart';
@@ -11,8 +10,6 @@ import 'package:nushi/message_actions.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 final _user = Item(
   id: 'u',
@@ -37,16 +34,7 @@ Future<(Daemon, List<String>)> _hovered(
   VoidCallback? onFork,
   bool hover = true,
 }) async {
-  final copied = <String>[];
-  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-    SystemChannels.platform,
-    (call) async {
-      if (call.method == 'Clipboard.setData') {
-        copied.add((call.arguments as Map)['text'] as String);
-      }
-      return null;
-    },
-  );
+  final copied = clipboardCopies(tester);
   final d = await FakeDaemon([]).connect(tester);
   final chat = ChatState('c', '/x')
     ..agent = 'claude'
@@ -106,14 +94,14 @@ void main() {
     await tester.tap(find.byTooltip('Rewind to here\u2002Esc Esc'));
     expect(rewound, 1);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('read once something of the agent’s follows', (tester) async {
     final (d, _) = await _hovered(tester, _user, [_user, _agent]);
     expect(find.byTooltip('Read by Claude'), findsOneWidget);
     expect(find.byTooltip('Sent'), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a subagent’s step isn’t the agent reading it', (tester) async {
     final step = Item(
@@ -125,7 +113,7 @@ void main() {
     final (d, _) = await _hovered(tester, _user, [_user, step]);
     expect(find.byTooltip('Sent'), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('an agent’s message copies its Markdown; no time when unknown', (
     tester,
@@ -137,7 +125,7 @@ void main() {
     await tester.pump();
     expect(copied, ['It **passes**.']);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('nothing moves as the pointer comes', (tester) async {
     final (still, _) = await _hovered(tester, _user, [_user], hover: false);
@@ -149,5 +137,5 @@ void main() {
     expect(find.byTooltip('Copy as Markdown'), findsOneWidget);
     expect(tester.getSize(find.byType(ItemView)).height, height);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

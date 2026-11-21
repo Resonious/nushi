@@ -142,9 +142,9 @@ func isPlace(places []root, dir string) bool {
 	})
 }
 
-// own are the places opencode's own skill folders are in: each
+// Own are the places opencode's own skill folders are in: each
 // .opencode/skills (or skill) opencode reads here, and your config's.
-func own(folder string) (project, yours []string) {
+func (OpenCode) Own(folder string) (project, yours []string) {
 	for _, r := range roots(git.RealPath(folder)) {
 		switch {
 		case r.project && r.source == "project" && filepath.Base(filepath.Dir(r.path)) == ".opencode":
@@ -156,14 +156,14 @@ func own(folder string) (project, yours []string) {
 	return project, yours
 }
 
-// CanTrash says why Trash wouldn't move path: nil only for a skill's
-// folder right in one of opencode's own places. One in a group, and a
-// skill in one file (a lone <name>.md, or the SKILL.md that makes a place
-// a skill), stay, and the error says which it is: Nushi's Trash takes a
-// skill's folder from its place and nothing else (skillfile.Trash), never
-// a file, a folder further down or the place.
-func (OpenCode) CanTrash(_ context.Context, folder, path string) error {
-	project, yours := own(folder)
+// Refuse says why a skill in one of opencode's own places stays out of
+// the Trash, for what only opencode has: one in a group, and a skill in
+// one file (a lone <name>.md, or the SKILL.md that makes a place a
+// skill). Nushi's Trash takes a skill's folder from its place and nothing
+// else (skillfile.Trash), never a file, a folder further down or the
+// place; the error says which it is.
+func (o OpenCode) Refuse(folder, path string) error {
+	project, yours := o.Own(folder)
 	for _, place := range slices.Concat(project, yours) {
 		rel, err := filepath.Rel(place, path)
 		if err != nil || rel == "." || !filepath.IsLocal(rel) || filepath.Clean(path) != path {
@@ -176,15 +176,5 @@ func (OpenCode) CanTrash(_ context.Context, folder, path string) error {
 			return fmt.Errorf("%s is a skill in one file; Nushi moves only a skill's folder to the Trash", path)
 		}
 	}
-	return skillfile.CanTrash(project, yours, path)
-}
-
-// Trash moves one of opencode's own skill folders to the Trash: only one
-// CanTrash passes.
-func (o OpenCode) Trash(ctx context.Context, folder, path string) error {
-	if err := o.CanTrash(ctx, folder, path); err != nil {
-		return err
-	}
-	project, yours := own(folder)
-	return skillfile.Trash(ctx, project, yours, path)
+	return nil
 }

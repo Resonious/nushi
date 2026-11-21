@@ -27,7 +27,6 @@ Future<(Daemon, FakeDaemon)> _app(
   bool deleteFails = false,
 }) async {
   viewport(tester, size, brightness: brightness);
-  paneWidths.value = {};
   showDetails.value = false;
   final c = chat('c', 'claude', 'Fix the login redirect');
   final status = ChatStatus(canFork: true, canRewind: true);
@@ -72,8 +71,6 @@ Future<void> _fork(WidgetTester tester) async {
 Finder get _toast => find.text('Forked into a new chat');
 Finder get _undo => find.widgetWithText(Button, 'Undo');
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -93,7 +90,7 @@ void main() {
     expect(d.selectedId, 'fork');
     expect(fake.calls.whereType<DeleteChatRequest>(), isEmpty);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Undo deletes the fork, its worktree kept, and goes back to '
       'the chat', (tester) async {
@@ -109,7 +106,7 @@ void main() {
     expect(_toast, findsNothing);
     expect(find.textContaining('So the page you asked'), findsOne);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('no Undo once a message is sent in the fork, or it works', (
     tester,
@@ -130,7 +127,7 @@ void main() {
     expect(_undo, findsNothing);
     expect(fake.calls.whereType<DeleteChatRequest>(), isEmpty);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a message sent in the fork takes the toast away at once', (
     tester,
@@ -142,7 +139,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_toast, findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a second fork replaces the first’s toast; its Undo deletes '
       'only the second', (tester) async {
@@ -161,7 +158,7 @@ void main() {
     expect(d.chats.containsKey('fork'), isTrue);
     expect(d.selectedId, 'c');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a failed delete says so; the chat forked from shows', (
     tester,
@@ -178,7 +175,7 @@ void main() {
     expect(d.selectedId, 'c');
     expect(d.chats.containsKey('fork'), isTrue); // still in the sidebar
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   // The toast to look at (`make renders`).
   for (final (what, size) in [
@@ -197,7 +194,7 @@ void main() {
           'fork_undo_toast_${what}_${b.name}',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

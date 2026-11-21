@@ -18,25 +18,26 @@ class HoverCard extends StatefulWidget {
     required this.card,
     super.key,
     this.onShow,
-    // design: a hover card's wait, as a tooltip's
-    this.delay = const Duration(milliseconds: 400),
     this.showOnTap = false,
     this.above,
     this.around,
-    this.minWidth = 240,
   });
 
   final Widget child;
   final WidgetBuilder card;
   final VoidCallback? onShow;
-  final Duration delay;
   final bool showOnTap;
   final double? above;
   final Rect Function()? around;
-  final double minWidth;
 
   /// The least room a card keeps from the window's edges.
   static const double margin = 8;
+
+  /// The narrowest a card gets at the window's right edge.
+  static const double minWidth = 240;
+
+  // design: a hover card's wait, as a tooltip's
+  static const _delay = Duration(milliseconds: 400);
 
   @override
   State<HoverCard> createState() => _HoverCardState();
@@ -54,7 +55,7 @@ class _HoverCardState extends State<HoverCard> {
   void _enter() {
     _leave?.cancel();
     if (_portal.isShowing) return;
-    _wait ??= Timer(widget.delay, _show);
+    _wait ??= Timer(HoverCard._delay, _show);
   }
 
   void _show() {
@@ -109,7 +110,7 @@ class _HoverCardState extends State<HoverCard> {
     final over =
         widget.above != null && window.height - clear.bottom < widget.above!;
     final room = window.width - own.left - HoverCard.margin;
-    final width = max(room, widget.minWidth);
+    final width = max(room, HoverCard.minWidth);
     final left = max(room - width, HoverCard.margin - own.left);
     return (
       over: over,

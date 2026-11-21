@@ -9,7 +9,6 @@ import 'package:nushi/main.dart';
 import 'package:nushi/panes.dart';
 import 'package:nushi/theme/theme.dart';
 
-import 'fake_app_install.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
@@ -57,13 +56,6 @@ const _bar = 'Nushi will update its daemon when the chats are idle.';
 
 void main() {
   setUpAll(loadFonts);
-  setUp(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        ),
-  );
 
   testWidgets('an older daemon is asked to restart when idle, again with '
       'each ping; the bar says so until the new one answers', (tester) async {
@@ -99,7 +91,7 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
     expect(_asks(fake), after);
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   for (final (name, brightness) in [
     ('dark', Brightness.dark),
@@ -125,7 +117,7 @@ void main() {
           'daemon_update_${width.toInt()}_$name',
         );
         d.dispose();
-      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      }, variant: onMac);
     }
   }
 
@@ -140,32 +132,7 @@ void main() {
     expect(find.text(_bar), findsNothing);
     expect(_asks(fake), 0);
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
-
-  testWidgets('where the app can’t stop its daemon (Windows), neither the '
-      'bar nor the screen offers a restart: the screen says how instead', (
-    tester,
-  ) async {
-    fakeInstall.canStop = false;
-    var api = apiVersion;
-    final fake = _daemon(() => PingResponse(apiVersion: api, build: '7-1000'));
-    final d = await _open(tester, fake);
-    expect(find.text(_bar), findsOneWidget);
-    expect(find.text('Restart now'), findsNothing);
-    d.dispose();
-
-    api = restartWhenIdleApi - 1;
-    final old = await _open(tester, fake);
-    expect(find.text('Restart daemon'), findsNothing);
-    expect(
-      find.text(
-        'To restart it, quit nushid in Activity Monitor: Nushi starts the '
-        'new one.',
-      ),
-      findsOneWidget,
-    );
-    old.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a daemon newer than the bundled one (an older copy of the app '
       'open) is left alone', (tester) async {
@@ -176,7 +143,7 @@ void main() {
     expect(find.text(_bar), findsNothing);
     expect(_asks(fake), 0);
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   // The daemon's reason says so; an older daemon's message does.
   for (final (message, reason) in [
@@ -267,5 +234,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(d.selectedId, 'r');
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

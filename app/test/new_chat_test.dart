@@ -7,10 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
-import 'package:nushi/open_session.dart';
 import 'package:nushi/sidebar.dart';
 import 'package:nushi/theme/theme.dart';
-import 'package:nushi/toast.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
@@ -28,18 +26,15 @@ Future<(FakeDaemon, Daemon)> _sidebar(
   final fake = FakeDaemon(_chats);
   final d = await fake.connect(tester);
   await tester.pumpWidget(
-    MaterialApp(
-      builder: (context, child) => ToastHost(child: child!),
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: Row(
-          children: [
-            SizedBox(width: 260, child: Sidebar(daemon: d)),
-            const Spacer(),
-          ],
-        ),
+    themed(
+      Row(
+        children: [
+          SizedBox(width: 260, child: Sidebar(daemon: d)),
+          const Spacer(),
+        ],
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   return (fake, d);
@@ -115,13 +110,6 @@ List<Agent> _notAllReady() => [
 
 void main() {
   setUpAll(loadFonts);
-  setUp(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        ),
-  );
 
   testWidgets('an agent not set up is dimmed and goes to Settings; one '
       'not installed isn’t offered', (tester) async {
@@ -157,7 +145,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Not installed'), findsWidgets);
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('the last agent is picked: Enter starts it at once', (
     tester,
@@ -288,15 +276,12 @@ void main() {
     // Keys go where the focus is: somewhere in the window.
     Focus.of(tester.element(find.text('New chat').first)).requestFocus();
     await tester.pump();
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyN);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
+    await cmdKey(tester, LogicalKeyboardKey.keyN, settle: false);
     expect(find.text('oh-my-pi'), findsOneWidget);
     await _key(tester, LogicalKeyboardKey.enter);
     expect(fake.started.single.agent, 'codex');
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('→ lists the agent’s sessions; Enter opens one there', (
     tester,
@@ -424,7 +409,7 @@ void main() {
     // On the Mac: as a phone (a test's platform unless it says), the
     // filter's caret has a handle under it, over the first row, which
     // took the click meant for Busy.
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('the arrows keep the selected session in view', (tester) async {
     final (fake, d) = await _sidebar(tester);
@@ -456,7 +441,6 @@ void main() {
     await _key(tester, LogicalKeyboardKey.arrowLeft);
     expect(find.text('Codex'), findsOneWidget);
     expect(find.text('Sessions'), findsNothing);
-    cantListSessions.clear();
     d.dispose();
   });
 

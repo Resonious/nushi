@@ -6,11 +6,11 @@ import 'package:nushi/chat_paths.dart';
 import 'package:nushi/preview_entry.dart';
 
 /// A chat's open files (ADR 0070): their tabs in the order opened and the
-/// one that shows, in the app's memory. With none showing the Files pane's
-/// viewer is blank (ADR 0123); the tabs outlive the pane hiding. A file
-/// opened without keeping it (a click in the tree, with preview tabs on)
-/// is [provisional], as VS Code's preview tab: the next such open takes its
-/// place, until it's kept.
+/// one that shows. With none showing the Files pane's viewer is blank (ADR
+/// 0123); the tabs outlive the pane hiding, and Nushi quitting ([kept],
+/// [restore]). A file opened without keeping it (a click in the tree, with
+/// preview tabs on) is [provisional], as VS Code's preview tab: the next
+/// such open takes its place, until it's kept.
 final class FileTabs {
   /// The tabs, in the order opened.
   final tabs = ValueNotifier<List<PreviewFile>>(const []);
@@ -22,9 +22,25 @@ final class FileTabs {
   /// italics; at most one.
   final provisional = ValueNotifier<PreviewFile?>(null);
 
-  /// The files whose view shows its Source, while the app runs: a file's
-  /// view is made again each time it shows.
+  /// The files whose view shows its Source, while its tab is open: a
+  /// file's view is made again each time it shows. Changed by [showSource].
   final sources = <String>{};
+
+  /// Counts [showSource]'s changes, for [changes].
+  final _sourced = ValueNotifier<int>(0);
+
+  /// Tells of every change to what [kept] gives.
+  late final Listenable changes = Listenable.merge([
+    tabs,
+    shown,
+    provisional,
+    _sourced,
+  ]);
+
+  /// Shows [path]'s Source, or its rendering again.
+  void showSource(String path, {required bool on}) {
+    if (on ? sources.add(path) : sources.remove(path)) _sourced.value++;
+  }
 
   /// Shows [path]: the tab of the same file if it has one, however each is
   /// named ([relativeIn] in [folder]: relative or absolute, with `.`, `..`
@@ -80,11 +96,90 @@ final class FileTabs {
     }
   }
 
-  /// Closes every tab.
-  void closeAll() {
-    tabs.value = const [];
-    shown.value = null;
-    provisional.value = null;
-    sources.clear();
+  /// The tabs to keep across launches, each named [relativeIn] [folder],
+  /// so they're found again should the chat's folder move; null with none
+  /// open.
+  KeptTabs? kept(String folder) {
+    if (tabs.value.isEmpty) return null;
+    String? name(PreviewFile? f) =>
+        f == null ? null : relativeIn(folder, f.path);
+    return KeptTabs(
+      [for (final f in tabs.value) name(f)!],
+      shown: name(shown.value),
+      provisional: name(provisional.value),
+      sources: [
+        for (final f in tabs.value)
+          if (sources.contains(f.path)) name(f)!,
+      ],
+    );
+  }
+
+  /// Puts back [kept]'s tabs of the files still [there] (the others are
+  /// gone), before any opened since, and shows the one that showed, or the
+  /// nearest left: the next, else the last. A tab opened since keeps
+  /// showing, and stands for a kept one of the same file.
+  void restore(KeptTabs kept, Set<String> there, {required String folder}) {
+    final open = {for (final f in tabs.value) relativeIn(folder, f.path)};
+    final back = [
+      for (final p in kept.tabs)
+        if (there.contains(p) && !open.contains(p)) PreviewFile(p),
+    ];
+    if (back.isEmpty) return;
+    sources.addAll([
+      for (final p in kept.sources)
+        if (back.contains(PreviewFile(p))) p,
+    ]);
+    tabs.value = [...back, ...tabs.value];
+    if (kept.provisional case final p?
+        when provisional.value == null && back.contains(PreviewFile(p))) {
+      provisional.value = PreviewFile(p);
+    }
+    if (shown.value != null) return;
+    if (kept.shown case final was?) {
+      final at = kept.tabs.indexOf(was);
+      shown.value =
+          back.where((f) => kept.tabs.indexOf(f.path) >= at).firstOrNull ??
+          back.last;
+    }
+  }
+}
+
+/// A chat's file tabs as kept across launches (`fileTabsKept`): their
+/// names in order (relative to the chat's folder when inside it), the one
+/// that shows, the provisional one, and those showing their Source. Not
+/// where each is scrolled, nor unsaved edits.
+@immutable
+final class KeptTabs {
+  const new(this.tabs, {this.shown, this.provisional, this.sources = const []});
+
+  final List<String> tabs;
+  final String? shown;
+  final String? provisional;
+  final List<String> sources;
+
+  /// What's saved, as JSON.
+  Map<String, Object?> get json => {
+    'tabs': tabs,
+    'shown': ?shown,
+    'provisional': ?provisional,
+    if (sources.isNotEmpty) 'sources': sources,
+  };
+
+  /// [saved] read: null unless it's a map with a tab's name; a part of
+  /// the wrong type, or naming no tab, is left out.
+  static KeptTabs? read(Object? saved) {
+    if (saved is! Map) return null;
+    List<String> names(Object? v) => [
+      if (v is List) ...v.whereType<String>().where((s) => s.isNotEmpty),
+    ];
+    final tabs = names(saved['tabs']).toSet().toList();
+    if (tabs.isEmpty) return null;
+    String? one(Object? v) => v is String && tabs.contains(v) ? v : null;
+    return KeptTabs(
+      tabs,
+      shown: one(saved['shown']),
+      provisional: one(saved['provisional']),
+      sources: [...names(saved['sources']).where(tabs.contains)],
+    );
   }
 }

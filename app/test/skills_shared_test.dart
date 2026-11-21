@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nushi/controls.dart' show Toggle;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/skills.dart';
@@ -103,12 +104,10 @@ Future<(FakeDaemon, Daemon)> _view(
   d.skillsAgent = agent;
   viewport(tester, size, ratio: 3);
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: SkillsView(daemon: d, folder: folder),
-      ),
+    themed(
+      SkillsView(daemon: d, folder: folder),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();
@@ -135,9 +134,7 @@ void main() {
     // A switch changed meanwhile: its write may come after that list.
     unawaited(l.changed());
     held.complete();
-    for (var i = 0; i < 4; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 4);
     expect(lists, 2);
     expect(l.list.skills.single.name, 'list 2');
     expect(l.loading, isFalse);
@@ -184,7 +181,7 @@ void main() {
     );
     expect(find.text('for Codex'), findsNWidgets(3));
     // mine, the shared release, review, everyday, then imagegen.
-    final switches = find.byType(Switch);
+    final switches = find.byType(Toggle);
     expect(switches, findsNWidgets(5));
     await tester.tap(switches.at(2)); // review, off for Codex
     await tester.pumpAndSettle();
@@ -202,7 +199,7 @@ void main() {
     final (_, d) = await _view(tester, '$_home/pig', agent: 'pig');
     expect(find.text('Loads once the folder is trusted'), findsOneWidget);
     expect(find.text('Not read by PiG here'), findsNWidgets(2));
-    expect(find.byType(Switch), findsNothing);
+    expect(find.byType(Toggle), findsNothing);
     await closeView(tester, d);
   });
 

@@ -138,27 +138,13 @@ func (o OMP) SetSkillOn(ctx context.Context, folder, source, name string, on boo
 	return setDisabled(userConfig(), "skill:"+name, !on)
 }
 
-// own are the places omp's own skill folders are in: each .omp/skills
+// Own are the places omp's own skill folders are in: each .omp/skills
 // omp reads here and your skills folder.
-func own(folder string) (project, yours []string) {
+func (OMP) Own(folder string) (project, yours []string) {
 	for _, d := range walk(git.RealPath(folder)) {
 		if !skillfile.Linked(d, ".omp/skills") {
 			project = append(project, filepath.Join(d, ".omp", "skills"))
 		}
 	}
 	return project, []string{filepath.Join(omp.AgentDir(), "skills")}
-}
-
-// CanTrash says why Trash wouldn't move path: nil only for a skill's
-// folder right in one of omp's own places.
-func (OMP) CanTrash(_ context.Context, folder, path string) error {
-	project, yours := own(folder)
-	return skillfile.CanTrash(project, yours, path)
-}
-
-// Trash moves one of omp's own skill folders to the Trash: only one
-// CanTrash passes.
-func (OMP) Trash(ctx context.Context, folder, path string) error {
-	project, yours := own(folder)
-	return skillfile.Trash(ctx, project, yours, path)
 }

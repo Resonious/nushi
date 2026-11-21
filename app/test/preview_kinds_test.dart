@@ -21,13 +21,13 @@ import 'package:nushi/phone/preview_screen.dart';
 import 'package:nushi/preview.dart';
 import 'package:nushi/preview_path.dart';
 import 'package:nushi/preview_text.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/source_view.dart';
 import 'package:nushi/web_page.dart';
 
 import 'fake_daemon.dart';
 import 'fake_web_views.dart';
 import 'harness.dart';
+import 'preview_fixture.dart';
 
 const _html = '''
 <!doctype html>
@@ -166,25 +166,14 @@ Future<(Daemon, _Host)> _app(
   Map<String, StreamController<WatchChatFileResponse>> streams, {
   List<Uri>? opened,
 }) async {
-  viewport(tester, const Size(1700, 900));
-  showDetails.value = false;
-  paneWidths.value = {};
   final host = _Host();
   fakeWebViews()
     ..newPage = (() => host)
     ..open = ((url) async => opened?.add(url));
-  final d = await _fake(streams).connect(tester);
-  d.select('c');
-  await tester.pumpWidget(NushiApp(daemon: d));
-  await tester.pumpAndSettle();
-  return (d, host);
+  return (await previewApp(tester, _fake(streams)), host);
 }
 
 Finder get _pane => find.byType(FilesPane);
-
-Finder _inPane(Finder f) => find.descendant(of: _pane, matching: f);
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 Future<void> _dark(WidgetTester tester) async {
   tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
@@ -290,12 +279,12 @@ void main() {
     expect(host.loads, [
       ('/Users/me/nushi/site/index.html', '/Users/me/nushi'),
     ]);
-    expect(_inPane(find.byKey(const Key('page'))), findsOneWidget);
+    expect(inPane(find.byKey(const Key('page'))), findsOneWidget);
     // The header: Live, Reload, Open in browser at its right edge, before
     // Show in Finder and Close.
-    expect(_inPane(find.text('Live')), findsOneWidget);
-    final reload = _inPane(find.byTooltip('Reload'));
-    final browser = _inPane(find.byTooltip('Open in browser'));
+    expect(inPane(find.text('Live')), findsOneWidget);
+    final reload = inPane(find.byTooltip('Reload'));
+    final browser = inPane(find.byTooltip('Open in browser'));
     expect(
       [
         for (final f in [reload, browser, find.byTooltip('Close')])
@@ -320,21 +309,21 @@ void main() {
     await tester.pumpAndSettle();
     expect((host.loads.length, host.reloads), (1, 2));
     // Source: the text, highlighted, the page kept (made once).
-    await tester.tap(_inPane(find.byType(SourceButton)));
+    await tester.tap(inPane(find.byType(SourceButton)));
     await tester.pumpAndSettle();
-    expect(_inPane(find.byType(SourceView)), findsOneWidget);
+    expect(inPane(find.byType(SourceView)), findsOneWidget);
     expect(
-      _inPane(find.textContaining('<h1>The Still Pot</h1>')),
+      inPane(find.textContaining('<h1>The Still Pot</h1>')),
       findsOneWidget,
     );
-    await tester.tap(_inPane(find.byTooltip('View preview')));
+    await tester.tap(inPane(find.byTooltip('View preview')));
     await tester.pumpAndSettle();
     expect(host.loads, hasLength(1));
-    await tester.tap(_inPane(find.byTooltip('Close')));
+    await tester.tap(inPane(find.byTooltip('Close')));
     await tester.pumpAndSettle();
     expect(host.disposed, isTrue);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the pane’s edge lies beside a web view, not over it, and '
       'drags over it', (tester) async {
@@ -346,7 +335,7 @@ void main() {
     await tester.pumpAndSettle();
     await render(tester, find.byType(NushiApp), 'preview_html_edge');
     final pane = tester.getRect(_pane);
-    final page = _inPane(find.byKey(const Key('page')));
+    final page = inPane(find.byKey(const Key('page')));
     // The edge's strip, its full height under the header, is Flutter's:
     // the web view starts past it.
     expect(tester.getRect(page).left, pane.left + Resizable.edgeWidth);
@@ -392,18 +381,18 @@ void main() {
     c.openInFiles('docs/flow.mmd');
     await tester.pumpAndSettle();
     expect(
-      tester.getRect(_inPane(find.byKey(const Key('diagram')))).left,
+      tester.getRect(inPane(find.byKey(const Key('diagram')))).left,
       tester.getRect(_pane).left + Resizable.edgeWidth,
     );
     c.openInFiles('config.json');
     await tester.pumpAndSettle();
     expect(
-      tester.getRect(_inPane(find.byType(SourceView))).left,
+      tester.getRect(inPane(find.byType(SourceView))).left,
       tester.getRect(_pane).left,
     );
     d.dispose();
     await tester.pump(const Duration(seconds: 2)); // the width's saved
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('SVG and PDF in the web view; a PDF has no Source', (
     tester,
@@ -413,12 +402,12 @@ void main() {
     d.chats['c']!.openInFiles('site/pic.svg');
     await tester.pumpAndSettle();
     expect(host.loads.single.$1, '/Users/me/nushi/site/pic.svg');
-    expect(_inPane(find.byType(SourceButton)), findsOneWidget);
+    expect(inPane(find.byType(SourceButton)), findsOneWidget);
     d.chats['c']!.openInFiles('report.pdf');
     await tester.pumpAndSettle();
     expect(host.loads.last, ('/Users/me/nushi/report.pdf', '/Users/me/nushi'));
-    expect(_inPane(find.byType(SourceButton)), findsNothing);
-    expect(_inPane(find.byTooltip('Reload')), findsOneWidget);
+    expect(inPane(find.byType(SourceButton)), findsNothing);
+    expect(inPane(find.byTooltip('Reload')), findsOneWidget);
     // Past the daemon's cap a page still shows: the web view reads it.
     streams['report.pdf']!.add(
       WatchChatFileResponse(
@@ -428,10 +417,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(_inPane(find.byKey(const Key('page'))), findsOneWidget);
-    expect(_inPane(find.textContaining('Too large')), findsNothing);
+    expect(inPane(find.byKey(const Key('page'))), findsOneWidget);
+    expect(inPane(find.textContaining('Too large')), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a binary has no Preview; code has its source only, and '
       "isn't an artifact", (tester) async {
@@ -446,13 +435,13 @@ void main() {
     expect(isArtifact('config.json'), isFalse);
     d.chats['c']!.openInFiles('config.json');
     await tester.pumpAndSettle();
-    expect(_inPane(find.byType(SourceButton)), findsNothing);
-    expect(_inPane(find.byTooltip('Reload')), findsNothing);
+    expect(inPane(find.byType(SourceButton)), findsNothing);
+    expect(inPane(find.byTooltip('Reload')), findsNothing);
     // Pretty-printed, numbered lines.
-    expect(_inPane(find.textContaining('"port": 8080,')), findsOneWidget);
-    expect(_inPane(find.text(' 3')), findsOneWidget);
+    expect(inPane(find.textContaining('"port": 8080,')), findsOneWidget);
+    expect(inPane(find.text(' 3')), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('CSV: a table of the first 500 rows, its source, dark', (
     tester,
@@ -461,18 +450,18 @@ void main() {
     await _dark(tester);
     d.chats['c']!.openInFiles('data.csv');
     await tester.pumpAndSettle();
-    expect(_inPane(find.text('The first 500 rows of 600.')), findsOneWidget);
-    expect(_inPane(find.text('city')), findsOneWidget);
-    expect(_inPane(find.text('a note, with a comma')), findsWidgets);
+    expect(inPane(find.text('The first 500 rows of 600.')), findsOneWidget);
+    expect(inPane(find.text('city')), findsOneWidget);
+    expect(inPane(find.text('a note, with a comma')), findsWidgets);
     await render(tester, find.byType(NushiApp), 'preview_csv_dark');
-    await tester.tap(_inPane(find.byType(SourceButton)));
+    await tester.tap(inPane(find.byType(SourceButton)));
     await tester.pumpAndSettle();
     expect(
-      _inPane(find.textContaining('1,User 1,Osaka,"a note, with a comma"')),
+      inPane(find.textContaining('1,User 1,Osaka,"a note, with a comma"')),
       findsOneWidget,
     );
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Mermaid on the Mac: drawn by the app’s page, again as it '
       'changes and with the theme; its source', (tester) async {
@@ -484,10 +473,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(diagram.shown, [(_flow, false)]);
     expect(host.loads, isEmpty); // not a page of the agent's
-    expect(_inPane(find.byKey(const Key('diagram'))), findsOneWidget);
-    expect(_inPane(find.byTooltip('View source')), findsOneWidget);
-    expect(_inPane(find.byTooltip('Reload')), findsNothing);
-    expect(_inPane(find.byTooltip('Open in browser')), findsNothing);
+    expect(inPane(find.byKey(const Key('diagram'))), findsOneWidget);
+    expect(inPane(find.byTooltip('View source')), findsOneWidget);
+    expect(inPane(find.byTooltip('Reload')), findsNothing);
+    expect(inPane(find.byTooltip('Open in browser')), findsNothing);
     streams['docs/flow.mmd']!.add(
       _answer('docs/flow.mmd', _flow.replaceAll('Ship', 'Ship it')),
     );
@@ -496,14 +485,15 @@ void main() {
     await _dark(tester);
     expect(diagram.shown.last.$2, isTrue);
     expect(diagram.shown, hasLength(3));
-    await tester.tap(_inPane(find.byType(SourceButton)));
+    await tester.tap(inPane(find.byType(SourceButton)));
     await tester.pumpAndSettle();
-    expect(_inPane(find.textContaining('Plan --> Build')), findsOneWidget);
-    d.chats['c']!.files.closeAll();
+    expect(inPane(find.textContaining('Plan --> Build')), findsOneWidget);
+    final files = d.chats['c']!.files;
+    files.tabs.value.toList().forEach(files.close);
     await tester.pumpAndSettle();
     expect(diagram.disposed, isTrue);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   group('the phone', () {
     Future<Phone> phone(WidgetTester tester) async {

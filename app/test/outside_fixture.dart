@@ -1,6 +1,5 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nushi/browser_page.dart';
 import 'package:nushi/conventions.dart';
 import 'package:nushi/native.dart';
 import 'package:nushi/window_drag_linux.dart';
@@ -26,7 +25,6 @@ List<Uri> pagesOutside({Future<void> Function(Uri url)? open}) {
     ..embedded = false
     ..open = open ?? ((url) async => opened.add(url))
     ..browserName = (() async => 'Firefox');
-  addTearDown(() => defaultBrowser.value = null);
   return opened;
 }
 

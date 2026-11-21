@@ -1,8 +1,6 @@
 import 'package:flutter/services.dart';
-import 'package:nushi/browser_page.dart';
 import 'package:nushi/diagram_page.dart';
 import 'package:nushi/outside_page.dart';
-import 'package:nushi/preview_entry.dart';
 import 'package:nushi/web_page.dart';
 import 'package:nushi/web_views.dart';
 
@@ -15,17 +13,11 @@ const _browser = MethodChannel('nushi/browser');
 /// Mermaid file shows its source. Links and mail go through the runner
 /// too, never url_launcher, so the app they start gets none of Nushi's
 /// variables.
-class LinuxWebViews implements WebViews {
+class LinuxWebViews with OutsideTabs implements WebViews {
   const new();
 
   @override
-  bool get embedded => false;
-
-  @override
   PageHost page() => OutsidePage();
-
-  @override
-  BrowserHost tab(BrowserTab tab) => OutsideTab(tab);
 
   @override
   DiagramHost? diagram() => null;
@@ -66,25 +58,7 @@ class LinuxWebViews implements WebViews {
     }
   }
 
-  /// The browser that opens https, as [openWithBrowser], with its errors,
-  /// for http and https alone (never a file, whatever a caller passes).
-  @override
-  Future<void> openLink(Uri url) async {
-    if (url.scheme != 'http' && url.scheme != 'https') {
-      throw const BrowserError('Only a web link opens in the browser.');
-    }
-    await openWithBrowser(url);
-  }
-
-  /// No web view takes presses.
-  @override
-  Future<Duration?> sincePress({bool pointerOnly = false}) async => null;
-
   @override
   Future<String?> defaultBrowserName() =>
       _browser.invokeMethod<String>('browserName');
-
-  /// The browser keeps its own data.
-  @override
-  Future<void> clearData() async {}
 }

@@ -26,8 +26,6 @@ import 'package:nushi/trust_ask.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const _hide = 'Hide the sidebar\u2002⌘\\';
 const _show = 'Show the sidebar\u2002⌘\\';
 
@@ -65,7 +63,6 @@ Future<Daemon> _window(
 }) async {
   viewport(tester, Size(width, 700), brightness: brightness);
   sidebarHidden.value = hidden;
-  paneWidths.value = {};
   final d = await (fake ?? FakeDaemon(_chats())).connect(tester);
   if (open) d.select('a');
   await tester.pumpWidget(NushiApp(daemon: d));
@@ -73,26 +70,10 @@ Future<Daemon> _window(
   return d;
 }
 
-Future<void> _key(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
-}
-
 /// The View menu's labels.
-List<String> _viewMenu(WidgetTester tester) {
-  final view = tester
-      .widget<PlatformMenuBar>(find.byType(PlatformMenuBar))
-      .menus
-      .whereType<PlatformMenu>()
-      .firstWhere((m) => m.label == 'View');
-  Iterable<String> labels(PlatformMenuItem m) => switch (m) {
-    PlatformMenuItemGroup(:final members) => members.expand(labels),
-    _ => [m.label],
-  };
-  return [...view.menus.expand(labels)];
-}
+List<String> _viewMenu(WidgetTester tester) => [
+  for (final m in viewItems(tester)) m.label,
+];
 
 void main() {
   setUpAll(loadFonts);
@@ -149,7 +130,7 @@ void main() {
       expect(tester.element(header), same(element), reason: 'the chat stayed');
       expect(readSaved()['sidebarHidden'], isFalse);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the list comes back where it was scrolled to', (tester) async {
       final fake = FakeDaemon([
@@ -168,7 +149,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.state<ScrollableState>(list.first).position.pixels, 300);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     // The owner, of the beta: the button at a header's left was smaller
     // than the icon buttons at its right. It's the same control: the same
@@ -225,7 +206,7 @@ void main() {
         await tester.pump();
         await render(tester, find.byType(NushiApp), '${shot}_pointer');
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('it keeps its clicks, and the strip’s empty space moves and '
@@ -289,7 +270,7 @@ void main() {
       expect(sidebarHidden.value, isFalse);
       expect(calls, ['arm', 'arm', 'zoom', 'arm']);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the headers, hidden', () {
@@ -388,7 +369,7 @@ void main() {
               await render(tester, find.byType(NushiApp), shot);
             }
             d.dispose();
-          }, variant: _mac);
+          }, variant: onMac);
         }
       }
     }
@@ -417,7 +398,7 @@ void main() {
         NushiTheme.windowPad + hiddenHeaderStart,
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a full header at 720 wide folds rather than overflows, ⋯ at '
         'its end', (tester) async {
@@ -440,7 +421,7 @@ void main() {
         header.right - ChatHeader.end,
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the bars, hidden', () {
@@ -466,7 +447,6 @@ void main() {
       testWidgets('the update’s, removed chats’ and a notice’s bars take a row '
           'under the header, $width wide, ${b.name}', (tester) async {
         viewport(tester, Size(width, 700), brightness: b);
-        paneWidths.value = {};
         sidebarHidden.value = true;
         final fake = FakeDaemon(_chats())
           ..answer = ((input) => switch (input) {
@@ -528,7 +508,7 @@ void main() {
           greaterThanOrEqualTo(tester.getRect(find.byType(Sidebar)).right),
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('the daemon’s banner too', (tester) async {
@@ -550,7 +530,7 @@ void main() {
       await tester.pump(DaemonBanner.backFor);
       await tester.pump(DaemonBanner.slideFor);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the action', () {
@@ -583,15 +563,15 @@ void main() {
       expect(_viewMenu(tester), isNot(contains('Show Sidebar')));
       await tester.tap(find.byType(TextField).first);
       await tester.pumpAndSettle();
-      await _key(tester, LogicalKeyboardKey.backslash);
+      await cmdKey(tester, LogicalKeyboardKey.backslash);
       expect(sidebarHidden.value, isTrue);
       expect(find.byType(Sidebar), findsNothing);
       expect(_viewMenu(tester), contains('Show Sidebar'));
       expect(_viewMenu(tester), isNot(contains('Hide Sidebar')));
-      await _key(tester, LogicalKeyboardKey.backslash);
+      await cmdKey(tester, LogicalKeyboardKey.backslash);
       expect(sidebarHidden.value, isFalse);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets(r'⌘\ still works once the button that had the focus has gone', (
       tester,
@@ -611,17 +591,17 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
       expect(sidebarHidden.value, isTrue);
-      await _key(tester, LogicalKeyboardKey.backslash);
+      await cmdKey(tester, LogicalKeyboardKey.backslash);
       expect(sidebarHidden.value, isFalse);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('hidden, ⌘K reaches Jira, GitHub, Settings and the sidebar', (
       tester,
     ) async {
       final d = await _window(tester);
       Future<void> run(String query, String row) async {
-        await _key(tester, LogicalKeyboardKey.keyK);
+        await cmdKey(tester, LogicalKeyboardKey.keyK);
         final palette = find.byType(Palette);
         expect(palette, findsOneWidget);
         await tester.enterText(
@@ -649,7 +629,7 @@ void main() {
       await run('sidebar', 'Show the sidebar');
       expect(sidebarHidden.value, isFalse);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the chat’s menu is in its ⋯ while the sidebar is hidden', (
       tester,
@@ -659,7 +639,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Color'), findsOneWidget);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   testWidgets('the phone: no button, no key, whatever is saved', (
@@ -674,7 +654,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(SidebarButton), findsNothing);
     expect(find.byType(TitleButtons), findsNothing);
-    await _key(tester, LogicalKeyboardKey.backslash);
+    await cmdKey(tester, LogicalKeyboardKey.backslash);
     expect(sidebarHidden.value, isTrue);
     await endPhone(tester, phone);
   });

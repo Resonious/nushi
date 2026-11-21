@@ -111,8 +111,6 @@ Future<(Daemon, FakeDaemon)> _app(
 }
 
 const _sizes = [('1700', Size(1700, 1000)), ('720', Size(720, 900))];
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -141,7 +139,7 @@ void main() {
         expect(find.byType(MenuItemButton), findsWidgets);
         await shot(tester, 'menu');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('New chat, ${b.name}, $w wide', (tester) async {
         final (d, _) = await _app(tester, size: size, brightness: b);
@@ -153,7 +151,7 @@ void main() {
         await tester.sendKeyEvent(LogicalKeyboardKey.escape);
         await tester.pumpAndSettle();
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('a dialog, ${b.name}, $w wide', (tester) async {
         final (d, _) = await _app(tester, size: size, brightness: b);
@@ -172,7 +170,7 @@ void main() {
         await tester.tap(find.text('Cancel'));
         await tester.pumpAndSettle();
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('the palette, ${b.name}, $w wide', (tester) async {
         final (d, _) = await _app(tester, size: size, brightness: b);
@@ -183,7 +181,7 @@ void main() {
         await tester.sendKeyEvent(LogicalKeyboardKey.escape);
         await tester.pumpAndSettle();
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('a tooltip and the find bar, ${b.name}, $w wide', (
         tester,
@@ -211,7 +209,7 @@ void main() {
         expect(find.text('Chat menu'), findsOneWidget);
         await shot(tester, 'find_tooltip');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('a toast and the update card, ${b.name}, $w wide', (
         tester,
@@ -234,7 +232,7 @@ void main() {
         await tester.pump(const Duration(seconds: 6));
         await tester.pumpAndSettle();
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

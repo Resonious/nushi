@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:nushi/clock.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.connect.client.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -125,7 +126,6 @@ class AppLog {
 
 /// [t] as Go's slog writes it: 2026-10-25T15:16:55.513+09:00.
 String timestamp(DateTime t) {
-  String two(int n) => '$n'.padLeft(2, '0');
   final o = t.timeZoneOffset;
   final sign = o.isNegative ? '-' : '+';
   final date = '${t.year}-${two(t.month)}-${two(t.day)}';

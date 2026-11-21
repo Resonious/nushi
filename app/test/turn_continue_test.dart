@@ -4,7 +4,6 @@
 // a reloaded transcript and on the phone, and both notices rendered.
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/controls.dart';
@@ -35,9 +34,6 @@ Item _user(String id, String text, {List<ImageData> images = const []}) => Item(
 
 Item _notice([String status = 'turn_failed', String text = _failed]) =>
     Item(id: 'n', kind: ItemKind.ITEM_KIND_NOTICE, status: status, text: text);
-
-Item _agent(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, text: text);
 
 Item _tool(String id, {String parent = '', bool report = false}) => Item(
   id: id,
@@ -102,8 +98,6 @@ Future<(FakeDaemon, Daemon)> _window(
 final Finder _continue = find.widgetWithText(Button, 'Continue');
 final Finder _again = find.widgetWithText(Button, 'Try again');
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The label [items] (ending with the notice) give its button, or null.
 String? _label(List<Item> items, {void Function(ChatState)? also}) {
   final s = _state(items);
@@ -120,17 +114,10 @@ final List<Item> _worked = [
 
 void main() {
   setUpAll(loadFonts);
-  setUp(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        ),
-  );
 
   test('what the agent did after the message is progress', () {
     for (final it in [
-      _agent('a', 'Skipping it.'),
+      agentSays('a', 'Skipping it.'),
       Item(id: 'a', kind: ItemKind.ITEM_KIND_AGENT_MESSAGE, images: [_image]),
       Item(id: 'th', kind: ItemKind.ITEM_KIND_THOUGHT),
       _tool('t1'),
@@ -161,9 +148,9 @@ void main() {
   test("what isn't the turn's work leaves Try again", () {
     for (final it in [
       _notice('branch_renamed', 'Branch renamed'),
-      _agent('a', '  '),
+      agentSays('a', '  '),
       // The failure repeated as the agent's message (Claude's API Error).
-      _agent('a', 'HTTP 412 Precondition Failed: Account is suspended'),
+      agentSays('a', 'HTTP 412 Precondition Failed: Account is suspended'),
       // A subagent started earlier: its step, and its report.
       _tool('x', parent: 'older'),
       _tool('r', report: true),
@@ -199,7 +186,7 @@ void main() {
   test('archived, rewinding or not last: neither', () {
     expect(_label(_worked, also: (s) => s.archived = true), isNull);
     expect(_label(_worked, also: (s) => s.rewinding.value = true), isNull);
-    final s = _state([..._worked, _agent('a', 'later')]);
+    final s = _state([..._worked, agentSays('a', 'later')]);
     expect(failedTurnRetry(s, _worked.last), isNull);
   });
 
@@ -231,7 +218,7 @@ void main() {
     final fake = FakeDaemon([]);
     final state = _state([
       _user('u', 'What is on this screen?', images: [_image]),
-      _agent('a', 'A login form.'),
+      agentSays('a', 'A login form.'),
       _notice(),
     ])..queue = [QueuedMessage(id: 'q1', text: 'then the tests')];
     final d = await _show(tester, fake, state);
@@ -301,7 +288,7 @@ void main() {
     await tester.pump();
     expect(_sent(fake).last.text, continuePrompt);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('on the phone, Continue sends', (tester) async {
     viewport(
@@ -320,9 +307,7 @@ void main() {
           : null);
     final phone = await startPhone(tester, fake);
     await tester.tap(find.text('Wrap the events'));
-    for (var i = 0; i < 20; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+    await frames(tester, 20, const Duration(milliseconds: 50));
     expect(tester.getRect(_continue).right, lessThanOrEqualTo(390));
     await render(tester, find.byType(PhoneApp), 'turn_continue_phone_dark');
     await tester.tap(_continue);
@@ -340,21 +325,19 @@ void main() {
       final d = await FakeDaemon([]).connect(tester);
       final state = _state(_worked);
       await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: NushiTheme(tokens).toThemeData(),
-          home: Scaffold(
-            body: Padding(
-              padding: const EdgeInsets.all(16),
-              child: ItemView(
-                state.items.last,
-                state,
-                d,
-                live: false,
-                still: true,
-              ),
+        themed(
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: ItemView(
+              state.items.last,
+              state,
+              d,
+              live: false,
+              still: true,
             ),
           ),
+          tokens: tokens,
+          banner: false,
         ),
       );
       await tester.pump();
@@ -384,7 +367,7 @@ void main() {
           'turn_${name}_${width.toInt()}_dark',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

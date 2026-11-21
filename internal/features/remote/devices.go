@@ -139,22 +139,10 @@ func (s *Service) add(name, kind string, key []byte) (string, error) {
 func (s *Service) unpair(id string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	devices := slices.DeleteFunc(slices.Clone(s.devices), func(d model.Device) bool { return d.ID == id })
-	if len(devices) == len(s.devices) || s.st.SaveDevices(devices) != nil {
+	served, err := s.dropLocked(id)
+	if err != nil {
 		return
 	}
-	s.devices = devices
-	delete(s.views, id)
-	delete(s.told, id)
-	served := false
-	for c, d := range s.conns {
-		if d == id {
-			delete(s.conns, c)
-			_ = c.Close()
-			served = true
-		}
-	}
-	var err error
 	if served {
 		err = s.rotate(id)
 	} else {
@@ -168,12 +156,24 @@ func (s *Service) unpair(id string) {
 func (s *Service) Revoke(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if _, err := s.dropLocked(id); err != nil {
+		return err
+	}
+	err := s.rotate(id) // the device knows the id
+	s.changed()
+	slog.Info("device revoked", "device", id, "err", err)
+	return err
+}
+
+// dropLocked takes the device with id off the saved list and closes its
+// connections, and says whether it had any. Called with s.mu.
+func (s *Service) dropLocked(id string) (served bool, err error) {
 	devices := slices.DeleteFunc(slices.Clone(s.devices), func(d model.Device) bool { return d.ID == id })
 	if len(devices) == len(s.devices) {
-		return errors.New("no such device")
+		return false, errors.New("no such device")
 	}
 	if err := s.st.SaveDevices(devices); err != nil {
-		return err
+		return false, err
 	}
 	s.devices = devices
 	delete(s.views, id)
@@ -182,12 +182,10 @@ func (s *Service) Revoke(id string) error {
 		if d == id {
 			delete(s.conns, c)
 			_ = c.Close()
+			served = true
 		}
 	}
-	err := s.rotate(id) // the device knows the id
-	s.changed()
-	slog.Info("device revoked", "device", id, "err", err)
-	return err
+	return served, nil
 }
 
 // deviceIndexLocked is device's index in s.devices, or -1. Called with

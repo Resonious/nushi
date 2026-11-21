@@ -31,5 +31,5 @@ void main() {
     );
     // Its last row, then the panel's padding and border, then the gap.
     expect(last.bottom, moreOrLessEquals(opener.top - 4 - 6, epsilon: 1));
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

@@ -158,17 +158,15 @@ Future<(FakeDaemon, Daemon, List<String>)> _open(
   viewport(tester, const Size(700, 1100), ratio: 3);
   clock = () => _now;
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: JiraIssuePane(
-          daemon: d,
-          site: 'acme.atlassian.net',
-          issueKey: 'ACME-12',
-          onOpen: opened.add,
-        ),
+    themed(
+      JiraIssuePane(
+        daemon: d,
+        site: 'acme.atlassian.net',
+        issueKey: 'ACME-12',
+        onOpen: opened.add,
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();
@@ -320,10 +318,7 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Yes, **Safari** first.');
     await tester.pump();
     // ⌘⏎ posts it, as the button does.
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.enter);
     final c = fake.calls.whereType<AddJiraCommentRequest>().single;
     expect((c.key, c.markdown), ('ACME-12', 'Yes, **Safari** first.'));
     await closeView(tester, d);

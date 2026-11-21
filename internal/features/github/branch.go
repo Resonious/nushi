@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"errors"
+	"maps"
 	"slices"
 	"strings"
 	"time"
@@ -53,10 +54,7 @@ func (s *Service) FindPull(ctx context.Context, folder string, poll bool, look f
 	if err != nil {
 		return BranchPull{}, nil //nolint:nilerr // not a repository: nothing to find
 	}
-	names := make([]string, 0, len(remotes))
-	for name := range remotes {
-		names = append(names, name)
-	}
+	names := slices.Collect(maps.Keys(remotes))
 	rank := func(n string) int {
 		switch n {
 		case pushed:

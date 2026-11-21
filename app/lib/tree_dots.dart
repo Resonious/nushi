@@ -40,9 +40,6 @@ final class TreeDots extends ChangeNotifier {
   Set<String>? _files;
   Set<String> _folders = const {};
 
-  late (String, String, int) _key;
-  bool _wasBusy = false;
-
   /// The files dotted and the folders holding them.
   ({Set<String> files, Set<String> folders}) get marks => switch (_files) {
     final files? => (files: files, folders: _folders),
@@ -53,16 +50,11 @@ final class TreeDots extends ChangeNotifier {
   /// wrote (no repository, an old daemon, or no answer yet).
   bool get fromGit => _files != null;
 
-  (String, String, int) _keyNow() =>
-      (chat.folder, chat.worktree?.base ?? '', chat.commits);
-
   /// Starts asking, for a pane that shows the tree.
   void attach(Daemon daemon) {
     _daemon = daemon;
     if (_users++ > 0) return;
-    _key = _keyNow();
-    _wasBusy = chat.busy;
-    chat.addListener(_chatChanged);
+    marksBaseOf(chat).addListener(poke);
     folderTreeOf(chat).heard.addListener(poke);
     unawaited(_ask());
   }
@@ -70,20 +62,10 @@ final class TreeDots extends ChangeNotifier {
   /// Stops asking when no pane shows the tree.
   void detach() {
     if (--_users > 0) return;
-    chat.removeListener(_chatChanged);
+    marksBaseOf(chat).removeListener(poke);
     folderTreeOf(chat).heard.removeListener(poke);
     _soon?.cancel();
     _asked++; // an answer on its way is dropped
-  }
-
-  void _chatChanged() {
-    final ended = _wasBusy && !chat.busy;
-    _wasBusy = chat.busy;
-    final key = _keyNow();
-    if (ended || key != _key) {
-      _key = key;
-      poke();
-    }
   }
 
   /// Asks again in a moment ([treeDotsWait]), while a pane shows the tree.

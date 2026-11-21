@@ -87,10 +87,11 @@ func unnoted(text string) (string, bool) {
 // told is what a prompt tells the agent of its branch: the name it then
 // has, and the notices of the renames its note told of.
 type told struct {
-	branch  string
-	noted   bool     // a note went with it
-	notices []string // the renames' lines it told of
-	placed  *placed  // where the chat works, told too (switch.go)
+	branch        string
+	noted         bool     // a note went with it
+	notices       []string // the renames' lines it told of
+	placed        bool     // a move or switch was pending, cleared as it goes (switch.go)
+	placedNotices []string // the lines of the move or switches told of
 }
 
 // notes is what the notes for a prompt about to start need, taken with
@@ -138,7 +139,7 @@ func (n *notes) blocks() ([]acp.ContentBlock, *told) {
 	if len(n.edited) > 0 {
 		blocks = append(blocks, acp.ContentBlock{Type: "text", Text: &acp.TextContent{Text: editNote(n.edited)}})
 	}
-	place, p := n.place()
+	place, placedNotices, placed := n.place()
 	if place != nil {
 		blocks = append(blocks, *place)
 	}
@@ -146,9 +147,9 @@ func (n *notes) blocks() ([]acp.ContentBlock, *told) {
 	if note != nil {
 		blocks = append(blocks, *note)
 	}
-	if p != nil {
+	if placed {
 		t = cmp.Or(t, &told{})
-		t.placed = p
+		t.placed, t.placedNotices = true, placedNotices
 	}
 	return blocks, t
 }
@@ -210,8 +211,8 @@ func (c *chat) markToldLocked(ids []string) {
 // toldLocked records that a prompt went to the agent with t: the branch
 // as the agent now has it, and its note's renames marked as told.
 func (c *chat) toldLocked(t *told) {
-	if t.placed != nil {
-		c.placedLocked(t.placed)
+	if t.placed {
+		c.placedLocked(t.placedNotices)
 	}
 	if wt := c.record.Worktree; wt == nil || wt.Branch != t.branch {
 		return // moved meanwhile

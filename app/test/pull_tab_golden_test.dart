@@ -7,8 +7,6 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 import 'pull_fixture.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The Pull request tab at the window's real widths (1440, and 1100: the
 /// narrowest with the details panel), in both themes, its text inside the
 /// window. At 1440 it's the tab's window golden (the sidebar hidden: it has
@@ -41,12 +39,16 @@ void main() {
           await render(tester, find.byType(NushiApp), shot);
         }
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 
   // Each section, scrolled to, at 1440.
-  for (final section in ['Activity 4', 'Checks · 3 failing', 'Files 12']) {
+  for (final section in [
+    'Overview',
+    'Checks  3 failing',
+    'Files changed  12',
+  ]) {
     for (final (name, brightness) in [
       ('dark', Brightness.dark),
       ('light', Brightness.light),
@@ -64,7 +66,7 @@ void main() {
         expectTextInside(tester, 1440);
         await render(tester, find.byType(NushiApp), 'pull_tab_${file}_$name');
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

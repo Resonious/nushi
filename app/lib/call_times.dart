@@ -13,13 +13,9 @@ bool callTicking(Item it) =>
     it.started != 0 &&
     it.ended == 0;
 
-/// How long a tool call ran, or has run so far; null when the daemon
-/// didn't see it start or end (a replayed call), or it took under a
-/// second.
-Duration? callTime(Item it) => runTime([it]);
-
 /// How long a run of tool calls took, from the first's start to the last's
-/// end, or to now while one still runs; null as [callTime].
+/// end, or to now while one still runs; null when the daemon didn't see
+/// any start or end (replayed calls), or it took under a second.
 Duration? runTime(List<Item> calls) {
   DateTime? from;
   DateTime? to;

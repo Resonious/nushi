@@ -21,9 +21,6 @@ import 'package:xterm2/xterm.dart';
 // The logs drawer (ADR 0100): a dev server's output, live, at the bottom of
 // the browser tab's pane, drawn by the terminal's renderer but read-only.
 
-/// The API from which the daemon streams a server's output.
-const serverLogsApi = 111;
-
 /// A server's output as the daemon streams it (WatchServerLog), in an
 /// emulator that acts on nothing: its bytes are the server's, and none of
 /// them reach the app or the Mac. It has no `onOutput` (its

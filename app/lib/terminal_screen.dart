@@ -22,40 +22,22 @@ import 'package:xterm2/xterm.dart';
 // letter is the shell's (ADR 0104).
 
 /// Copies the terminal's selection.
-const terminalCopyKey = Cmd(
-  LogicalKeyboardKey.keyC,
-  linux: SingleActivator(LogicalKeyboardKey.keyC, control: true, shift: true),
-);
+const terminalCopyKey = Cmd(LogicalKeyboardKey.keyC, terminal: true);
 
 /// Pastes into the terminal.
-const terminalPasteKey = Cmd(
-  LogicalKeyboardKey.keyV,
-  linux: SingleActivator(LogicalKeyboardKey.keyV, control: true, shift: true),
-);
+const terminalPasteKey = Cmd(LogicalKeyboardKey.keyV, terminal: true);
 
 /// Clears the terminal's screen and scrollback.
-const terminalClearKey = Cmd(
-  LogicalKeyboardKey.keyK,
-  linux: SingleActivator(LogicalKeyboardKey.keyK, control: true, shift: true),
-);
+const terminalClearKey = Cmd(LogicalKeyboardKey.keyK, terminal: true);
 
 /// Opens another terminal for the chat.
-const newTerminalKey = Cmd(
-  LogicalKeyboardKey.keyT,
-  linux: SingleActivator(LogicalKeyboardKey.keyT, control: true, shift: true),
-);
+const newTerminalKey = Cmd(LogicalKeyboardKey.keyT, terminal: true);
 
 /// Closes the terminal.
-const closeTerminalKey = Cmd(
-  LogicalKeyboardKey.keyW,
-  linux: SingleActivator(LogicalKeyboardKey.keyW, control: true, shift: true),
-);
+const closeTerminalKey = Cmd(LogicalKeyboardKey.keyW, terminal: true);
 
 /// Finds in the terminal.
-const terminalFindKey = Cmd(
-  LogicalKeyboardKey.keyF,
-  linux: SingleActivator(LogicalKeyboardKey.keyF, control: true, shift: true),
-);
+const terminalFindKey = Cmd(LogicalKeyboardKey.keyF, terminal: true);
 
 /// Ctrl+C, the shell's interrupt.
 const _interruptKey = SingleActivator(LogicalKeyboardKey.keyC, control: true);

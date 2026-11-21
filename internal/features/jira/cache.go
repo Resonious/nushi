@@ -1,7 +1,6 @@
 package jira
 
 import (
-	"encoding/json"
 	"log/slog"
 	"strconv"
 	"time"
@@ -29,23 +28,9 @@ func issueKey(key string) string { return "issue " + key }
 
 // keep caches v under key for the site with id, as it is now.
 func (s *Service) keep(id, key string, v any) {
-	b, err := json.Marshal(v)
-	if err == nil {
-		err = s.store.Cache(cacheArea, id, key, time.Now(), b)
-	}
-	if err != nil {
+	if err := s.store.Cache(cacheArea, id, key, v); err != nil {
 		slog.Warn("keeping a jira answer", "site", id, "err", err)
 	}
-}
-
-// kept reads what key held for the site with id into v, and when it came
-// (zero with nothing kept).
-func (s *Service) kept(id, key string, v any) (time.Time, error) {
-	at, data, err := s.store.Cached(cacheArea, id, key)
-	if err != nil || data == nil || json.Unmarshal(data, v) != nil {
-		return time.Time{}, err
-	}
-	return at, nil
 }
 
 // forget drops a site's cache.
@@ -63,7 +48,7 @@ func (s *Service) CachedList(id, list, jql string) (List, time.Time, error) {
 		return List{}, time.Time{}, err
 	}
 	var l List
-	at, err := s.kept(id, listKey(site, list, jql), &l)
+	at, err := s.store.Cached(cacheArea, id, listKey(site, list, jql), &l)
 	return l, at, err
 }
 
@@ -76,6 +61,6 @@ func (s *Service) CachedIssue(id, key string) (model.JiraIssue, time.Time, error
 		return model.JiraIssue{}, time.Time{}, err
 	}
 	var is model.JiraIssue
-	at, err := s.kept(id, issueKey(key), &is)
+	at, err := s.store.Cached(cacheArea, id, issueKey(key), &is)
 	return is, at, err
 }

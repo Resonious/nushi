@@ -128,7 +128,7 @@ void main() {
         expectTextInside(tester, width);
         await render(tester, find.byType(NushiApp), 'plus_files_$name');
         await closeView(tester, d);
-      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      }, variant: onMac);
     }
   }
 

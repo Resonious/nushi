@@ -65,7 +65,6 @@ Future<Daemon> _window(
     ..conventions = linuxConventions;
   viewport(tester, Size(width, 760), brightness: brightness);
   sidebarHidden.value = hidden;
-  paneWidths.value = {};
   final d = await FakeDaemon([
     chat('a', 'claude', _title)..color = 'amber',
     chat('b', 'codex', 'Bump the API version', age: 1),
@@ -164,7 +163,6 @@ void main() {
       ..window = const LinuxWindow()
       ..conventions = linuxConventions;
     viewport(tester, const Size(720, 700));
-    paneWidths.value = {};
     sidebarHidden.value = true;
     final fake =
         FakeDaemon([chat('a', 'claude', _title), chat('b', 'codex', 'Bump')])

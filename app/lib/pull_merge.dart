@@ -2,115 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/menu.dart';
-import 'package:nushi/pull_lights.dart';
 import 'package:nushi/pull_merge_dialog.dart';
 import 'package:nushi/pull_merge_state.dart';
 import 'package:nushi/settings.dart';
-import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 
-/// The Merge control of an open pull request, in its Pull request tab and
-/// the details widget: ready, or exactly why it can't merge, and what the
-/// viewer may do about it ([mergeView]). Every way in goes through the
-/// confirmation (`pull_merge_dialog.dart`); [onChanged] reads the pull
-/// request again. While it shows what was kept from before ([stale]) it
-/// says what it knew and offers nothing. [compact]: the details widget's,
-/// no box, the buttons under the words.
-class MergeControl extends StatelessWidget {
+/// The merge status card's merge button, for an open pull request: what
+/// the viewer may do about merging it ([mergeView]: a method as a split
+/// button with its menu, Enable auto-merge, Add to queue, Merge when
+/// ready, or the way out of auto-merge or the queue). Nothing the viewer
+/// has no permission for, and no admin bypass (ADR 0069). Every way in
+/// goes through the confirmation (`pull_merge_dialog.dart`); [onChanged]
+/// reads the pull request again. While the card shows what was kept from
+/// before ([stale]) it offers nothing.
+class MergeButtons extends StatelessWidget {
   const new({
     required this.daemon,
     required this.pull,
     required this.onChanged,
     super.key,
-    this.compact = false,
     this.stale = false,
   });
 
   final Daemon daemon;
   final GitHubPull pull;
   final Future<void> Function() onChanged;
-  final bool compact;
   final bool stale;
 
   @override
   Widget build(BuildContext context) {
-    if (mergeView(pull) == null) return const SizedBox.shrink();
+    final view = mergeView(pull);
+    if (view == null || stale) return const SizedBox.shrink();
     return ValueListenableBuilder(
       valueListenable: mergeMethods,
-      builder: (context, _, _) => compact
-          ? _built(context, narrow: true)
-          : LayoutBuilder(
-              builder: (context, box) =>
-                  _built(context, narrow: box.maxWidth < 560),
-            ),
-    );
-  }
-
-  Widget _built(BuildContext context, {required bool narrow}) {
-    final theme = NushiTheme.of(context);
-    final t = theme.t;
-    final view = mergeView(pull)!;
-    final size = compact ? 12.0 : 13.0;
-    final words = Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 1),
-          child: Icon(view.icon, size: 15, color: moodColor(t, view.mood)),
-        ),
-        const SizedBox(width: 7),
-        Expanded(
-          child: Text.rich(
-            key: const ValueKey('merge-words'),
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: view.lead,
-                  style: theme.ui(
-                    moodColor(t, view.mood),
-                    size: size,
-                    weight: FontWeight.w600,
-                  ),
-                ),
-                if (view.rest.isNotEmpty) TextSpan(text: ' ${view.rest}'),
-              ],
-            ),
-            style: theme.ui(t.textSecondary, size: size),
-          ),
-        ),
-      ],
-    );
-    final actions = stale ? const <Widget>[] : _actions(context, view);
-    final body = narrow
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              words,
-              if (actions.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Wrap(spacing: 6, runSpacing: 6, children: actions),
-              ],
-            ],
-          )
-        : Row(
-            children: [
-              Expanded(child: words),
-              if (actions.isNotEmpty) ...[
-                const SizedBox(width: 12),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 6,
-                  children: actions,
-                ),
-              ],
-            ],
-          );
-    if (compact) return body;
-    return Container(
-      key: const ValueKey('merge-control'),
-      padding: const EdgeInsets.fromLTRB(12, 9, 10, 9),
-      decoration: cardBox(t),
-      child: body,
+      builder: (context, _, _) => Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 6,
+        children: _actions(context, view),
+      ),
     );
   }
 

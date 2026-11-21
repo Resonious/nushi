@@ -31,7 +31,7 @@ import (
 )
 
 // Version is the API version reported by Ping. Bump it when methods are added.
-const Version = 125
+const Version = 128
 
 // Release is the version a release build stamps in (make package's
 // VERSION, through -ldflags -X), "" in a build that isn't packaged
@@ -82,6 +82,8 @@ type Services struct {
 	Restart Restart
 	// Updates checks for a newer release; nil: it doesn't.
 	Updates Updates
+	// Usage sums what the chats' turns used; nil: it isn't kept.
+	Usage Usage
 }
 
 // Restart stops the daemon for a newer build once nothing would be lost
@@ -155,6 +157,10 @@ var macOnly = map[string]bool{
 	// off the relay (ADR 0127).
 	nushiv1connect.NushiServiceGetWorkflowProcedure:      true,
 	nushiv1connect.NushiServiceGetWorkflowAgentProcedure: true,
+	// The phone has no Usage page, and the page names project folders and
+	// chats' titles (ADR 0136); the call checks for the Mac's socket too
+	// (onMac).
+	nushiv1connect.NushiServiceGetUsageProcedure: true,
 }
 
 // ForDevices is the API a paired device's channel gets, which the
@@ -245,10 +251,10 @@ func (s *server) Events(ctx context.Context, req *connect.Request[nushiv1.Events
 		}
 		err = stream.Send(toProto(e, req.Msg.ImageRefs))
 		return err == nil
-	}, events.OnLive(func() bool {
+	}, func() bool {
 		err = stream.Send(&nushiv1.EventsResponse{})
 		return err == nil
-	}))
+	})
 	if behind != nil {
 		// A client that stopped reading (a frozen app, a phone on a bad
 		// link): its events were dropped, and it subscribes again and

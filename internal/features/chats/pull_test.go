@@ -21,11 +21,35 @@ func numbers(pulls []model.ChatGitHub) []int {
 	return out
 }
 
+// TestOlderPullRecord: a record written before Pulls still reads: its
+// Pull is its first, and its NoPull keeps that pull request out when
+// found; linking it by hand clears both.
+func TestOlderPullRecord(t *testing.T) {
+	svc, _, c := newChat(t, `{"sessionId":"s1"}`, &memModes{})
+	c.mu.Lock()
+	c.saveLocked(func(s *model.ChatRecord) { p := pullLink(5, ""); s.Pull, s.NoPull = &p, 6 })
+	c.mu.Unlock()
+	record := func() model.ChatRecord {
+		s, err := svc.Session(c.id)
+		testcheck.NoErr(t, err)
+		return s
+	}
+	found := pullLink(6, "sub")
+	testcheck.NoErr(t, svc.LinkPull(c.id, &found))
+	if r := record(); fmt.Sprint(numbers(r.AllPulls())) != "[5]" {
+		t.Fatalf("an older record's pull requests: %+v", r)
+	}
+	testcheck.NoErr(t, svc.AddPull(c.id, pullLink(6, "")))
+	if r := record(); fmt.Sprint(numbers(r.AllPulls())) != "[5 6]" || r.Pull != nil || r.NoPull != 0 {
+		t.Fatalf("linked by hand: %+v", r)
+	}
+}
+
 // TestLinkPull (ADR 0117): a found pull request is added; one linked by
 // hand takes the primary's place, or is added; unlinking one forgets it,
 // and it isn't found again; a chat started from a pull request keeps it
 // first until unlinked; a found one goes when the folder leaves its
-// branch; Pull is the primary, for a release before Pulls.
+// branch. Pull and NoPull are no longer written.
 func TestLinkPull(t *testing.T) {
 	svc, _, c := newChat(t, `{"sessionId":"s1"}`, &memModes{})
 	record := func() model.ChatRecord {
@@ -42,7 +66,7 @@ func TestLinkPull(t *testing.T) {
 		t.Fatalf("found, then added: %s", got)
 	}
 	link(pullLink(9, "")) // by hand, in the primary's place
-	if r := record(); fmt.Sprint(numbers(r.AllPulls())) != "[9 8]" || r.Pull == nil || r.Pull.Number != 9 {
+	if r := record(); fmt.Sprint(numbers(r.AllPulls())) != "[9 8]" || r.Pull != nil {
 		t.Fatalf("linked by hand: %+v", r)
 	}
 	testcheck.NoErr(t, svc.UnlinkPull(c.id, pullLink(8, "")))
@@ -61,7 +85,7 @@ func TestLinkPull(t *testing.T) {
 		t.Fatalf("its branch left: %s", got)
 	}
 	testcheck.NoErr(t, svc.LinkPull(c.id, nil))
-	if r := record(); fmt.Sprint(numbers(r.AllPulls())) != "[8]" || r.NoPull != 9 {
+	if r := record(); fmt.Sprint(numbers(r.AllPulls())) != "[8]" || r.NoPull != 0 || !r.Unlinked(pullLink(9, "sub")) {
 		t.Fatalf("the primary unlinked: %+v", r)
 	}
 	c.mu.Lock()

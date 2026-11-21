@@ -5,6 +5,8 @@ import (
 	"slices"
 	"strings"
 	"unicode"
+
+	"github.com/afrase/nushi/internal/git"
 )
 
 // The agent hears of the files the user edited in Nushi's preview (ADR
@@ -62,12 +64,8 @@ func (s *Service) UserEdited(chatID, path string) {
 // there: relative to the folder, or absolute when it's in the worktree
 // alone.
 func (c *chat) holdsLocked(path string) (string, bool) {
-	roots := []string{c.record.Folder}
-	if wt := c.record.Worktree; wt != nil && wt.Path != c.record.Folder {
-		roots = append(roots, wt.Path)
-	}
-	for i, r := range roots {
-		for _, r := range []string{r, realPath(r)} {
+	for i, r := range c.rootsLocked() {
+		for _, r := range []string{r, git.RealPath(r)} {
 			if rel, err := filepath.Rel(r, path); err == nil && filepath.IsLocal(rel) {
 				if i > 0 {
 					return path, true
@@ -77,12 +75,4 @@ func (c *chat) holdsLocked(path string) (string, bool) {
 		}
 	}
 	return "", false
-}
-
-// realPath is p with its links followed, or p if that fails.
-func realPath(p string) string {
-	if r, err := filepath.EvalSymlinks(p); err == nil {
-		return r
-	}
-	return p
 }

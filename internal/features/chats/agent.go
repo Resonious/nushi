@@ -236,7 +236,7 @@ func InitializeRequest(info model.HarnessInfo) *acp.InitializeRequest {
 // What the agent sends from then on is live, not a replay (kept).
 func (s *Service) useLocked(c *chat, o opened) {
 	c.agent, c.canFork, c.steer, c.canImage, c.sid, c.config = o.agent, o.agent.CanFork(), o.agent.CanSteer(), o.images, o.sid, o.config
-	c.forkAt, c.held, c.kept, c.ownTurn, c.reopenFailed = o.forkAt, false, false, false, false
+	c.forkAt, c.held, c.outlived, c.ownTurn, c.reopenFailed = o.forkAt, false, false, false, false
 	c.canLoad, c.asleep, c.reapplying = o.load, false, true // until reapply
 	c.mcpChanged = false                                    // the new agent has the MCP servers as they are now
 	c.unsendLocked(c.failure)                               // it runs: why it couldn't is stale
@@ -262,7 +262,7 @@ func (s *Service) watch(c *chat, agent Agent) {
 		c.mu.Unlock()
 		return
 	}
-	c.agent, c.kept = nil, true
+	c.agent, c.outlived = nil, true
 	c.logLocked().Error("the chat's agent quit unexpectedly", "pid", agent.Pid())
 	c.dropPromptsLocked()
 	c.orphanLocked(false)
@@ -281,7 +281,7 @@ func (c *chat) orphanLocked(stopped bool) {
 	c.ownTurn = false
 	c.pokeWorkflowsLocked() // they went with the agent
 	for i, it := range c.items {
-		running := it.Status == "pending" || it.Status == "in_progress" || it.Subagent != nil && it.Subagent.State == "running"
+		running := callRunning(it.Status) || it.Subagent != nil && it.Subagent.State == "running"
 		if it.Kind == model.ToolCall && running {
 			c.items[i].Status = "failed"
 			if it.Ended.IsZero() { // else its turn's end ended it
@@ -309,11 +309,11 @@ func (c *chat) orphanLocked(stopped bool) {
 func (c *chat) disconnect() {
 	c.mu.Lock()
 	agent := c.agent
-	c.agent, c.kept = nil, len(c.items) > 0
+	c.agent, c.outlived = nil, len(c.items) > 0
 	c.dropPromptsLocked() // the agent can't take an answer once stopped
 	c.orphanLocked(true)
 	c.mu.Unlock()
 	if agent != nil {
-		_ = agent.Stop(c.timing.stopGrace()) // its process is gone either way
+		_ = agent.Stop(c.svc.timing.stopGrace()) // its process is gone either way
 	}
 }

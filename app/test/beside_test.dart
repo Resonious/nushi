@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/chat_view.dart';
@@ -68,8 +67,6 @@ Future<Daemon> _app(
   return d;
 }
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Finder get _pane => find.byType(SubagentPane);
 Finder get _details => find.byType(DetailsPanel);
 
@@ -105,13 +102,6 @@ void _side(WidgetTester tester) {
 
 void main() {
   setUpAll(loadFonts);
-  setUp(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        ),
-  );
 
   testWidgets('the details open beside an open subagent pane', (tester) async {
     final d = await _app(tester, details: false);
@@ -120,7 +110,7 @@ void main() {
     await _toggleDetails(tester);
     _side(tester);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a subagent pane opens right of the open details', (
     tester,
@@ -130,7 +120,7 @@ void main() {
     await _openPane(tester);
     _side(tester);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('each closes on its own', (tester) async {
     final d = await _app(tester);
@@ -154,7 +144,7 @@ void main() {
     await _toggleDetails(tester);
     expect(_transcript(tester).right, tester.getRect(_pane).left);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the pane keeps its own width; the details have theirs', (
     tester,
@@ -165,7 +155,7 @@ void main() {
     expect(tester.getRect(_pane).width, 300);
     expect(tester.getRect(_details).width, DetailsPanel.width); // ADR 0092
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('too narrow for both: the details tuck away and the pane '
       'stays beside the transcript', (tester) async {
@@ -190,7 +180,7 @@ void main() {
     expect(tester.getRect(_details).right, 1160 - NushiTheme.windowPad);
     expect(_transcript(tester).right, tester.getRect(_details).left);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('too narrow for the pane beside the transcript: it narrows, '
       'unsaved, then lies over it at its least', (tester) async {
@@ -221,7 +211,7 @@ void main() {
     expect(_transcript(tester).right, 820 - NushiTheme.windowPad);
     expect(paneWidths.value.containsKey('subagent'), isFalse);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("the pane drags past 480, to the transcript's least, tucking "
       'the details away, and keeps its width across a relaunch', (
@@ -269,7 +259,7 @@ void main() {
     await _openPane(tester);
     expect(tester.getRect(_pane).width, most);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   // Dragged wide, beside the transcript, and as far as it goes, over it.
   for (final (name, width, by) in [
@@ -294,7 +284,7 @@ void main() {
       expectTextInside(tester, width);
       await render(tester, find.byType(NushiApp), 'pane_drag_$name');
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('a side chat goes right of the details and left of the pane', (
@@ -311,5 +301,5 @@ void main() {
     expect(pane.right, 1800 - NushiTheme.windowPad);
     expect(_transcript(tester).right, details.left);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

@@ -97,7 +97,7 @@ void main() {
     await _enter(tester, [LogicalKeyboardKey.metaLeft]);
     expect(sent, ['abcd', 'abcd']);
     expect(text.text, 'abcd', reason: 'no line from ⌘⏎');
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('the reply dialog: ⌥⏎ starts a line, ⌘⏎ saves', (tester) async {
     final replies = Replies([
@@ -118,7 +118,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(AlertDialog), findsNothing);
     expect(replies.value.single.text, 'ab\ncd');
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('the composer: the same keys start a line and send nothing; '
       '⌘⏎ sends', (tester) async {
@@ -155,7 +155,7 @@ void main() {
     expect(sent.now, isFalse, reason: 'nothing to stop');
     expect(c.text, isEmpty);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a review comment: the same keys; the keypad’s Enter saves, '
       'Escape drops it', (tester) async {
@@ -189,7 +189,7 @@ void main() {
     expect(saved, ['abcd', 'abcd']);
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     expect(dropped, isTrue);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a subagent’s box: the same keys', (tester) async {
     final fake = FakeDaemon([]);
@@ -227,5 +227,5 @@ void main() {
     expect(sent.text, 'abcd');
     expect(sent.toSubagent, 'a');
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

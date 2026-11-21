@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nushi/controls.dart' show IconTap;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/settings.dart';
@@ -19,8 +20,6 @@ import 'fake_daemon.dart';
 import 'fake_desktop.dart';
 import 'harness.dart';
 import 'settings_harness.dart';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 /// The tokens the app paints [of] with.
 Tokens _painted(WidgetTester tester, Finder of) =>
@@ -61,7 +60,6 @@ void main() {
 
   testWidgets('a theme picked repaints the app at once and is kept across '
       'a relaunch', (tester) async {
-    Directory(dataDir).createSync(recursive: true);
     final d = await _app(tester);
     expect(_painted(tester, find.byType(SettingsView)), same(Tokens.dark));
     expect(find.byType(ThemeCard), findsNWidgets(builtInThemes.length));
@@ -85,12 +83,11 @@ void main() {
     final again = await _app(tester);
     expect(_painted(tester, find.byType(SettingsView)), same(nord.dark));
     await closeView(tester, again);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Tokyo Night is picked from its card, and kept by its id', (
     tester,
   ) async {
-    Directory(dataDir).createSync(recursive: true);
     final d = await _app(tester);
     await _tap(tester, find.text('Tokyo Night'));
     await tester.pumpAndSettle();
@@ -98,14 +95,17 @@ void main() {
     expect(_painted(tester, find.byType(SettingsView)), same(tokyo.dark));
     expect(readSaved()['theme'], 'tokyo-night');
     expect(pickedTheme(), same(tokyo));
-    // Its sets by the names they're known by.
-    expect(find.text('Dark: Tokyo Night'), findsOneWidget);
-    expect(find.text('Light: Tokyo Night Day'), findsOneWidget);
+    // A card names the set it shows where its palette names it apart:
+    // Tokyo Night's dark set is the theme's name, its light set Day.
+    expect(find.text('Tokyo Night Day'), findsNothing);
+    expect(find.text('Catppuccin Mocha'), findsOneWidget);
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
     await tester.pumpAndSettle();
     expect(_painted(tester, find.byType(SettingsView)), same(tokyo.light));
+    expect(find.text('Tokyo Night Day'), findsOneWidget);
+    expect(find.text('Catppuccin Latte'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a theme picked shows on the next frame, and rebuilding the '
       'app with the same theme changes nothing below it', (tester) async {
@@ -130,7 +130,7 @@ void main() {
     await tester.pump();
     expect(shown(), same(before));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   test('a theme made once is made again for another platform', () {
     // ThemeData takes its platform when it is made, so a theme cached
@@ -174,7 +174,7 @@ void main() {
     expectTextInside(tester, 720);
     await render(tester, find.byType(NushiApp), 'theme_picker_720_dark');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a theme file loads as a tile; a partial, a broken and a '
       'low-contrast file each say what they are', (tester) async {
@@ -228,7 +228,9 @@ void main() {
     );
     expect(onCard('Dim', find.textContaining('Light:')), findsNothing);
     expect(onCard('Good', find.text('Yours · Good.json')), findsOne);
-    expect(onCard('Nord', find.text('Built in')), findsOne);
+    // A built-in card is its name alone: no file, no Yours line.
+    expect(onCard('Nord', find.textContaining('Yours')), findsNothing);
+    expect(onCard('Nord', find.byType(IconTap)), findsNothing);
     // The custom card's colors are its own: its preview draws in them.
     final mine = tester.widget<ThemeCard>(
       find.ancestor(of: find.text('Good'), matching: find.byType(ThemeCard)),
@@ -252,7 +254,7 @@ void main() {
     expect(t.base, const Color(0xFF101820));
     expect(t.raised, builtInTheme('solarized')!.dark.raised);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a picked theme whose file goes shows Nushi’s, and is back '
       'with it', (tester) async {
@@ -270,7 +272,7 @@ void main() {
     expect(_painted(tester, find.byType(SettingsView)).base, Tokens.dark.base);
     expect(colorTheme.value, 'custom:Gone');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('editing a theme file reloads it, and the app repaints', (
     tester,
@@ -300,7 +302,7 @@ void main() {
     await untilReal(tester, () => find.text('Second').evaluate().isNotEmpty);
     await tester.runAsync(themeFiles.stop);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('New from writes the current theme whole, picks it and shows '
       'it in Finder; Show folder opens the folder', (tester) async {
@@ -332,14 +334,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(opened.last, [themeFiles.dir.path]);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),
     ('light', Tokens.light),
   ]) {
     testWidgets('golden, the theme picker, $name', (tester) async {
-      colorTheme.value = 'nushi';
       final d = await FakeDaemon([]).connect(tester);
       await pumpSettings(
         tester,

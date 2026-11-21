@@ -7,6 +7,7 @@ import 'package:file_selector/file_selector.dart';
 
 import 'package:nushi/daemon.dart';
 import 'package:nushi/file_mode.dart';
+import 'package:nushi/images.dart';
 import 'package:nushi/tile_crop.dart';
 import 'package:nushi/tile_look.dart';
 
@@ -38,27 +39,6 @@ Future<XFile?> Function() pickTileImage = () => openFile(
   ],
   confirmButtonText: 'Choose',
 );
-
-/// The kind of image [bytes] start as, by its stored name's ending: PNG,
-/// JPEG, GIF or WebP, from the bytes and never a file's name; null for
-/// anything else.
-String? tileImageKind(List<int> bytes) {
-  bool starts(List<int> magic, [int at = 0]) {
-    if (bytes.length < at + magic.length) return false;
-    for (final (i, b) in magic.indexed) {
-      if (bytes[at + i] != b) return false;
-    }
-    return true;
-  }
-
-  if (starts(const [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])) {
-    return 'png';
-  }
-  if (starts(const [0xFF, 0xD8, 0xFF])) return 'jpg';
-  if (starts('GIF87a'.codeUnits) || starts('GIF89a'.codeUnits)) return 'gif';
-  if (starts('RIFF'.codeUnits) && starts('WEBP'.codeUnits, 8)) return 'webp';
-  return null;
-}
 
 /// An image picked for a tile and found good: its bytes and their kind.
 typedef PickedImage = ({Uint8List bytes, String kind});
@@ -102,7 +82,7 @@ Future<PickedImage> readTileImage(String path) async {
   if (bytes.length > maxTileImageBytes) {
     throw const TileImageRefused('That image is larger than 16 MB.');
   }
-  final kind = tileImageKind(bytes);
+  final kind = imageKind(bytes);
   if (kind == null) {
     throw const TileImageRefused('Not a PNG, JPEG, GIF or WebP image.');
   }

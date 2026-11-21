@@ -33,9 +33,7 @@ func newCopyingChat(t *testing.T) (*Service, *fakeAgent, *chat, *transcripts.Sto
 	on.Store(true)
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude", Title: "Claude"}, Launch: agent.launch}}, Options{Scratch: t.TempDir(), Copies: store, CopiesOn: on.Load})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(context.Background(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	return svc, agent, svc.chats[id], store, on
+	return svc, agent, startChat(t, svc, t.TempDir()), store, on
 }
 
 // copied is a chat's copy as kind:id items, in order.

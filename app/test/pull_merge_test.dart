@@ -7,22 +7,22 @@ import 'package:nushi/controls.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/pull_cache.dart';
 import 'package:nushi/pull_lights.dart';
-import 'package:nushi/pull_merge.dart';
+import 'package:nushi/pull_merge_card.dart';
 import 'package:nushi/pull_merge_state.dart';
 import 'package:nushi/pull_rows.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/toast.dart';
 
 import 'fake_daemon.dart';
+import 'harness.dart';
 import 'pull_fixture.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
-/// What the control's box says, whole.
-String _says(WidgetTester tester) => tester
-    .widget<Text>(find.byKey(const ValueKey('merge-words')).first)
-    .textSpan!
-    .toPlainText();
+/// What the merge status card says: its heading, then its line.
+String _says(WidgetTester tester) => [
+  for (final k in ['merge-heading', 'merge-line'])
+    if (find.byKey(ValueKey(k)).evaluate().isNotEmpty)
+      tester.widget<Text>(find.byKey(ValueKey(k))).data!,
+].join(' ');
 
 const ValueKey<String> _key = ValueKey('merge-title');
 
@@ -172,7 +172,7 @@ void main() {
             _ => null,
           },
         );
-        expect(_says(tester), 'Ready to merge.');
+        expect(_says(tester), 'Ready to merge All requirements are met.');
         await _pressMerge(tester);
         expect(fake.calls.whereType<MergeGitHubPullRequest>(), isEmpty);
         expect(find.text('Squash and merge?'), findsOneWidget);
@@ -202,12 +202,12 @@ void main() {
         expect(sent.title, 'My title');
         expect(sent.body, '* One\n* Two');
         expect(find.byType(AlertDialog), findsNothing);
-        // The view follows: no control on a merged pull request.
-        expect(find.byKey(const ValueKey('merge-control')), findsNothing);
+        // The view follows: no merge button on a merged pull request.
+        expect(find.byType(SplitButton), findsNothing);
         expect(find.text('Merged'), findsWidgets);
         d.dispose();
       },
-      variant: _mac,
+      variant: onMac,
     );
 
     testWidgets('Cancel sends nothing', (tester) async {
@@ -221,7 +221,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(fake.calls.whereType<MergeGitHubPullRequest>(), isEmpty);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('no title, no merge', (tester) async {
       final (d, fake) = await openPullTab(
@@ -241,7 +241,7 @@ void main() {
       await tester.pump();
       expect(fake.calls.whereType<MergeGitHubPullRequest>(), isEmpty);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a rebase has no commit text', (tester) async {
       mergeMethods.value = {'github.com $fixtureRepo': 'rebase'};
@@ -261,7 +261,7 @@ void main() {
       expect(sent.method, 'rebase');
       expect(sent.headOid, 'b' * 40);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a head that moved says so, and reads it again', (
       tester,
@@ -296,7 +296,7 @@ void main() {
         greaterThan(before),
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets("GitHub's refusal toasts, in its words, and the dialog stays", (
       tester,
@@ -327,7 +327,7 @@ void main() {
       expect(find.text(words), findsNWidgets(2));
       expect(find.byType(ToastLine), findsOneWidget);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the commit text not read means no merge', (tester) async {
       final (d, fake) = await openPullTab(
@@ -348,7 +348,7 @@ void main() {
       await tester.pump();
       expect(fake.calls.whereType<MergeGitHubPullRequest>(), isEmpty);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('picking a method is remembered for the repository', (
       tester,
@@ -361,7 +361,7 @@ void main() {
       expect(mergeMethods.value['github.com $fixtureRepo'], 'rebase');
       expect(find.text('Rebase and merge'), findsWidgets);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('what was kept from before offers nothing', (tester) async {
       final kept = mergePull('ready');
@@ -372,10 +372,10 @@ void main() {
         kept,
         more: (input) => input is GetGitHubPullRequest ? never.future : null,
       );
-      expect(_says(tester), 'Ready to merge.');
+      expect(_says(tester), 'Ready to merge All requirements are met.');
       expect(find.byType(SplitButton), findsNothing);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('auto-merge', () {
@@ -400,7 +400,7 @@ void main() {
           _ => null,
         },
       );
-      expect(_says(tester), contains("Can't merge yet."));
+      expect(_says(tester), startsWith('Merging is blocked'));
       expect(find.text('Squash and merge'), findsNothing);
       await tester.tap(find.text('Enable auto-merge').first);
       await tester.pumpAndSettle();
@@ -425,7 +425,7 @@ void main() {
       );
       expect(find.text('Enable auto-merge'), findsWidgets);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the merge queue', () {
@@ -468,7 +468,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(fake.calls.whereType<DequeueGitHubPullRequest>(), hasLength(1));
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('Merge when ready asks, and joins through auto-merge', (
       tester,
@@ -489,7 +489,7 @@ void main() {
         'b' * 40,
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   testWidgets('the split button is as wide as its label', (tester) async {
@@ -502,7 +502,7 @@ void main() {
     final wide = tester.getTopRight(caret).dx - tester.getTopLeft(split).dx;
     expect(wide, lessThan(170));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   // ADR 0117: the Merge control left the widget; a row's ⋯ has Merge….
   testWidgets("the details widget's row has Merge… instead", (tester) async {
@@ -512,7 +512,7 @@ void main() {
       details: true,
       open: false,
     );
-    expect(find.byType(MergeControl), findsNothing);
+    expect(find.byType(MergeCard), findsNothing);
     await tester.tap(
       find.descendant(
         of: find.byType(PullRow),
@@ -522,34 +522,24 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Merge…', findRichText: true), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the page says ready once, beside the button that acts on it', (
     tester,
   ) async {
     final (d, _) = await openPullTab(tester, mergePull('ready'));
-    expect(
-      find.textContaining('Ready to merge', findRichText: true),
-      findsOneWidget,
-    );
-    expect(find.byKey(const ValueKey('merge-words')), findsOneWidget);
+    expect(find.text('Ready to merge'), findsOneWidget);
     expect(find.textContaining('nothing blocks'), findsNothing);
-    expect(find.textContaining('Nothing else waits'), findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
-  testWidgets('a move the control doesn’t say stays in the head', (
-    tester,
-  ) async {
+  testWidgets('blocked: the card says by what, in a line', (tester) async {
     final (d, _) = await openPullTab(tester, mergePull('blocked'));
     expect(
-      find.textContaining('Your move', findRichText: true),
-      findsOneWidget,
-    );
-    expect(
-      find.textContaining("Can't merge yet", findRichText: true),
-      findsOneWidget,
+      _says(tester),
+      'Merging is blocked 2 required checks failing, changes requested, '
+      'unresolved conversations.',
     );
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

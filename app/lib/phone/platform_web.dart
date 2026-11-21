@@ -164,6 +164,7 @@ final class PhonePlatform {
     'daemon',
     'daemonKey',
     'seen',
+    'os',
   ];
 
   /// Keeps [record]: strings and bytes (a Uint8Array each, so the key is

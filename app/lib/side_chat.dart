@@ -14,6 +14,7 @@ import 'package:nushi/pane_title.dart';
 import 'package:nushi/panes.dart';
 import 'package:nushi/side_toast.dart';
 import 'package:nushi/status.dart';
+import 'package:nushi/text_width.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/top_notices.dart';
 import 'package:nushi/transcript.dart';
@@ -256,20 +257,8 @@ class _Row extends StatelessWidget {
   static const double _button = 15 + 2 * IconTap.header;
 
   /// Keep as chat's words' width, as its [Tap] draws them.
-  static double _keepWidth(BuildContext context, TextStyle style) {
-    final p = TextPainter(
-      text: TextSpan(
-        text: 'Keep as chat',
-        style: DefaultTextStyle.of(context).style.merge(style),
-      ),
-      textDirection: TextDirection.ltr,
-      textScaler: MediaQuery.textScalerOf(context),
-      maxLines: 1,
-    )..layout();
-    final width = p.width.ceilToDouble();
-    p.dispose();
-    return width + 12;
-  }
+  static double _keepWidth(BuildContext context, TextStyle style) =>
+      textWidth(context, 'Keep as chat', style).ceilToDouble() + 12;
 
   @override
   Widget build(BuildContext context) {

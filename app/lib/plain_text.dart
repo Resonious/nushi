@@ -14,3 +14,13 @@ String plainName(String name) => String.fromCharCodes([
         r == 0xFEFF))
       r,
 ]);
+
+/// [all] joined as a sentence lists them: "a", "a and b", "a, b and c".
+String andList(Iterable<String> all) {
+  final l = all.toList();
+  if (l.length < 2) return l.join();
+  return '${l.take(l.length - 1).join(', ')} and ${l.last}';
+}
+
+/// [s] with its first letter a capital: "idle" as "Idle".
+String capital(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);

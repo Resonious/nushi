@@ -72,10 +72,6 @@ class Sidebar extends StatefulWidget {
   /// the Mac.
   static const double topHeight = NushiTheme.windowPad + PaneHeader.height;
 
-  /// The room over New chat: the strip's foot is already the header's
-  /// line.
-  static const double topGap = 0;
-
   /// The narrowest it's dragged to: room in its top strip for the title
   /// buttons and Arrange beside them, past the Mac's traffic lights.
   static double get minWidth => max(
@@ -342,12 +338,9 @@ class _SidebarState extends State<Sidebar> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(
-            Sidebar.start,
-            Sidebar.topGap,
-            Sidebar.end,
-            4,
-          ),
+          // No room over it: the top strip's foot is already the
+          // header's line.
+          padding: const EdgeInsets.fromLTRB(Sidebar.start, 0, Sidebar.end, 4),
           child: WideButton(
             label: 'New chat',
             icon: Icons.add,
@@ -409,7 +402,7 @@ class _SidebarState extends State<Sidebar> {
         if (rail)
           Positioned(
             left: Sidebar.start - Sidebar.railTuck,
-            top: Sidebar.topGap - ProjectRail.top,
+            top: -ProjectRail.top,
             bottom: 0,
             width: ProjectRail.width,
             child: ProjectRail(

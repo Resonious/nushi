@@ -86,9 +86,6 @@ class LinuxAppInstall implements AppInstall {
   String get stopByHand => 'end nushid in the system monitor';
 
   @override
-  bool get canStop => true;
-
-  @override
   Future<void> launch(String dataDir) async {
     final program = daemon;
     if (program == null) return;

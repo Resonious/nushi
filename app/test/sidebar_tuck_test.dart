@@ -17,8 +17,6 @@ import 'panes_app.dart';
 // narrower than a chat's least, never saved, and is back once the window
 // has room; tucked, its button and ⌘\ float it over the view.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const PanesOpen _filesOnly = (
   side: false,
   files: true,
@@ -71,7 +69,7 @@ void main() {
       greaterThanOrEqualTo(ChatView.leastBesideWide),
     );
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('tucked, its button says Show and floats it over the view, '
       r'and ⌘\ puts the float away; the choice is never changed', (
@@ -89,14 +87,11 @@ void main() {
     expect(sidebarHidden.value, isFalse);
     await render(tester, find.byType(NushiApp), 'sidebar_tucked_peek_480');
 
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.backslash);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.backslash);
     expect(find.byType(Sidebar), findsNothing);
     expect(sidebarHidden.value, isFalse);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final width in <double>[400, 480, 520, 560, 600]) {
     testWidgets('a ${width.round()} window with the sidebar shown and Files '
@@ -119,6 +114,6 @@ void main() {
       );
       expect(tester.getRect(find.byType(Composer)).left, lessThan(20));
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

@@ -1,4 +1,4 @@
-// Package agents finds the agents chats can run on this Mac: each one's
+// Package agents finds the agents chats can run on this machine: each one's
 // CLI on the login shell's PATH (Env: the environment agents start with),
 // its version, and what else it needs.
 // Finding them only asks each CLI what it is (Probe), run as the user

@@ -6,7 +6,6 @@ package jira
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -33,7 +32,7 @@ type Client interface { //nolint:interfacebloat // the Jira calls the feature ma
 	Transitions(ctx context.Context, key string) ([]model.JiraTransition, error)
 	Transition(ctx context.Context, key string, t model.JiraTransition, values map[string]string) error
 	AddComment(ctx context.Context, key, markdown string) (model.JiraComment, error)
-	Attachment(ctx context.Context, id string, thumbnail bool) ([]byte, string, error)
+	Attachment(ctx context.Context, id string) ([]byte, string, error)
 }
 
 // Sites is how the feature reaches a site: Connect checks a token (and
@@ -70,8 +69,8 @@ type Store interface {
 	SaveJiraSites([]model.JiraSite) error
 	JiraWrites() ([]model.JiraWrite, error)
 	SaveJiraWrites([]model.JiraWrite) error
-	Cached(area, name, key string) (time.Time, json.RawMessage, error)
-	Cache(area, name, key string, at time.Time, data json.RawMessage) error
+	Cached(area, name, key string, v any) (time.Time, error)
+	Cache(area, name, key string, v any) error
 	ForgetCache(area, name string) error
 }
 

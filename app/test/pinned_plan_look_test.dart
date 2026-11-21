@@ -6,7 +6,6 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/clock.dart';
-import 'package:nushi/collapsible.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
@@ -17,8 +16,6 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 import 'pinned_plan_fixture.dart';
 import 'update_fixtures.dart';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 /// The app on a chat with [items], working unless [idle], its details
 /// hidden, at [size] in [brightness].
@@ -33,7 +30,6 @@ Future<(Daemon, FakeDaemon)> _app(
   viewport(tester, size, brightness: brightness);
   showDetails.value = false;
   sidebarHidden.value = true;
-  Collapsible.opened.clear();
   final c = chat('c', 'claude', 'Paginate the feed');
   final fake = FakeDaemon([c])
     ..answer = ((input) => switch (input) {
@@ -76,7 +72,7 @@ void main() {
           'plan_running_${w}_${b.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('a running plan collapsed, ${b.name}, $w wide', (
         tester,
@@ -90,7 +86,7 @@ void main() {
           'plan_collapsed_${w}_${b.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('a long plan, ${b.name}, $w wide', (tester) async {
         final (d, _) = await _app(
@@ -102,7 +98,7 @@ void main() {
         expectTextInside(tester, size.width);
         await render(tester, find.byType(NushiApp), 'plan_long_${w}_${b.name}');
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('a question under a plan, ${b.name}, $w wide', (
         tester,
@@ -125,7 +121,7 @@ void main() {
           'plan_question_${w}_${b.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('queued messages under a plan, ${b.name}, $w wide', (
         tester,
@@ -147,7 +143,7 @@ void main() {
           'plan_queued_${w}_${b.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('the update card over a plan, ${b.name}, $w wide', (
         tester,
@@ -168,7 +164,7 @@ void main() {
           'plan_update_${w}_${b.name}',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     testWidgets('a 360-wide chat, ${b.name}', (tester) async {
@@ -192,7 +188,7 @@ void main() {
         'plan_narrow_collapsed_${b.name}',
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the phone, ${b.name}', (tester) async {
       viewport(tester, const Size(390, 844), ratio: 2, brightness: b);
@@ -201,7 +197,6 @@ void main() {
       addTearDown(
         tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
       );
-      Collapsible.opened.clear();
       final c = chat('c', 'claude', 'Paginate the feed');
       final fake = FakeDaemon([c])
         ..answer = ((input) => input is GetChatRequest

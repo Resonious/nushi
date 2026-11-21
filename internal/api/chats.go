@@ -106,7 +106,7 @@ func (s *server) StartChat(ctx context.Context, req *connect.Request[nushiv1.Sta
 	} else if err != nil {
 		return nil, refused(err)
 	}
-	return connect.NewResponse(&nushiv1.StartChatResponse{ChatId: id, Config: configProto(s.Chats.Config(id))}), nil
+	return connect.NewResponse(&nushiv1.StartChatResponse{ChatId: id}), nil
 }
 
 func (s *server) MoveChat(ctx context.Context, req *connect.Request[nushiv1.MoveChatRequest]) (*connect.Response[nushiv1.MoveChatResponse], error) {

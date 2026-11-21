@@ -50,9 +50,7 @@ func relatedChat(t *testing.T, h Harness, folder string, stored *memSessions) (*
 	}
 	svc := newService(t, []Kind{{Harness: h, Launch: agent.launch}}, Options{Sessions: stored, Worktrees: git.Worktrees{}})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(context.Background(), "", folder, false)
-	testcheck.NoErr(t, err)
-	return svc, svc.chats[id]
+	return svc, startChat(t, svc, folder)
 }
 
 // note is an update of the chat's session.
@@ -455,9 +453,7 @@ func TestRelatedLeavesOutAPathThatIsntUTF8(t *testing.T) {
 	testcheck.NoErr(t, json.Unmarshal([]byte(claudeSession), &agent.session))
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude"}, Launch: agent.launch}}, Options{Sessions: &memSessions{}, Worktrees: lists})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(context.Background(), "", folder, false)
-	testcheck.NoErr(t, err)
-	c := svc.chats[id]
+	c := startChat(t, svc, folder)
 	startSubagent(t, c, "a1")
 	c.mu.Lock()
 	c.addLocked(model.Item{ID: "s1", Kind: model.ToolCall, ToolKind: "execute", Parent: "a1", Input: "ls " + bad})

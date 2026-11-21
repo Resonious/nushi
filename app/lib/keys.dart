@@ -36,6 +36,7 @@ class Cmd extends ShortcutActivator with MenuSerializableShortcut {
     this.alt = false,
     this.ctrl = false,
     this.includeRepeats = true,
+    this.terminal = false,
     this.linux,
     this.windows,
   }) : assert(!ctrl || linux != null, 'Control is the command key on Linux');
@@ -54,6 +55,10 @@ class Cmd extends ShortcutActivator with MenuSerializableShortcut {
 
   /// Whether a held key's repeats trigger it again.
   final bool includeRepeats;
+
+  /// A terminal's own key: where the command key is Control, Shift is held
+  /// too, since Control and a letter is the shell's (ADR 0104).
+  final bool terminal;
 
   /// Its form where the command key is Control, when that isn't Control
   /// and the same keys.
@@ -82,7 +87,7 @@ class Cmd extends ShortcutActivator with MenuSerializableShortcut {
           SingleActivator(
             trigger,
             control: true,
-            shift: shift,
+            shift: shift || terminal,
             alt: alt,
             includeRepeats: includeRepeats,
           ),

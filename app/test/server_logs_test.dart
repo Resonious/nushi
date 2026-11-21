@@ -100,7 +100,6 @@ Future<(FakeDaemon, Daemon, ChatState)> _pane(
 }) async {
   browserFakes();
   viewport(tester, size, brightness: brightness);
-  paneWidths.value = {};
   final fake = FakeDaemon([chat('c', 'claude', 'Build the tea shop')])
     ..answer = s.answer;
   final d = await fake.connect(tester);
@@ -461,7 +460,6 @@ void main() {
         browserFakes();
         viewport(tester, Size(width, 900), brightness: brightness);
         showDetails.value = false;
-        paneWidths.value = {};
         final s = _Servers()..rows = [_server('web', id: 'a', logId: 'a')];
         final fake = FakeDaemon([chat('c', 'claude', 'Build the tea shop')])
           ..answer = s.answer

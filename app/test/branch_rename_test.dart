@@ -10,7 +10,6 @@ import 'package:nushi/details_panel.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/items.dart';
 import 'package:nushi/panel_widgets.dart';
-import 'package:nushi/settings.dart';
 import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
@@ -89,7 +88,6 @@ Finder get _pencil => find.byTooltip('Rename branch…');
 
 void main() {
   setUpAll(loadFonts);
-  setUp(() => collapsedWidgets.value = {});
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),

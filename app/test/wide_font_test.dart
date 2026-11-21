@@ -21,8 +21,6 @@ import 'harness.dart';
 import 'screenshots/demo.dart';
 import 'settings_harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const _code = '''
 The cursor, as the store reads it:
 
@@ -105,9 +103,7 @@ Future<List<String>> _overflows(
 const _known = ['MCP servers, 720:'];
 
 Future<void> _pump(WidgetTester tester, [int times = 8]) async {
-  for (var i = 0; i < times; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, times, const Duration(milliseconds: 100));
 }
 
 /// The Mac app at [size] on the demo's chats, the hero's open, its text in
@@ -152,7 +148,7 @@ void main() {
       expect(over, isEmpty);
       expectTextInside(tester, size.width);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('a chat in a wide app font, $w', (tester) async {
       showDetails.value = false;
@@ -167,7 +163,7 @@ void main() {
       expect(over, isEmpty);
       expectTextInside(tester, size.width);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('Changes in a wide app font, $w', (tester) async {
       showDetails.value = false;
@@ -181,7 +177,7 @@ void main() {
       expect(over, isEmpty);
       expectTextInside(tester, size.width);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('every section of Settings in a wide app font, $w', (
       tester,
@@ -209,7 +205,7 @@ void main() {
         d.dispose();
       }, where: () => where);
       expect(over.where((o) => !_known.any(o.startsWith)), isEmpty);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   // The chat's header folds its parts by what its words take, measured in
@@ -239,7 +235,7 @@ void main() {
       await closeView(tester, d);
     }, where: () => where);
     expect(over.join('\n'), isEmpty);
-  }, variant: _mac);
+  }, variant: onMac);
 
   // What the pictures above compare with: the same window in the bundled
   // font. A render only.
@@ -250,7 +246,7 @@ void main() {
       await render(tester, find.byType(NushiApp), 'wide_font_window_bundled');
       await closeView(tester, d);
     },
-    variant: _mac,
+    variant: onMac,
     skip: rendersDir == null,
   );
 }

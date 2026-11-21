@@ -64,10 +64,7 @@ Future<void> _framed(WidgetTester tester) async {
 }
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   testWidgets('Change tile… keeps an emoji or two letters and a color; '
       'Cancel keeps nothing, Reset forgets them', (tester) async {
@@ -286,7 +283,6 @@ void main() {
       'framing, another image or none put it back', (tester) async {
     final before = pickTileImage;
     addTearDown(() => pickTileImage = before);
-    if (tileImagesDir.existsSync()) tileImagesDir.deleteSync(recursive: true);
     final image = keepTileImage((bytes: await photoPng(tester), kind: 'png'));
     projectTiles.value = {garden: TileLook(image: image)};
     ProjectTile preview() =>
@@ -432,9 +428,6 @@ void main() {
         tester,
       ) async {
         viewport(tester, const Size(640, 480));
-        if (tileImagesDir.existsSync()) {
-          tileImagesDir.deleteSync(recursive: true);
-        }
         final image = keepTileImage((
           bytes: await photoPng(tester),
           kind: 'png',

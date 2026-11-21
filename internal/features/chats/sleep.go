@@ -105,7 +105,7 @@ func (s *Service) doze(c *chat, after time.Duration) {
 	}
 	agent := c.agent
 	c.asleep, c.retiring = true, agent
-	c.agent, c.kept = nil, len(c.items) > 0
+	c.agent, c.outlived = nil, len(c.items) > 0
 	c.statusChangedLocked()
 	c.logLocked().Info("chat asleep", "why", "idle", "after", after)
 	c.mu.Unlock()
@@ -139,11 +139,11 @@ func (c *chat) retire(ctx context.Context, old Agent) error {
 			return false, nil
 		}
 	}
-	done, err := ended(2 * c.timing.stopGrace())
+	done, err := ended(2 * c.svc.timing.stopGrace())
 	if !done && err == nil {
 		c.log().Warn("the agent the chat slept from outlived its stop: killing it", "pid", old.Pid())
 		_ = old.Close()
-		done, err = ended(c.timing.stopGrace())
+		done, err = ended(c.svc.timing.stopGrace())
 	}
 	switch {
 	case err != nil:

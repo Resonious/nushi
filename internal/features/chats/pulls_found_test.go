@@ -143,13 +143,7 @@ func TestFoundPullTwoChats(t *testing.T) {
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude"}, Launch: agent.launch}}, Options{Sessions: &liveSessions{}})
 	t.Cleanup(svc.Close)
 	folder := t.TempDir()
-	aID, err := svc.Start(t.Context(), "", folder, false)
-	testcheck.NoErr(t, err)
-	bID, err := svc.Start(t.Context(), "", folder, false)
-	testcheck.NoErr(t, err)
-	cID, err := svc.Start(t.Context(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	a, b, c := svc.chats[aID], svc.chats[bID], svc.chats[cID]
+	a, b, c := startChat(t, svc, folder), startChat(t, svc, folder), startChat(t, svc, t.TempDir())
 	base := time.Now().Add(time.Minute)
 	at := func(n int) time.Time { return base.Add(time.Duration(n) * time.Minute) }
 	pushedAt(a, at(0), at(0))

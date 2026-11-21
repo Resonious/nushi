@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/arrangement.dart';
@@ -19,10 +17,7 @@ import 'sidebar_fixture.dart';
 
 void main() {
   final macOS = TargetPlatformVariant.only(TargetPlatform.macOS);
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
+  setUpAll(loadFonts);
 
   Future<Daemon> open(WidgetTester tester, double width) async {
     viewport(tester, Size(width, 900));

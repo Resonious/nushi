@@ -1,9 +1,10 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:connectrpc/connect.dart' show Transport;
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/clock.dart';
@@ -18,6 +19,15 @@ import 'package:nushi/toast.dart';
 /// The time the app sees in every test ([clock], set before each by
 /// `flutter_test_config.dart`): fixed, so an age a golden shows never moves.
 final fixtureNow = DateTime(2026, 10, 29, 12);
+
+/// A test run on the Mac only.
+final onMac = TargetPlatformVariant.only(TargetPlatform.macOS);
+
+/// A test run on the Mac and again on Linux.
+const macAndLinux = TargetPlatformVariant({
+  TargetPlatform.macOS,
+  TargetPlatform.linux,
+});
 
 /// The test's window: [size] in logical pixels, [ratio] device pixels to
 /// one, the system in [brightness] when given; as it was after the test.
@@ -39,10 +49,17 @@ void viewport(
 /// [child] as a test shows a widget on its own: in a plain app in the
 /// theme of [tokens], on a Scaffold, with the window's toasts. With
 /// [still], Reduce Motion is that for it (the MediaQuery's
-/// disableAnimations), the window's MediaQuery otherwise kept.
-Widget themed(Widget child, {Tokens tokens = Tokens.dark, bool? still}) {
+/// disableAnimations), the window's MediaQuery otherwise kept. Without
+/// [banner], no debug banner in its corner.
+Widget themed(
+  Widget child, {
+  Tokens tokens = Tokens.dark,
+  bool? still,
+  bool banner = true,
+}) {
   final page = Scaffold(body: child);
   return MaterialApp(
+    debugShowCheckedModeBanner: banner,
     theme: NushiTheme(tokens).toThemeData(),
     builder: (context, child) => ToastHost(child: child!),
     home: still == null
@@ -55,6 +72,65 @@ Widget themed(Widget child, {Tokens tokens = Tokens.dark, bool? still}) {
           ),
   );
 }
+
+/// [count] frames, each [step] after the one before (none: at once), for
+/// what never settles (a spinner, a turn's shine) or a path frame by frame.
+Future<void> frames(WidgetTester tester, int count, [Duration? step]) async {
+  for (var i = 0; i < count; i++) {
+    await tester.pump(step);
+  }
+}
+
+/// [key] pressed with ⌘ held, then settled, or one frame when not
+/// [settle] (what never settles: a turn's clock, a terminal).
+Future<void> cmdKey(
+  WidgetTester tester,
+  LogicalKeyboardKey key, {
+  bool settle = true,
+}) async {
+  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+  await tester.sendKeyEvent(key);
+  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+  }
+}
+
+/// What the app puts on the clipboard, each text in the order copied; the
+/// platform channel answers nothing else.
+List<String> clipboardCopies(WidgetTester tester) {
+  final copied = <String>[];
+  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+    SystemChannels.platform,
+    (call) async {
+      if (call.method == 'Clipboard.setData') {
+        copied.add((call.arguments as Map)['text'] as String);
+      }
+      return null;
+    },
+  );
+  return copied;
+}
+
+/// The View menu's items in the menu bar, flattened, submenus as
+/// themselves.
+List<PlatformMenuItem> viewItems(WidgetTester tester) {
+  final view = tester
+      .widget<PlatformMenuBar>(find.byType(PlatformMenuBar))
+      .menus
+      .whereType<PlatformMenu>()
+      .firstWhere((m) => m.label == 'View');
+  Iterable<PlatformMenuItem> items(PlatformMenuItem m) => switch (m) {
+    PlatformMenuItemGroup(:final members) => members.expand(items),
+    _ => [m],
+  };
+  return view.menus.expand(items).toList();
+}
+
+/// [fixtureNow] less [d], as the daemon sends a time.
+Int64 msAgo(Duration d) => Int64(fixtureNow.subtract(d).millisecondsSinceEpoch);
 
 /// Takes the app away and disposes [d], so its timers end with the test.
 Future<void> closeView(WidgetTester tester, Daemon d) async {
@@ -92,9 +168,7 @@ Future<Phone> startPhone(
   );
   await tester.pumpWidget(PhoneApp(phone));
   await phone.start();
-  for (var i = 0; i < 8; i++) {
-    await tester.pump();
-  }
+  await frames(tester, 8);
   return phone;
 }
 
@@ -198,9 +272,9 @@ Future<void> untilReal(
   }
 }
 
-/// The window narrowed from [from] to [to] (each [height] high), [check]
+/// The window narrowed from [from] to [to] (each 900 high), [check]
 /// run at each width laid out, as a point at a time would, at a fraction
-/// of the layouts: every [step]th width, then every width between two
+/// of the layouts: every 8th width, then every width between two
 /// whose widget tree differs (a part folded, a pane gone), where the
 /// layout jumps rather than glides. Those are walked in an app [reopen]
 /// builds again at [from], so every width is still reached narrowing.
@@ -212,9 +286,9 @@ Future<void> narrowing(
   required double to,
   required void Function(double width) check,
   required Future<void> Function() reopen,
-  double height = 900,
-  double step = 8,
 }) async {
+  const height = 900.0;
+  const step = 8.0;
   Future<int> at(double w) async {
     viewport(tester, Size(w, height));
     await tester.pump();

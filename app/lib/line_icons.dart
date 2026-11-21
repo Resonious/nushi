@@ -102,9 +102,6 @@ enum LineIcon {
   /// Run a dev server: a triangle pointing right, its corners rounded.
   play,
 
-  /// Stop a dev server: a square, its corners rounded.
-  stop,
-
   /// Pause what plays (a trimmed tile's image): two bars, upright.
   pause,
 
@@ -408,10 +405,6 @@ enum LineIcon {
         ..lineTo(9, 17.5)
         ..moveTo(15, 6.5)
         ..lineTo(15, 17.5),
-    stop =>
-      Path()..addRRect(
-        RRect.fromRectXY(const Rect.fromLTWH(6.5, 6.5, 11, 11), 2, 2),
-      ),
     source =>
       Path()
         ..moveTo(7.5, 7)

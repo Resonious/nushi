@@ -6,6 +6,8 @@ import 'package:nushi/daemon.dart';
 import 'package:nushi/files_bar.dart';
 import 'package:nushi/settings.dart';
 
+import 'harness.dart';
+
 // The Files pane's view options as each place words them (ADR 0123),
 // written out here rather than read from the options' table, so a wrong
 // label or a row wired to the wrong pref fails; and the places' rows.
@@ -128,20 +130,6 @@ final List<ViewChoiceWords> choiceWords = [
     ],
   ),
 ];
-
-/// The View menu's items, flattened, submenus as themselves.
-List<PlatformMenuItem> viewItems(WidgetTester tester) {
-  final view = tester
-      .widget<PlatformMenuBar>(find.byType(PlatformMenuBar))
-      .menus
-      .whereType<PlatformMenu>()
-      .firstWhere((m) => m.label == 'View');
-  Iterable<PlatformMenuItem> items(PlatformMenuItem m) => switch (m) {
-    PlatformMenuItemGroup(:final members) => members.expand(items),
-    _ => [m],
-  };
-  return view.menus.expand(items).toList();
-}
 
 /// The View menu's submenu called [label].
 PlatformMenu viewSubmenu(WidgetTester tester, String label) =>

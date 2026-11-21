@@ -108,6 +108,28 @@ bool _cardAt(WidgetTester tester, Offset p) {
   return tester.hitTestOnBinding(p).path.any((h) => cards.contains(h.target));
 }
 
+/// The bars with controls the card stands above ([UnderCard]), each
+/// without its bare ends ([UnderCard.clear]: a chat's foot is as wide as
+/// its view, its composer only its column's).
+List<Rect> _floorBars(WidgetTester tester) => [
+  for (final e in find.byType(UnderCard).evaluate())
+    switch (tester.getRect(find.byElementPredicate((x) => x == e))) {
+      final r => Rect.fromLTRB(
+        r.left + (e.widget as UnderCard).clear,
+        r.top,
+        r.right - (e.widget as UnderCard).clear,
+        r.bottom,
+      ),
+    },
+];
+
+/// Whether the card is across from a bar's controls: it must rise.
+bool _acrossBar(WidgetTester tester) {
+  final card = tester.getRect(updateToast);
+  return _floorBars(tester)
+      .any((r) => r.left < card.right && r.right > card.left);
+}
+
 /// Whether the card, in the window [width] wide, is in its corner: [_inset]
 /// from its right edge, and from its bottom edge unless it stands
 /// [TopNotices.cardInset] above a bar with controls at the foot of what's
@@ -117,10 +139,7 @@ bool _cornered(WidgetTester tester, double width, String name) {
   final height = tester.view.physicalSize.height / tester.view.devicePixelRatio;
   expect(width - card.right, _inset, reason: '$name: right inset');
   if (height - card.bottom == _inset) return false;
-  final bars = [
-    for (final e in find.byType(UnderCard).evaluate())
-      tester.getRect(find.byElementPredicate((x) => x == e)),
-  ];
+  final bars = _floorBars(tester);
   expect(
     bars.any(
       (r) =>
@@ -166,7 +185,10 @@ Future<void> _placed(
   expect(card.bottom, lessThanOrEqualTo(tester.view.physicalSize.height));
   final controls = [
     ...find.byType(Pressable).evaluate().where((e) => !_scrolls(e)),
-    ...find.byType(EditableText).evaluate(),
+    // A field that scrolls with its page (a pull request's comment box,
+    // under its description) is as a list's row: the page scrolls it out
+    // from under the card.
+    ...find.byType(EditableText).evaluate().where((e) => !_scrolls(e)),
     for (final t in _bars) ...find.byType(t).evaluate(),
   ];
   final mine = find
@@ -218,7 +240,6 @@ Future<void> _tab(WidgetTester tester, String tab, double width) async {
 void main() {
   setUpAll(loadFonts);
   setUp(() {
-    dismissedUpdate.value = null;
     brewCask = null;
   });
 
@@ -285,8 +306,16 @@ void main() {
         final name = 'chat_${sidebar ? '' : 'nosidebar_'}$w';
         testWidgets('the Chat tab, $name', (tester) async {
           final (d, _) = await open(tester, sidebar: sidebar);
-          // The transcript reaches the corner: above its composer.
-          await _placed(tester, name, width, lifted: true);
+          // Above the composer where the chat's column reaches under
+          // it; in the corner beside it where the view is wider than the
+          // column and its gutter has room for the card.
+          final beside = width == 1700 && !sidebar;
+          expect(_acrossBar(tester), !beside, reason: name);
+          await _placed(tester, name, width, lifted: !beside);
+          if (beside) {
+            final field = tester.getRect(find.byType(EditableText).first);
+            expect(tester.getRect(updateToast).left, greaterThan(field.right));
+          }
           await closeView(tester, d);
         }, variant: macOSOnly);
       }
@@ -351,7 +380,12 @@ void main() {
             final narrow =
                 tester.getRect(paneOf).width <
                 UpdateToast.width + TopNotices.cardInset;
-            await _placed(tester, name, width, lifted: narrow || lifted);
+            await _placed(
+              tester,
+              name,
+              width,
+              lifted: (narrow && _acrossBar(tester)) || lifted,
+            );
             // Over the pane, which has the window's corner.
             final card = tester.getRect(updateToast);
             expect(tester.getRect(paneOf).contains(card.center), isTrue);

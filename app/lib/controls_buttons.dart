@@ -65,10 +65,7 @@ BoxDecoration _buttonBox(
     );
   }
   final fill = kind == ButtonKind.danger ? t.crashedSoft : t.lifted;
-  return BoxDecoration(
-    color: look.hover ? Color.alphaBlend(_tint(t, look), fill) : fill,
-    borderRadius: r,
-  );
+  return BoxDecoration(color: _over(t, look, fill), borderRadius: r);
 }
 
 /// The focus ring of a button of [kind]: on the accent's fill, the one
@@ -217,9 +214,7 @@ class WideButton extends StatelessWidget {
           height: height,
           padding: const EdgeInsets.only(left: 12, right: 8),
           decoration: BoxDecoration(
-            color: look.hover
-                ? Color.alphaBlend(_tint(t, look), t.raised)
-                : t.raised,
+            color: _over(t, look, t.raised),
             borderRadius: corners,
           ),
           foregroundDecoration: focusRing(t, look, radius: corners),

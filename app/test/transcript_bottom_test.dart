@@ -23,8 +23,6 @@ import 'harness.dart';
 import 'long_chat.dart';
 import 'paged_chat.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Future<(Daemon, PagedChat)> _window(
   WidgetTester tester, {
   Size size = const Size(1700, 1000),
@@ -42,9 +40,7 @@ Future<(Daemon, PagedChat)> _window(
 }
 
 Future<void> _settle(WidgetTester tester, [int n = 40]) async {
-  for (var i = 0; i < n; i++) {
-    await tester.pump(const Duration(milliseconds: 16));
-  }
+  await frames(tester, n, const Duration(milliseconds: 16));
 }
 
 ScrollPosition _scroll(WidgetTester tester) => tester
@@ -93,16 +89,14 @@ void main() {
     await mouse.moveTo(Offset(list.center.dx, list.top + 260));
     await tester.pump();
     await mouse.moveTo(Offset(list.center.dx, status.top + 60));
-    for (var i = 0; i < 30; i++) {
-      await tester.pump(const Duration(milliseconds: 16));
-    }
+    await frames(tester, 30, const Duration(milliseconds: 16));
     expect(p.pixels, greaterThan(was + 100));
     // The list ends where the turn line starts.
     expect(list.bottom, status.top);
     await mouse.up();
     await _settle(tester, 4);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   // Busy, the turn line shows over the list's foot as well as the
   // composer: wide, only then is the toolbar placed under them.
@@ -148,7 +142,7 @@ void main() {
         'selection_toolbar_$width${busy ? '_busy' : ''}',
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('the thumb dragged up as a page lands keeps what shows', (
@@ -232,7 +226,7 @@ void main() {
     await mouse.up();
     await _settle(tester, 20);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }
 
 ChatState _chat(Daemon d) => d.chats['c']!;

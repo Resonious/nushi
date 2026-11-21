@@ -170,7 +170,6 @@ Future<Daemon> browserApp(
 }) async {
   viewport(tester, Size(width, 900), brightness: brightness);
   showDetails.value = false;
-  paneWidths.value = {};
   final fake =
       FakeDaemon([
           chat('c', 'claude', 'Build the tea shop'),
@@ -198,13 +197,6 @@ Future<Daemon> browserApp(
   await tester.pumpWidget(NushiApp(daemon: d));
   await tester.pumpAndSettle();
   return d;
-}
-
-Future<void> pressMeta(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
 }
 
 Finder get addressField => find.descendant(

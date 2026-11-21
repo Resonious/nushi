@@ -37,7 +37,7 @@ func (s *Service) Move(ctx context.Context, chatID, folder string, worktree bool
 	from, sid, fresh, oldWT, mode, picks := c.record.Folder, c.sid, !c.record.HasMessages, c.record.Worktree, c.record.Mode, c.record.Picks
 	// A chat whose reopen failed (its folder gone) has an empty transcript:
 	// the moved session is reopened, which replays it.
-	replay := !fresh && c.agent == nil && !c.kept
+	replay := !fresh && c.agent == nil && !c.outlived
 	switch {
 	case c.closedLocked() != nil:
 		err = c.closedLocked()
@@ -105,7 +105,7 @@ func (s *Service) Move(ctx context.Context, chatID, folder string, worktree bool
 					c.log().Warn("deleting the empty session left by the move", "old", sid, "err", err)
 				}
 			}
-			_ = old.Stop(c.timing.stopGrace()) // its process is gone either way
+			_ = old.Stop(c.svc.timing.stopGrace()) // its process is gone either way
 		}
 		s.later(func() { s.discard(c, sides) }) // discarding outlives the request
 		if left := oldWT != nil && wt != oldWT && !oldWT.Found; left && (!fresh || s.inUse(c, oldWT.Path) || !s.dropWorktree(oldWT)) {
@@ -116,7 +116,7 @@ func (s *Service) Move(ctx context.Context, chatID, folder string, worktree bool
 			c.mu.Unlock()
 		}
 		if replay {
-			_ = o.agent.Stop(c.timing.stopGrace()) // its process is gone either way
+			_ = o.agent.Stop(c.svc.timing.stopGrace()) // its process is gone either way
 		} else if err := c.reapply(ctx, o.agent, o.sid, mode, picks); err != nil {
 			c.log().Warn("mode after moving", "err", err)
 		}

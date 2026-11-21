@@ -92,7 +92,7 @@ const PanesOpen noPanes = (
 /// or not and [open]'s panes open, the chat archived or not, holding
 /// [items] ([panesItems] by default). The fake is
 /// returned, to count what was asked; [folderCancels] hears each folder
-/// whose listing's watch ends.
+/// whose listing's watch ends. FindChatFiles finds those of [found].
 Future<(Daemon, FakeDaemon)> panesApp(
   WidgetTester tester, {
   required double width,
@@ -106,6 +106,7 @@ Future<(Daemon, FakeDaemon)> panesApp(
   Map<String, double> widths = const {},
   List<Item>? items,
   List<String>? folderCancels,
+  Set<String> found = const {},
 }) async {
   // On Linux, its window and conventions, as a real Linux machine has.
   if (defaultTargetPlatform == TargetPlatform.linux) {
@@ -142,6 +143,9 @@ Future<(Daemon, FakeDaemon)> panesApp(
       items: items ?? panesItems,
     ),
     GetChatRequest() => GetChatResponse(),
+    FindChatFilesRequest(:final paths) => FindChatFilesResponse(
+      found: paths.where(found.contains),
+    ),
     _ => shellAnswer?.call(input),
   };
   Stream<Object>? streams(Object input) {

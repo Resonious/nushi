@@ -23,8 +23,6 @@ const _shared = 'Help me write a new skill shared by every agent';
 const _claudeOnly = 'Help me write a new Claude Code skill.';
 
 /// The whole app needs the Mac's menu bar.
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// What the daemon does for [_app], whose Skills view is on [folder] (one
 /// per test, as a folder's list outlives the daemon): the new chat is `new`,
 /// its snapshot held on [snapshot] and the start's answer on [start] when
@@ -122,7 +120,7 @@ void main() {
       expect(_box(tester), startsWith(request));
       _nothingSent(fake);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('the request stays when the snapshot comes late', (tester) async {
@@ -138,7 +136,7 @@ void main() {
     expect(_box(tester), startsWith(_shared));
     _nothingSent(fake);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a folder to trust: nothing until Start anyway, then the '
       'request is in the box', (tester) async {
@@ -158,7 +156,7 @@ void main() {
     expect(_box(tester), startsWith(_shared));
     _nothingSent(fake);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a trust card up when the chat starts: the request waits in '
       'the new chat, which stays unselected', (tester) async {
@@ -186,7 +184,7 @@ void main() {
     expect(_box(tester), startsWith(_shared));
     _nothingSent(fake);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the user went elsewhere: the request goes to the new chat '
       'all the same', (tester) async {
@@ -204,7 +202,7 @@ void main() {
     expect(d.place, const JiraPlace());
     expect(d.chats['new']!.draft.text.text, startsWith(_shared));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a start that fails writes nothing, and shows why', (
     tester,
@@ -218,7 +216,7 @@ void main() {
     expect(d.chats['a']!.draft.text.text, isEmpty);
     expect(find.textContaining("couldn't start PiG"), findsWidgets);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a trust card turned down writes nothing', (tester) async {
     const folder = '/Users/me/no';
@@ -231,7 +229,7 @@ void main() {
     expect(d.chats.containsKey('new'), isFalse);
     expect(d.chats['a']!.draft.text.text, isEmpty);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the request is kept on disk before the daemon announces the '
       'chat, and an empty kept draft leaves it', (tester) async {
@@ -249,5 +247,5 @@ void main() {
     expect(_box(tester), startsWith(_shared));
     await closeView(tester, d);
     await tester.pump(const Duration(seconds: 4)); // the ping's timeout
-  }, variant: _mac);
+  }, variant: onMac);
 }

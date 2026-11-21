@@ -22,10 +22,9 @@ class ShellEnvLine extends StatelessWidget {
       if (env == null) return const SizedBox.shrink();
       final t = NushiTheme.of(context).t;
       final shell = env.shell.split('/').last;
-      final when = DateTime.fromMillisecondsSinceEpoch(env.readUnixMs.toInt());
       final text = env.problem.isEmpty
           ? "Agents start with $shell's environment, read "
-                '${ago(clock().difference(when), when)}.'
+                '${agoAt(env.readUnixMs.toInt(), clock())}.'
           : "Couldn't read your shell's environment: ${env.problem}.";
       return SettingsGroup(
         children: [

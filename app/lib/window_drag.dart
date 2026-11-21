@@ -9,7 +9,8 @@ import 'package:nushi/native.dart';
 /// The window and the chrome around it: on the Mac, AppKit's
 /// (`window_drag_macos.dart`), whose content runs under the title bar, so
 /// a header stands in for it and moves and zooms the window (ADR 0080); on
-/// Linux the system's title bar, above the content (ADR 0104).
+/// Linux and Windows the system's title bar, above the content (ADR 0104,
+/// 0125).
 abstract interface class AppWindow {
   /// How far from the window's left edge what's in the main area's top
   /// starts with the sidebar hidden: past the Mac's traffic lights, or a
@@ -53,7 +54,7 @@ bool get headersMoveWindow => !kIsWeb && native.window.headersMoveWindow;
 /// not on or beside what's in it. A control (what shows a pointer of its
 /// own: the hand, the text's I-beam) keeps its clicks and its drags. Where
 /// the headers don't move the window ([headersMoveWindow]: the phone's,
-/// Linux's), it's only the Stack.
+/// Linux's, Windows's), it's only the Stack.
 class WindowDrag extends StatefulWidget {
   const new({required this.background, required this.children, super.key});
 

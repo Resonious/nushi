@@ -84,7 +84,7 @@ func (h *itemHead) item() model.Item {
 // their images as the chat holds them, each with the id of the item
 // before it ("" for the first). want sees an item as Heads has it, and only the items it
 // picks are read whole: a long copy costs what they hold and its
-// items' ids, not its size (a daemon's start looks through every chat's).
+// items' ids, not its size.
 func (s *Store) Find(chat string, want func(model.Item) bool) (items []model.Item, after []string, err error) {
 	if err := checkChat(chat); err != nil {
 		return nil, nil, err

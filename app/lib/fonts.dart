@@ -1,5 +1,6 @@
 /// The fonts installed on the machine (ADR 0097): on the Mac, AppKit's
-/// (`fonts_macos.dart`); on Linux, fontconfig's (`fonts_linux.dart`).
+/// (`fonts_macos.dart`); on Linux, fontconfig's (`fonts_linux.dart`); on
+/// Windows, the registry's font list (`fonts_windows.dart`).
 abstract interface class Fonts {
   /// The installed monospaced families' names, or null when there's no
   /// answer.

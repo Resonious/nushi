@@ -164,11 +164,11 @@ class Rig {
   }
 }
 
-/// A rig with its relay (started with [relayArgs]) and daemon running.
-Future<Rig> startRig(String name, {List<String> relayArgs = const []}) async {
+/// A rig with its relay and daemon running.
+Future<Rig> startRig(String name) async {
   final rig = await Rig.build(name);
   try {
-    await rig.startRelay(args: relayArgs);
+    await rig.startRelay();
     await rig.startDaemon();
   } on Object {
     await rig.close();

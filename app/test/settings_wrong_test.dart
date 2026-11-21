@@ -10,7 +10,6 @@ void main() {
   setUpAll(() {
     // An app.json whose every key has the wrong type (another app's, or
     // hand-edited): read before anything else is.
-    Directory(dataDir).createSync(recursive: true); // the tests' own
     File('$dataDir/app.json').writeAsStringSync(
       jsonEncode({
         for (final key in [

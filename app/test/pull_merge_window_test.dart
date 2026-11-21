@@ -3,13 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/main.dart';
-import 'package:nushi/pull_merge.dart';
+import 'package:nushi/pull_merge_card.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
 import 'pull_fixture.dart';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 final _text = GetGitHubMergeTextResponse(
   squashTitle: "Ignore q params that aren't hashes in admin filters (#412)",
@@ -38,13 +36,13 @@ Future<Daemon> _tab(
   return d;
 }
 
-/// The Merge control in each state, in the Pull request tab at the window's
+/// The merge status card in each state, in the Pull request tab at the window's
 /// real widths and in the details widget (which shows beside the chat), in
 /// both themes, all of it inside the window; and the confirmation. Each a
 /// render (harness.dart's [render]), not a golden.
-/// The Merge control and its words inside a window [width] wide.
+/// The merge status card and its words inside a window [width] wide.
 void _inside(WidgetTester tester, double width) {
-  final control = find.byType(MergeControl);
+  final control = find.byType(MergeCard);
   final box = tester.getRect(control);
   expect(box.left, greaterThanOrEqualTo(0));
   expect(box.right, lessThanOrEqualTo(width));
@@ -76,7 +74,7 @@ void main() {
             'pull_merge_${state}_${width.toInt()}_$theme',
           );
           d.dispose();
-        }, variant: _mac);
+        }, variant: onMac);
       }
     }
 
@@ -96,7 +94,7 @@ void main() {
           'pull_merged_${width.toInt()}_$theme',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
 
     for (final width in [1700.0, 720.0]) {
@@ -121,7 +119,7 @@ void main() {
           'pull_merge_confirm_${width.toInt()}_$theme',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

@@ -32,19 +32,7 @@ func newAgents(dir string, known []knownagents.Agent) *agents.Service {
 	for _, a := range known {
 		list = append(list, a.Agent)
 	}
-	removeClaudeAdapter(filepath.Join(dir, "agents", "claude"))
 	return agents.New(list, agents.Run(shellEnv.Environ), shellEnv, filepath.Join(dir, "agents"), npm.Installer{Environ: shellEnv.Environ})
-}
-
-// removeClaudeAdapter removes folder, where Settings › Agents set up
-// Claude's Node adapter (claude-agent-acp) before Claude ran through the
-// Go agent alone (ADR 0066): about 73 MB nothing runs any more.
-func removeClaudeAdapter(folder string) {
-	if _, err := os.Lstat(folder); err != nil {
-		return
-	}
-	err := os.RemoveAll(folder)
-	slog.Info("claude's old adapter removed", "folder", folder, "err", err)
 }
 
 // chatKinds are the agents as chats run them, from dir (the daemon's

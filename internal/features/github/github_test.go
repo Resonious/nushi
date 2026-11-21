@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -12,7 +11,9 @@ import (
 	"time"
 
 	"github.com/afrase/nushi/internal/githubapi"
+	"github.com/afrase/nushi/internal/keychain/keychaintest"
 	"github.com/afrase/nushi/internal/model"
+	"github.com/afrase/nushi/internal/store/storetest"
 )
 
 // fakeClient is a host's client: its answers, and what it was asked.
@@ -35,6 +36,13 @@ type fakeClient struct {
 	autos     []githubapi.MergeInput // EnableAutoMerge's
 	mergeErr  error                  // what Merge answers
 	mergeText githubapi.MergeText
+	edits     []fakeEdit // EditPull's calls
+}
+
+// fakeEdit is one of EditPull's calls.
+type fakeEdit struct {
+	pull        string
+	title, body *string
 }
 
 func (f *fakeClient) note(s string) {
@@ -113,6 +121,11 @@ func (f *fakeClient) Pull(_ context.Context, _ string, n int) (model.GitHubPull,
 	return model.GitHubPull{ID: "PR_1", Head: "subtract"}, nil
 }
 
+func (f *fakeClient) Commits(_ context.Context, repo string, n int) ([]model.GitHubCommit, int, error) {
+	f.note(fmt.Sprint("commits ", repo, "#", n))
+	return []model.GitHubCommit{{OID: strings.Repeat("c", 40), Headline: "Subtract", Author: "mira"}}, 1, f.fail
+}
+
 func (f *fakeClient) PullsByHead(_ context.Context, repo, head string) ([]githubapi.HeadPull, time.Duration, error) {
 	f.note("heads " + repo + " " + head)
 	return f.heads[repo+" "+head], 0, f.fail
@@ -140,9 +153,9 @@ func (f *fakeClient) Blobs(_ context.Context, _ string, at []githubapi.BlobAt) (
 	return out, nil
 }
 
-func (f *fakeClient) Reply(context.Context, string, string) (model.GitHubComment, error) {
+func (f *fakeClient) Reply(context.Context, string, string) error {
 	f.written = append(f.written, "reply")
-	return model.GitHubComment{ID: "C1"}, nil
+	return nil
 }
 
 func (f *fakeClient) Resolve(context.Context, string, bool) error {
@@ -150,9 +163,16 @@ func (f *fakeClient) Resolve(context.Context, string, bool) error {
 	return nil
 }
 
-func (f *fakeClient) Comment(context.Context, string, string) (model.GitHubComment, error) {
+func (f *fakeClient) Comment(context.Context, string, string) error {
 	f.written = append(f.written, "comment")
-	return model.GitHubComment{ID: "C2"}, nil
+	return nil
+}
+
+func (f *fakeClient) EditPull(_ context.Context, pull string, title, body *string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.edits = append(f.edits, fakeEdit{pull, title, body})
+	return nil
 }
 
 func (f *fakeClient) RerunFailed(_ context.Context, _ string, jobs []int64) ([]int64, error) {
@@ -224,62 +244,9 @@ func (f *fakeClient) Dequeue(context.Context, string) error {
 	return nil
 }
 
-type fakeTokens struct {
-	m      map[string]string
-	needOK bool
-}
-
-var errOK = errors.New("needs ok")
-
-func (k *fakeTokens) Set(account, _ string, secret []byte) error {
-	k.m[account] = string(secret)
-	return nil
-}
-
-func (k *fakeTokens) Get(account string, prompt bool) ([]byte, error) {
-	if k.needOK && !prompt {
-		return nil, errOK
-	}
-	t, ok := k.m[account]
-	if !ok {
-		return nil, errors.New("not found")
-	}
-	return []byte(t), nil
-}
-
-func (k *fakeTokens) Delete(account string) error {
-	delete(k.m, account)
-	return nil
-}
-
 type fakeStore struct {
+	storetest.Answers
 	hosts []string
-	cache map[string]json.RawMessage // by area, name and key
-}
-
-func (s *fakeStore) Cached(area, name, key string) (time.Time, json.RawMessage, error) {
-	d, ok := s.cache[area+" "+name+" "+key]
-	if !ok {
-		return time.Time{}, nil, nil
-	}
-	return time.Unix(1, 0), d, nil
-}
-
-func (s *fakeStore) Cache(area, name, key string, _ time.Time, data json.RawMessage) error {
-	if s.cache == nil {
-		s.cache = map[string]json.RawMessage{}
-	}
-	s.cache[area+" "+name+" "+key] = data
-	return nil
-}
-
-func (s *fakeStore) ForgetCache(area, name string) error {
-	for k := range s.cache {
-		if strings.HasPrefix(k, area+" "+name+" ") {
-			delete(s.cache, k)
-		}
-	}
-	return nil
 }
 
 func (s *fakeStore) GitHubTokenHosts() ([]string, error)   { return slices.Clone(s.hosts), nil }
@@ -293,7 +260,7 @@ type world struct {
 	read    []string   // the hosts in gh's config as it was read last
 	asking  func()     // called as gh is asked for a token, when set
 	fetched []string
-	tokens  *fakeTokens
+	tokens  *keychaintest.Keychain
 	store   *fakeStore
 	clients map[string]*fakeClient // by token
 	branch  map[string][2]string   // by folder: its branch and the remote it's pushed to
@@ -301,7 +268,7 @@ type world struct {
 
 func newWorld(t *testing.T) *world {
 	t.Helper()
-	w := &world{tokens: &fakeTokens{m: map[string]string{}}, store: &fakeStore{}, clients: map[string]*fakeClient{}, ghHosts: []string{"github.com"},
+	w := &world{tokens: &keychaintest.Keychain{Items: map[string]string{}}, store: &fakeStore{}, clients: map[string]*fakeClient{}, ghHosts: []string{"github.com"},
 		branch: map[string][2]string{}}
 	w.read = w.ghHosts
 	w.s = New(Deps{
@@ -344,9 +311,7 @@ func newWorld(t *testing.T) *world {
 			}
 			return c
 		},
-		NeedsOK: func(err error) bool { return errors.Is(err, errOK) },
-		Restart: func(error) bool { return false },
-		Missing: func(error) bool { return false },
+		Keys: Keys{NeedsOK: func(err error) bool { return errors.Is(err, keychaintest.ErrLocked) }, Restart: func(error) bool { return false }, Missing: func(error) bool { return false }},
 		Remotes: func(_ context.Context, folder string) (map[string]string, error) {
 			if folder == "lab" {
 				return map[string]string{"origin": "https://gitlab.com/me/lab"}, nil
@@ -379,7 +344,7 @@ func TestHostsAndTokens(t *testing.T) {
 	if err != nil || len(hosts) != 1 || hosts[0].Source != "gh" || hosts[0].User.Login != "octo-gho_gh" || hosts[0].Kind != "oauth" || len(hosts[0].Budget) != 1 {
 		t.Fatalf("%+v %v", hosts, err)
 	}
-	if _, err := w.s.AddToken(ctx, "git.example.com", "bad"); !errors.Is(err, githubapi.ErrUnauthorized) || len(w.tokens.m) != 0 {
+	if _, err := w.s.AddToken(ctx, "git.example.com", "bad"); !errors.Is(err, githubapi.ErrUnauthorized) || len(w.tokens.Items) != 0 {
 		t.Fatalf("a refused token was kept: %v", err)
 	}
 	if _, err := w.s.AddToken(ctx, "Not A Host", "ghp_x"); err == nil || !strings.Contains(err.Error(), `"Not A Host"`) {
@@ -398,12 +363,12 @@ func TestHostsAndTokens(t *testing.T) {
 	if err := w.s.RemoveToken("github.com"); err != nil {
 		t.Fatal(err)
 	}
-	if hosts, _ = w.s.Hosts(ctx); hosts[1].Source != "gh" || w.tokens.m["github.com"] != "" {
+	if hosts, _ = w.s.Hosts(ctx); hosts[1].Source != "gh" || w.tokens.Items["github.com"] != "" {
 		t.Fatalf("back to gh's: %+v", hosts)
 	}
 	// A new build of Nushi: the keychain wants the user's OK.
 	w2 := newWorld(t)
-	w2.tokens.m["git.example.com"], w2.store.hosts, w2.tokens.needOK = "ghp_ent", []string{"git.example.com"}, true
+	w2.tokens.Items["git.example.com"], w2.store.hosts, w2.tokens.Locked = "ghp_ent", []string{"git.example.com"}, true
 	hosts, _ = w2.s.Hosts(ctx)
 	if !hosts[0].NeedsOK {
 		t.Fatalf("%+v", hosts)
@@ -569,14 +534,14 @@ func TestStates(t *testing.T) {
 		t.Fatalf("asked again within 30 s: %v", c.asked)
 	}
 	// A write makes them old; GitHub failing then keeps the last known.
-	if _, err := w.s.Comment(ctx, "github.com", "PR_1", "Thanks"); err != nil {
+	if err := w.s.Comment(ctx, "github.com", "PR_1", "Thanks"); err != nil {
 		t.Fatal(err)
 	}
 	c.fail = errors.New("down")
 	if st := w.s.States(ctx, items[:1], true); st["PR_1"].State != "open" {
 		t.Fatalf("%+v", st)
 	}
-	if _, err := w.s.Comment(ctx, "github.com", "PR_1", " "); err == nil {
+	if err := w.s.Comment(ctx, "github.com", "PR_1", " "); err == nil {
 		t.Fatal("an empty comment")
 	}
 }
@@ -770,6 +735,9 @@ func TestUnknownHosts(t *testing.T) {
 		if _, err := w.s.Pull(ctx, model.GitHubRef{Host: h, Repo: "a/b", Number: 1}, false); err == nil {
 			t.Errorf("%q: asked", h)
 		}
+		if _, _, err := w.s.Commits(ctx, model.GitHubRef{Host: h, Repo: "a/b", Number: 1}, false); err == nil {
+			t.Errorf("%q: asked", h)
+		}
 		w.s.States(ctx, []model.ChatGitHub{{Host: h, ID: "PR_1"}}, false)
 	}
 	if len(w.asked) != 0 || len(w.clients) != 0 {
@@ -810,7 +778,7 @@ func TestCheckOut(t *testing.T) {
 }
 
 // TestOnlyAskedWrites: reading everything there is (the inbox, states, a
-// pull request, an issue, files, a log, a checkout) writes nothing to
+// pull request, its commits, an issue, files, a log, a checkout) writes nothing to
 // GitHub; only the user's writes do.
 func TestOnlyAskedWrites(t *testing.T) {
 	w := newWorld(t)
@@ -819,6 +787,9 @@ func TestOnlyAskedWrites(t *testing.T) {
 	_, _ = w.s.Inbox(ctx, "github.com", githubapi.InboxFilter{}, true)
 	w.s.States(ctx, []model.ChatGitHub{{Host: "github.com", ID: "PR_1"}}, true)
 	_, _ = w.s.Pull(ctx, ref, true)
+	if cs, total, err := w.s.Commits(ctx, ref, true); err != nil || total != 1 || cs[0].Author != "mira" {
+		t.Fatalf("commits %+v %d %v", cs, total, err)
+	}
 	_, _ = w.s.Issue(ctx, ref, true)
 	_, _ = w.s.Files(ctx, ref, strings.Repeat("a", 40), strings.Repeat("b", 40))
 	_, _ = w.s.JobTail(ctx, ref, 7)

@@ -7,6 +7,7 @@ enum SettingsSection {
   appearance('Appearance'),
   terminal('Terminal'),
   history('Chat history'),
+  usage('Usage'),
   remote('Remote access'),
   agents('Agents'),
   mcp('MCP servers'),

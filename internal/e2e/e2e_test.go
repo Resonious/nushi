@@ -28,6 +28,7 @@ import (
 	"github.com/afrase/nushi/internal/ante/antetest"
 	"github.com/afrase/nushi/internal/api"
 	"github.com/afrase/nushi/internal/claude"
+	"github.com/afrase/nushi/internal/database"
 	"github.com/afrase/nushi/internal/events"
 	"github.com/afrase/nushi/internal/features/agents"
 	"github.com/afrase/nushi/internal/features/chats"
@@ -37,6 +38,7 @@ import (
 	"github.com/afrase/nushi/internal/features/servers"
 	"github.com/afrase/nushi/internal/features/terminals"
 	"github.com/afrase/nushi/internal/features/tools"
+	"github.com/afrase/nushi/internal/features/usage"
 	nushiv1 "github.com/afrase/nushi/internal/gen/nushi/v1"
 	"github.com/afrase/nushi/internal/gen/nushi/v1/nushiv1connect"
 	"github.com/afrase/nushi/internal/git"
@@ -46,6 +48,7 @@ import (
 	"github.com/afrase/nushi/internal/pi/pitest"
 	"github.com/afrase/nushi/internal/shellenv"
 	"github.com/afrase/nushi/internal/store"
+	"github.com/afrase/nushi/internal/testcheck"
 	"github.com/afrase/nushi/internal/transcripts"
 )
 
@@ -64,6 +67,17 @@ type daemon struct {
 	claudes *claudes      // the fake claudes Claude's Go agent ran
 	tools   *tools.Service
 	hub     *events.Hub
+	dataDir string           // what it was started on, for reopen
+	history *acptest.History // and the fake agent's sessions
+}
+
+// reopen stops d and starts it again in its place, on the same data folder
+// and fake agent's sessions, as after a restart, and opens an app on it.
+func (d *daemon) reopen(t *testing.T) *app {
+	t.Helper()
+	d.stop()
+	*d = *startDaemon(t, d.dataDir, d.history)
+	return open(t, d)
 }
 
 // fakeHarness is the "fake" agent's: Claude's notices, as startDaemon says,
@@ -144,11 +158,11 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		})
 	}
 	anteStore := anteStores(dataDir)
-	anteHosts := func(string) (io.WriteCloser, io.Reader, func(), error) { //nolint:unparam // an ante.Spawn, which can fail
+	anteHosts := func(string) (agentproc.Program, error) { //nolint:unparam // an ante.Spawn, which can fail
 		inR, inW := io.Pipe()
 		outR, outW := io.Pipe()
 		go func() { anteStore.Serve(inR, outW); _ = outW.Close() }()
-		return inW, outR, func() { _, _ = inR.Close(), outW.Close() }, nil
+		return agentproc.Program{In: inW, Out: outR, Kill: func() { _, _ = inR.Close(), outW.Close() }}, nil
 	}
 	hub := &events.Hub{}
 	st := store.New(dataDir)
@@ -164,14 +178,14 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 	// files on this Mac (Agent.Local) is left out, but for Claude's
 	// transcripts' search and workflows, read in the daemon's own Claude
 	// config folder.
-	piStore := piStores(dataDir)
+	piStore := piStores(t, dataDir)
 	pis := func(f pi.Flavor) chats.Launch {
 		return launch(func(r io.Reader, w io.Writer) {
-			spawn := func(cwd string, args ...string) (pi.Program, error) {
+			spawn := func(cwd string, args ...string) (agentproc.Program, error) {
 				inR, inW := io.Pipe()
 				outR, outW := io.Pipe()
 				go func() { piStore.Serve(inR, outW, cwd, args); _ = outW.Close() }()
-				return pi.Program{In: inW, Out: outR, Kill: func() { _, _ = inR.Close(), outW.Close() }}, nil
+				return agentproc.Program{In: inW, Out: outR, Kill: func() { _, _ = inR.Close(), outW.Close() }}, nil
 			}
 			pi.Serve(r, w, pi.Config{Flavor: f, Spawn: spawn, Dirs: pi.Dirs{Sessions: piStore.Sessions}, Version: f.Version})
 		})
@@ -205,11 +219,17 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Usage in the data folder's database, as main keeps it.
+	db, err := database.Open(filepath.Join(dataDir, "nushi.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	meter := usage.New(db, st)
 	// Sleep and the copies as main has them: the settings are the daemon's.
 	// A workflow's files are read often, so a test sees its end at once.
 	svc := chats.New(t.Context(), kinds, chats.Options{Remembered: st, Sessions: st, Worktrees: git.Worktrees{}, Scratch: filepath.Join(dataDir, "scratch"),
 		Uploads: filepath.Join(dataDir, "uploads"), Publish: hub.Publish, Copies: copies, CopiesOn: st.KeepTranscripts, Sleep: st,
-		Timing: chats.Timing{WorkflowPoll: 20 * time.Millisecond}})
+		Timing: chats.Timing{WorkflowPoll: 20 * time.Millisecond}, Meter: meter})
 	shows := preview.New(hub.Publish)
 	shows.UseChats(svc)
 	serverTools := &servers.AgentTools{}
@@ -221,7 +241,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 	serverTools.Use(srvs)
 	follow, unfollow := context.WithCancel(context.Background())
 	go func() {
-		_ = hub.Subscribe(follow, func(e model.Event) bool { terms.Follow(e); srvs.Follow(e); return true }, events.Unbounded())
+		hub.Follow(follow, func(e model.Event) { terms.Follow(e); srvs.Follow(e) })
 	}()
 	restarts := restart.New(svc, restart.Together{terms, srvs})
 	restarts.Every = 20 * time.Millisecond
@@ -231,7 +251,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		lapsed.Store(!waiting)
 	}
 	sv := api.Services{Chats: svc, Agents: agents.New(nil, nil, shellenv.Off(os.Environ()), "", nil), Terms: terms, Hub: hub, Memory: memory.New(svc), Transcripts: st, Restart: restarts,
-		Servers: srvs}
+		Servers: srvs, Usage: meter}
 	socket, forDevices := api.Handlers(sv, toolSvc, "tok") // as main serves them
 	srv := httptest.NewServer(socket)
 	devices := httptest.NewServer(forDevices)
@@ -244,42 +264,44 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		terms.CloseAll() // as main does: the shells don't outlive the daemon
 		srvs.CloseAll()
 		svc.Close()
+		meter.Close()
+		_ = db.Close() // closed already when stopped twice: reopen's, then the cleanup's
 	}
 	t.Cleanup(stop)
-	return &daemon{url: srv.URL, devices: devices.URL, stop: stop, chats: svc, restart: restarts, looks: looks, lapsed: lapsed, claudes: cls, tools: toolSvc, hub: hub, kill: func() {
+	return &daemon{url: srv.URL, devices: devices.URL, stop: stop, chats: svc, restart: restarts, looks: looks, lapsed: lapsed, claudes: cls, tools: toolSvc, hub: hub, dataDir: dataDir, history: history, kill: func() {
 		mu.Lock()
 		defer mu.Unlock()
 		kill()
 	}}
 }
 
+// The fake Ante's and pi's sessions by data folder, under fakesMu: tests
+// run at once.
 var (
-	anteMu sync.Mutex
-	antes  = map[string]*antetest.Store{}
+	fakesMu sync.Mutex
+	antes   = map[string]*antetest.Store{}
+	piFakes = map[string]*pitest.Store{}
 )
 
 // anteStores is the fake Ante's sessions for a data folder: a daemon
 // started again on it finds them.
 func anteStores(dataDir string) *antetest.Store {
-	anteMu.Lock()
-	defer anteMu.Unlock()
+	fakesMu.Lock()
+	defer fakesMu.Unlock()
 	if antes[dataDir] == nil {
 		antes[dataDir] = &antetest.Store{Home: filepath.Join(dataDir, "ante")}
 	}
 	return antes[dataDir]
 }
 
-var piFakes = map[string]*pitest.Store{}
-
 // piStores is the fake pi's sessions for a data folder, as anteStores.
-func piStores(dataDir string) *pitest.Store {
-	anteMu.Lock()
-	defer anteMu.Unlock()
+func piStores(t *testing.T, dataDir string) *pitest.Store {
+	t.Helper()
+	fakesMu.Lock()
+	defer fakesMu.Unlock()
 	if piFakes[dataDir] == nil {
 		dir := filepath.Join(dataDir, "pi")
-		if err := os.MkdirAll(dir, 0o700); err != nil {
-			panic(err) // no t here; the panic fails the test
-		}
+		testcheck.NoErr(t, os.MkdirAll(dir, 0o700))
 		piFakes[dataDir] = &pitest.Store{Sessions: dir}
 	}
 	return piFakes[dataDir]
@@ -441,13 +463,9 @@ func TestAppQuitsWhileAPromptWaits(t *testing.T) {
 		t.Fatalf("chats = %v", list)
 	}
 	snap := second.get(chatID)
-	var texts []string
-	for _, it := range snap.Items {
-		texts = append(texts, it.Kind.String()+":"+it.Text+it.Status)
-	}
-	want := "ITEM_KIND_USER_MESSAGE:hello ITEM_KIND_AGENT_MESSAGE:You said: hello ITEM_KIND_USER_MESSAGE:ask permission ITEM_KIND_TOOL_CALL:pending ITEM_KIND_PERMISSION:pending"
-	if got := strings.Join(texts, " "); got != want || !snap.Status.Busy {
-		t.Fatalf("transcript = %s (busy %v)\nwant %s", got, snap.Status.Busy, want)
+	want := "USER_MESSAGE:hello:\nAGENT_MESSAGE:You said: hello:\nUSER_MESSAGE:ask permission:\nTOOL_CALL::pending\nPERMISSION::pending"
+	if got := transcript(snap.Items); got != want || !snap.Status.Busy {
+		t.Fatalf("transcript (busy %v):\n%s\nwant:\n%s", snap.Status.Busy, got, want)
 	}
 
 	perm := snap.Items[len(snap.Items)-1]
@@ -504,10 +522,7 @@ func TestDaemonRestartReopensChats(t *testing.T) {
 	a.waitFor("the second reply", turnEnded(chatID))
 	before := transcript(a.get(chatID).Items)
 
-	d.stop() // the daemon goes, and its agents with it
-	d = startDaemon(t, dataDir, history)
-
-	a = open(t, d)
+	a = d.reopen(t) // the daemon goes, and its agents with it
 	list := must(a.c.ListChats(ctx, connect.NewRequest(&nushiv1.ListChatsRequest{}))).Chats
 	if len(list) != 1 || list[0].Id != chatID {
 		t.Fatalf("chats = %v", list)
@@ -545,13 +560,9 @@ func TestStopCancelsAWaitingPrompt(t *testing.T) {
 	a.waitFor("the turn to end", turnEnded(chatID))
 
 	snap := a.get(chatID)
-	var got []string
-	for _, it := range snap.Items {
-		got = append(got, it.Kind.String()+":"+it.Status)
-	}
-	want := "ITEM_KIND_USER_MESSAGE: ITEM_KIND_TOOL_CALL:pending ITEM_KIND_PERMISSION:cancelled ITEM_KIND_NOTICE:cancelled"
-	if strings.Join(got, " ") != want || snap.Status.Waiting || snap.Status.Started != 0 {
-		t.Errorf("items = %v, status = %v\nwant %s", got, snap.Status, want)
+	want := "USER_MESSAGE:ask permission:\nTOOL_CALL::pending\nPERMISSION::cancelled\nNOTICE:Stopped:cancelled"
+	if got := transcript(snap.Items); got != want || snap.Status.Waiting || snap.Status.Started != 0 {
+		t.Errorf("items (status %v):\n%s\nwant:\n%s", snap.Status, got, want)
 	}
 }
 
@@ -600,9 +611,7 @@ func TestRenameArchiveAndDelete(t *testing.T) {
 
 	// After a restart the chat is still archived and renamed; unarchived,
 	// it is replayed and carries on.
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	if c := list(); len(c) != 1 || !c[kept].Archived || c[kept].Title != "Greeting" {
 		t.Fatalf("chats after restart = %v", c)
 	}

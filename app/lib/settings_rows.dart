@@ -27,7 +27,15 @@ class SettingsPage extends StatelessWidget {
   });
 
   /// The content's widest.
-  static const maxWidth = 720.0;
+  static const maxWidth = 740.0;
+
+  /// How far the modal's Close sits in from the page's top right corner.
+  static const closeInset = 12.0;
+
+  /// The room the modal's Close takes from the page's right edge: its
+  /// inset, its 26-point box and a 12-point gap before the title's
+  /// actions, so they never crowd it.
+  static const double closeRoom = closeInset + 26 + 12;
 
   /// The space between the nav and the content, and at least this on the
   /// right.
@@ -61,8 +69,12 @@ class SettingsPage extends StatelessWidget {
         final narrow =
             box.maxWidth - gutter - right(box.maxWidth) < 520 &&
             actions.isNotEmpty;
+        // The title's line stays clear of Close in the corner.
         final heading = Padding(
-          padding: const EdgeInsets.only(bottom: 18),
+          padding: EdgeInsets.only(
+            bottom: 18,
+            right: max(0, closeRoom - right(box.maxWidth)),
+          ),
           child: narrow
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,7 +103,7 @@ class SettingsPage extends StatelessWidget {
                 controller: controller,
                 slivers: [
                   SliverPadding(
-                    padding: pad.copyWith(top: 22),
+                    padding: pad.copyWith(top: 18),
                     sliver: SliverList.list(children: [heading, ...children]),
                   ),
                   for (final s in slivers)
@@ -108,9 +120,10 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-/// A group of rows in a card, an optional [title] over it (and
-/// [about], what the group holds, under the title) and a [footer] under it;
-/// a hairline between rows, and [empty] ("None") in the box without any.
+/// A group of rows in a card, an optional [title] over it (with [actions]
+/// at the end of its line, and [about], what the group holds, under it)
+/// and a [footer] under it; a hairline between rows, and [empty] ("None")
+/// in the box without any.
 class SettingsGroup extends StatelessWidget {
   const new({
     required this.children,
@@ -119,9 +132,11 @@ class SettingsGroup extends StatelessWidget {
     this.about,
     this.footer,
     this.empty,
+    this.actions = const [],
   });
 
   final String? title;
+  final List<Widget> actions;
   final String? about;
   final Widget? footer;
   final String? empty;
@@ -141,16 +156,27 @@ class SettingsGroup extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(left: 2, bottom: 7),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (title case final title?)
-                    Text(
-                      title,
-                      style: theme.ui(
-                        t.textSecondary,
-                        size: 12,
-                        weight: FontWeight.w600,
+                    SizedBox(
+                      height: actions.isEmpty ? null : 30,
+                      child: Row(
+                        spacing: 8,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: theme.ui(
+                                t.textSecondary,
+                                size: 12,
+                                weight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          ...actions,
+                        ],
                       ),
                     ),
                   if (about case final about?) Text(about, style: muted),
@@ -191,8 +217,9 @@ class SettingsGroup extends StatelessWidget {
 /// A row's height at least.
 const settingsRowHeight = 46.0;
 
-/// A row of a [SettingsGroup]: [label] and its [description] on the left,
-/// [control] on the right, at the group's edge.
+/// A row of a [SettingsGroup]: [label] and its [description] on the left
+/// (cut to [descriptionLines] when given: text that isn't Nushi's own, as
+/// a reply card's words), [control] on the right, at the group's edge.
 class SettingsRow extends StatelessWidget {
   const new(
     this.label, {
@@ -200,49 +227,70 @@ class SettingsRow extends StatelessWidget {
     this.description,
     this.control,
     this.descriptionColor,
+    this.descriptionLines,
+    this.stackBelow,
   });
 
   final String label;
   final String? description;
   final Widget? control;
   final Color? descriptionColor;
+  final int? descriptionLines;
+
+  /// The row's width under which [control] goes under the label, at its
+  /// left, rather than squeeze the label beside a wide control (a field,
+  /// two buttons); null keeps it beside at any width.
+  final double? stackBelow;
 
   @override
   Widget build(BuildContext context) {
     final theme = NushiTheme.of(context);
     final t = theme.t;
+    final words = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: theme.ui(t.text)),
+        if (description case final d? when d.isNotEmpty)
+          Text(
+            d,
+            maxLines: descriptionLines,
+            overflow: descriptionLines == null ? null : TextOverflow.ellipsis,
+            style: theme.ui(descriptionColor ?? t.textMuted, size: 12),
+          ),
+      ],
+    );
+    Widget beside() => Row(
+      children: [
+        Expanded(child: words),
+        if (control case final c?) ...[const SizedBox(width: 16), c],
+      ],
+    );
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: settingsRowHeight),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(label, style: theme.ui(t.text)),
-                  if (description case final d? when d.isNotEmpty)
-                    Text(
-                      d,
-                      style: theme.ui(
-                        descriptionColor ?? t.textMuted,
-                        size: 12,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            if (control case final c?) ...[const SizedBox(width: 16), c],
-          ],
-        ),
+        child: switch ((stackBelow, control)) {
+          (final below?, final c?) => LayoutBuilder(
+            builder: (context, box) => box.maxWidth >= below
+                ? beside()
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: 8,
+                    children: [
+                      words,
+                      Align(alignment: Alignment.centerLeft, child: c),
+                    ],
+                  ),
+          ),
+          _ => beside(),
+        },
       ),
     );
   }
 }
 
-/// A switch, Settings' size everywhere. [onChanged] takes a change; or
+/// A switch ([Toggle]), Settings' everywhere. [onChanged] takes a change; or
 /// [run] makes it as a call, the switch off while it runs (a double click
 /// sends once) and its error shown, as a [RunButton]. Off with neither.
 class SettingsSwitch extends StatefulWidget {
@@ -268,18 +316,13 @@ class _SettingsSwitchState extends State<SettingsSwitch> {
   @override
   Widget build(BuildContext context) => ValueListenableBuilder(
     valueListenable: _runner,
-    builder: (context, running, _) => SizedBox(
-      height: 22,
-      child: FittedBox(
-        child: Switch(
-          value: widget.value,
-          onChanged: switch (widget.run) {
-            null => widget.onChanged,
-            _ when running => null,
-            final run => (on) => _runner.run(context, () => run(on: on)),
-          },
-        ),
-      ),
+    builder: (context, running, _) => Toggle(
+      value: widget.value,
+      onChanged: switch (widget.run) {
+        null => widget.onChanged,
+        _ when running => null,
+        final run => (on) => _runner.run(context, () => run(on: on)),
+      },
     ),
   );
 }

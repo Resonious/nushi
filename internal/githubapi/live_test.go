@@ -161,7 +161,7 @@ func TestLiveWrites(t *testing.T) {
 		t.Fatalf("%v %+v", err, p.Threads)
 	}
 	th := p.Threads[0]
-	if _, err := c.Reply(ctx, th.ID, "A reply from Nushi's live test."); err != nil {
+	if err := c.Reply(ctx, th.ID, "A reply from Nushi's live test."); err != nil {
 		t.Fatal(err)
 	}
 	if err := c.Resolve(ctx, th.ID, true); err != nil {
@@ -173,7 +173,7 @@ func TestLiveWrites(t *testing.T) {
 	if err := c.Resolve(ctx, th.ID, false); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := c.Comment(ctx, p.ID, "A comment from Nushi's live test."); err != nil {
+	if err := c.Comment(ctx, p.ID, "A comment from Nushi's live test."); err != nil {
 		t.Fatal(err)
 	}
 	err = c.SubmitReview(ctx, Review{Pull: p.ID, HeadOID: p.HeadOID, Event: "comment", Body: "A review from Nushi's live test.",

@@ -14,37 +14,37 @@
 brew install --cask afrase/tap/nushi
 ```
 
-Then open Nushi and set up an agent in Settings › Agents. The zip, upgrades and uninstalling are in [Installing Nushi](docs/install.md), and so is Linux's tarball ([On Linux](docs/install.md#on-linux)).
+Then open Nushi and set up an agent in **Settings › Agents**. To install from the zip or upgrade or uninstall, see [Installing Nushi](docs/install.md). For Linux's tarball, see [On Linux](docs/install.md#on-linux).
 
 ## What it does
 
 <table>
 <tr>
-<td width="44%"><b>Any ACP agent.</b> Claude, Codex, Ante, oh-my-pi, OpenCode, Pi and PiG run as chats over the <a href="https://agentclientprotocol.com">Agent Client Protocol</a>, each your own CLI with its own login and history, so a chat resumes in a terminal.</td>
+<td width="44%"><b>Any ACP agent.</b> Claude, Codex, Ante, oh-my-pi, OpenCode, Pi and PiG run as chats. Nushi talks to them over the <a href="https://agentclientprotocol.com">Agent Client Protocol</a> (ACP). Each agent is your own CLI, with its own login and history, so you can resume a chat in a terminal.</td>
 <td><a href="docs/images/agents.png"><img src="docs/images/agents.png" width="440" alt="The New chat dialog listing the agents"></a></td>
 </tr>
 <tr>
-<td><b>Changes and review.</b> A side-by-side or unified diff of the chat's work, with comments on its lines that go to the agent as one message.</td>
+<td><b>Changes and review.</b> See the chat's work as a side-by-side or unified diff. Comment on its lines, and the agent gets all your comments in one message.</td>
 <td><a href="docs/images/changes.png"><img src="docs/images/changes.png" width="440" alt="The Changes tab: a file tree and a side-by-side diff with two review comments"></a></td>
 </tr>
 <tr>
-<td><b>Artifacts and previews.</b> Markdown, HTML, images, PDFs, CSVs and Mermaid diagrams the agent writes preview beside the chat, live as it rewrites them. An agent can open one itself, several files sit in tabs, and a file’s source is editable: click and type.</td>
+<td><b>Artifacts and previews.</b> When the agent writes Markdown, HTML, images, PDFs, CSVs or Mermaid diagrams, they preview beside the chat and update as it rewrites them. An agent can open a file there itself. Several files open in tabs. To edit a file's source, click and type.</td>
 <td><a href="docs/images/preview.png"><img src="docs/images/preview.png" width="440" alt="A Markdown design note previewed beside the chat that wrote it"></a></td>
 </tr>
 <tr>
-<td><b>The Pull request tab.</b> Checks, reviews and threads in one place, what blocks the merge first, each a click from the agent's box. Merge from the same tab when it's ready.</td>
-<td><a href="docs/images/pull-request.png"><img src="docs/images/pull-request.png" width="440" alt="The Pull request tab: status lights and the To do list of a failing check and review threads"></a></td>
+<td><b>The Pull request tab.</b> Checks, reviews and threads in one place, with what blocks the merge at the top. One click puts any of them in the agent's message box. Merge from the same tab when it's ready.</td>
+<td><a href="docs/images/pull-request.png"><img src="docs/images/pull-request.png" width="440" alt="The Pull request tab: the merge status card, the description and the comments"></a></td>
 </tr>
 <tr>
-<td><b>Jira.</b> Your issues and sprints as a task list; Start work opens a chat in a worktree named after the issue.</td>
+<td><b>Jira.</b> Your issues and sprints as a task list. <b>Start work</b> opens a chat in a worktree (a separate checkout on its own branch) named after the issue.</td>
 <td><a href="docs/images/jira.png"><img src="docs/images/jira.png" width="440" alt="The Jira view: a sprint's issues by status, with their assignees"></a></td>
 </tr>
 <tr>
-<td><b>Terminals.</b> Shells under each chat, kept by the daemon, so they outlive the app.</td>
+<td><b>Terminals.</b> Shells under each chat. Nushi's background service (the daemon) runs them, so they keep running after you quit the app.</td>
 <td><a href="docs/images/terminal.png"><img src="docs/images/terminal.png" width="440" alt="A terminal under a chat, showing a test run"></a></td>
 </tr>
 <tr>
-<td><b>The phone.</b> Follow your chats and answer their questions from your phone, end-to-end encrypted through a relay you run.</td>
+<td><b>The phone.</b> Follow your chats and answer their questions from your phone. It connects through a relay, a small server you run, and the connection is end-to-end encrypted.</td>
 <td align="center"><a href="docs/images/phone.png"><img src="docs/images/phone.png" width="200" alt="The phone's web app: an agent's question, answered with a tap"></a></td>
 </tr>
 </table>
@@ -52,7 +52,7 @@ Then open Nushi and set up an agent in Settings › Agents. The zip, upgrades an
 ## Requirements
 
 - A Mac with Apple silicon and macOS 13 or later, or Linux on x86_64 or arm64 with glibc 2.34 or later ([On Linux](docs/install.md#on-linux)).
-- An agent's CLI: `claude`, `codex`, `ante`, `omp`, `opencode`, `pi` or `pig`. Pi needs Node, Codex also needs Node and npm; Claude needs neither (Nushi runs it through its own agent).
+- An agent's CLI: `claude`, `codex`, `ante`, `omp`, `opencode`, `pi` or `pig`. Pi needs Node. Codex needs Node and npm. Claude needs neither, because Nushi runs it through its own built-in agent.
 
 ## Docs
 

@@ -14,6 +14,7 @@ import 'package:nushi/panes.dart';
 import 'package:nushi/preview.dart';
 import 'package:nushi/preview_entry.dart';
 import 'package:nushi/preview_marks.dart';
+import 'package:nushi/text_width.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/tool_parts.dart' show plainPath;
 import 'package:nushi/widgets.dart' show Hover;
@@ -67,20 +68,8 @@ class FilesTopRow extends StatelessWidget {
   static const _endGap = 8.0;
 
   /// [text]'s width in [style], as a [Text] here draws it.
-  static double _width(BuildContext context, String text, TextStyle style) {
-    final p = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: DefaultTextStyle.of(context).style.merge(style),
-      ),
-      textDirection: TextDirection.ltr,
-      textScaler: MediaQuery.textScalerOf(context),
-      maxLines: 1,
-    )..layout();
-    final width = p.width.ceilToDouble();
-    p.dispose();
-    return width;
-  }
+  static double _width(BuildContext context, String text, TextStyle style) =>
+      textWidth(context, text, style).ceilToDouble();
 
   @override
   Widget build(BuildContext context) {

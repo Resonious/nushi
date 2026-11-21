@@ -40,11 +40,10 @@ func (s *server) ListGitHubHosts(ctx context.Context, _ *connect.Request[nushiv1
 }
 
 func (s *server) AddGitHubToken(ctx context.Context, req *connect.Request[nushiv1.AddGitHubTokenRequest]) (*connect.Response[nushiv1.AddGitHubTokenResponse], error) {
-	u, err := s.GitHub.AddToken(ctx, req.Msg.Host, req.Msg.Token)
-	if err != nil {
+	if _, err := s.GitHub.AddToken(ctx, req.Msg.Host, req.Msg.Token); err != nil {
 		return nil, githubErr(err)
 	}
-	return connect.NewResponse(&nushiv1.AddGitHubTokenResponse{Login: u.Login}), nil
+	return connect.NewResponse(&nushiv1.AddGitHubTokenResponse{}), nil
 }
 
 func (s *server) RemoveGitHubToken(_ context.Context, req *connect.Request[nushiv1.RemoveGitHubTokenRequest]) (*connect.Response[nushiv1.RemoveGitHubTokenResponse], error) {
@@ -148,6 +147,21 @@ func (s *server) GetGitHubPull(ctx context.Context, req *connect.Request[nushiv1
 	return connect.NewResponse(&nushiv1.GetGitHubPullResponse{Pull: pullProto(p)}), nil
 }
 
+// GetGitHubCommits answers a pull request's newest 100 commits, asked when
+// they show rather than with each poll of the pull request.
+func (s *server) GetGitHubCommits(ctx context.Context, req *connect.Request[nushiv1.GetGitHubCommitsRequest]) (*connect.Response[nushiv1.GetGitHubCommitsResponse], error) {
+	cs, total, err := s.GitHub.Commits(ctx, ref(req.Msg.Ref), req.Msg.Quiet)
+	if err != nil {
+		return nil, githubErr(err)
+	}
+	out := &nushiv1.GetGitHubCommitsResponse{Total: int32(total)}
+	for _, c := range cs {
+		out.Commits = append(out.Commits, &nushiv1.GitHubCommit{Oid: c.OID, Headline: c.Headline, Author: c.Author, AuthorName: c.AuthorName,
+			CommittedMs: unixMs(c.Committed), Checks: c.Checks})
+	}
+	return connect.NewResponse(out), nil
+}
+
 func (s *server) GetGitHubIssue(ctx context.Context, req *connect.Request[nushiv1.GetGitHubIssueRequest]) (*connect.Response[nushiv1.GetGitHubIssueResponse], error) {
 	is, err := s.GitHub.Issue(ctx, ref(req.Msg.Ref), req.Msg.Quiet)
 	if err != nil {
@@ -179,11 +193,7 @@ func (s *server) GetGitHubJobLog(ctx context.Context, req *connect.Request[nushi
 }
 
 func (s *server) ReplyGitHubThread(ctx context.Context, req *connect.Request[nushiv1.ReplyGitHubThreadRequest]) (*connect.Response[nushiv1.ReplyGitHubThreadResponse], error) {
-	c, err := s.GitHub.Reply(ctx, req.Msg.Host, req.Msg.Thread, req.Msg.Body)
-	if err != nil {
-		return nil, githubErr(err)
-	}
-	return connect.NewResponse(&nushiv1.ReplyGitHubThreadResponse{Comment: ghCommentProto(c)}), nil
+	return done[nushiv1.ReplyGitHubThreadResponse](s.GitHub.Reply(ctx, req.Msg.Host, req.Msg.Thread, req.Msg.Body), githubErr)
 }
 
 func (s *server) ResolveGitHubThread(ctx context.Context, req *connect.Request[nushiv1.ResolveGitHubThreadRequest]) (*connect.Response[nushiv1.ResolveGitHubThreadResponse], error) {
@@ -199,11 +209,31 @@ func (s *server) RerunGitHubChecks(ctx context.Context, req *connect.Request[nus
 }
 
 func (s *server) AddGitHubComment(ctx context.Context, req *connect.Request[nushiv1.AddGitHubCommentRequest]) (*connect.Response[nushiv1.AddGitHubCommentResponse], error) {
-	c, err := s.GitHub.Comment(ctx, req.Msg.Host, req.Msg.Subject, req.Msg.Body)
-	if err != nil {
-		return nil, githubErr(err)
+	return done[nushiv1.AddGitHubCommentResponse](s.GitHub.Comment(ctx, req.Msg.Host, req.Msg.Subject, req.Msg.Body), githubErr)
+}
+
+// EditGitHubPull sets a pull request's title or description on the
+// user's ask (features/github's EditPull guards it).
+func (s *server) EditGitHubPull(ctx context.Context, req *connect.Request[nushiv1.EditGitHubPullRequest]) (*connect.Response[nushiv1.EditGitHubPullResponse], error) {
+	m := req.Msg
+	if m.Ref == nil {
+		return nil, invalid(errors.New("which pull request"))
 	}
-	return connect.NewResponse(&nushiv1.AddGitHubCommentResponse{Comment: ghCommentProto(c)}), nil
+	err := s.GitHub.EditPull(ctx, ref(m.Ref), github.PullEdit{Title: m.Title, Body: m.Body, Was: m.Was})
+	return done[nushiv1.EditGitHubPullResponse](err, editErr)
+}
+
+// editErr is an edit's failure: GitHub having changed it as its own
+// reason, so the app offers GitHub's text; GitHub not letting the user
+// edit it as PermissionDenied.
+func editErr(err error) error {
+	switch {
+	case errors.Is(err, github.ErrChangedSince):
+		return because(connect.NewError(connect.CodeFailedPrecondition, err), ReasonChangedSince)
+	case errors.Is(err, github.ErrCantEdit):
+		return connect.NewError(connect.CodePermissionDenied, err)
+	}
+	return githubErr(err)
 }
 
 func (s *server) SubmitGitHubReview(ctx context.Context, req *connect.Request[nushiv1.SubmitGitHubReviewRequest]) (*connect.Response[nushiv1.SubmitGitHubReviewResponse], error) {
@@ -241,7 +271,7 @@ func ghItemsProto(items []model.GitHubItem) []*nushiv1.GitHubItem {
 
 func ghCommentProto(c model.GitHubComment) *nushiv1.GitHubComment {
 	return &nushiv1.GitHubComment{Id: c.ID, Author: c.Author, Outside: github.Outside(c.Association),
-		Bot: c.Bot, Body: c.Body, Url: c.URL, CreatedMs: unixMs(c.Created), Review: c.Review, Commit: c.Commit}
+		Bot: c.Bot, Body: c.Body, Url: c.URL, CreatedMs: unixMs(c.Created), Review: c.Review, Commit: c.Commit, ReviewId: c.ReviewID}
 }
 
 func ghCommentsProto(cs []model.GitHubComment) []*nushiv1.GitHubComment {
@@ -257,14 +287,19 @@ func pullProto(p model.GitHubPull) *nushiv1.GitHubPull {
 		Base: p.Base, Head: p.Head, HeadRepo: p.HeadRepo, CrossRepo: p.CrossRepo, BaseOid: p.BaseOID, HeadOid: p.HeadOID,
 		Mergeable: p.Mergeable, MergeState: p.MergeState, Additions: int32(p.Additions), Deletions: int32(p.Deletions),
 		ChangedFiles: int32(p.ChangedFiles), Conversation: ghCommentsProto(p.Conversation), PendingReview: p.PendingReview,
-		PendingComments: int32(p.PendingComments), Commits: int32(p.Commits), Merge: mergeProto(p)}
+		PendingComments: int32(p.PendingComments), Commits: int32(p.Commits), Merge: mergeProto(p), Assignees: p.Assignees,
+		Reviews: ghCommentsProto(p.Reviews), BodySource: p.BodySource, CanEdit: p.CanEdit}
+	for _, l := range p.Labels {
+		out.Labels = append(out.Labels, &nushiv1.GitHubLabel{Name: l.Name, Color: l.Color})
+	}
 	for _, r := range p.Reviewers {
 		out.Reviewers = append(out.Reviewers, &nushiv1.GitHubReviewer{Login: r.Login, State: r.State, Team: r.Team, CodeOwner: r.CodeOwner})
 	}
 	for _, t := range p.Threads {
 		out.Threads = append(out.Threads, &nushiv1.GitHubThread{Id: t.ID, Path: t.Path, Side: t.Side, Line: int32(t.Line), StartLine: int32(t.StartLine),
 			OriginalLine: int32(t.OriginalLine), OriginalStartLine: int32(t.OriginalStartLine), OnFile: t.OnFile, Outdated: t.Outdated,
-			Resolved: t.Resolved, CanReply: t.CanReply, CanResolve: t.CanResolve, CanUnresolve: t.CanUnresolve, Comments: ghCommentsProto(t.Comments)})
+			Resolved: t.Resolved, CanReply: t.CanReply, CanResolve: t.CanResolve, CanUnresolve: t.CanUnresolve, Comments: ghCommentsProto(t.Comments),
+			DiffHunk: t.DiffHunk})
 	}
 	for _, c := range p.Runs {
 		pc := &nushiv1.GitHubCheck{Id: c.ID, Name: c.Name, Workflow: c.Workflow, App: c.App, State: c.State, Failed: github.Failed(c), Url: c.URL,

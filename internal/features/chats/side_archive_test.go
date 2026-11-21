@@ -127,7 +127,7 @@ func TestUndoBringsTheSideChatBack(t *testing.T) {
 	if _, err := svc.stored(id); err == nil {
 		t.Error("the archived chat stayed")
 	}
-	sessions := c.sessions.(*memSessions)
+	sessions := c.svc.sessions.(*memSessions)
 	sessions.mu.Lock()
 	if !slices.Contains(sessions.deleted, id) {
 		t.Errorf("records deleted %v, not the archived chat's", sessions.deleted)

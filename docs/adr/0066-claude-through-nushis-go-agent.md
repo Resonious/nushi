@@ -1,6 +1,8 @@
 # 0066. Claude through Nushi's Go agent (draft)
 
-A draft: the Go agent is in, off by default. The default flips by an amendment once the conditions below hold.
+No longer a draft: since the amendment of 2026-11-04 (below) the Go agent is Claude's only agent.
+
+As first written: a draft, the Go agent in and off by default, the default to flip by an amendment once the conditions below hold.
 
 ## Context
 Claude runs through claude-agent-acp 0.94.0 under the user's Node ([0037](0037-agents-you-set-up.md)): a Set up that downloads 9 MB into 73 MB, Node on `PATH`, a Node process per chat beside each `claude`, and the TypeScript Agent SDK inside, whose code is all rights reserved, so its behaviour can only be observed. Nushi reads the adapter's wire shape and a few vendor extensions (`_meta.claudeCode`, `_claude/origin`, the subagents RFD, fork-at).
@@ -31,3 +33,5 @@ Claude runs through claude-agent-acp 0.94.0 under the user's Node ([0037](0037-a
 **Amendment (2026-11-04): the Go agent is Claude's only agent.** The owner used it for over five working days with no chat bug traced to it, the last condition above, and chose to drop the Node adapter now rather than keep it selectable for one more release. Claude has no adapter, Set up, Node requirement or pinned CLI versions; the setting is gone (`Settings.claude_go_agent` and `Agent.go_agent` reserved in the API, `settings.json`'s `claudeGoAgent` ignored), with `NUSHI_CLAUDE_ADAPTER`, and the daemon removes an adapter a Set up left in `agents/claude`. A chat that last ran on the adapter reopens and resumes on the Go agent under the same session id and transcript (`chats/claude_resume_test.go`, against the adapter's recording). The parity recordings, all made through the adapter, stay as the Go agent's golden (`acp.jsonl`); `make claude-record` now records the Go agent. This supersedes [0037](0037-agents-you-set-up.md)'s Claude part; Codex keeps its adapter.
 
 **Amendment (2026-11-05): the library is its own module.** `claudeagent` and `claudeacp` moved, as the first point above meant them to, to `github.com/afrase/claude-acp-go` (MIT, the owner's; v0.2.0 is the code Nushi had in its tree), with `cmd/claude-acp` for other ACP clients. Nushi imports the published module and keeps no copy: a fix is made and released there, then taken here with `go get` (`docs/development.md`'s Dependencies). The licences above hold in that repository, its NOTICE files with them. The parity recordings and their tests stay in Nushi: the tests run the module's `claudeacp` in process (`claudeacp.Serve`), and `make claude-record` records through `nushid claude-acp`.
+
+**Amendment (2026-11-20): the adapter is no longer removed.** The daemon removed an adapter a Set up left in `agents/claude` at each start from 2026-11-04; that cleanup is gone, since any release since then has already done it. A Mac that skipped every release in between keeps the folder, about 73 MB that nothing runs, until it is deleted by hand.

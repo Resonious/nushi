@@ -97,7 +97,6 @@ void main() {
         );
         sidebarHidden.value = width < 1000;
         showDetails.value = false;
-        paneWidths.value = {};
         final d = await _fake().connect(tester);
         d.select('c');
         await tester.pumpWidget(NushiApp(daemon: d));
@@ -134,7 +133,7 @@ void main() {
         sidebarHidden.value = false;
         showDetails.value = true;
         await closeView(tester, d);
-      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      }, variant: onMac);
     }
   }
 

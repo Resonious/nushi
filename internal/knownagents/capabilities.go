@@ -24,6 +24,7 @@ var (
 	_ chats.DefaultReader    = claude.Harness{}
 	_ chats.Transcript       = claude.Harness{}
 	_ chats.Subagents        = claude.Harness{}
+	_ chats.SubagentOutput   = claude.Harness{}
 	_ chats.SubagentMessages = claude.Harness{}
 	_ chats.BackgroundTasks  = claude.Harness{}
 	_ chats.ContextCommander = claude.Harness{}
@@ -31,6 +32,7 @@ var (
 	_ chats.ReadOnly         = claude.Harness{}
 	_ chats.GoneReader       = claude.Harness{}
 	_ chats.TitleMaker       = claude.Harness{}
+	_ chats.UsageReader      = claude.Harness{}
 
 	_ chats.OpenFinder      = claudehistory.Local{}
 	_ chats.ForkFinder      = claudehistory.Local{}

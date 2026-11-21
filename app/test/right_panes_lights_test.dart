@@ -20,8 +20,6 @@ import 'right_panes_fixture.dart';
 // its left. However narrow the window, nothing in the first pane's top row
 // lies under them, and nothing in any pane's runs past its edge (ADR 0123).
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 PanesOpen _open({
   bool side = false,
   bool files = false,
@@ -119,6 +117,6 @@ void main() {
         'lights_${name.replaceAll(' ', '_')}_${to.toInt()}',
       );
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

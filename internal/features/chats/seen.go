@@ -58,7 +58,7 @@ func (c *chat) turnEndedLocked(end model.TurnEnd, failure string) {
 		st.Failure = failure
 	}
 	if c.parent == nil && !c.halting {
-		mark := end != model.TurnStopped && c.viewers != nil && !c.viewers.Shown(c.id)
+		mark := end != model.TurnStopped && c.svc.viewers != nil && !c.svc.viewers.Shown(c.id)
 		c.saveLocked(func(s *model.ChatRecord) {
 			s.Updated = time.Now()
 			if mark {

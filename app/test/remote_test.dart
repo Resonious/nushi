@@ -1,6 +1,5 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/gen/nushi/v1/nushi.connect.client.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -80,27 +79,14 @@ void main() {
   });
 
   testWidgets('Pair a phone offers Copy link', (tester) async {
-    String? copied;
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied = (call.arguments as Map)['text'] as String;
-        }
-        return null;
-      },
-    );
+    final copied = clipboardCopies(tester);
     remoteState.value = Remote(
       on: true,
       relay: 'wss://relay.example.com',
       pairing: Pairing(),
     );
     await tester.pumpWidget(
-      MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: const NushiTheme(Tokens.dark).toThemeData(),
-        home: Scaffold(body: RemoteSection(NushiServiceClient(_daemon()))),
-      ),
+      themed(RemoteSection(NushiServiceClient(_daemon())), banner: false),
     );
     viewport(tester, const Size(720, 560));
     await tester.tap(find.text('Pair a phone'));
@@ -111,7 +97,7 @@ void main() {
     );
     await tester.tap(find.text('Copy link'));
     await tester.pumpAndSettle();
-    expect(copied, pairingLink(_qr));
+    expect(copied.last, pairingLink(_qr));
     expect(find.text('Copied'), findsOneWidget);
   });
 
@@ -125,7 +111,7 @@ void main() {
     testWidgets('paired devices, kinds and notifications ($name)', (
       tester,
     ) async {
-      viewport(tester, Size(width, 320));
+      viewport(tester, Size(width, 440));
       final daemon = _daemon();
       remoteState.value = Remote(
         on: true,
@@ -153,15 +139,13 @@ void main() {
         ],
       );
       await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: NushiTheme(tokens).toThemeData(),
-          home: Scaffold(
-            body: Padding(
-              padding: const EdgeInsets.all(16),
-              child: RemoteSection(NushiServiceClient(daemon)),
-            ),
+        themed(
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: RemoteSection(NushiServiceClient(daemon)),
           ),
+          tokens: tokens,
+          banner: false,
         ),
       );
       await tester.pumpAndSettle();
@@ -181,7 +165,10 @@ void main() {
       for (final revoke in tester.widgetList(find.text('Revoke'))) {
         expect(
           tester.getRect(find.byWidget(revoke)).right,
-          closeTo(width - 16 - 9, 6),
+          closeTo(
+            width - 16 - 14 - 12,
+            1,
+          ), // the group's edge, a row's and the button's padding
         );
       }
       await expectLater(

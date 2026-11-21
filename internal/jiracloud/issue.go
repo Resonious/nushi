@@ -244,14 +244,9 @@ func (c *Client) remoteLinks(ctx context.Context, key string) ([]model.JiraRemot
 // maxAttachment is the largest attachment Nushi fetches.
 const maxAttachment = 20 << 20
 
-// Attachment fetches an attachment's file (or its thumbnail), 20 MB at
-// most, and its type.
-func (c *Client) Attachment(ctx context.Context, id string, thumbnail bool) ([]byte, string, error) {
-	path := "/rest/api/3/attachment/content/{}"
-	if thumbnail {
-		path = "/rest/api/3/attachment/thumbnail/{}"
-	}
-	resp, err := c.send(ctx, http.MethodGet, path, []string{id}, nil, nil)
+// Attachment fetches an attachment's file, 20 MB at most, and its type.
+func (c *Client) Attachment(ctx context.Context, id string) ([]byte, string, error) {
+	resp, err := c.send(ctx, http.MethodGet, "/rest/api/3/attachment/content/{}", []string{id}, nil, nil)
 	if err != nil {
 		return nil, "", err
 	}

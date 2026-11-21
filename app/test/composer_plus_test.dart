@@ -29,8 +29,6 @@ import 'package:nushi/theme/theme.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The last box's daemon, which [_end] lets go of.
 Daemon? _daemon;
 
@@ -62,21 +60,18 @@ Future<(FakeDaemon, Daemon, ChatState)> _box(
   d.chats['c'] = chat;
   final tokens = dark ? Tokens.dark : Tokens.light;
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        backgroundColor: tokens.base,
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            ListenableBuilder(
-              listenable: chat,
-              builder: (context, _) => Composer(chat: chat, daemon: d),
-            ),
-          ],
-        ),
+    themed(
+      Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          ListenableBuilder(
+            listenable: chat,
+            builder: (context, _) => Composer(chat: chat, daemon: d),
+          ),
+        ],
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   _daemon = d;
@@ -130,13 +125,6 @@ class _Clipboard implements ClipboardFiles {
 
 Future<void> _openMenu(WidgetTester tester) async {
   await tester.tap(find.byTooltip(plusTooltip));
-  await tester.pump();
-}
-
-Future<void> _cmd(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
   await tester.pump();
 }
 
@@ -227,7 +215,7 @@ void main() {
         );
         _end();
       },
-      variant: _mac,
+      variant: onMac,
     );
   }
 
@@ -253,7 +241,7 @@ void main() {
       expect(chat.draft.text.text, contains(' @')); // at the cursor
       _end();
     },
-    variant: _mac,
+    variant: onMac,
   );
 
   testWidgets(
@@ -270,7 +258,7 @@ void main() {
         return [XFile(notes), XFile(spec)];
       };
       await tester.tap(find.byType(TextField));
-      await _cmd(tester, LogicalKeyboardKey.keyU);
+      await cmdKey(tester, LogicalKeyboardKey.keyU, settle: false);
       await tester.pump();
       expect(opened, 1);
       expect(find.byType(FileCard), findsNWidgets(2));
@@ -291,7 +279,7 @@ void main() {
       expect(chat.draft.files.value, isEmpty);
       _end();
     },
-    variant: _mac,
+    variant: onMac,
   );
 
   testWidgets('the file cards in the light theme', (tester) async {
@@ -302,7 +290,7 @@ void main() {
     final spec = _file(elsewhere, 'spec sheet.pdf', bytes: 3 << 20);
     pickFiles = () async => [XFile(notes), XFile(spec)];
     await tester.tap(find.byType(TextField));
-    await _cmd(tester, LogicalKeyboardKey.keyU);
+    await cmdKey(tester, LogicalKeyboardKey.keyU, settle: false);
     await tester.pumpAndSettle();
     expect(find.byType(FileCard), findsNWidgets(2));
     await expectLater(
@@ -310,7 +298,7 @@ void main() {
       matchesGoldenFile('goldens/composer_file_cards_light.png'),
     );
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⌘U held, or pressed again, opens one panel', (tester) async {
     await _box(tester);
@@ -332,10 +320,10 @@ void main() {
     expect(opened, 1);
     panel.complete(const []);
     await tester.pump();
-    await _cmd(tester, LogicalKeyboardKey.keyU);
+    await cmdKey(tester, LogicalKeyboardKey.keyU, settle: false);
     expect(opened, 2);
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('cards wrapped to a second row start where the first does', (
     tester,
@@ -352,7 +340,7 @@ void main() {
     expect(second.top, greaterThan(first.bottom)); // wrapped
     expect(second.left, first.left);
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('an image to an agent without images is a file card', (
     tester,
@@ -371,7 +359,7 @@ void main() {
     await tester.pump();
     expect(_sent(fake).files, ['shot.png']);
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⌘V of Finder’s files attaches them; Enter waits for the read', (
     tester,
@@ -381,7 +369,7 @@ void main() {
     final clipboard = Completer<List<String>>();
     native.clipboard = _Clipboard(onFiles: () => clipboard.future);
     await tester.enterText(find.byType(TextField), 'This one');
-    await _cmd(tester, LogicalKeyboardKey.keyV);
+    await cmdKey(tester, LogicalKeyboardKey.keyV, settle: false);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter); // before the read
     await tester.pump();
     expect(fake.calls.whereType<SendPromptRequest>(), isEmpty);
@@ -391,7 +379,7 @@ void main() {
     expect(_sent(fake).files, ['notes.md']);
     expect(find.byType(FileCard), findsNothing); // sent with it, not left
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('caps: ten files a message, no folders, nothing too large', (
     tester,
@@ -439,7 +427,7 @@ void main() {
       'c.mov: a message sends 20 MB at most',
     );
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('an image too large to read is a file card; photos count', (
     tester,
@@ -481,7 +469,7 @@ void main() {
     );
     expect(photo.reads, 0);
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the Mac caps what images a message sends too', (tester) async {
     // The images go as bytes from the Mac as well: past about 22 MB the
@@ -507,7 +495,7 @@ void main() {
     );
     expect(chat.draft.images.value, hasLength(5));
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a file outside the folder waits for a daemon that takes it', (
     tester,
@@ -522,7 +510,7 @@ void main() {
     expect(refused, contains('outside the chat’s folder'));
     expect([for (final f in chat.draft.files.value) f.name], ['b.pdf']);
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the phone’s files go whole, as uploads', (tester) async {
     final (fake, _, chat) = await _box(tester);
@@ -547,7 +535,7 @@ void main() {
     expect(sent.uploads.single.name, 'receipt.pdf');
     expect(sent.uploads.single.data, [1, 2, 3]);
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the phone’s picker opens in the tap itself, once', (
     tester,
@@ -569,7 +557,7 @@ void main() {
     expect(opened, 1);
     expect(find.text('Mention a file'), findsNothing, reason: 'menu closed');
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('files pasted into the phone’s page go to the focused box', (
     tester,
@@ -594,7 +582,7 @@ void main() {
     await tester.pump();
     expect(find.byType(FileCard), findsOne);
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a file’s name shows its bidi controls marked, never applied', (
     tester,
@@ -617,7 +605,7 @@ void main() {
     expect(find.text('report\ufffdfdp.sh'), findsOne);
     expect(find.textContaining('\u202e'), findsNothing);
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('on the phone against an older daemon: photos only, or none', (
     tester,
@@ -636,7 +624,7 @@ void main() {
     expect(find.byTooltip(RegExp('doesn’t take images')), findsOne);
     expect(chat.canImages, isFalse);
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a message taken back keeps its attached files as cards', (
     tester,
@@ -655,7 +643,7 @@ void main() {
     expect(chat.draft.mentions, {'a.go'});
     expect(d.chats['c'], chat);
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Up brings the last message back with its files, uploads too', (
     tester,
@@ -677,7 +665,7 @@ void main() {
     expect(chat.draft.mentions, {'lib/a.dart'});
     expect([for (final f in chat.draft.files.value) f.path], [saved]);
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('@ and a longer path doesn’t mention an attached file', (
     tester,
@@ -722,7 +710,7 @@ void main() {
     expect(again.draft.mentions, isEmpty);
     expect([for (final f in again.draft.files.value) f.name], ['notes.md']);
     _end();
-  }, variant: _mac);
+  }, variant: onMac);
 
   test('mentionsPath: the whole path after @', () {
     expect(mentionsPath('see @a.md', 'a.md'), isTrue);
@@ -785,7 +773,7 @@ void main() {
     expect(find.text('c.pdf'), findsOne);
     expect(find.text('a.dart'), findsNothing);
     expect(find.byTooltip('/Users/me/nushi/docs/b.md'), findsOne);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('files dropped on the chat take the same way', (tester) async {
     viewport(tester, const Size(1200, 700));
@@ -813,5 +801,5 @@ void main() {
     expect(find.byType(FileCard), findsNWidgets(2));
     expect(find.textContaining('is a folder'), findsOne);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

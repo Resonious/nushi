@@ -10,17 +10,10 @@ import 'package:nushi/sidebar.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The app with no chats yet; Claude's sessions were found in two
 /// folders (one gone).
 Future<Daemon> _firstRun(WidgetTester tester, double width) async {
   viewport(tester, Size(width, 600), brightness: Brightness.dark);
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-        const MethodChannel('nushi/fonts'),
-        (_) async => <String>[],
-      );
   FoundSession found(String folder, int age, {bool gone = false}) =>
       FoundSession(
         sessionId: folder,
@@ -74,7 +67,7 @@ void main() {
         'first_run_${width.toInt()}_dark',
       );
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('a recent folder starts a new chat there', (tester) async {
@@ -92,5 +85,5 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

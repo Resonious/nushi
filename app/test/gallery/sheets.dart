@@ -414,6 +414,14 @@ Widget _fields() => page('Fields and pickers', [
     ('off', const SettingsSwitch(value: false, onChanged: _toggle)),
     ('disabled', const SettingsSwitch(value: true)),
   ]),
+  stateRow(
+    'Toggle, on',
+    ({required on}) => Toggle(value: true, onChanged: on ? _toggle : null),
+  ),
+  stateRow(
+    'Toggle, off',
+    ({required on}) => Toggle(value: false, onChanged: on ? _toggle : null),
+  ),
   plainRow('checkbox', [
     ('on', Checkbox(value: true, onChanged: (_) {})),
     ('off', Checkbox(value: false, onChanged: (_) {})),
@@ -855,27 +863,13 @@ final List<Sheet> sheets = [
   ),
 ];
 
-/// The Mac, where the gallery's controls are drawn: a menu's rows, a
-/// tooltip's wait and a field's look are the platform's.
-final mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// [sheet] drawn in [tokens] at its size, and what it opens, opened: on a
 /// pane, as `themed` draws a widget but without the debug banner, nothing
 /// moving.
 Future<void> drawSheet(WidgetTester tester, Sheet sheet, Tokens tokens) async {
   viewport(tester, sheet.size);
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      builder: (context, child) => ToastHost(child: child!),
-      home: Builder(
-        builder: (context) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(disableAnimations: true),
-          child: Scaffold(body: sheet.build()),
-        ),
-      ),
-    ),
+    themed(sheet.build(), tokens: tokens, still: true, banner: false),
   );
   await tester.pumpAndSettle();
   await sheet.open?.call(tester);

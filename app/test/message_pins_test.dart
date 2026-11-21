@@ -23,8 +23,6 @@ import 'package:nushi/theme/theme.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Int64 _ago(int minutes) =>
     Int64(fixtureNow.millisecondsSinceEpoch - minutes * 60000);
 
@@ -121,9 +119,7 @@ Future<(Daemon, FakeDaemon)> _window(
   await tester.pumpWidget(NushiApp(daemon: d));
   if (busy) {
     // A running turn's spinner never settles.
-    for (var i = 0; i < 40; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+    await frames(tester, 40, const Duration(milliseconds: 50));
   } else {
     await tester.pumpAndSettle();
   }
@@ -254,7 +250,7 @@ void main() {
     expect(d.chats['c']!.pinnedMessages, isEmpty);
     expect(find.byType(Rail), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('no Pin on the message still being written', (tester) async {
     final (d, _) = await _window(tester, busy: true);
@@ -265,9 +261,7 @@ void main() {
       await mouse.moveTo(
         tester.getCenter(find.textContaining(text, findRichText: true).last),
       );
-      for (var i = 0; i < 6; i++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
+      await frames(tester, 6, const Duration(milliseconds: 50));
     }
 
     await over('Done: the relay restarts without dropping a phone.');
@@ -280,7 +274,7 @@ void main() {
     await over('The tests, line 39');
     expect(find.byTooltip('Pin'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a pin the daemon refuses goes back', (tester) async {
     final (d, fake) = await _window(tester);
@@ -292,7 +286,7 @@ void main() {
     expect(d.chats['c']!.pinnedMessages, isEmpty);
     expect(find.byType(Rail), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('what can be pinned: an agent message of the chat’s own, '
       'shown by a daemon that keeps pins', (tester) async {
@@ -359,7 +353,7 @@ void main() {
     await _scrollTo(tester, a2 - third + 40);
     expect(_current(tester, 4), 2);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('two short answers at the end: each is current somewhere, '
       'and a pick is current until the list scrolls', (tester) async {
@@ -384,9 +378,7 @@ void main() {
     ]) {
       await _openMenu(tester);
       await tester.tap(_row(row));
-      for (var i = 0; i < 4; i++) {
-        await tester.pump();
-      }
+      await frames(tester, 4);
       await tester.pumpAndSettle();
       expect(_current(tester, 4), want, reason: row);
     }
@@ -394,7 +386,7 @@ void main() {
     await _scrollTo(tester, p.maxScrollExtent);
     expect(_current(tester, 4), 3);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a call opened above a pin moves it: the current entry '
       'follows, though nothing scrolled', (tester) async {
@@ -416,7 +408,7 @@ void main() {
     expect(_topOf(tester, 'The tests, line 0') - before, greaterThan(third));
     expect(_current(tester, 3), 1);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the pointer over the rail opens its menu; leaving both '
       'closes it; a pick goes there', (tester) async {
@@ -449,9 +441,7 @@ void main() {
     // transcript's, and tints it for a moment.
     await _openMenu(tester);
     await tester.tap(_row('The tests reasoned through'));
-    for (var i = 0; i < 4; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 4);
     final p = _scroll(tester);
     expect(p.pixels, greaterThan(0));
     expect(p.pixels, lessThan(p.maxScrollExtent));
@@ -477,7 +467,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_scroll(tester).pixels, 0);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a click on a menu row over the rail picks it, and the '
       'menu stays closed until the pointer leaves the rail', (tester) async {
@@ -501,7 +491,7 @@ void main() {
     await _move(tester, at);
     expect(_row('Session start'), findsOneWidget, reason: 'back over it');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the rail from the keyboard: focus opens its menu at the '
       'current entry, ↑↓ move, Enter picks, Esc closes', (tester) async {
@@ -529,14 +519,12 @@ void main() {
     expect(_current(tester, 3), 2); // at the bottom: a2
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp); // a1
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    for (var i = 0; i < 4; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 4);
     expect(_row('Session start'), findsNothing);
     expect(_current(tester, 3), 1);
     await tester.pumpAndSettle();
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a title from the agent repaints the open menu', (tester) async {
     final (d, fake) = await _window(tester, pins: ['a1']);
@@ -549,7 +537,7 @@ void main() {
     expect(_row('How the relay restarts'), findsOneWidget);
     expect(_row('Relay restart plan'), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   test('the menu’s dim titles are told from the current one’s, and read, '
       'in every built-in theme', () {
@@ -680,7 +668,7 @@ void main() {
         find.byKey(const ValueKey(#host)),
         matchesGoldenFile('goldens/pins_menu_${b.name}.png'),
       );
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   for (final (width, b) in [
@@ -691,7 +679,6 @@ void main() {
   ]) {
     testWidgets('the window, $width wide, ${b.name}: the rail at the top, '
         'the middle and the bottom, the menu open', (tester) async {
-      paneWidths.value = {};
       if (width < 1000) sidebarHidden.value = true;
       final (d, _) = await _window(
         tester,
@@ -713,7 +700,7 @@ void main() {
       expect(menu.right, lessThan(width));
       await render(tester, find.byType(NushiApp), '${name}_menu');
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   for (final (size, b) in [
@@ -745,9 +732,7 @@ void main() {
         };
       final phone = await startPhone(tester, fake);
       await tester.tap(find.text('Relay restarts'));
-      for (var i = 0; i < 10; i++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
+      await frames(tester, 10, const Duration(milliseconds: 50));
       // Every pin on the rail, though one is on a page not taken yet; no
       // Pin on the phone, which has no actions row.
       expect(_railDashes, findsNWidgets(4));
@@ -758,9 +743,7 @@ void main() {
       // A tall screen takes the older page to fill itself.
       final filled = [...pages];
       await tester.tap(_railDashes.first);
-      for (var i = 0; i < 10; i++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
+      await frames(tester, 10, const Duration(milliseconds: 50));
       // Listed by its title, no page taken for it.
       expect(pages, filled);
       expect(_row('Relay restart plan'), findsOneWidget);
@@ -779,9 +762,7 @@ void main() {
       }
 
       await tester.tap(_row('Relay restart plan'));
-      for (var i = 0; i < 10; i++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
+      await frames(tester, 10, const Duration(milliseconds: 50));
       expect(pages, ['u2']); // by the pick, or the fill before
       final at = tester.getRect(
         find.textContaining('The relay, line 0', findRichText: true).first,
@@ -815,13 +796,9 @@ void main() {
       };
     final phone = await startPhone(tester, fake);
     await tester.tap(find.text('Relay restarts'));
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+    await frames(tester, 10, const Duration(milliseconds: 50));
     await tester.tap(_railDashes.first);
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+    await frames(tester, 10, const Duration(milliseconds: 50));
     // Listed by its first line, from the page it's on.
     expect(pages, ['u2']);
     expect(_row('The plan'), findsOneWidget);

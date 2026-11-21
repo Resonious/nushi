@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/pull_todo_items.dart';
 import 'package:nushi/replies.dart';
 import 'package:nushi/review_findings.dart';
 import 'package:nushi/run_state.dart';
@@ -174,9 +175,24 @@ void keepGitHubLogins(Iterable<GitHubHost> hosts) {
       for (final h in hosts)
         if (h.login.isNotEmpty) h.host: h.login,
     });
+  _working
+    ..clear()
+    ..addAll(hosts.where(githubHostWorks).map((h) => h.host));
 }
 
 final Map<String, String> _logins = runMap();
+
+/// The hosts the last listing found signed in and working.
+final Set<String> _working = runSet();
+
+/// Whether [h] is signed in (GitHub said who) and works.
+bool githubHostWorks(GitHubHost h) =>
+    h.login.isNotEmpty && h.problem.isEmpty && !h.needsOk;
+
+/// Whether a listing of the hosts this launch (by any GitHub view, or
+/// Settings › GitHub) found one that works: Settings' nav dot, known
+/// without asking GitHub again.
+bool get githubSignedInKnown => _working.isNotEmpty;
 
 /// A comment in the pull request's conversation, for the agent.
 Reply commentReply(GitHubComment c) => (
@@ -208,13 +224,7 @@ Reply changesRequestedReply(GitHubComment c) {
 /// A review thread, its place and every comment, for the agent; with
 /// [also], a review bot's findings on the same lines.
 Reply threadReply(GitHubThread x, {List<ReviewFinding> also = const []}) {
-  final line = x.outdated ? x.originalLine : x.line;
-  final start = x.outdated ? x.originalStartLine : x.startLine;
-  final where = x.onFile
-      ? x.path
-      : start > 0 && start != line
-      ? '${x.path}:$start-$line'
-      : '${x.path}:$line';
+  final where = threadPlace(x, dash: '-');
   final outdated = x.outdated ? ' (outdated: the lines changed since)' : '';
   String who(GitHubComment c) =>
       c.outside ? '${c.author} (outside the repository)' : c.author;

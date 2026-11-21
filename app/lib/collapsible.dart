@@ -100,39 +100,18 @@ class _CollapsibleState extends State<Collapsible> {
     final block = BorderRadius.circular(
       NushiTheme.inner(NushiTheme.card, Collapsible.inset),
     );
-    if (nested) {
-      return Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: open ? t.codeBlock : null,
-          borderRadius: block,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            header,
-            if (body != null)
-              Disclosure(
-                open: _open,
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(side, 0, side, 10),
-                  child: body,
-                ),
-              ),
-          ],
-        ),
-      );
-    }
+    // Nested, the sunk block itself while open; else a card: a control's
+    // corners while it's one row (a card's would round 36 points into a
+    // lozenge, ADR 0110), a card's once it holds more.
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: t.raised,
-        // A control's corners while it's one row (a card's would round 36
-        // points into a lozenge, ADR 0110); a card's once it holds more.
-        borderRadius: BorderRadius.circular(
-          open ? NushiTheme.card : NushiTheme.control,
-        ),
+        color: nested ? (open ? t.codeBlock : null) : t.raised,
+        borderRadius: nested
+            ? block
+            : BorderRadius.circular(
+                open ? NushiTheme.card : NushiTheme.control,
+              ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -143,13 +122,15 @@ class _CollapsibleState extends State<Collapsible> {
             Disclosure(
               open: _open,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  Collapsible.inset,
-                  0,
-                  Collapsible.inset,
-                  Collapsible.inset,
-                ),
-                child: widget.sunk
+                padding: nested
+                    ? EdgeInsets.fromLTRB(side, 0, side, 10)
+                    : const EdgeInsets.fromLTRB(
+                        Collapsible.inset,
+                        0,
+                        Collapsible.inset,
+                        Collapsible.inset,
+                      ),
+                child: widget.sunk && !nested
                     ? Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(

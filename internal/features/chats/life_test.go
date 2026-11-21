@@ -58,7 +58,7 @@ func TestMoveAChatThatNeverReopened(t *testing.T) {
 	agent.updates = []acp.SessionUpdate{chunk("m1", "first")}
 	turn(t, svc, c, "one")
 	c.mu.Lock() // as after a daemon restart, when its folder was gone
-	c.agent, c.items, c.kept = nil, nil, false
+	c.agent, c.items, c.outlived = nil, nil, false
 	c.mu.Unlock()
 	if err := svc.Move(context.Background(), c.id, t.TempDir(), false); err != nil {
 		t.Fatal(err)
@@ -138,12 +138,12 @@ func TestNoMoveWhileTheChatGoesOrTheAgentWorks(t *testing.T) {
 	c.halting = false
 	c.mu.Unlock()
 	// The agent's own turn (a background command ended), until its usage.
-	_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: chunk("own", "tests passed")})
+	send(c, chunk("own", "tests passed"))
 	if err := svc.Move(context.Background(), c.id, t.TempDir(), false); err == nil {
 		t.Error("moved a chat during the agent's own turn")
 	}
-	_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: acp.SessionUpdate{SessionUpdate: "usage_update",
-		UsageUpdate: &acp.UsageUpdate{Used: 1, Size: 2, Cost: &acp.Cost{Amount: 0.1, Currency: "USD"}}}})
+	send(c, acp.SessionUpdate{SessionUpdate: "usage_update",
+		UsageUpdate: &acp.UsageUpdate{Used: 1, Size: 2, Cost: &acp.Cost{Amount: 0.1, Currency: "USD"}}})
 	if err := svc.Move(context.Background(), c.id, t.TempDir(), false); err != nil {
 		t.Error(err)
 	}

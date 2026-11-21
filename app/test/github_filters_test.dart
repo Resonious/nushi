@@ -1,10 +1,7 @@
-import 'dart:io';
-
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_view.dart';
 import 'package:nushi/settings.dart';
@@ -45,15 +42,7 @@ Future<void> _pick(WidgetTester tester, String menu, Pattern entry) async {
 }
 
 void main() {
-  setUpAll(() async {
-    await loadFonts();
-    Directory(dataDir).createSync(recursive: true); // the tests' own
-  });
-  tearDown(() {
-    githubDays.value = 90;
-    githubHidden.value = {};
-    githubOwners.value = {};
-  });
+  setUpAll(loadFonts);
 
   testWidgets('the last 90 days at first, in the search; another span asks '
       'again and is remembered', (tester) async {

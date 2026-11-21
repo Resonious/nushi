@@ -87,7 +87,6 @@ void main() {
   });
 
   testWidgets('a title folds its widget, remembered', (tester) async {
-    collapsedWidgets.value = {};
     await tester.pumpWidget(_widgets(Tokens.light));
     expect(find.text('npm test'), findsOneWidget);
     await tester.tap(find.text('Background tasks'));
@@ -104,7 +103,6 @@ void main() {
 
   testWidgets('dragged by its title: the closed hand, then its new place, '
       'remembered', (tester) async {
-    widgetOrder.value = [];
     await tester.pumpWidget(_widgets(Tokens.light));
     final mouse = await _pointer(tester);
     final from = tester.getCenter(find.text('Context'));
@@ -154,14 +152,12 @@ void main() {
     await tester.pump();
     expect(find.text('4%'), findsOneWidget);
     expect(find.byIcon(Icons.refresh), findsNothing);
-    collapsedWidgets.value = {};
   });
 
   // The pointer leaving the widget for the menu once rebuilt the action
   // in another place, which closed its menu before a row could be picked.
   testWidgets("a widget's menu stays open as the pointer goes onto it, the "
       'grip with it, and its row picks', (tester) async {
-    collapsedWidgets.value = {};
     viewport(tester, const Size(800, 400));
     var picked = false;
     await tester.pumpWidget(

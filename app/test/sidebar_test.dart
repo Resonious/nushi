@@ -11,6 +11,7 @@ import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
+import 'sidebar_fixture.dart';
 
 /// Chats of all five agents, in each status.
 final List<Chat> _chats = [
@@ -55,32 +56,15 @@ void main() {
     testWidgets('each row shows its agent beside its status ($name)', (
       tester,
     ) async {
-      viewport(tester, const Size(400, 600));
-      final d = await FakeDaemon(_chats).connect(tester);
-      await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: NushiTheme(tokens).toThemeData(),
-          home: MediaQuery(
-            // Still, so the working chat's mark doesn't breathe.
-            data: const MediaQueryData(disableAnimations: true),
-            child: Scaffold(
-              body: Align(
-                alignment: Alignment.topLeft,
-                child: RepaintBoundary(
-                  key: const Key('shot'),
-                  child: SizedBox(
-                    width: 260,
-                    height: 540,
-                    child: Sidebar(daemon: d),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
+      // Still, so the working chat's mark doesn't breathe.
+      final (d, _) = await arrangedSidebar(
+        tester,
+        chats: _chats,
+        tokens: tokens,
+        size: const Size(400, 600),
+        height: 540,
+        settle: false,
       );
-      await tester.pump();
       await expectLater(
         find.byKey(const Key('shot')),
         matchesGoldenFile('goldens/sidebar_$name.png'),
@@ -95,7 +79,6 @@ void main() {
       tester,
     ) async {
       viewport(tester, Size(width, 600));
-      paneWidths.value = {};
       // Idle ones, so pumpAndSettle settles.
       final d = await FakeDaemon([
         for (final c in _chats)
@@ -123,7 +106,7 @@ void main() {
       // A card's fill, not the accent: that is for the one action of a card.
       expect(box.height, WideButton.height);
       d.dispose();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   // An idle app's sidebar goes on with the clock: the ages its rows show,
@@ -156,5 +139,5 @@ void main() {
     expect(find.text('Today'), findsNothing);
     expect(find.text('Yesterday'), findsOneWidget);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

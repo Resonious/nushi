@@ -35,11 +35,7 @@ func newTimedChat(t *testing.T, session string, modes *memModes, timing Timing) 
 	}
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude"}, Launch: agent.launch}}, Options{Remembered: modes, Timing: timing})
 	t.Cleanup(svc.Close)
-	id, err := svc.Start(context.Background(), "", t.TempDir(), false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return svc, agent, svc.chats[id]
+	return svc, agent, startChat(t, svc, t.TempDir())
 }
 
 func current(c *chat, id string) string {
@@ -76,8 +72,8 @@ func TestOneModePickerAndTheModeIsRemembered(t *testing.T) {
 	}
 
 	// A mode change the agent makes itself is shown but not remembered.
-	_ = c.SessionUpdate(context.Background(), &acp.SessionNotification{SessionID: "s1", Update: acp.SessionUpdate{SessionUpdate: "current_mode_update",
-		CurrentModeUpdate: &acp.CurrentModeUpdate{CurrentModeID: "default"}}})
+	send(c, acp.SessionUpdate{SessionUpdate: "current_mode_update",
+		CurrentModeUpdate: &acp.CurrentModeUpdate{CurrentModeID: "default"}})
 	if current(c, "mode") != "default" || (*modes)["claude"] != "plan" {
 		t.Errorf("after the agent's change: mode %q, remembered %q", current(c, "mode"), (*modes)["claude"])
 	}

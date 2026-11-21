@@ -41,30 +41,25 @@ class LogsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final built = buildTime(daemon.daemonBuild);
+    // One group: a group of each was a heading over a row or two.
     return SettingsPage(
       title: 'Logs & advanced',
       children: [
-        SettingsGroup(
-          title: 'Logs',
-          children: [
-            SettingsRow(
-              'Logs',
-              description: 'nushid.log, and app.log beside it.',
-              control: Button(label: 'Show logs', onPressed: reveal),
-            ),
-            if (debug case final on?)
-              SettingsRow(
-                'Debug lines',
-                description: 'Every agent and API call, with timings.',
-                control: SettingsSwitch(value: on, run: onDebug),
-              ),
-          ],
-        ),
         ListenableBuilder(
           listenable: daemon,
           builder: (context, _) => SettingsGroup(
-            title: 'Daemon',
             children: [
+              SettingsRow(
+                'Logs',
+                description: 'nushid.log, and app.log beside it.',
+                control: Button(label: 'Show logs', onPressed: reveal),
+              ),
+              if (debug case final on?)
+                SettingsRow(
+                  'Debug lines',
+                  description: 'Every agent and API call, with timings.',
+                  control: SettingsSwitch(value: on, run: onDebug),
+                ),
               SettingsRow(
                 'Daemon',
                 description: [

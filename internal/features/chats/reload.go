@@ -50,7 +50,7 @@ func (s *Service) Reload(chatID string) error {
 		}
 	}
 	c.mu.Lock()
-	c.kept = false // the replay is merged with the copy (restore.go)
+	c.outlived = false // the replay is merged with the copy (restore.go)
 	c.mu.Unlock()
 	s.later(func() { s.discard(c, sides) })
 	go s.resume(c)

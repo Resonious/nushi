@@ -2,7 +2,6 @@ package antemcp
 
 import (
 	"context"
-	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -11,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/afrase/nushi/internal/agentproc"
 	"github.com/afrase/nushi/internal/ante"
 	"github.com/afrase/nushi/internal/model"
 	"github.com/afrase/nushi/internal/testcheck"
@@ -219,12 +219,12 @@ func TestLogout(t *testing.T) {
 func check(t *testing.T, a Ante, why string) []model.MCPServer {
 	t.Helper()
 	a.Spawn = func() (ante.Spawn, error) {
-		return func(string) (io.WriteCloser, io.Reader, func(), error) {
+		return func(string) (agentproc.Program, error) {
 			in, out, kill := host(`{"event":{"SessionStart":{"session_id":"ses_1","cwd":"/tmp/x"}}}`,
 				`{"event":{"ExtensionRefreshed":{"session_id":"ses_1","mcp_servers":[{"name":"example-gateway","tools":[]},{"name":"local-tools","tools":[{"name":"read"}]}]}}}`,
 				`{"event":{"InfoBlockAppend":{"id":"mcp-warmup-ses_1","detail":"MCP server 'example-gateway' failed: `+why+`"}}}`,
 				`{"event":{"InfoBlockAppend":{"id":"mcp-warmup-ses_1","detail":"MCP ready: 1/2 servers connected, 1 tools registered."}}}`)
-			return in, out, kill, nil
+			return agentproc.Program{In: in, Out: out, Kill: kill}, nil
 		}, nil
 	}
 	got, err := a.Check(context.Background(), "/f")

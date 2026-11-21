@@ -87,7 +87,7 @@ void main() {
         expect(f.tabs.value, hasLength(2));
       });
 
-      test('closing it, or every tab, leaves none provisional; a replaced '
+      test('closing it leaves none provisional; a replaced '
           'one forgets its Source', () {
         final f = FileTabs()
           ..open('a', folder: folder, keep: false)
@@ -95,10 +95,6 @@ void main() {
           ..open('b', folder: folder, keep: false);
         expect(f.sources, isEmpty);
         f.close(const PreviewFile('b'));
-        expect(f.provisional.value, isNull);
-        f
-          ..open('c', folder: folder, keep: false)
-          ..closeAll();
         expect(f.provisional.value, isNull);
       });
 

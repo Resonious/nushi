@@ -22,17 +22,6 @@ List<Item> workflowsOf(List<Item> items) => items.where(isWorkflow).toList();
 /// Whether the workflow runs, stalled or not: it can be stopped.
 bool workflowLive(Workflow w) => w.state == 'running';
 
-/// Its mark's state: running, done, failed or stopped ("unknown" has
-/// none).
-String workflowMark(Workflow w) => w.state;
-
-/// How long it ran, or runs: from its start to its end, or to now.
-String workflowTime(Workflow w) {
-  final since = msTime(w.started.toInt());
-  final end = workflowLive(w) ? clock() : msTime(w.ended.toInt());
-  return since == null || end == null ? '' : elapsed(end.difference(since));
-}
-
 /// The phase it's in now: the last one reached that hasn't ended, else
 /// the last; null when it has none.
 WorkflowPhase? currentPhase(Workflow w) {
@@ -52,7 +41,11 @@ String phaseProgress(WorkflowPhase p) =>
 /// running", without its time, which no longer ticks and would be cut
 /// first where the line is short (a phone's).
 String workflowState(Workflow w) {
-  final time = workflowTime(w);
+  final time = ranFor(
+    w.started.toInt(),
+    w.ended.toInt(),
+    runs: workflowLive(w),
+  );
   final agents = '${w.agents} agent${w.agents == 1 ? '' : 's'}';
   if (workflowLive(w)) {
     final phase = currentPhase(w);
@@ -87,14 +80,8 @@ String _quiet(Workflow w) {
 /// Its phases on one line, each with its progress: "Map 2/2 · Review 5/7".
 String phasesLine(Workflow w) => w.phases.map(phaseProgress).join(' · ');
 
-/// Who runs now: "review:security, review:ui +1".
-String runningLine(Workflow w) {
-  final more = runningMore(w);
-  return [w.running.join(', '), if (more > 0) '+$more'].join(' ');
-}
-
-/// How many run beyond the labels the summary holds: the "+1" of
-/// [runningLine].
+/// How many run beyond the labels the summary holds: the "+1" after
+/// "review:security, review:ui".
 int runningMore(Workflow w) => math.max(0, w.runningCount - w.running.length);
 
 /// What it says when it ended otherwise than done: Claude's own word, or

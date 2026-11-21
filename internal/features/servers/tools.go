@@ -57,15 +57,15 @@ func (t *AgentTools) Tools(tools.Grant) []tools.Tool {
 	}
 	return []tools.Tool{
 		{Name: "preview_list", Description: "Lists the dev servers this chat's folder configures in .agents/launch.json and .claude/launch.json: each one's name, state, port and URL.",
-			InputSchema: json.RawMessage(`{"type":"object","properties":{},"additionalProperties":false}`)},
+			InputSchema: tools.Schema("")},
 		{Name: "preview_start", Description: "Starts a dev server of this chat's folder's launch files by its name, on a free port, and waits a while for it to answer. " +
 			"Once it answers, its page opens in a browser tab beside the chat. A server that already runs is left as it is.",
-			InputSchema: json.RawMessage(`{"type":"object","properties":{` + nameSchema + `},"required":["name"],"additionalProperties":false}`)},
+			InputSchema: tools.Schema(nameSchema, "name")},
 		{Name: "preview_stop", Description: "Stops a running dev server of this chat's folder, by its name.",
-			InputSchema: json.RawMessage(`{"type":"object","properties":{` + nameSchema + `},"required":["name"],"additionalProperties":false}`)},
+			InputSchema: tools.Schema(nameSchema, "name")},
 		{Name: "preview_logs", Description: "Reads a dev server's output (running, or the last run), as plain text: its last lines, 100 unless you ask for up to 500.",
-			InputSchema: json.RawMessage(`{"type":"object","properties":{` + nameSchema +
-				`,"lines":{"type":"integer","minimum":1,"maximum":500,"description":"How many of its last lines; 100 when not given."}},"required":["name"],"additionalProperties":false}`)},
+			InputSchema: tools.Schema(nameSchema+
+				`,"lines":{"type":"integer","minimum":1,"maximum":500,"description":"How many of its last lines; 100 when not given."}`, "name")},
 	}
 }
 

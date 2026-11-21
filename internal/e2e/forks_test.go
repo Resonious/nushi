@@ -43,9 +43,7 @@ func TestForkAChat(t *testing.T) {
 		t.Errorf("the original changed:\n%s", transcript(now.Items))
 	}
 
-	d.stop()
-	d = startDaemon(t, dataDir, history)
-	a = open(t, d)
+	a = d.reopen(t)
 	listed := must(a.c.ListChats(ctx, connect.NewRequest(&nushiv1.ListChatsRequest{}))).Chats
 	if !slices.ContainsFunc(listed, func(c *nushiv1.Chat) bool { return c.Id == fork }) {
 		t.Fatal("the fork isn't listed after a restart")

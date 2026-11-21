@@ -22,24 +22,12 @@ import 'harness.dart';
 import 'settings_harness.dart';
 import 'spell_harness.dart' show FakeSpeller;
 
-Future<void> _key(
-  WidgetTester tester,
-  LogicalKeyboardKey key, {
-  bool meta = false,
-}) async {
-  if (meta) await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(key);
-  if (meta) await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
-}
-
 /// A row of the sidebar's footer.
 Finder _footer(String label) =>
     find.descendant(of: find.byType(Sidebar), matching: find.text(label));
 
 void main() {
   setUpAll(loadFonts);
-  final macOS = TargetPlatformVariant.only(TargetPlatform.macOS);
 
   // Every section, both themes, a wide window, a small one and a narrow
   // one (720, where the window's layout narrows); the general section,
@@ -83,7 +71,7 @@ void main() {
             await render(tester, find.byType(MaterialApp), name);
           }
           d.dispose();
-        }, variant: macOS);
+        }, variant: onMac);
       }
     }
   }
@@ -109,7 +97,7 @@ void main() {
     expect(group.width, greaterThan(680));
     expect(tester.getRect(find.text('Terminal').last).left, group.left);
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('the nav picks a section; Esc and Close shut it; ⌘, comes '
       'back to the last one and shuts it again', (tester) async {
@@ -122,20 +110,21 @@ void main() {
     await tester.pumpAndSettle();
     expect(d.settingsOpen, const SettingsAt(SettingsSection.jira));
     expect(find.text('acme.atlassian.net'), findsOneWidget);
-    await _key(tester, LogicalKeyboardKey.escape);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
     expect(d.settingsOpen, isNull);
     expect(d.place, const ChatPlace());
     expect(find.byType(SettingsView), findsNothing);
-    await _key(tester, LogicalKeyboardKey.comma, meta: true);
+    await cmdKey(tester, LogicalKeyboardKey.comma);
     expect(d.settingsOpen, const SettingsAt(SettingsSection.jira));
-    await _key(tester, LogicalKeyboardKey.comma, meta: true);
+    await cmdKey(tester, LogicalKeyboardKey.comma);
     expect(find.byType(SettingsView), findsNothing);
-    await _key(tester, LogicalKeyboardKey.comma, meta: true);
+    await cmdKey(tester, LogicalKeyboardKey.comma);
     await tester.tap(find.byTooltip('Close\u2002Esc'));
     await tester.pumpAndSettle();
     expect(find.byType(SettingsView), findsNothing);
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('Esc with the focus in a field inside still leaves', (
     tester,
@@ -152,10 +141,11 @@ void main() {
     await tester.tap(search);
     await tester.enterText(search, 'rel');
     await tester.pumpAndSettle();
-    await _key(tester, LogicalKeyboardKey.escape);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
     expect(d.settingsOpen, isNull);
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets('deep links: a chat’s MCP servers… and Skills… open their '
       'sections for its folder; the footer’s Settings opens it and is never '
@@ -231,7 +221,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(d.place, const GitHubPlace());
     d.dispose();
-  }, variant: macOS);
+  }, variant: onMac);
 
   testWidgets("two changes inside one round trip don't undo each other", (
     tester,
@@ -288,4 +278,204 @@ void main() {
     expect(find.text('Sleep idle chats'), findsOneWidget);
     await closeView(tester, d);
   });
+
+  testWidgets('the nav: its one title, the sections in their groups in '
+      'order, a dot on each integration that works', (tester) async {
+    final d = await pumpSettingsApp(
+      tester,
+      settingsFake(),
+      SettingsSection.general,
+    );
+    // Every section once.
+    expect([
+      for (final (_, g) in settingsGroups) ...g,
+    ], unorderedEquals(SettingsSection.values));
+    // The nav's words, top to bottom: the title, then each heading and its
+    // sections.
+    final nav = find.byType(SettingsNav);
+    final words = [
+      for (final e
+          in find.descendant(of: nav, matching: find.byType(Text)).evaluate())
+        (tester.getRect(find.byWidget(e.widget)).top, (e.widget as Text).data!),
+    ]..sort((a, b) => a.$1.compareTo(b.$1));
+    expect(
+      [for (final (_, w) in words) w],
+      [
+        'Settings',
+        'App',
+        'General',
+        'Appearance',
+        'Terminal',
+        'Agents',
+        'Agents',
+        'MCP servers',
+        'Skills',
+        'Chat history',
+        'Usage',
+        'Connections',
+        'GitHub',
+        'Jira',
+        'Remote access',
+        'Logs & advanced',
+      ],
+    );
+    // Logs & advanced is set apart from Remote access, under no heading.
+    expect(words.last.$1 - words[words.length - 2].$1, greaterThan(40));
+    // One title in the modal, the nav's: no bar of its own over the page.
+    expect(
+      find.descendant(
+        of: find.byType(SettingsView),
+        matching: find.text('Settings'),
+      ),
+      findsOne,
+    );
+    final page = tester.getRect(find.text('General').last);
+    final modal = tester.getRect(find.byKey(const ValueKey('settings-modal')));
+    expect(page.top - modal.top, lessThan(30));
+    // Nothing known yet this launch: no dot, and nothing asked for one.
+    expect(find.byKey(const ValueKey('settings-nav-dot-github')), findsNothing);
+    expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsNothing);
+    // GitHub's host is signed in, Jira said who the site's token is: once
+    // each page found so, both dotted, and still on the next opening.
+    for (final s in ['github', 'jira', 'general']) {
+      await tester.tap(find.byKey(ValueKey('settings-nav-$s')));
+      await tester.pumpAndSettle();
+    }
+    expect(find.byKey(const ValueKey('settings-nav-dot-github')), findsOne);
+    expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsOne);
+    expect(find.byKey(const ValueKey('settings-nav-dot-remote')), findsNothing);
+    d.closeSettings();
+    await tester.pumpAndSettle();
+    d.openSettings(section: SettingsSection.general);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('settings-nav-dot-github')), findsOne);
+    expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsOne);
+    await closeView(tester, d);
+  }, variant: onMac);
+
+  testWidgets('720 wide, Remote access stacks what would squeeze: the '
+      'relay field under its label, a phone’s buttons under its words', (
+    tester,
+  ) async {
+    final d = await pumpSettingsApp(
+      tester,
+      settingsFake(),
+      SettingsSection.remote,
+      size: const Size(720, 900),
+    );
+    final label = tester.getRect(find.text('Relay'));
+    final field = tester.getRect(
+      find.descendant(
+        of: find.byType(SettingsView),
+        matching: find.byType(TextField),
+      ),
+    );
+    expect(label.height, lessThan(20), reason: 'one line');
+    expect(field.top, greaterThan(label.bottom));
+    expect(field.left, closeTo(label.left, 1));
+    final words = tester.getRect(find.textContaining('notifications off'));
+    expect(words.height, lessThan(20), reason: 'one line');
+    expect(tester.getRect(find.text('Revoke')).top, greaterThan(words.bottom));
+    expectTextInside(tester, 720);
+    await closeView(tester, d);
+  }, variant: onMac);
+
+  testWidgets('Phones says why its buttons are off', (tester) async {
+    final d = await pumpSettingsApp(
+      tester,
+      settingsFake(),
+      SettingsSection.remote,
+    );
+    // Remote access off, the phone's notifications off: both said.
+    expect(find.textContaining('Turn on Remote access to pair'), findsOne);
+    expect(
+      find.textContaining('A test notification needs the phone’s'),
+      findsOne,
+    );
+    await closeView(tester, d);
+  }, variant: onMac);
+
+  testWidgets('900 wide, they stay beside', (tester) async {
+    final d = await pumpSettingsApp(
+      tester,
+      settingsFake(),
+      SettingsSection.remote,
+      size: const Size(900, 900),
+    );
+    final label = tester.getRect(find.text('Relay'));
+    final field = tester.getRect(
+      find.descendant(
+        of: find.byType(SettingsView),
+        matching: find.byType(TextField),
+      ),
+    );
+    expect(field.center.dy, closeTo(label.center.dy, 2));
+    expect(field.width, 300);
+    await closeView(tester, d);
+  }, variant: onMac);
+
+  testWidgets('opening Settings asks GitHub and Jira nothing: their pages '
+      'do, as they show', (tester) async {
+    final fake = settingsFake();
+    final inner = fake.answer!;
+    final asked = <String>[];
+    fake.answer = (input) {
+      if (input is ListGitHubHostsRequest ||
+          input is ListJiraSitesRequest ||
+          input is CheckJiraSiteRequest) {
+        asked.add(input.runtimeType.toString());
+      }
+      return inner(input);
+    };
+    final d = await pumpSettingsApp(tester, fake, SettingsSection.appearance);
+    expect(asked, isEmpty);
+    await closeView(tester, d);
+  }, variant: onMac);
+
+  testWidgets('a Jira site whose token Jira turns down has no dot, though '
+      'listed without a problem', (tester) async {
+    final fake = settingsFake();
+    final inner = fake.answer!;
+    var works = true;
+    fake.answer = (input) => switch (input) {
+      CheckJiraSiteRequest() when !works => throw ConnectException(
+        Code.unauthenticated,
+        'Jira turned the token down',
+      ),
+      _ => inner(input),
+    };
+    final d = await pumpSettingsApp(tester, fake, SettingsSection.jira);
+    expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsOne);
+    // The token revoked: the next check takes the dot away.
+    works = false;
+    await tester.tap(find.byKey(const ValueKey('settings-nav-general')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('settings-nav-jira')));
+    await tester.pumpAndSettle();
+    expect(find.text('Not connected'), findsOne);
+    expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsNothing);
+    await closeView(tester, d);
+  }, variant: onMac);
+
+  testWidgets('no dot on an integration without a working account, and one '
+      'once its page finds it', (tester) async {
+    final fake = settingsFake();
+    final inner = fake.answer!;
+    var hosts = <GitHubHost>[];
+    fake.answer = (input) => switch (input) {
+      ListGitHubHostsRequest() => ListGitHubHostsResponse(hosts: hosts),
+      ListJiraSitesRequest() => ListJiraSitesResponse(
+        sites: [JiraSite(id: 'acme.atlassian.net', problem: 'Token expired')],
+      ),
+      _ => inner(input),
+    };
+    final d = await pumpSettingsApp(tester, fake, SettingsSection.general);
+    expect(find.byKey(const ValueKey('settings-nav-dot-github')), findsNothing);
+    expect(find.byKey(const ValueKey('settings-nav-dot-jira')), findsNothing);
+    hosts = [GitHubHost(host: 'github.com', login: 'octo', source: 'gh')];
+    await tester.tap(find.byKey(const ValueKey('settings-nav-github')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('settings-nav-dot-github')), findsOne);
+    await closeView(tester, d);
+  }, variant: onMac);
 }

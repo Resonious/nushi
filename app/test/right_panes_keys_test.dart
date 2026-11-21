@@ -30,12 +30,6 @@ import 'right_panes_fixture.dart';
 // The keys, the focus, the expanded browser tab and the terminal with the
 // panes right of the details rail (ADR 0123).
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-const _both = TargetPlatformVariant({
-  TargetPlatform.macOS,
-  TargetPlatform.linux,
-});
-
 PanesOpen _open({
   bool side = false,
   bool files = false,
@@ -139,7 +133,7 @@ void main() {
       expect(find.byType(Palette), findsNothing);
     }
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⇧⌘E: Files opens right of the rail, its button lit, the '
       "header's buttons left by its width", (tester) async {
@@ -171,7 +165,7 @@ void main() {
     expect(find.byType(FilesPane), findsNothing);
     expect(_r(tester, find.byTooltip('Chat menu')), menu);
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets('⇧⌘B hides the side chat and shows it again, the rail coming '
       'back and tucking away for it', (tester) async {
@@ -189,7 +183,7 @@ void main() {
     expect(find.byType(SideChat), findsOneWidget);
     expect(_rail, findsNothing);
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets('New browser tab opens right of the rail; ⌘L is its '
       'address; closing its last tab brings the rail back', (tester) async {
@@ -226,7 +220,7 @@ void main() {
     expect(find.byType(BrowserPane), findsNothing);
     expect(_r(tester, _rail).right, _r(tester, find.byType(Pane)).right);
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets('a browser tab that tucks the rail: ⌘R reloads its page, Back '
       'and Forward go through the chats and back to it as it was, and ⌘W '
@@ -286,7 +280,7 @@ void main() {
     expect(_rail, findsOneWidget);
     expect(_r(tester, _rail).right, _r(tester, find.byType(Pane)).right);
     await closeView(tester, d);
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets('⌃`: the terminal under the transcript and the rail, beside '
       'the panes or under them, the panes as tall', (tester) async {
@@ -321,7 +315,7 @@ void main() {
       expect(find.byType(TerminalPanel), findsNothing);
       await closeView(tester, d);
     }
-  }, variant: _both);
+  }, variant: macAndLinux);
 
   testWidgets(r'⌘\: the sidebar hidden gives the rail its room back', (
     tester,
@@ -339,7 +333,7 @@ void main() {
     expect(sidebarHidden.value, isTrue);
     expect(_rail, findsOneWidget);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⌘F: the find bar in the transcript, left of the rail', (
     tester,
@@ -355,7 +349,7 @@ void main() {
       lessThanOrEqualTo(_r(tester, _rail).left),
     );
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("the focus in the rail as it tucks away goes to the chat's "
       'keys: ⌃` still works, and typing writes in the box', (tester) async {
@@ -395,7 +389,7 @@ void main() {
       'q',
     );
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final terminal in [false, true]) {
     testWidgets('Tab goes header, transcript, rail, then the panes left to '
@@ -463,7 +457,7 @@ void main() {
       expect(seen, containsAll(['header', 'rail', 'files', 'browser']));
       if (terminal) expect(seen.last, 'terminal');
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   group('Expand', () {
@@ -526,7 +520,7 @@ void main() {
       expect(fakes.hosts, hasLength(1));
       expect(fakes.hosts.single.opened, hasLength(1));
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the Files pane covers it too: header, rail, terminal and '
         'box hidden; ⌃` puts it back and shows the terminal', (tester) async {
@@ -553,7 +547,7 @@ void main() {
       expect(_r(tester, find.byType(FilesPane)), files);
       expect(find.byType(TerminalPanel), findsOneWidget);
       await closeView(tester, d);
-    }, variant: _both);
+    }, variant: macAndLinux);
 
     testWidgets('tucked or over, collapsing puts each back', (tester) async {
       for (final area in [1100.0, 900.0]) {
@@ -574,7 +568,7 @@ void main() {
         expect(_rail, findsNothing);
         await closeView(tester, d);
       }
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('with the sidebar hidden, its tabs start past the traffic '
         'lights', (tester) async {
@@ -600,7 +594,7 @@ void main() {
         );
         await closeView(tester, d);
       }
-    }, variant: _both);
+    }, variant: macAndLinux);
 
     testWidgets('⌃` puts it back and shows the terminal, in one press', (
       tester,
@@ -610,7 +604,7 @@ void main() {
       expect(find.byTooltip('Expand'), findsOneWidget);
       expect(find.byType(TerminalPanel), findsOneWidget);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('⌃` with the terminal open under it puts it back and shows '
         'that terminal, never closing it', (tester) async {
@@ -623,7 +617,7 @@ void main() {
       await _terminalKey(tester);
       expect(find.byType(TerminalPanel), findsNothing);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets("the palette's Show terminal puts it back and shows the "
         'terminal', (tester) async {
@@ -632,7 +626,7 @@ void main() {
       expect(find.byTooltip('Expand'), findsOneWidget);
       expect(find.byType(TerminalPanel), findsOneWidget);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets("another chat's terminal opening leaves it expanded", (
       tester,
@@ -642,7 +636,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byTooltip('Collapse'), findsOneWidget);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('Changes puts it back', (tester) async {
       final d = await expanded(tester);
@@ -653,7 +647,7 @@ void main() {
       expect(find.byTooltip('Expand'), findsOneWidget);
       expect(find.byType(ChatHeader), findsOneWidget);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('the window narrowed under it: collapsed, the layout is the '
         "new width's", (tester) async {
@@ -667,7 +661,7 @@ void main() {
       expect(browser.top, _r(tester, find.byType(Pane)).top);
       expect(_r(tester, find.byType(ChatHeader)).right, browser.left);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   group('the terminal', () {
@@ -714,7 +708,7 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       expect(resizes(fake) - was, 1);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets("a pane's edge dragged beside it: at most one resize each "
         '100 ms, and the last', (tester) async {
@@ -738,7 +732,7 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
       expect(resizes(fake) - was, inInclusiveRange(2, 7));
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('its edge goes as high as before, and moves no pane', (
       tester,
@@ -767,7 +761,7 @@ void main() {
       );
       expect(_r(tester, find.byType(FileView)), preview);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   testWidgets('a tucked rail draws nothing: no frames while idle', (
@@ -808,5 +802,5 @@ void main() {
     // The chat holds what it was given: no command running.
     expect(find.text('npm run dev', skipOffstage: false), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/agents.dart';
 import 'package:nushi/chat.dart';
+import 'package:nushi/controls.dart' show Toggle;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/mcp.dart';
@@ -115,7 +116,7 @@ void main() {
     expect(find.text('TOKEN=••••'), findsOneWidget); // masked, as Claude's
     expect(find.text('timed out connecting after 15s'), findsOneWidget);
     // Claude's own server has its switch; Ante's have none.
-    expect(find.byType(Switch), findsOneWidget);
+    expect(find.byType(Toggle), findsOneWidget);
     expect(
       tester.getTopLeft(find.text('Ante')).dy,
       greaterThan(tester.getTopLeft(find.text('github')).dy),
@@ -152,7 +153,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text(McpView.userOnlyAbout('Ante')), findsOneWidget);
-    expect(find.byType(Switch), findsOneWidget); // Claude's alone
+    expect(find.byType(Toggle), findsOneWidget); // Claude's alone
     await closeView(tester, d);
   });
 
@@ -167,7 +168,7 @@ void main() {
     expect(find.text('web'), findsOneWidget);
     expect(find.text('Connected'), findsOneWidget);
     expect(find.text('Failed to connect'), findsOneWidget);
-    expect(find.byType(Switch), findsNothing);
+    expect(find.byType(Toggle), findsNothing);
     expect(
       fake.calls.whereType<ListMcpServersRequest>().map((r) => r.agent).toSet(),
       {'ante'},
@@ -220,12 +221,10 @@ void main() {
       final (_, d) = await _daemon(tester);
       viewport(tester, Size(width, 960), ratio: 3);
       await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: NushiTheme(tokens).toThemeData(),
-          home: Scaffold(
-            body: McpView(daemon: d, folder: '/Users/me/$name'),
-          ),
+        themed(
+          McpView(daemon: d, folder: '/Users/me/$name'),
+          tokens: tokens,
+          banner: false,
         ),
       );
       await tester.pumpAndSettle();
@@ -241,8 +240,6 @@ void main() {
     tester,
   ) async {
     final (_, d) = await _daemon(tester);
-    final known = agentList.value;
-    addTearDown(() => agentList.value = known);
     agentList.value = {};
     final list = McpServers.of(d, '/late-agents', agent: 'ante');
     await tester.pumpAndSettle();

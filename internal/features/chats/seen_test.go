@@ -54,9 +54,7 @@ func newSeenChat(t *testing.T, st Sessions, v Viewers) (*Service, *fakeAgent, *c
 		t.Fatal(err)
 	}
 	svc := newService(t, []Kind{{Harness: testHarness{Name: "claude"}, Launch: agent.launch}}, Options{Sessions: st, Viewers: v})
-	id, err := svc.Start(context.Background(), "", t.TempDir(), false)
-	testcheck.NoErr(t, err)
-	return svc, agent, svc.chats[id]
+	return svc, agent, startChat(t, svc, t.TempDir())
 }
 
 func isDone(c *chat) bool {
@@ -228,9 +226,7 @@ func TestATurnsEndSaysHowItEnded(t *testing.T) {
 						mu.Unlock()
 					}
 				}})
-			id, err := svc.Start(t.Context(), "", t.TempDir(), false)
-			testcheck.NoErr(t, err)
-			c := svc.chats[id]
+			c := startChat(t, svc, t.TempDir())
 			agent.gate = make(chan struct{})
 			testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "one"}, SendIdle))
 			eventually(t, c, func() bool { return !c.started.IsZero() })

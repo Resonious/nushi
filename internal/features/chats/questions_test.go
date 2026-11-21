@@ -19,7 +19,7 @@ const claudeForm = `{"message":"Please answer the following questions.","mode":"
 
 func TestQuestionGetsExactlyWhatWasChosen(t *testing.T) {
 	events := make(chan model.Event, 100)
-	c := &chat{remembered: &memModes{}, id: "s1", sid: "s1", kind: &kind{}, agent: &fakeAgent{}, publish: func(e model.Event) { events <- e }, questions: map[string]chan<- []model.Field{}}
+	c := &chat{svc: &Service{remembered: &memModes{}}, id: "s1", sid: "s1", kind: &kind{}, agent: &fakeAgent{}, publish: func(e model.Event) { events <- e }, questions: map[string]chan<- []model.Field{}}
 	svc := &Service{chats: map[string]*chat{"s1": c}}
 	var req acp.CreateElicitationRequest
 	if err := json.Unmarshal([]byte(claudeForm), &req); err != nil {
@@ -150,7 +150,7 @@ func TestAnsweringTwiceFails(t *testing.T) {
 // declined: the agent gets accept, and the card says answered.
 func TestEmptyFormAnsweredIsAccepted(t *testing.T) {
 	events := make(chan model.Event, 100)
-	c := &chat{remembered: &memModes{}, id: "s1", sid: "s1", kind: &kind{}, agent: &fakeAgent{}, publish: func(e model.Event) { events <- e }, questions: map[string]chan<- []model.Field{}}
+	c := &chat{svc: &Service{remembered: &memModes{}}, id: "s1", sid: "s1", kind: &kind{}, agent: &fakeAgent{}, publish: func(e model.Event) { events <- e }, questions: map[string]chan<- []model.Field{}}
 	svc := &Service{chats: map[string]*chat{"s1": c}}
 	var req acp.CreateElicitationRequest
 	testcheck.NoErr(t, json.Unmarshal([]byte(`{"message":"Go ahead?","mode":"form","requestedSchema":{"type":"object","properties":{}},"sessionId":"s1"}`), &req))

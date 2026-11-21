@@ -24,14 +24,13 @@ func (f *fake) vars(op, answer string) *[]map[string]any {
 
 func TestReplyResolveComment(t *testing.T) {
 	f := newFake(t)
-	reply := f.vars("Reply", `{"data":{"addPullRequestReviewThreadReply":{"comment":{"id":"C1","author":{"login":"octo"},"authorAssociation":"OWNER","body":"Done <!-- x -->"}}}}`)
+	reply := f.vars("Reply", `{"data":{"addPullRequestReviewThreadReply":{"clientMutationId":null}}}`)
 	resolve := f.vars("Resolve", `{"data":{"resolveReviewThread":{"thread":{"isResolved":true}}}}`)
 	unresolve := f.vars("Unresolve", `{"data":{"unresolveReviewThread":{"thread":{"isResolved":false}}}}`)
-	comment := f.vars("Comment", `{"data":{"addComment":{"commentEdge":{"node":{"id":"C2","author":{"login":"octo"},"body":"Thanks"}}}}}`)
+	comment := f.vars("Comment", `{"data":{"addComment":{"clientMutationId":null}}}`)
 	c := f.client()
-	cm, err := c.Reply(t.Context(), "T1", "Done")
-	if err != nil || cm.ID != "C1" || cm.Body != "Done" || (*reply)[0]["thread"] != "T1" {
-		t.Fatalf("%+v %v %v", cm, err, *reply)
+	if err := c.Reply(t.Context(), "T1", "Done"); err != nil || (*reply)[0]["thread"] != "T1" || (*reply)[0]["body"] != "Done" {
+		t.Fatal(err, *reply)
 	}
 	if err := c.Resolve(t.Context(), "T1", true); err != nil || len(*resolve) != 1 {
 		t.Fatal(err)
@@ -39,13 +38,47 @@ func TestReplyResolveComment(t *testing.T) {
 	if err := c.Resolve(t.Context(), "T1", false); err != nil || len(*unresolve) != 1 {
 		t.Fatal(err)
 	}
-	if cm, err := c.Comment(t.Context(), "PR_1", "Thanks"); err != nil || cm.ID != "C2" || (*comment)[0]["subject"] != "PR_1" {
-		t.Fatalf("%+v %v", cm, err)
+	if err := c.Comment(t.Context(), "PR_1", "Thanks"); err != nil || (*comment)[0]["subject"] != "PR_1" {
+		t.Fatal(err, *comment)
 	}
 	f.route("graphql Reply", func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte(`{"data":{"addPullRequestReviewThreadReply":null},"errors":[{"type":"UNPROCESSABLE","message":"Thread is locked"}]}`))
 	})
-	if _, err := c.Reply(t.Context(), "T1", "x"); err == nil || !strings.Contains(err.Error(), "Thread is locked") {
+	if err := c.Reply(t.Context(), "T1", "x"); err == nil || !strings.Contains(err.Error(), "Thread is locked") {
+		t.Fatal(err)
+	}
+}
+
+func TestEditPull(t *testing.T) {
+	f := newFake(t)
+	edit := f.vars("EditPull", `{"data":{"updatePullRequest":{"pullRequest":{"id":"PR_218"}}}}`)
+	c := f.client()
+	title, body := "Fix the login loop", ""
+	if err := c.EditPull(t.Context(), "PR_218", &title, nil); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.EditPull(t.Context(), "PR_218", nil, &body); err != nil {
+		t.Fatal(err)
+	}
+	in := func(i int) map[string]any {
+		m, _ := (*edit)[i]["input"].(map[string]any)
+		return m
+	}
+	// Only the field being changed goes: GitHub leaves the other.
+	if m := in(0); len(m) != 2 || m["pullRequestId"] != "PR_218" || m["title"] != title {
+		t.Fatalf("%v", m)
+	}
+	if m := in(1); len(m) != 2 || m["body"] != "" {
+		t.Fatalf("%v", m)
+	}
+	if err := c.EditPull(t.Context(), "PR_218", nil, nil); err == nil || len(*edit) != 2 {
+		t.Fatal("an edit of nothing went")
+	}
+	f.route("graphql EditPull", func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"data":{"updatePullRequest":null},"errors":[{"type":"FORBIDDEN","message":"mira does not have the correct permissions to execute UpdatePullRequest"}]}`))
+	})
+	var api *APIError
+	if err := c.EditPull(t.Context(), "PR_218", &title, nil); !errors.As(err, &api) || !strings.Contains(err.Error(), "permissions") {
 		t.Fatal(err)
 	}
 }

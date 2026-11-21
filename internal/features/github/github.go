@@ -8,7 +8,6 @@ package github
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -31,6 +30,7 @@ type Client interface { //nolint:interfacebloat // the GitHub calls the feature 
 	Status(ctx context.Context, ids []string) (map[string]model.GitHubItem, error)
 	Items(ctx context.Context, refs []model.GitHubRef) ([]model.GitHubItem, []model.GitHubRef, error)
 	Pull(ctx context.Context, repo string, number int) (model.GitHubPull, error)
+	Commits(ctx context.Context, repo string, number int) ([]model.GitHubCommit, int, error)
 	Issue(ctx context.Context, repo string, number int) (model.GitHubIssue, error)
 	PullsByHead(ctx context.Context, repo, head string) ([]githubapi.HeadPull, time.Duration, error)
 	JobLog(ctx context.Context, repo string, job int64) (string, error)
@@ -41,9 +41,10 @@ type Client interface { //nolint:interfacebloat // the GitHub calls the feature 
 	DefaultBranch(ctx context.Context, repo string) (string, error)
 	Compare(ctx context.Context, repo, base, head string) (string, []githubapi.File, error)
 	Blobs(ctx context.Context, repo string, at []githubapi.BlobAt) (map[githubapi.BlobAt]githubapi.Blob, error)
-	Reply(ctx context.Context, thread, body string) (model.GitHubComment, error)
+	Reply(ctx context.Context, thread, body string) error
 	Resolve(ctx context.Context, thread string, resolve bool) error
-	Comment(ctx context.Context, subject, body string) (model.GitHubComment, error)
+	Comment(ctx context.Context, subject, body string) error
+	EditPull(ctx context.Context, pull string, title, body *string) error
 	SubmitReview(ctx context.Context, r githubapi.Review) error
 	MergeText(ctx context.Context, repo string, number int) (githubapi.MergeText, error)
 	Merge(ctx context.Context, m githubapi.MergeInput) error
@@ -76,8 +77,8 @@ type Tokens interface {
 type Store interface {
 	GitHubTokenHosts() ([]string, error)
 	SaveGitHubTokenHosts([]string) error
-	Cached(area, name, key string) (time.Time, json.RawMessage, error)
-	Cache(area, name, key string, at time.Time, data json.RawMessage) error
+	Cached(area, name, key string, v any) (time.Time, error)
+	Cache(area, name, key string, v any) error
 	ForgetCache(area, name string) error
 }
 
@@ -85,9 +86,16 @@ type Store interface {
 // allows it (a new build of Nushi): AllowToken asks.
 var ErrNeedsOK = errors.New("this build of Nushi needs your OK to read the GitHub token from the keychain: Settings › GitHub › Allow")
 
+// Keys says what a keychain error means (internal/keychain's kinds): the
+// user's OK is needed (AllowToken asks), the daemon must start again to
+// reach the keychain (its error says so), or the token is gone.
+type Keys struct {
+	NeedsOK, Restart, Missing func(error) bool
+}
+
 // Deps are what the feature takes from main: gh's login, the keychain,
-// the store, a client of a host for a token, whether a keychain error
-// means the user's OK is needed, a folder's git remotes (name to URL),
+// the store, a client of a host for a token, what a keychain error
+// means, a folder's git remotes (name to URL),
 // fetching a refspec from one, whether git takes a branch's name, a
 // folder's branch and the remote it's pushed to, and its repository's
 // default branch.
@@ -96,9 +104,7 @@ type Deps struct {
 	Tokens        Tokens
 	Store         Store
 	Open          func(host, token string) Client
-	NeedsOK       func(error) bool
-	Restart       func(error) bool // the daemon must start again to reach the keychain
-	Missing       func(error) bool // the item is gone
+	Keys          Keys
 	Remotes       func(ctx context.Context, folder string) (map[string]string, error)
 	Fetch         func(ctx context.Context, folder, remote, refspec string) error
 	CheckBranch   func(name string) error
@@ -178,7 +184,7 @@ func (s *Service) Hosts(ctx context.Context) ([]HostState, error) {
 			err = s.check(ctx, name, h)
 		}
 		if err != nil {
-			st.Problem, st.NeedsOK, st.Restart = err.Error(), errors.Is(err, ErrNeedsOK), s.Restart(err)
+			st.Problem, st.NeedsOK, st.Restart = err.Error(), errors.Is(err, ErrNeedsOK), s.Keys.Restart(err)
 		}
 		if h != nil {
 			s.mu.Lock()
@@ -343,11 +349,11 @@ func (s *Service) host(ctx context.Context, name string, prompt bool) (*host, er
 		token, err = s.Tokens.Get(name, prompt)
 		switch {
 		case err == nil:
-		case s.NeedsOK(err):
+		case s.Keys.NeedsOK(err):
 			return nil, ErrNeedsOK
-		case s.Restart(err):
+		case s.Keys.Restart(err):
 			return nil, err // says what to do
-		case s.Missing(err):
+		case s.Keys.Missing(err):
 			return nil, fmt.Errorf("the GitHub token for %s isn't in the keychain any more: add it again in Settings › GitHub", name)
 		default:
 			return nil, fmt.Errorf("reading the GitHub token from the keychain: %w", err)

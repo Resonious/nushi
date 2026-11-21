@@ -18,13 +18,6 @@ final List<RemovedChat> _three = [
 
 void main() {
   setUpAll(loadFonts);
-  setUp(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        ),
-  );
 
   test('the bar names the chats, and why when one agent deleted them', () {
     expect(
@@ -81,6 +74,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Removed “Still here”'), findsOneWidget);
       d.dispose();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 }

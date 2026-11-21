@@ -26,8 +26,6 @@ import 'harness.dart';
 import 'screenshots/demo.dart';
 import 'settings_harness.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The installed fonts a test says there are.
 class _Fonts implements Fonts {
   new({this.all, this.fixed = const ['Menlo', 'SF Mono'], this.system});
@@ -60,17 +58,33 @@ List<String> _many(int n) => [
   'IBM Plex Sans',
 ];
 
+/// Settings › Appearance in the app, scrolled to its Fonts, which come
+/// after the theme and the layout.
 Future<Daemon> _settings(
   WidgetTester tester, {
   Size size = const Size(1700, 1000),
   Brightness b = Brightness.dark,
-}) => pumpSettingsApp(
-  tester,
-  settingsFake(),
-  SettingsSection.appearance,
-  size: size,
-  brightness: b,
-);
+}) async {
+  final d = await pumpSettingsApp(
+    tester,
+    settingsFake(),
+    SettingsSection.appearance,
+    size: size,
+    brightness: b,
+  );
+  await tester.scrollUntilVisible(
+    _field('terminal-font'),
+    200,
+    scrollable: find
+        .descendant(
+          of: find.byType(SettingsPage),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  await tester.pumpAndSettle();
+  return d;
+}
 
 Finder _field(String key) => find.byKey(ValueKey(key));
 
@@ -202,7 +216,7 @@ void main() {
     expect(codeFont.value, isNull);
     expect(terminalFont.value, isNull);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Code font lists the monospaced families only, sets and '
       'clears code’s font, and leaves the terminal’s', (tester) async {
@@ -241,7 +255,7 @@ void main() {
     expect(codeFont.value, isNull);
     expect(_theme(tester, view).codePicked, isNull);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('with no system font to name, there’s no System; with no '
       'answer, the bundled font alone', (tester) async {
@@ -262,7 +276,7 @@ void main() {
     await tester.tapAt(const Offset(5, 5));
     await tester.pumpAndSettle();
     e.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a picked family that isn’t installed stays listed, saying '
       'so, and the longest name fits its row', (tester) async {
@@ -274,9 +288,18 @@ void main() {
       expect(tester.takeException(), isNull);
       final field = tester.getRect(_field('app-font'));
       expect(field.width, lessThanOrEqualTo(FontField.maxWidth));
-      final row = tester.getRect(find.widgetWithText(SettingsRow, 'App font'));
+      final appRow = find.ancestor(
+        of: _field('app-font'),
+        matching: find.byType(SettingsRow),
+      );
+      final row = tester.getRect(appRow);
       expect(field.right, moreOrLessEquals(row.right - 14, epsilon: 0.5));
-      expect(tester.getRect(find.text('App font')).right, lessThan(field.left));
+      expect(
+        tester
+            .getRect(find.descendant(of: appRow, matching: find.text('App')))
+            .right,
+        lessThan(field.left),
+      );
       expectTextInside(tester, width);
       await _tap(tester, _field('app-font'));
       expect(tester.takeException(), isNull);
@@ -294,7 +317,7 @@ void main() {
       await tester.pumpAndSettle();
       d.dispose();
     }
-  }, variant: _mac);
+  }, variant: onMac);
 
   // The owner's Mac has about 290 families. The menu filters as you type,
   // and opens on the picked family, wherever it is in the list. The one
@@ -346,7 +369,7 @@ void main() {
       expect(appFont.value, 'Avenir Next');
       expect(find.text('Filter'), findsNothing);
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('a font picked while a chat shows redraws all of it, code '
@@ -356,7 +379,6 @@ void main() {
     viewport(tester, const Size(1700, 1000), brightness: Brightness.dark);
     clock = () => demoNow;
     Collapsible.opened.add('e2');
-    addTearDown(Collapsible.opened.clear);
     final fake = FakeDaemon(demoChats())
       ..answer = (input) => switch (input) {
         GetChatRequest(:final chatId) when chatId == heroChat.id =>
@@ -370,11 +392,8 @@ void main() {
     final d = await fake.connect(tester)
       ..select(heroChat.id);
     await tester.pumpWidget(NushiApp(daemon: d));
-    Future<void> settle() async {
-      for (var i = 0; i < 8; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-    }
+    Future<void> settle() =>
+        frames(tester, 8, const Duration(milliseconds: 100));
 
     await settle();
     String? diffFont() => tester
@@ -415,7 +434,7 @@ void main() {
     expect(_drawn(tester), bundled);
     expect(diffFont(), 'JetBrains Mono');
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the phone keeps the bundled fonts whatever the Mac picked', (
     tester,
@@ -467,7 +486,7 @@ void main() {
         await tester.tapAt(const Offset(5, 5));
         await tester.pumpAndSettle();
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

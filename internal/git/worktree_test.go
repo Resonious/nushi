@@ -20,7 +20,7 @@ func TestWorktrees(t *testing.T) {
 	ctx := context.Background()
 	repo, _ := filepath.EvalSymlinks(t.TempDir())
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
-	write(t, filepath.Join(repo, "sub", "a.txt"), "a\n")
+	testcheck.Write(t, filepath.Join(repo, "sub", "a.txt"), "a\n")
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "init")
 
@@ -66,14 +66,14 @@ func TestWorktrees(t *testing.T) {
 
 	// Inspect counts what would be lost: changed files, and commits the
 	// base doesn't have.
-	write(t, filepath.Join(second.Path, "new.txt"), "work\n")
-	write(t, filepath.Join(second.Path, "sub", "a.txt"), "b\n")
+	testcheck.Write(t, filepath.Join(second.Path, "new.txt"), "work\n")
+	testcheck.Write(t, filepath.Join(second.Path, "sub", "a.txt"), "b\n")
 	testcheck.Git(t, second.Path, "commit", "-q", "-am", "one")
-	write(t, filepath.Join(second.Path, "sub", "a.txt"), "c\n")
+	testcheck.Write(t, filepath.Join(second.Path, "sub", "a.txt"), "c\n")
 	// Ignored files go with the worktree too.
-	write(t, filepath.Join(second.Path, ".gitignore"), ".env\nbuild/\n")
-	write(t, filepath.Join(second.Path, ".env"), "SECRET=1\n")
-	write(t, filepath.Join(second.Path, "build", "out.o"), "o")
+	testcheck.Write(t, filepath.Join(second.Path, ".gitignore"), ".env\nbuild/\n")
+	testcheck.Write(t, filepath.Join(second.Path, ".env"), "SECRET=1\n")
+	testcheck.Write(t, filepath.Join(second.Path, "build", "out.o"), "o")
 	if st, err := (Worktrees{}).Inspect(ctx, second); err != nil || st != (model.WorktreeState{Changed: 3, Ignored: 2, Commits: 1}) {
 		t.Errorf("Inspect = %+v, %v", st, err)
 	}
@@ -119,7 +119,7 @@ func TestNoWritesThroughARepositorysLinks(t *testing.T) {
 	ctx := context.Background()
 	repo, elsewhere := t.TempDir(), t.TempDir()
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
-	write(t, filepath.Join(repo, "SKILL.md"), "evil\n")
+	testcheck.Write(t, filepath.Join(repo, "SKILL.md"), "evil\n")
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "init")
 	testcheck.NoErr(t, os.Symlink(elsewhere, filepath.Join(repo, ".worktrees")))
@@ -131,7 +131,7 @@ func TestNoWritesThroughARepositorysLinks(t *testing.T) {
 	}
 
 	target := filepath.Join(elsewhere, "settings.json")
-	write(t, target, "{}")
+	testcheck.Write(t, target, "{}")
 	exclude := filepath.Join(repo, ".git", "info", "exclude")
 	testcheck.NoErr(t, os.Remove(exclude))
 	testcheck.NoErr(t, os.Symlink(target, exclude))
@@ -206,7 +206,7 @@ func TestInspectCountsARenameOnce(t *testing.T) {
 	ctx := context.Background()
 	repo, _ := filepath.EvalSymlinks(t.TempDir())
 	testcheck.Git(t, repo, "init", "-q", "-b", "main")
-	write(t, filepath.Join(repo, "a.txt"), "a\n")
+	testcheck.Write(t, filepath.Join(repo, "a.txt"), "a\n")
 	testcheck.Git(t, repo, "add", ".")
 	testcheck.Git(t, repo, "commit", "-q", "-m", "init")
 	wt, _, err := Worktrees{}.Add(ctx, repo, "calm-heron", "", "")
@@ -232,8 +232,8 @@ func TestInspectCountsACheckedOutSubmodule(t *testing.T) {
 	lib, repo := filepath.Join(root, "lib"), filepath.Join(root, "repo")
 	for _, dir := range []string{lib, repo} {
 		testcheck.Git(t, root, "init", "-q", "-b", "main", dir)
-		write(t, filepath.Join(dir, "a.txt"), "a\n")
-		write(t, filepath.Join(dir, ".gitignore"), "out/\n")
+		testcheck.Write(t, filepath.Join(dir, "a.txt"), "a\n")
+		testcheck.Write(t, filepath.Join(dir, ".gitignore"), "out/\n")
 		testcheck.Git(t, dir, "add", ".")
 		testcheck.Git(t, dir, "commit", "-q", "-m", "init")
 	}
@@ -246,8 +246,8 @@ func TestInspectCountsACheckedOutSubmodule(t *testing.T) {
 		t.Fatalf("Inspect before the submodule's checkout = %+v, %v", st, err)
 	}
 	testcheck.Git(t, wt.Path, "-c", "protocol.file.allow=always", "submodule", "update", "-q", "--init")
-	write(t, filepath.Join(wt.Path, "vendor", "lib", "a.txt"), "edited\n")
-	write(t, filepath.Join(wt.Path, "out", "bin"), "built\n")
+	testcheck.Write(t, filepath.Join(wt.Path, "vendor", "lib", "a.txt"), "edited\n")
+	testcheck.Write(t, filepath.Join(wt.Path, "out", "bin"), "built\n")
 	st, err = Worktrees{}.Inspect(ctx, wt)
 	changes, cerr := Worktrees{}.Changes(ctx, wt.Path, 10)
 	if err != nil || cerr != nil || st.Changed != 1 || st.Ignored != 1 || len(changes) != 1 || changes[0] != "submodule vendor/lib" {

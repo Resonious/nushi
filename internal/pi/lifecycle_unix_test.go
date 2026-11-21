@@ -17,6 +17,7 @@ import (
 
 	acp "github.com/afrase/acp-go/unstable"
 
+	"github.com/afrase/nushi/internal/agentproc"
 	"github.com/afrase/nushi/internal/pi/pitest"
 	"github.com/afrase/nushi/internal/testcheck"
 )
@@ -62,7 +63,7 @@ func TestPiDoesntOutliveTheBridge(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		Serve(toBridgeR, fromBridgeW, Config{Flavor: PiG, Dirs: Dirs{Sessions: sessions}, Version: PiG.Version,
-			Spawn: func(cwd string, args ...string) (Program, error) { return spawn(exe, cwd, args) }})
+			Spawn: func(cwd string, args ...string) (agentproc.Program, error) { return spawn(exe, cwd, args) }})
 		_ = fromBridgeW.Close()
 		close(done)
 	}()

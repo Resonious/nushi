@@ -99,17 +99,6 @@ func (l Listener) Takes(dst netip.AddrPort) bool {
 	}
 }
 
-// OnPort is those of ls on port, on any address.
-func OnPort(ls []Listener, port uint16) []Listener {
-	var out []Listener
-	for _, l := range ls {
-		if l.Addr.Port() == port {
-			out = append(out, l)
-		}
-	}
-	return out
-}
-
 // Reaching is those of ls a connection to dst (127.0.0.1:p or [::1]:p)
 // can land on. macOS gives it to a listener bound to dst's own address
 // before any wildcard, whichever bound first (seen with two processes on

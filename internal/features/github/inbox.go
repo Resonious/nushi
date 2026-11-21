@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"slices"
@@ -98,11 +97,7 @@ func inboxKey(f githubapi.InboxFilter) string {
 }
 
 func (s *Service) keep(name, key string, v any) {
-	b, err := json.Marshal(v)
-	if err == nil {
-		err = s.Store.Cache(cacheArea, name, key, time.Now(), b)
-	}
-	if err != nil {
+	if err := s.Store.Cache(cacheArea, name, key, v); err != nil {
 		slog.Warn("keeping a github answer", "host", name, "err", err)
 	}
 }
@@ -138,12 +133,11 @@ func (s *Service) CachedInbox(name string, f githubapi.InboxFilter) (Inbox, erro
 	if err != nil {
 		return Inbox{}, err
 	}
-	at, data, err := s.Store.Cached(cacheArea, name, inboxKey(f))
 	var in Inbox
-	if err != nil || data == nil || json.Unmarshal(data, &in.Inbox) != nil {
-		return Inbox{}, err
+	in.At, err = s.Store.Cached(cacheArea, name, inboxKey(f), &in.Inbox)
+	if err != nil || in.At.IsZero() {
+		return Inbox{}, err // a part read of a broken answer isn't shown
 	}
-	in.At = at
 	return in, nil
 }
 

@@ -14,7 +14,6 @@ import 'package:nushi/github_review.dart';
 import 'package:nushi/github_thread.dart';
 import 'package:nushi/github_view.dart';
 import 'package:nushi/send_to_agent.dart';
-import 'package:nushi/theme/theme.dart';
 
 import 'fake_daemon.dart';
 import 'github_fixture.dart' show openView, pull, testNow;
@@ -26,18 +25,15 @@ Future<void> _inPlace(WidgetTester tester, Daemon d) async {
   d.go(const GitHubPlace());
   clock = () => testNow;
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: const NushiTheme(Tokens.dark).toThemeData(),
-      home: Scaffold(
-        body: ListenableBuilder(
-          listenable: d,
-          builder: (_, _) => switch (d.place) {
-            GitHubPlace() => GitHubView(d),
-            _ => const Text('A chat'),
-          },
-        ),
+    themed(
+      ListenableBuilder(
+        listenable: d,
+        builder: (_, _) => switch (d.place) {
+          GitHubPlace() => GitHubView(d),
+          _ => const Text('A chat'),
+        },
       ),
+      banner: false,
     ),
   );
   await tester.pumpAndSettle();
@@ -65,7 +61,7 @@ Future<(FakeDaemon, Daemon)> _files(
   await _inPlace(tester, d);
   await tester.tap(find.text('Add Sub and Neg'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Files 3'));
+  await tester.tap(find.text('Files changed  3'));
   await tester.pumpAndSettle();
   return (fake, d);
 }
@@ -78,10 +74,7 @@ String _draft(String id) => commentDraft(
 );
 
 Future<void> _post(WidgetTester tester) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-  await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-  await tester.pumpAndSettle();
+  await cmdKey(tester, LogicalKeyboardKey.enter);
 }
 
 void main() {
@@ -94,9 +87,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).first, 'Half a reply');
     await _lookAtChat(tester, d);
-    // Back on Files, the box open with the text, and in To do's row: one
-    // draft.
-    expect(_box('Half a reply'), findsNWidgets(2));
+    // Back on Files, the box open with the text: one draft.
+    expect(_box('Half a reply'), findsOneWidget);
     expect(_draft('T1'), 'Half a reply');
     // The outdated thread's box starts empty, and keeps its own.
     Finder inT2(Finder f) =>
@@ -177,16 +169,16 @@ void main() {
     expect(find.text('Lines 3–4: a comment of your review'), findsOneWidget);
     expect(_box('Call it Minus?'), findsOneWidget);
     // The pull request's comment, in Activity.
-    await tester.tap(find.text('Activity 3'));
+    await tester.tap(find.text('Overview'));
     await tester.pumpAndSettle();
-    final comment = _box('Comment on the pull request');
+    final comment = _box('Leave a comment');
     await tester.ensureVisible(comment);
     await tester.enterText(comment, 'Ready when CI is.');
     await _lookAtChat(tester, d);
     expect(_box('Ready when CI is.'), findsOneWidget);
     // The review's text: kept by Cancel, gone once submitted.
     final review = find.textContaining(
-      RegExp(r'^Review( \(\d+\))?…$'),
+      RegExp(r'^Submit review( \(\d+\))?$'),
       skipOffstage: false,
     );
     await tester.ensureVisible(review);
@@ -202,7 +194,7 @@ void main() {
     await tester.tap(review);
     await tester.pumpAndSettle();
     expect(_box('Close.'), findsOneWidget);
-    await tester.tap(find.text('Submit review'));
+    await tester.tap(_inDialog('Submit review'));
     await tester.pumpAndSettle();
     expect(
       fake.calls.whereType<SubmitGitHubReviewRequest>().single.body,
@@ -230,12 +222,13 @@ void main() {
     await _post(tester);
     final ref = pull().item.ref;
     expect(reviewDrafts(ref), hasLength(1));
-    final review = find.text('Review (1)…', skipOffstage: false);
+    // The head's, or the slim bar's once the head has scrolled away.
+    final review = find.text('Submit review (1)', skipOffstage: false).last;
     await tester.ensureVisible(review);
     await tester.pumpAndSettle();
     await tester.tap(review);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Submit review'));
+    await tester.tap(_inDialog('Submit review'));
     await tester.pump();
     // Esc while it's sent: the dialog stays, saying so.
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -295,10 +288,15 @@ void main() {
 
 /// Opens the review dialog from the pull request's head.
 Future<void> _openReview(WidgetTester tester) async {
-  final review = find.text('Review…', skipOffstage: false);
+  // The head's, or the slim bar's once the head has scrolled away.
+  final review = find.text('Submit review', skipOffstage: false).last;
   await tester.ensureVisible(review);
   await tester.pumpAndSettle();
   await tester.tap(review);
   await tester.pumpAndSettle();
-  expect(find.text('Submit review'), findsOneWidget);
+  expect(_inDialog('Submit review'), findsOneWidget);
 }
+
+/// [text] in the open dialog (the head has a Submit review of its own).
+Finder _inDialog(String text) =>
+    find.descendant(of: find.byType(Dialog), matching: find.text(text));

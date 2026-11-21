@@ -16,7 +16,7 @@ The sidebar lists your chats by project. Click one to open it.
 
 ## Tell projects apart
 
-Each project in the sidebar has a small square tile before its name. It shows the repository's own icon when it has one (an `icon.png` or `logo.png`, an app's icon, a site's favicon), and otherwise the folder's initials on a color.
+Each project in the sidebar has a small square tile before its name, so you can tell projects apart at a glance. The tile shows the repository's own icon if it has one (an `icon.png` or `logo.png`, an app's icon, a site's favicon). Otherwise it shows the folder's initials on a color.
 
 To change a project's tile:
 
@@ -28,25 +28,25 @@ To use a picture of your own:
 
 1. Right-click the project's name and pick **Change tile…**.
 2. Click **Choose image…** and pick a PNG, JPEG, GIF or WebP file (up to 16 MB; an animated one up to 4K, 3840 × 2160).
-3. To show only part of it, zoom in with the **Zoom** slider (or scroll, or pinch) and drag the picture in the square below it. The tile beside shows the result. **Reset framing** shows the middle again.
+3. To show only part of it, zoom in with the **Zoom** slider (or scroll, or pinch), then drag the picture in the square below it. The tile beside it shows the result. **Reset framing** shows the middle again.
 4. To play only part of a GIF, drag the handles at the ends of the strip of frames under it. Click **Play** to watch the part you kept; drag the line between the handles to look at one frame.
 5. Click **Save**.
 
-A GIF plays while the pointer is on the tile, framed and trimmed the same way. The picture itself isn't changed, so you can frame or trim it again later: drag the handles back to the ends to keep every frame. To take the picture off, open **Change tile…** again and click **Remove image**, then **Save**. Nushi keeps its own copy of the picture, so the file you picked can be moved or deleted.
+A GIF plays while the pointer is on the tile, framed and trimmed the same way. Nushi doesn't change the picture itself, so you can frame or trim it again later. To keep every frame again, drag the handles back to the ends. To take the picture off, open **Change tile…** again, click **Remove image**, then click **Save**. Nushi keeps its own copy of the picture, so you can move or delete the file you picked.
 
 To add a project before it has a chat, click the Arrange button at the top of the sidebar, pick **Add project…** and pick its folder.
 
 ## Hide the sidebar
 
-Press **⌘\**, or click the sidebar button at the top left of the window, right of the window's own buttons. The chat takes the whole window. The button stays in the same place, so the same click brings the sidebar back.
+Press **⌘\**, or click the sidebar button at the top left of the window, to the right of the window's own buttons. The chat takes the whole window. The button stays in the same place, so the same click brings the sidebar back.
 
-To glance at the sidebar while it's hidden, point at the sidebar button (or rest the pointer on the window's left edge). The sidebar slides in over the chat: pick a chat or use its menus there. It slides away when the pointer leaves it. Click the button while it's out to keep it shown.
+To glance at the sidebar while it's hidden, point at the sidebar button (or rest the pointer on the window's left edge). The sidebar slides in over the chat, and you can pick a chat or use its menus there. It slides away when the pointer leaves it. To keep it shown, click the button while it's out.
 
-In a narrow window (about 600 wide or less) the sidebar tucks itself away so the chat keeps room to read. It comes back on its own when the window is wider. While it's tucked away, **⌘\** or the sidebar button slides it in over the chat as above.
+In a narrow window (about 600 points wide or less), the sidebar hides itself so the chat has room. It comes back on its own when the window is wider. While it's hidden this way, **⌘\** or the sidebar button slides it in over the chat, as above.
 
 ## Go back to a chat
 
-The **<** and **>** buttons right of the sidebar button go back to the chat you had open before, and forward again, as a browser's Back and Forward do. Jira and GitHub count as places too. A chat you've since deleted or archived is skipped.
+The **<** and **>** buttons to the right of the sidebar button work like a browser's Back and Forward. **<** goes back to the chat you had open before, and **>** goes forward again. The Jira and GitHub views count as places too. Back and Forward skip a chat you've since deleted or archived.
 
 - **⌘[**: Back (on Linux, **Alt+Left**).
 - **⌘]**: Forward (on Linux, **Alt+Right**).
@@ -69,13 +69,13 @@ A number on a tile counts that project's chats that need you. Hover over a tile 
 
 ## Sort a project's chats
 
-Each project can sort its chats its own way. The rest keep the order set in the Arrange menu's **Sort by**.
+Each project can sort its chats its own way. Projects you don't change keep the order set in the Arrange menu's **Sort by**.
 
 1. Point at the project's name in the sidebar.
 2. Click the **⇅** button beside its **+**.
 3. Pick **Last updated**, **Date created**, **Name** or **Manual** (the order you drag them into), and which way.
 
-The ⇅ stays, in color, while the project sorts its own way. Pick **Sidebar’s sort** to go back.
+While the project sorts its own way, the ⇅ button stays visible, in color. To go back to the sidebar's order, pick **Sidebar’s sort**.
 
 ## Find an archived chat
 
@@ -84,25 +84,36 @@ Archived chats wait at the bottom of the sidebar, newest archived first, so a ch
 1. Click **Archived** at the bottom of the sidebar.
 2. Click the chat to read it, or right-click it and pick **Unarchive**.
 
-If you've picked a sort in the Arrange menu's **Sort by**, Archived uses it too. Chats archived before Nushi kept the time come after the rest, newest made first.
+If you've picked a sort in the Arrange menu's **Sort by**, Archived uses it too. Chats archived before Nushi recorded archive times come after the rest, newest first.
+
+## Change the theme
+
+Nushi comes in a few color themes, each with a dark and a light look. Settings stays open over the window, so you see a theme on your chats as you pick it.
+
+1. Open **Settings**, then **Appearance**.
+2. Under **Theme**, pick **System**, **Light** or **Dark** beside **Mode**. **System** follows your computer.
+3. Click a theme's card. The picked one has a ring and a check.
+
+To make your own, click **New from** and the theme's name: Nushi writes a JSON file of its colors to the themes folder, which **Show folder** opens. Change the colors in the file; Nushi reads it again as you save it.
 
 ## Change the fonts
 
-Nushi comes with its own fonts. You can use any font installed on your computer instead, one for the app's text and one for code.
+Nushi comes with its own fonts. You can use any font installed on your computer instead: one for the app's text, one for code, and one for the terminal.
 
 1. Open **Settings**, then **Appearance**.
-2. Under **Fonts**, click **App font** and pick a font. The whole window changes at once.
-3. Click **Code font** and pick a font for code in chats, diffs and files.
+2. Under **Fonts**, click the menu beside **App** and pick a font. The whole window changes at once.
+3. Beside **Code**, pick a font for code in chats, diffs and files.
+4. Beside **Terminal**, pick the terminal's font and its size.
 
 The list is long: type a few letters to find a font. To go back, pick the first font in the list, the one marked **bundled**. On a Mac, **System** is the font macOS itself uses.
 
-The terminal has its own font, in **Settings**, then **Terminal**. The phone always uses Nushi's own fonts.
+**Settings**, then **Terminal** has the terminal's font and size too, beside a preview. The phone always uses Nushi's own fonts.
 
 ## Send a message
 
 Type in the box at the bottom and press **⏎** to send. **⇧⏎** starts a new line.
 
-You don't have to click the box first: start typing anywhere in the chat and the letters go into it (a menu, a dialog or another text field keeps them).
+You don't have to click the box first. Start typing anywhere in the chat and the letters go into the box. (A menu, a dialog or another text field keeps what you type.)
 
 - **Attach files or images**: click the **+** in the box and pick **Add files or photos** (**⌘U**), drop files on the chat, or paste a picture.
 - **Mention a file**: type `@` and pick one.
@@ -110,9 +121,9 @@ You don't have to click the box first: start typing anywhere in the chat and the
 
 ## Send while the agent is working
 
-No need to wait for the agent to finish. Type your message, then:
+You can send a message before the agent finishes. Type your message, then:
 
-- **⏎, or the Queue button,** puts it in line, as a pill over the box. An agent that takes input mid-task gets it right away; otherwise it goes when the current turn ends. You can edit or remove a pill, or send it now.
+- **⏎, or the Queue button,** puts it in line, as a pill over the box. If the agent takes input while it works, it gets the message right away. Otherwise the message goes when the current turn ends. You can edit or remove a pill, or send it now.
 - **⌘⏎, or the Stop and send button,** stops what the agent is doing and sends your message at once.
 
 ## Stop the agent
@@ -121,18 +132,18 @@ Press **Esc**, or click the round red **Stop** button at the end of the box's ro
 
 ## See how long a step took
 
-Each tool call's row ends with how long it ran, such as **12s**; while it runs, the time ticks. A folded group of calls, such as **Ran 3 commands**, ends with the time from its first call's start to its last call's end.
+Each step the agent takes (a tool call) has a row that ends with how long it ran, such as **12s**. While the step runs, the time counts up. A folded group of calls, such as **Ran 3 commands**, ends with the time from its first call's start to its last call's end.
 
-- A call that asked your permission counts from when you allowed it, not from when it asked. One you denied shows no time.
+- A call that asked your permission counts from when you allowed it. A call you denied shows no time.
 - Nothing shows for a call that took under a second.
 - Calls from before Nushi saw the chat (resumed from a terminal, or replayed by the agent) have no time.
 - A call still running when the turn ends stops counting there.
 
-A helper's (subagent's) row shows the time it actually worked, such as **3m 12s**: its clock stops while it waits for a message. Once a Claude helper is done, its row adds the tokens it used, such as **48k tokens**. Other agents don't report tokens, so their helpers show the time only.
+A subagent is a helper the agent starts for part of a task. Its row shows the time it actually worked, such as **3m 12s**. Its clock stops while it waits for a message. Once a Claude subagent is done, its row also shows the tokens it used, such as **48k tokens**. Other agents don't report tokens, so their subagents show only the time.
 
 ## Follow the agent's plan
 
-When the agent keeps a to-do list, its plan stays over the box until every step is done, so you always see where it is, even after the turn ends: "Plan · 2 of 5 done", a bar, and the steps with a dot on the one being worked on.
+When the agent keeps a to-do list, its plan stays over the box until every step is done, even after the turn ends. It shows "Plan · 2 of 5 done", a progress bar, and the steps, with a dot on the one being worked on.
 
 - **To make it one line**, click the plan's bottom line (or press Enter on it). Collapsed, it shows the count and the step being worked on. Click it again to see every step.
 - Your choice holds for every chat, and after you quit.
@@ -142,23 +153,23 @@ In the conversation, the plan's place says "shown over the box" while it's there
 
 ## Follow a workflow
 
-Claude can run a workflow: a script that has many helpers work in phases, in the background. Its card shows where Claude started it, and the chat counts as working until it ends.
+Claude can run a workflow: a script that has many subagents work in phases, in the background. Its card shows in the chat where Claude started it. The chat counts as working until the workflow ends.
 
 1. Read the card: its name, what it does, each phase's progress ("Review 5/7"), who runs now, and how long it has run. At the end it says done, failed or stopped.
-2. Click the card to open the **Workflow pane**: each phase with its helpers, their state and time.
-3. Click a helper to read its steps; **All agents** (←) goes back.
+2. Click the card to open the **Workflow pane**. It lists each phase with its subagents, their state and their time.
+3. Click a subagent to read its steps. **All agents** (←) goes back.
 4. To stop it, point at the card and click **Stop**, or use Stop in the pane's header.
 
-A workflow that writes nothing for an hour says "no activity for 1h" and no longer counts as working; it still ends when Claude says so.
+If a workflow writes nothing for an hour, it says "no activity for 1h" and no longer counts as working. It still ends only when Claude says so.
 
-While a workflow runs, the chat can't be moved or rewound: that would stop it. Stop it first, or wait for it to end.
+While a workflow runs, you can't move or rewind the chat, because that would stop the workflow. Stop it first, or wait for it to end.
 
 ## Pick the mode, model and effort
 
-In the box's bottom row, after the **+**, are the agent's own options (in a side chat and on the phone they're under the box):
+The agent's own options are in the box's bottom row, after the **+**. (In a side chat and on the phone, they're under the box.)
 
 - **First, the mode.** The agent's permission mode (for example Auto or Plan) decides what it may do without asking. It's the only permission control; Nushi has none of its own.
-- **Then the model** and its effort. Click to switch; the menu also has **Effort** and **More models**.
+- **Then the model** and its effort. Click to switch models. The menu also has **Effort** and **More models**.
 - **The ⋯ button** holds any other options the agent offers.
 
 A chat remembers your picks, and a new chat starts with the ones you last picked for that agent.
@@ -189,24 +200,29 @@ Nushi notifies you when a chat needs you, a turn ends, or a turn fails. Click on
 
 ## Rewind a message
 
-Point at one of your messages, click its rewind button (**Rewind to here**), then click **Rewind** to confirm. Or press **Esc** twice in the box and pick a message: that rewinds at once.
+Rewinding takes the chat back to just before one of your messages.
 
-The agent forgets everything from that message on, and the message goes back in the box to edit. Files are not rewound: the agent's changes on disk stay.
+1. Point at one of your messages and click its rewind button (**Rewind to here**).
+2. Click **Rewind** to confirm.
+
+Or press **Esc** twice in the box and pick a message. That rewinds at once.
+
+The agent forgets everything from that message on, and the message goes back in the box for you to edit. Files are not rewound: the agent's changes on disk stay.
 
 ## Fork a chat
 
-A fork is a new chat with this one's conversation so far, going on separately; the original stays as it was.
+A fork is a new chat that starts with this chat's conversation so far and then goes on separately. The original chat stays as it was.
 
 - **Fork** in the chat's **⋯** menu (or **Fork chat** in ⌘K, or **Fork** in the phone's **⋯**) forks all of it.
 - **Fork from here**, under one of the agent's messages on hover, forks up to that message.
 
-The fork opens, and a toast says **Forked into a new chat**. Forked by mistake? Click **Undo** in the toast (within ten seconds): the fork is deleted, with the agent's session for it, and you're back in the chat you forked from. The original chat and its history are never touched. Once you send a message in the fork, or it starts working, Undo goes away; delete the fork from its menu instead. If the delete fails, the toast says why and the fork stays in the sidebar.
+The fork opens, and a toast says **Forked into a new chat**. If you forked by mistake, click **Undo** in the toast within ten seconds. Nushi deletes the fork and the agent's session for it, and takes you back to the chat you forked from. The original chat and its history are never touched. Once you send a message in the fork, or it starts working, Undo goes away. Delete the fork from its menu instead. If the delete fails, the toast says why and the fork stays in the sidebar.
 
 ## Ask a side question
 
-Press **⇧⌘B** to open a **side chat** beside the main one. It knows the conversation but doesn't add to it, so you can ask "why did you do that?" without sidetracking the agent. ⇧⌘B hides it again; **Keep as chat** makes it a chat of its own.
+Press **⇧⌘B** to open a **side chat** beside the main one. It knows the conversation but doesn't add to it, so you can ask "why did you do that?" without sidetracking the agent. ⇧⌘B hides it again. **Keep as chat** makes it a chat of its own.
 
-**×** ends it at once. If it has messages, it's archived rather than deleted, and a toast says **Archived side chat**:
+**×** ends it at once. If it has messages, Nushi archives it instead of deleting it, and a toast says **Archived side chat**:
 
 - Click **Undo** in the toast (within ten seconds) to bring it back beside the chat, as it was.
 - Later, find it in **Archived** as "Side chat of" the chat's title. Delete it there if you don't need it.
@@ -215,7 +231,7 @@ If Undo can't bring it back (the chat was deleted or archived, or has another si
 
 ## Work in a worktree
 
-To keep a chat's work apart from your checkout, click **New worktree** under the box before the first message. It shows only when the chat's folder is a git repository. The chat gets its own git worktree, on a new branch named after the chat. Review its work in the **Changes** tab: see [Reviewing changes](Reviewing-changes).
+A worktree is a separate copy of your repository on its own branch. To keep a chat's work apart from your checkout, click **New worktree** under the box before the first message. It shows only when the chat's folder is a git repository. The chat gets its own worktree, on a new branch named after the chat. Review its work in the **Changes** tab: see [Reviewing changes](Reviewing-changes).
 
 ## Find an old chat
 
@@ -223,12 +239,23 @@ To keep a chat's work apart from your checkout, click **New worktree** under the
 - **Settings › Chat history** lists past chats, searchable by title and folder. Click a title to open it.
 - For a session you started in a terminal, press **⌘N**, highlight the agent and click **Sessions** (or →).
 
+## See what the agents used
+
+Settings has a Usage page: what your chats spent and the tokens they used, by day, agent, model and project, and the chats that cost the most. Where an agent reports your account's limits (Claude's 5-hour and weekly ones), they show there too.
+
+1. Open **Settings**, then **Usage**.
+2. Pick **7 days**, **30 days**, **90 days** or **All**. Nushi remembers your pick.
+3. Point at a day in the chart for its spend, tokens and turns.
+4. Click a chat under **Costliest chats** to open it.
+
+Spend is what the agent reports. On a subscription that's what the API would charge for the same tokens, not what you pay. Codex and Ante report no cost, so the page says so and counts their tokens. A limit shows as the agent last said it, and changes only while one of its chats runs. Usage counts from the first turn after you updated to a version that keeps it; workflows' agents and the Context widget's `/context` aren't counted. The phone doesn't have this page.
+
 ## Good to know
 
 - **Chats belong to your agent.** Each is the agent's own session, so its own resume command, run in the chat's folder, picks it up in a terminal.
 - **Quitting Nushi doesn't stop your agents.** A background helper (the daemon) keeps them and the chat's terminals running. More on terminals in [Previews and terminals](Previews-and-terminals).
-- **The card at the bottom of the sidebar** counts the agents that are working, awake and asleep, and shows the memory Nushi takes. Click the memory to see each awake chat's, with **Sleep** beside it.
+- **The card at the bottom of the sidebar** counts the agents that are working, awake and asleep, and shows how much memory Nushi uses. Click the memory to see each awake chat's share, with **Sleep** beside it.
 - **Idle chats sleep** after 30 minutes: the agent stops, and your next message wakes it. A sleeping chat's row in the sidebar has no dot and is faint and in italics (unless a turn it finished is still unseen); its header says **Asleep**. Change it in **Settings › General › Sleep idle chats**.
-- **Old chats stay asleep after Nushi restarts.** Looking at one doesn't start its agent; your next message does. The chat you used in the hour before the restart wakes when you open it.
+- **Old chats stay asleep after Nushi restarts.** Looking at one doesn't start its agent. Your next message does. A chat you used in the hour before the restart wakes when you open it.
 - **Rewind, forks and side chats** show only for agents that support them.
-- **Don't use a session in Nushi and a terminal at once**: both write to it.
+- **Don't use a session in Nushi and a terminal at once.** Both would write to it.

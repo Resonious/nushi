@@ -189,6 +189,19 @@ void revealRow(GlobalKey row, {required bool down, VoidCallback? then}) {
     ..scheduleFrame();
 }
 
+/// Scrolls [scroll]'s list of rows [row] high just far enough that its
+/// [index]th shows: [revealRow] for a row that may not be built yet.
+void revealRowAt(ScrollController scroll, int index, double row) {
+  if (!scroll.hasClients) return;
+  final p = scroll.position;
+  final top = index * row;
+  if (top < p.pixels) {
+    p.jumpTo(top);
+  } else if (top + row > p.pixels + p.viewportDimension) {
+    p.jumpTo(top + row - p.viewportDimension);
+  }
+}
+
 /// What [builder] makes, built knowing whether the pointer is over it: for
 /// what shows only under the pointer (a row's Stop, a card's Remove).
 class Hover extends StatefulWidget {

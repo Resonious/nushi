@@ -3,7 +3,7 @@ import 'package:nushi/clock.dart';
 import 'package:nushi/commits.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/github_items.dart';
-import 'package:nushi/jira_people.dart' show initials, personColor;
+import 'package:nushi/jira_people.dart' show Avatar;
 import 'package:nushi/line_icons.dart';
 import 'package:nushi/theme/theme.dart';
 
@@ -81,40 +81,6 @@ Widget diffSize(NushiTheme theme, GitHubItem it, {double size = 11.5}) {
 
 /// "3 files", "1 file".
 String filesWords(int n) => '$n file${n == 1 ? '' : 's'}';
-
-/// A login as Nushi draws people: initials on the person's color.
-class LoginAvatar extends StatelessWidget {
-  const new(this.login, {super.key, this.size = 16});
-
-  final String login;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = NushiTheme.of(context);
-    final t = theme.t;
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: personColor(t, login),
-        shape: BoxShape.circle,
-      ),
-      child: Text(
-        initials(login).characters.take(1).toString().toUpperCase(),
-        maxLines: 1,
-        overflow: TextOverflow.clip,
-        softWrap: false,
-        style: theme.ui(
-          t.monogramText,
-          size: size * 0.55,
-          weight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
 
 /// The hover card of a pull request's or an issue's link (ADR 0117): the
 /// state pill, `owner/repo #n`, its age; the title (two lines at most);
@@ -229,7 +195,13 @@ class GitHubCardBody extends StatelessWidget {
         Row(
           spacing: 6,
           children: [
-            LoginAvatar(it.author),
+            Avatar(
+              name: it.author,
+              id: it.author,
+              size: 16,
+              letters: 1,
+              tip: false,
+            ),
             Expanded(
               child: Text(
                 it.author,

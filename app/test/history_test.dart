@@ -134,7 +134,7 @@ void main() {
       expect(find.text('Compacted here'), findsOneWidget);
       await render(tester, find.byType(ChatView), 'history_marks_$name');
       await end();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
 
     testWidgets('a chat whose session is gone, from its copy: read-only '
         '($name)', (tester) async {
@@ -148,7 +148,7 @@ void main() {
       expect(find.text('Read-only: Nushi’s copy of the transcript.'), findsOne);
       await render(tester, find.byType(ChatView), 'expired_copy_$name');
       await end();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }, variant: onMac);
   }
 
   testWidgets('a click on Compacted here shows what Claude kept of it', (
@@ -166,7 +166,7 @@ void main() {
       findsOne,
     );
     await end();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('a chat whose session is gone: Delete… asks what it deletes; '
       'Start a new chat here starts one in its folder', (tester) async {
@@ -185,5 +185,5 @@ void main() {
     expect(fake.started.single.folder, '/Users/me/nushi');
     expect(fake.started.single.agent, 'claude');
     await end();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 }

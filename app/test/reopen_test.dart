@@ -1,6 +1,5 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/chat_header.dart';
@@ -54,26 +53,13 @@ Future<Daemon> _show(
   Tokens tokens = Tokens.dark,
 }) async {
   final d = await fake.connect(tester);
-  await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(body: child(d)),
-    ),
-  );
+  await tester.pumpWidget(themed(child(d), tokens: tokens, banner: false));
   await tester.pumpAndSettle();
   return d;
 }
 
 void main() {
   setUpAll(loadFonts);
-  setUp(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        ),
-  );
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),
@@ -226,7 +212,7 @@ void main() {
     await tester.pump();
     expect(_reopens(fake), ['c', 'c', 'c']);
     d.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   // A chat kept though its agent deleted its session (its worktree has
   // work): quiet, not an error; Delete… instead of Try again.

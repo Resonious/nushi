@@ -76,7 +76,7 @@ func TestASideChatShowsTheModeItIsOn(t *testing.T) {
 func TestASideChatsChangeIsItsOwn(t *testing.T) {
 	svc, agent, c, side := sideOf(t)
 	modes := svc.remembered.(*memModes)
-	sessions := c.sessions.(*memSessions)
+	sessions := c.svc.sessions.(*memSessions)
 	ctx := context.Background()
 	agent.setIn = nil
 	testcheck.NoErr(t, svc.SetConfig(ctx, side.id, "mode", "default"))

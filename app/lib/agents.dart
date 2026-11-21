@@ -4,6 +4,7 @@ import 'package:nushi/chat.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.connect.client.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/plain_text.dart';
 import 'package:nushi/run_state.dart';
 
 /// The agents the daemon runs (ListAgents), by name, the default first,
@@ -38,7 +39,7 @@ Future<void> listAgents(
 String agentTitle(String agent) => switch (agent) {
   _ when knownAgents[agent] != null => knownAgents[agent]!.title,
   '' => 'The agent',
-  _ => agent[0].toUpperCase() + agent.substring(1),
+  _ => capital(agent),
 };
 
 /// The agents whose MCP servers Nushi shows and changes (Claude, Ante).

@@ -78,7 +78,7 @@ void main() {
     await tester.pump(const Duration(minutes: 1));
     expect(fake.calls.whereType<GetGitHubStatesRequest>().last.quiet, isTrue);
     await closeView(tester, d);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   for (final size in const [Size(390, 844), Size(430, 932), Size(844, 390)]) {
     testWidgets("the phone: the pull request in the chat's bar, a tap opens "

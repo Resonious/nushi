@@ -52,7 +52,7 @@ void main() {
     expect(d.selectedId, 'b');
     await closeView(tester, d);
     semantics.dispose();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  }, variant: onMac);
 
   testWidgets('the phone’s chats: every control labelled and a finger’s '
       'size', (tester) async {

@@ -19,9 +19,6 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 import 'workflow_card_test.dart' show workflowCall;
 
-Int64 _ms(Duration ago) =>
-    Int64(fixtureNow.subtract(ago).millisecondsSinceEpoch);
-
 /// The agents GetWorkflow answers for [workflowCall]'s run.
 final List<WorkflowAgent> agents = [
   WorkflowAgent(
@@ -29,8 +26,8 @@ final List<WorkflowAgent> agents = [
     label: 'map:files',
     phase: 'Map',
     state: 'done',
-    started: _ms(const Duration(minutes: 4)),
-    ended: _ms(const Duration(minutes: 3, seconds: 20)),
+    started: msAgo(const Duration(minutes: 4)),
+    ended: msAgo(const Duration(minutes: 3, seconds: 20)),
     tokens: 12400,
   ),
   WorkflowAgent(
@@ -38,8 +35,8 @@ final List<WorkflowAgent> agents = [
     label: 'map:tests',
     phase: 'Map',
     state: 'done',
-    started: _ms(const Duration(minutes: 4)),
-    ended: _ms(const Duration(minutes: 3)),
+    started: msAgo(const Duration(minutes: 4)),
+    ended: msAgo(const Duration(minutes: 3)),
     tokens: 8100,
   ),
   for (final (i, label) in [
@@ -53,8 +50,8 @@ final List<WorkflowAgent> agents = [
       label: label,
       phase: 'Review',
       state: i == 0 ? 'failed' : 'running',
-      started: _ms(Duration(minutes: 2, seconds: i * 10)),
-      ended: i == 0 ? _ms(const Duration(minutes: 1)) : null,
+      started: msAgo(Duration(minutes: 2, seconds: i * 10)),
+      ended: i == 0 ? msAgo(const Duration(minutes: 1)) : null,
       tokens: 5000 + i * 900,
       model: 'claude-opus-5-5',
       prompt:
@@ -71,8 +68,8 @@ final List<WorkflowAgent> agents = [
       label: label,
       phase: 'Review',
       state: 'done',
-      started: _ms(const Duration(minutes: 3)),
-      ended: _ms(const Duration(minutes: 2)),
+      started: msAgo(const Duration(minutes: 3)),
+      ended: msAgo(const Duration(minutes: 2)),
       tokens: 7000,
     ),
   WorkflowAgent(id: 'x', label: 'hotfix', state: 'done'),
@@ -177,8 +174,6 @@ Future<(FakeDaemon, Daemon)> _app(
   await tester.pumpAndSettle();
   return (fake, d);
 }
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 void main() {
   setUpAll(loadFonts);
@@ -365,7 +360,7 @@ void main() {
     paneWidths.value = {};
     showDetails.value = true;
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the run ending leaves the pane with its last tree; its call '
       'going leaves the pane a workflow’s, saying so', (tester) async {
@@ -412,7 +407,7 @@ void main() {
     paneWidths.value = {};
     showDetails.value = true;
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),

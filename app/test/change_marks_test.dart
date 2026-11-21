@@ -535,15 +535,10 @@ void main() {
 
 /// The editor on `main.go` as [changeShown], its last commit's text
 /// [changeBase].
-Future<(Daemon, FakeDaemon)> openEditorWith(
-  WidgetTester tester, {
-  double width = 1200,
-  Brightness brightness = Brightness.light,
-}) => openEditor(
+Future<(Daemon, FakeDaemon)> openEditorWith(WidgetTester tester) => openEditor(
   tester,
   {'main.go': utf8.encode(changeShown)},
-  width: width,
-  brightness: brightness,
+  width: 1200,
   fileDiffs: {
     '/Users/me/nushi/main.go': FileChange(
       path: 'main.go',

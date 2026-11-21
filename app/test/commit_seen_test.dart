@@ -7,7 +7,6 @@ import 'package:nushi/changes_view.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
-import 'package:nushi/settings.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
@@ -68,7 +67,6 @@ Future<(Daemon, ChatState, _Folder)> _view(
   Size size = const Size(1100, 700),
 }) async {
   viewport(tester, size);
-  paneWidths.value = {};
   final folder = _Folder();
   final fake = FakeDaemon([])..answer = folder.answer;
   final d = await fake.connect(tester);

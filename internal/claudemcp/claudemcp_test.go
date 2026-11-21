@@ -71,8 +71,21 @@ func TestServersReadsEachScope(t *testing.T) {
 	}
 }
 
+// withoutGitConfig has the git this package runs read none of the user's
+// git config, as testcheck.Git runs it, nor their global excludes, which
+// git reads from $XDG_CONFIG_HOME/git/ignore without any config: one that
+// ignores .claude/settings.local.json would keep SetOn from writing
+// info/exclude.
+func withoutGitConfig(t *testing.T) {
+	t.Helper()
+	t.Setenv("GIT_CONFIG_GLOBAL", os.DevNull)
+	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+}
+
 func TestSetOnKeepsOtherSettings(t *testing.T) {
 	t.Setenv("CLAUDE_CONFIG_DIR", t.TempDir())
+	withoutGitConfig(t)
 	repo, _ := filepath.EvalSymlinks(t.TempDir())
 	testcheck.Git(t, repo, "init", "-q")
 	testcheck.Write(t, filepath.Join(repo, ".mcp.json"), `{"mcpServers":{"web":{"type":"http","url":"http://x"}}}`)

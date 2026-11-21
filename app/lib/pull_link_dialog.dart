@@ -62,14 +62,14 @@ class _LinkPullState extends State<_LinkPull> {
   String? _error;
   bool _busy = false;
 
-  String get _host => widget.cp.found?.host ?? widget.cp.link?.host ?? '';
+  String get _host => widget.cp.found?.host ?? widget.cp.current?.host ?? '';
 
   /// The chat has one: this one joins it (ADR 0117), and the list leaves
   /// out those linked.
   bool get _another =>
       widget.cp.links.isNotEmpty &&
       widget.cp.daemon.daemonApi >= githubItemsApi;
-  String get _repo => widget.cp.found?.repo ?? widget.cp.link?.repo ?? '';
+  String get _repo => widget.cp.found?.repo ?? widget.cp.current?.repo ?? '';
 
   @override
   void initState() {

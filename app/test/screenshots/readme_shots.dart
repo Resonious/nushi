@@ -27,8 +27,6 @@ import '../fake_daemon.dart';
 import '../harness.dart';
 import 'demo.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// Writes what [finder] shows as docs/images/[name].png, its shadows drawn
 /// as the app draws them (a test's are solid blocks): these are looked at,
 /// never compared.
@@ -42,9 +40,7 @@ Future<void> _shoot(WidgetTester tester, String name, [Finder? finder]) =>
     );
 
 Future<void> _pump(WidgetTester tester, [int times = 6]) async {
-  for (var i = 0; i < times; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, times, const Duration(milliseconds: 100));
 }
 
 /// What the fake daemon answers for the demo, beyond its own.
@@ -162,11 +158,6 @@ Future<(Daemon, FakeDaemon)> _app(
   addTearDown(tester.view.reset);
   tester.platformDispatcher.platformBrightnessTestValue = brightness;
   addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-        const MethodChannel('nushi/fonts'),
-        (_) async => <String>[],
-      );
   clock = () => demoNow;
   showDetails.value = details;
   paneWidths.value = {};
@@ -258,7 +249,7 @@ void main() {
     await _pump(tester);
     await _shoot(tester, 'hero');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('agents: New chat asks which one', (tester) async {
     final (d, _) = await _app(tester, _small, select: 'feed');
@@ -266,7 +257,7 @@ void main() {
     await _pump(tester);
     await _shoot(tester, 'agents');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('changes: the branch with review comments', (tester) async {
     final cursor = demoChanges().first;
@@ -302,7 +293,7 @@ void main() {
     await _pump(tester, 10);
     await _shoot(tester, 'changes');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('preview: the design note the agent wrote', (tester) async {
     final (d, _) = await _app(tester, _small, select: 'feed', details: false);
@@ -311,7 +302,7 @@ void main() {
     await _pump(tester, 10);
     await _shoot(tester, 'preview');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('pull request: the tab', (tester) async {
     final (d, _) = await _app(tester, _small, select: 'feed', details: false);
@@ -319,7 +310,7 @@ void main() {
     await _pump(tester, 10);
     await _shoot(tester, 'pull-request');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('jira: the sprint', (tester) async {
     final (d, _) = await _app(tester, _small, select: 'feed', details: false);
@@ -329,7 +320,7 @@ void main() {
     await _pump(tester, 10);
     await _shoot(tester, 'jira');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('phone: a question, answered with a tap', (tester) async {
     tester.view
@@ -365,7 +356,7 @@ void main() {
     await phone.close();
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 5));
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('terminal: beside the chat', (tester) async {
     terminalChats.value = {heroChat.id};
@@ -373,7 +364,7 @@ void main() {
     await _pump(tester, 10);
     await _shoot(tester, 'terminal');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }
 
 /// The highlights' window.

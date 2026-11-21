@@ -1,4 +1,3 @@
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,8 +11,6 @@ import 'harness.dart';
 
 // SessionList on its own, for its tests.
 
-Int64 _ago(Duration d) => Int64(fixtureNow.subtract(d).millisecondsSinceEpoch);
-
 /// Claude's sessions: three on the first page, one on the next.
 ListAgentSessionsResponse sessionPages(ListAgentSessionsRequest r) =>
     switch (r.cursor) {
@@ -26,20 +23,20 @@ ListAgentSessionsResponse sessionPages(ListAgentSessionsRequest r) =>
             sessionId: 's1',
             title: 'Fix the flaky test',
             folder: '/Users/me/nushi',
-            updatedUnixMs: _ago(const Duration(minutes: 5)),
+            updatedUnixMs: msAgo(const Duration(minutes: 5)),
             messages: 12,
           ),
           FoundSession(
             sessionId: 's2',
             title: 'Rename the relay flags',
             folder: '/Users/me/nushi',
-            updatedUnixMs: _ago(const Duration(hours: 3)),
+            updatedUnixMs: msAgo(const Duration(hours: 3)),
           ),
           FoundSession(
             sessionId: 's3',
             title: 'Flaky relay reconnect',
             folder: '/Users/me/nushi',
-            updatedUnixMs: _ago(const Duration(days: 2)),
+            updatedUnixMs: msAgo(const Duration(days: 2)),
           ),
         ],
       ),
@@ -113,7 +110,7 @@ SearchAgentSessionsResponse sessionHits(SearchAgentSessionsRequest r) =>
             sessionId: 's9',
             title: 'Old relay work',
             folder: '/Users/me/nushi',
-            updatedUnixMs: _ago(const Duration(days: 6)),
+            updatedUnixMs: msAgo(const Duration(days: 6)),
           ),
           before: '…so why does the ',
           match: r.text,
@@ -127,7 +124,7 @@ SearchAgentSessionsResponse sessionHits(SearchAgentSessionsRequest r) =>
             sessionId: 's8',
             title: 'Clock skew',
             folder: '/Users/me/nushi',
-            updatedUnixMs: _ago(const Duration(days: 9)),
+            updatedUnixMs: msAgo(const Duration(days: 9)),
             openIn: 'a terminal',
           ),
           before: 'The ',

@@ -38,7 +38,8 @@ func waitErr(ctx context.Context, err error) error {
 
 // ReasonHeader is the metadata a refusal the app acts on carries, so the
 // app needn't read its message (which an older daemon's it still reads):
-// ReasonRestarting, ReasonAgentStart or ReasonHeadMoved.
+// ReasonRestarting, ReasonAgentStart, ReasonHeadMoved or
+// ReasonChangedSince.
 const ReasonHeader = "Nushi-Reason"
 
 const (
@@ -54,6 +55,10 @@ const (
 	// the head the user was shown (github.ErrHeadMoved): the app says so
 	// and reads it again.
 	ReasonHeadMoved = "head_moved"
+	// ReasonChangedSince is a pull request's edit refused because GitHub
+	// no longer has what the edit began from (github.ErrChangedSince): the
+	// app keeps the user's text and offers GitHub's.
+	ReasonChangedSince = "changed_since"
 )
 
 // because is err carrying reason (ReasonHeader).

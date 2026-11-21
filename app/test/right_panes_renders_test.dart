@@ -56,8 +56,6 @@ final _notable = <(double, bool, String)>[
   (900, false, 'files'),
 ];
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -107,7 +105,7 @@ void main() {
               brightness: brightness,
             );
           },
-          variant: _mac,
+          variant: onMac,
           skip: rendersDir == null,
         );
       }
@@ -128,7 +126,7 @@ void main() {
           terminal: true,
         );
       },
-      variant: _mac,
+      variant: onMac,
       skip: rendersDir == null,
     );
   }
@@ -149,7 +147,7 @@ void main() {
             expand: true,
           );
         },
-        variant: _mac,
+        variant: onMac,
         skip: rendersDir == null,
       );
     }

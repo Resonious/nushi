@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/app_actions.dart';
 import 'package:nushi/bundled_daemon.dart';
+import 'package:nushi/controls.dart' show Toggle;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/logs_section.dart';
@@ -51,7 +52,7 @@ void main() {
       reveal: () async => revealed++,
     );
     await tester.tap(find.text('Show logs'));
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byType(Toggle));
     expect(revealed, 1);
     expect(set, [true]);
     expect(find.text('Debug lines'), findsOneWidget);
@@ -73,9 +74,9 @@ void main() {
       },
       reveal: () async {},
     );
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byType(Toggle));
     await tester.pump();
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byType(Toggle));
     await tester.pump();
     expect(calls, 1);
     sent.complete();
@@ -100,8 +101,8 @@ void main() {
     d.dispose();
   });
 
-  testWidgets('Restart shows for a packaged daemon the app can stop, and '
-      'not where it can’t (Windows): here nor in the palette', (tester) async {
+  testWidgets('Restart shows for a packaged daemon, and not without one: '
+      'here nor in the palette', (tester) async {
     fakeInstall.daemon = '/opt/nushi/lib/nushid';
     final d = await FakeDaemon([]).connect(tester);
     late BuildContext context;
@@ -129,7 +130,7 @@ void main() {
     await show();
     expect(find.text('Restart'), findsOneWidget);
     expect(restartRow(), isTrue);
-    fakeInstall.canStop = false;
+    fakeInstall.daemon = null;
     await show();
     expect(find.text('Restart'), findsNothing);
     expect(restartRow(), isFalse);
@@ -144,7 +145,7 @@ void main() {
       reveal: () async {},
     );
     expect(find.text('Show logs'), findsOneWidget);
-    expect(find.byType(Switch), findsNothing);
+    expect(find.byType(Toggle), findsNothing);
     d.dispose();
   });
 
@@ -155,7 +156,7 @@ void main() {
       ..settings = Settings(sleepAfterMinutes: 60, debugLog: false);
     final d = await fake.connect(tester);
     await pumpSettings(tester, d, SettingsSection.logs);
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byType(Toggle));
     await tester.pumpAndSettle();
     expect(fake.setSettings.single.debugLog, isTrue);
     expect(fake.setSettings.single.sleepAfterMinutes, 60);

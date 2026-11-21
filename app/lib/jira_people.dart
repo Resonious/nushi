@@ -33,51 +33,63 @@ Color personColor(Tokens t, String id) {
 
 /// An issue's assignee as a small round avatar: initials on the person's
 /// color, the name on hover; "Unassigned" a muted dashed circle. Jira's
-/// avatar images aren't fetched (`docs/facts/jira.md`).
+/// avatar images aren't fetched (`docs/facts/jira.md`). A GitHub card's
+/// author is one [letters] in larger type and no [tip], the login being
+/// beside it, and nobody (a deleted account) a "?" like any other.
 class Avatar extends StatelessWidget {
-  const new({required this.name, required this.id, super.key, this.size = 20});
+  const new({
+    required this.name,
+    required this.id,
+    super.key,
+    this.size = 20,
+    this.letters = 2,
+    this.tip = true,
+  });
 
   /// The person's name ("" for nobody) and account id.
   final String name;
   final String id;
   final double size;
 
+  /// How many of the initials it shows: one is set larger.
+  final int letters;
+
+  /// Whether the name is its tooltip, and nobody the dashed circle.
+  final bool tip;
+
   @override
   Widget build(BuildContext context) {
     final theme = NushiTheme.of(context);
     final t = theme.t;
     final shown = plainName(name);
-    if (shown.isEmpty) {
+    if (shown.isEmpty && tip) {
       return tooltip(
         context,
         'Unassigned',
         CustomPaint(size: Size.square(size), painter: _Dashed(t.textMuted)),
       );
     }
-    return tooltip(
-      context,
-      shown,
-      Container(
-        width: size,
-        height: size,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: personColor(t, id.isEmpty ? shown : id),
-          shape: BoxShape.circle,
-        ),
-        child: Text(
-          initials(shown),
-          maxLines: 1,
-          overflow: TextOverflow.clip,
-          softWrap: false,
-          style: theme.ui(
-            t.monogramText,
-            size: size * 0.42,
-            weight: FontWeight.w600,
-          ),
+    final face = Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: personColor(t, id.isEmpty ? shown : id),
+        shape: BoxShape.circle,
+      ),
+      child: Text(
+        initials(shown).characters.take(letters).toString(),
+        maxLines: 1,
+        overflow: TextOverflow.clip,
+        softWrap: false,
+        style: theme.ui(
+          t.monogramText,
+          size: size * (letters == 1 ? 0.55 : 0.42),
+          weight: FontWeight.w600,
         ),
       ),
     );
+    return tip ? tooltip(context, shown, face) : face;
   }
 }
 

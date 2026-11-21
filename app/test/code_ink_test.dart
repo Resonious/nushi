@@ -16,8 +16,6 @@ import 'fake_daemon.dart';
 import 'harness.dart';
 import 'theme_sets.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 /// The WCAG contrast of [a] and [b].
 double _contrast(Color a, Color b) {
   double lum(Color c) => c.computeLuminance();
@@ -141,7 +139,6 @@ void main() {
           "composer's code", (tester) async {
         viewport(tester, Size(width, 900), brightness: b);
         showDetails.value = false;
-        paneWidths.value = {};
         final c = chat('c', 'claude', 'Why make check vets twice');
         final fake = FakeDaemon([c])
           ..answer = ((input) => input is GetChatRequest
@@ -163,7 +160,7 @@ void main() {
           'code_ink_${width.toInt()}_${b.name}_$where',
         );
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 
@@ -177,9 +174,7 @@ void main() {
             : null);
       final phone = await startPhone(tester, fake);
       await tester.tap(find.text('Why make check vets twice'));
-      for (var i = 0; i < 10; i++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
+      await frames(tester, 10, const Duration(milliseconds: 50));
       final t = b == Brightness.dark ? Tokens.dark : Tokens.light;
       final vet = _styleOf(tester, find.byType(PhoneApp), 'vet');
       expect(vet?.color, t.inlineCodeText);

@@ -14,7 +14,6 @@
 package pi
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -23,7 +22,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"slices"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -32,7 +30,6 @@ import (
 
 	"github.com/afrase/nushi/internal/agentproc"
 	"github.com/afrase/nushi/internal/model"
-	"github.com/afrase/nushi/internal/procgroup"
 )
 
 // Flavor is a program that speaks Pi's RPC mode, and the names it has.
@@ -114,7 +111,7 @@ func (f Flavor) Main() {
 		cfg.Version, err = f.version(bin)
 	}
 	cfg.Problem = err
-	cfg.Spawn = func(cwd string, args ...string) (Program, error) { return spawn(bin, cwd, args) }
+	cfg.Spawn = func(cwd string, args ...string) (agentproc.Program, error) { return spawn(bin, cwd, args) }
 	Serve(os.Stdin, os.Stdout, cfg)
 }
 
@@ -122,15 +119,11 @@ func (f Flavor) Main() {
 // "0.5.3+1.4.0.74f46864": its own, then the Pi it ports), and says so when
 // it isn't the one the bridge follows.
 func (f Flavor) version(bin string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, bin, "--version")
-	procgroup.Bound(cmd)
-	out, err := cmd.Output()
+	out, err := agentproc.Version(bin)
 	if err != nil {
-		return "", fmt.Errorf("couldn't run %s --version: %w", bin, err)
+		return "", err
 	}
-	v, _, _ := strings.Cut(strings.TrimSpace(string(out)), "+")
+	v, _, _ := strings.Cut(out, "+")
 	if err := f.check(v); err != nil {
 		return "", err
 	}
@@ -148,7 +141,7 @@ func (f Flavor) check(v string) error {
 	if f.Min == "" {
 		return nil
 	}
-	got, want := numbers(v), numbers(f.Min)
+	got, want := agentproc.Numbers(v), agentproc.Numbers(f.Min)
 	switch {
 	case got == nil:
 		return fmt.Errorf("couldn't read %s's version from %q", f.Title, v)
@@ -158,32 +151,13 @@ func (f Flavor) check(v string) error {
 	return nil
 }
 
-// numbers reads a version's three numbers, a prerelease's tag left out;
-// nil if it hasn't three.
-func numbers(v string) []int {
-	v, _, _ = strings.Cut(v, "-")
-	parts := strings.Split(v, ".")
-	if len(parts) != 3 {
-		return nil
-	}
-	out := make([]int, 3)
-	for i, p := range parts {
-		n, err := strconv.Atoi(p)
-		if err != nil {
-			return nil
-		}
-		out[i] = n
-	}
-	return out
-}
-
 // spawn starts the program with args in cwd, in a process group of its own, its
 // stderr to the bridge's (its last line kept); its start and exit go to
 // the log.
-func spawn(bin, cwd string, args []string) (Program, error) {
+func spawn(bin, cwd string, args []string) (agentproc.Program, error) {
 	p, err := agentproc.Pipe(bin, args, cwd, nil, os.Stderr) // the user's pi (ADR 0039)
 	if err != nil {
-		return Program{}, err
+		return agentproc.Program{}, err
 	}
 	started := time.Now()
 	warnf("started pid=%d args=%q", p.Pid, args)
@@ -194,7 +168,7 @@ func spawn(bin, cwd string, args []string) (Program, error) {
 		}
 		warnf("exited pid=%d ran=%s %s", p.Pid, time.Since(started).Round(100*time.Millisecond), status)
 	}()
-	return Program{In: p.In, Out: p.Out, Kill: p.Kill, Said: p.Said}, nil
+	return p.Program(), nil
 }
 
 // DirsFromEnv finds f's sessions folder as the program does (and as

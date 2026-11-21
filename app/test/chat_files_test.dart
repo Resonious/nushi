@@ -19,7 +19,6 @@ import 'package:nushi/phone/artifacts_screen.dart';
 import 'package:nushi/phone/platform.dart';
 import 'package:nushi/phone/preview_screen.dart';
 import 'package:nushi/settings.dart';
-import 'package:nushi/tool_calls.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
@@ -122,8 +121,6 @@ const _minutes = {'report.md': 2, 'chart.png': 15, 'sub.md': 125};
 Future<Daemon> _app(WidgetTester tester) async {
   viewport(tester, const Size(1700, 900));
   showDetails.value = false;
-  paneWidths.value = {};
-  Collapsible.opened.clear();
   final was = fileChanged;
   fileChanged = (p) => switch (_minutes[p.split('/').last]) {
     final m? => clock().subtract(Duration(minutes: m, seconds: 5)),
@@ -136,8 +133,6 @@ Future<Daemon> _app(WidgetTester tester) async {
   await tester.pumpAndSettle();
   return d;
 }
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 Finder get _pane => find.byType(FilesPane);
 
@@ -261,10 +256,7 @@ void main() {
 
   /// ⌘K, then Artifacts… picked by typing.
   Future<void> paletteArtifacts(WidgetTester tester) async {
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyK);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyK);
     await tester.enterText(
       find.descendant(
         of: find.byType(Palette),
@@ -302,7 +294,7 @@ void main() {
     expect(d.chats['c']!.shownFile, 'notes/sub.md');
     expect(FocusManager.instance.primaryFocus, same(keys));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('with no room for the panel, Artifacts… lists them in the '
       'palette', (tester) async {
@@ -324,17 +316,14 @@ void main() {
     expect(d.chats['c']!.shownFile, 'notes/sub.md');
     expect(showDetails.value, isFalse);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⌘P: Open file matches what’s typed and opens it', (
     tester,
   ) async {
     final d = await _app(tester);
     final keys = FocusManager.instance.primaryFocus;
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyP);
     final box = find.byType(OpenFileBox);
     expect(box, findsOneWidget);
     Finder inBox(Finder f) => find.descendant(of: box, matching: f);
@@ -375,20 +364,14 @@ void main() {
     // The keys are back where they were: Files, opening, took none.
     expect(FocusManager.instance.primaryFocus, same(keys));
     // Code isn't an artifact, but ⌘P opens it.
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyP);
     await tester.enterText(inBox(find.byType(TextField)), 'api.go');
     await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
     expect(_inPane(find.text('api.go')), findsOneWidget);
     // A script with no extension: listed, and it opens.
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyP);
     await tester.enterText(inBox(find.byType(TextField)), 'deploy');
     await tester.pumpAndSettle();
     expect(
@@ -400,7 +383,7 @@ void main() {
     expect(_inPane(find.text('deploy')), findsOneWidget);
     expect(d.chats['c']!.shownFile, 'scripts/deploy');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the phone: Artifacts in the bar, then a file full screen', (
     tester,

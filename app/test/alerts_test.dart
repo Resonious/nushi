@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/alerts.dart';
 import 'package:nushi/alerts_macos.dart';
 import 'package:nushi/alerts_settings.dart';
+import 'package:nushi/controls.dart' show Toggle;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/settings.dart';
@@ -40,12 +41,6 @@ _Swift _fake() {
         .setMockMethodCallHandler(alertsChannel, null),
   );
   return swift;
-}
-
-void _defaults() {
-  alertNeedsYou.value = alertFinished.value = alertFailed.value = true;
-  alertSound.value = false;
-  dockBadge.value = true;
 }
 
 EventsResponse _status(
@@ -95,8 +90,6 @@ Future<(FakeDaemon, Daemon, ChatAlerts)> _connect(
 }
 
 void main() {
-  setUp(_defaults);
-
   testWidgets('a permission prompt and a question are posted once, in the '
       "phone's words, the chat's title under them", (tester) async {
     final swift = _fake();
@@ -337,9 +330,7 @@ void main() {
           alertsChannel.codec.encodeMethodCall(const MethodCall('open', 'b')),
           (_) {},
         );
-    for (var i = 0; i < 5; i++) {
-      await tester.pump();
-    }
+    await frames(tester, 5);
     expect(d.chatsListed, isTrue);
     expect(d.selectedId, 'b');
     alerts.dispose();
@@ -354,10 +345,7 @@ void main() {
       themed(const SingleChildScrollView(child: NotificationsGroup())),
     );
     await tester.pump();
-    expect(
-      find.text('The turn ended with an error, or the agent quit mid-turn.'),
-      findsOne,
-    );
+    expect(find.text('An error, or the agent quit mid-turn.'), findsOne);
     expect(find.text('macOS has notifications off for Nushi.'), findsOne);
     await tester.tap(find.text('Open Notifications…'));
     await tester.pump();
@@ -365,10 +353,10 @@ void main() {
 
     Finder switchOf(String label) => find.descendant(
       of: find.ancestor(of: find.text(label), matching: find.byType(Row)).first,
-      matching: find.byType(Switch),
+      matching: find.byType(Toggle),
     );
-    expect(tester.widget<Switch>(switchOf('Sound')).value, false);
-    expect(tester.widget<Switch>(switchOf('Dock badge')).value, true);
+    expect(tester.widget<Toggle>(switchOf('Sound')).value, false);
+    expect(tester.widget<Toggle>(switchOf('Dock badge')).value, true);
     await tester.tap(switchOf('A turn ends'));
     await tester.tap(switchOf('Sound'));
     await tester.pump();

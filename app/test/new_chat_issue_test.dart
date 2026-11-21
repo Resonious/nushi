@@ -64,17 +64,15 @@ Future<(FakeDaemon, Daemon)> _sidebar(
     ..answer = _jira;
   final d = await fake.connect(tester);
   await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: Row(
-          children: [
-            SizedBox(width: 260, child: Sidebar(daemon: d)),
-            const Spacer(),
-          ],
-        ),
+    themed(
+      Row(
+        children: [
+          SizedBox(width: 260, child: Sidebar(daemon: d)),
+          const Spacer(),
+        ],
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   return (fake, d);
@@ -105,11 +103,6 @@ void main() {
   setUpAll(loadFonts);
   setUp(() {
     lastJiraSite.value = _other;
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        );
   });
 
   testWidgets('⌘V with an issue’s link picks it: a worktree on its branch, '
@@ -127,10 +120,7 @@ void main() {
         );
     await _open(tester);
     expect(find.text('Jira issue…'), findsOneWidget);
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyV);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyV);
     expect(find.text('Log in with a passkey'), findsOneWidget);
     await _key(tester, LogicalKeyboardKey.enter); // picks it
     expect(find.text('Chat on ACME-12 in nushi'), findsOneWidget);

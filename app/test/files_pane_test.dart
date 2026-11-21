@@ -143,9 +143,7 @@ Future<(Daemon, _Folder)> _app(
 }) async {
   viewport(tester, size, brightness: brightness);
   showDetails.value = false;
-  paneWidths.value = {};
   filesChats.value = open ? {'c'} : {};
-  filesIgnored.value = false;
   final folder = _Folder();
   addTearDown(folder.close);
   final previews = <StreamController<WatchChatFileResponse>>[];
@@ -217,8 +215,6 @@ Future<void> _key(WidgetTester tester, LogicalKeyboardKey key) async {
   await tester.pumpAndSettle();
 }
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -266,7 +262,7 @@ void main() {
       expect(blank.right, tree.left);
       expect(tree.width, 260);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets('one file: its name and its ✕ after Files; two: their tabs, '
         'the first name where the one was; the tree never moves', (
@@ -303,7 +299,7 @@ void main() {
       expect(find.byType(FilesBlank), findsOneWidget);
       expect(tester.getRect(find.byType(FilesTree)), tree);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
 
     testWidgets("the × and the header's button hide the pane and keep its "
         'tabs', (tester) async {
@@ -323,7 +319,7 @@ void main() {
       expect(c.shownFile, 'docs/notes.md');
       expect(find.byType(PaneTabs), findsOneWidget);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   });
 
   testWidgets('a daemon older than the tree: the viewer alone, saying how '
@@ -361,7 +357,7 @@ void main() {
       findsOneWidget,
     );
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('⇧⌘E opens the tree: folders first, what git ignores left out '
       'until the eye shows it, dimmed', (tester) async {
@@ -397,7 +393,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(d.chats['c']!.files.shown.value, isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a folder opens as it is clicked, listed then; a file opens in '
       'the preview; outside git, what the chat wrote is marked', (
@@ -432,7 +428,7 @@ void main() {
     expect(_names(tester), isNot(contains('report.md')));
     expect(folder.streams['docs']!.hasListener, isFalse);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a file opened opens the pane, and a click on its name shows '
       'it in the tree: the folders above it open, its row selected', (
@@ -475,7 +471,7 @@ void main() {
     expect(_view(tester, 'report.md').selected, isTrue);
     expect(_view(tester, 'main.dart').selected, isFalse);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a file git ignores, while they’re hidden: the pane opens at '
       'its folder, and nothing scrolls to it later', (tester) async {
@@ -517,7 +513,7 @@ void main() {
     expect(folderTreeOf(c).revealing, isNull);
     expect(folderTreeOf(c).selected, isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a file outside the chat’s folder: its name does nothing', (
     tester,
@@ -536,7 +532,7 @@ void main() {
     expect(folderTreeOf(d.chats['c']!).selected, isNull);
     expect(folderTreeOf(d.chats['c']!).open, isEmpty);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('↑↓ move, → opens a folder and goes in, ← closes it and goes '
       'up, ⏎ opens a file', (tester) async {
@@ -561,7 +557,7 @@ void main() {
     expect(_names(tester).first, 'app');
     expect(_names(tester), isNot(contains('lib')));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('the filter finds any file by name, in folders not opened '
       'yet, as a tree; ⏎ opens the best; Esc clears it', (tester) async {
@@ -592,7 +588,7 @@ void main() {
     expect(_names(tester).first, 'app');
     expect(_names(tester), isNot(contains('widgets')));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Search files… with the eye at its end; past its 200 best '
       'matches it says some may not be listed', (tester) async {
@@ -628,7 +624,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(note), findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a filter isn’t worked out again as the chat streams, only '
       'as the query, the tree or git’s list changes', (tester) async {
@@ -646,7 +642,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_view(tester, 'tree_view.dart').row, isNot(same(row)));
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a change comes in: the tree keeps what is open and selected', (
     tester,
@@ -674,7 +670,7 @@ void main() {
     );
     expect(_view(tester, 'report.md').selected, isTrue);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a big folder says how many more', (tester) async {
     final (d, folder) = await _app(tester);
@@ -688,7 +684,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_names(tester), ['a.md', '(1234 more)']);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a row shows a bidi override in its name and its tooltip', (
     tester,
@@ -732,7 +728,6 @@ void main() {
       tester.platformDispatcher.accessibilityFeaturesTestValue =
           const FakeAccessibilityFeatures(disableAnimations: true);
       addTearDown(tester.platformDispatcher.clearAllTestValues);
-      filesIgnored.value = false;
       final folder = _Folder();
       addTearDown(folder.close);
       final previews = <StreamController<WatchChatFileResponse>>[];
@@ -815,7 +810,7 @@ void main() {
         expectTextInside(tester, width);
         await render(tester, find.byType(NushiApp), 'files_${size}_$name');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }

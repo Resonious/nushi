@@ -16,13 +16,14 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
+
+	"github.com/afrase/nushi/tools/dartcheck"
 )
 
 // platform is one platform's suffix (a file <capability>_<suffix>.dart is
@@ -63,50 +64,21 @@ const picksASet = "main.dart"
 
 var theSets = []string{"native_macos.dart", "native_linux.dart", "native_windows.dart"}
 
-// generated are the suffixes of protoc's and Connect's Dart, left out.
-var generated = []string{".pb.dart", ".pbenum.dart", ".pbjson.dart", ".pbserver.dart", ".pbgrpc.dart"}
-
-// use is one line of a file that uses native code.
-type use struct {
-	path string
-	line int
-	what string
-}
-
 func main() {
-	roots := os.Args[1:]
-	if len(roots) == 0 {
-		roots = []string{"app/lib"}
-	}
-	var uses []use
-	for _, root := range roots {
-		found, err := check(root)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "native-edge:", err)
-			os.Exit(2)
-		}
-		uses = append(uses, found...)
-	}
-	for _, u := range uses {
-		fmt.Fprintf(os.Stderr, "%s:%d: %s\n", u.path, u.line, u.what)
-	}
-	if len(uses) > 0 {
-		fmt.Fprintln(os.Stderr, "Native code goes behind an interface its user declares, each platform's implementation in "+
-			"<capability>_macos.dart, <capability>_linux.dart or <capability>_windows.dart, reached only through Native "+
-			"and chosen in main.dart (native_macos.dart, native_linux.dart or native_windows.dart; ADR 0097, 0104 and 0125, docs/adr/).")
-		os.Exit(1)
-	}
+	os.Exit(dartcheck.Run("native-edge", "Native code goes behind an interface its user declares, each platform's implementation in "+
+		"<capability>_macos.dart, <capability>_linux.dart or <capability>_windows.dart, reached only through Native "+
+		"and chosen in main.dart (native_macos.dart, native_linux.dart or native_windows.dart; ADR 0097, 0104 and 0125, docs/adr/).", check))
 }
 
 // check lists the native code in the Dart files under root where it may not
 // be, generated code left out.
-func check(root string) ([]use, error) {
-	var uses []use
+func check(root string) ([]dartcheck.Use, error) {
+	var uses []dartcheck.Use
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		switch {
 		case err != nil:
 			return err
-		case d.IsDir() || !strings.HasSuffix(path, ".dart") || isGenerated(path):
+		case d.IsDir() || !strings.HasSuffix(path, ".dart") || dartcheck.Generated(path):
 			return nil
 		}
 		rel, err := filepath.Rel(root, path)
@@ -119,17 +91,6 @@ func check(root string) ([]use, error) {
 		return err
 	})
 	return uses, err
-}
-
-// isGenerated says whether path is protoc's or Connect's output.
-func isGenerated(path string) bool {
-	base := filepath.Base(path)
-	for _, s := range generated {
-		if strings.HasSuffix(base, s) {
-			return true
-		}
-	}
-	return strings.Contains(base, ".connect.")
 }
 
 // platformOf is the platform whose file path is, if any.
@@ -154,13 +115,13 @@ func where(in []platform) string {
 // inFile lists the native code in one file, comments left out, that its
 // platform (own, when ok) doesn't allow; main is whether it's the app's
 // main.dart, which may name the sets.
-func inFile(path string, own platform, ok, main bool) ([]use, error) {
+func inFile(path string, own platform, ok, main bool) ([]dartcheck.Use, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close() //nolint:errcheck // read only
-	var uses []use
+	var uses []dartcheck.Use
 	sc := bufio.NewScanner(f)
 	for n := 1; sc.Scan(); n++ {
 		line := sc.Text()
@@ -170,7 +131,7 @@ func inFile(path string, own platform, ok, main bool) ([]use, error) {
 		for _, k := range native {
 			allowed := ok && slices.Contains(k.in, own)
 			if !allowed && k.pattern.MatchString(line) {
-				uses = append(uses, use{path, n, k.name + " " + where(k.in)})
+				uses = append(uses, dartcheck.Use{Path: path, Line: n, What: k.name + " " + where(k.in)})
 			}
 		}
 		for _, m := range platformFile.FindAllStringSubmatch(line, -1) {
@@ -179,7 +140,7 @@ func inFile(path string, own platform, ok, main bool) ([]use, error) {
 			case main && slices.Contains(theSets, filepath.Base(m[1])):
 			case ok && named == own:
 			default:
-				uses = append(uses, use{path, n, named.name + " (" + m[1] + ")"})
+				uses = append(uses, dartcheck.Use{Path: path, Line: n, What: named.name + " (" + m[1] + ")"})
 			}
 		}
 	}

@@ -17,7 +17,6 @@ void main() {
     expect(set.window.menuBar, isFalse);
     expect(set.desktop, isA<WindowsDesktop>());
     expect(set.install, isA<WindowsAppInstall>());
-    expect(set.install.canStop, isTrue);
   });
 
   test('presenting with no window of the app to find (a test has none) does '

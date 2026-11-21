@@ -35,6 +35,17 @@ type Tool struct {
 	InputSchema json.RawMessage `json:"inputSchema"`
 }
 
+// Schema is a tool's input: an object of props (JSON members, written
+// out), the keys in required given, and no others.
+func Schema(props string, required ...string) json.RawMessage {
+	req := ""
+	if len(required) > 0 {
+		b, _ := json.Marshal(required) // a list of strings
+		req = `,"required":` + string(b)
+	}
+	return json.RawMessage(`{"type":"object","properties":{` + props + `}` + req + `,"additionalProperties":false}`)
+}
+
 // Set is a group of tools (Jira's; review comments' later), which decides
 // what a grant gets of it.
 type Set interface {

@@ -48,9 +48,8 @@ class SessionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = NushiTheme.of(context);
     final t = theme.t;
-    final when = DateTime.fromMillisecondsSinceEpoch(s.updatedUnixMs.toInt());
     final details = [
-      if (s.updatedUnixMs != 0) ago(clock().difference(when), when),
+      if (s.updatedUnixMs != 0) agoAt(s.updatedUnixMs.toInt(), clock()),
       if (s.messages > 0) '${s.messages} messages',
       if (everyFolder && s.folder.isNotEmpty) folderParts(s.folder).$1,
       if (s.folderGone) 'folder gone',

@@ -102,10 +102,6 @@ void disallowLocalNetwork(String host) =>
 /// can't say.
 final ValueNotifier<String?> defaultBrowser = runValue(null);
 
-/// Removes every site's data from the web views' store
-/// ([WebViews.clearData]): the ⋯ menu's Clear browsing data.
-Future<void> clearBrowsingData() => native.web.clearData();
-
 /// Sets [defaultBrowser] afresh: the user may have changed it meanwhile.
 Future<void> lookUpDefaultBrowser() async {
   try {

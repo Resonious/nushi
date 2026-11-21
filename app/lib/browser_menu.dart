@@ -11,6 +11,7 @@ import 'package:nushi/browser_page.dart';
 import 'package:nushi/clock.dart';
 import 'package:nushi/conventions.dart';
 import 'package:nushi/menu.dart';
+import 'package:nushi/native.dart';
 import 'package:nushi/preview_entry.dart';
 import 'package:nushi/settings.dart' show linksInBrowserTab, localNetworkSites;
 import 'package:nushi/theme/theme.dart';
@@ -141,7 +142,6 @@ Future<String?> Function(String name) screenshotPath = (name) async =>
 /// A screenshot's name, as macOS names one: "Screenshot 2026-11-06 at
 /// 14.03.22.png".
 String screenshotName(DateTime at) {
-  String two(int n) => n.toString().padLeft(2, '0');
   return 'Screenshot ${at.year}-${two(at.month)}-${two(at.day)} at '
       '${two(at.hour)}.${two(at.minute)}.${two(at.second)}.png';
 }
@@ -165,7 +165,7 @@ Future<void> saveScreenshot(BuildContext context, BrowserHost host) async {
 }
 
 /// Clear browsing data: once the user says so, every site's cookies,
-/// storage and caches go from WebKit's store ([clearBrowsingData]), and the
+/// storage and caches go from WebKit's store ([Native.web]), and the
 /// page showing ([host]'s) loads again without them; another tab's page
 /// loads afresh as it shows.
 Future<void> clearBrowsing(BuildContext context, BrowserHost? host) async {
@@ -182,7 +182,7 @@ Future<void> clearBrowsing(BuildContext context, BrowserHost? host) async {
   await runAndSay(
     context,
     () async {
-      await clearBrowsingData();
+      await native.web.clearData();
       await host?.reload();
     },
     running: 'Clearing browsing data…',

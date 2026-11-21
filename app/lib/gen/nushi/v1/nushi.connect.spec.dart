@@ -978,7 +978,7 @@ abstract final class NushiService {
   );
 
   /// Starts pairing a phone (remote access must be on): the text for the QR
-  /// code, good until it expires. Once a phone holding it connects,
+  /// code, good for a few minutes. Once a phone holding it connects,
   /// Remote.pairing has its name and the code both screens show.
   static const startPairing = connect.Spec(
     '/$name/StartPairing',
@@ -1185,7 +1185,7 @@ abstract final class NushiService {
     nushiv1nushi.FindJiraIssuesResponse.new,
   );
 
-  /// An attachment's file or thumbnail (20 MB at most).
+  /// An attachment's file (20 MB at most).
   static const getJiraAttachment = connect.Spec(
     '/$name/GetJiraAttachment',
     connect.StreamType.unary,
@@ -1279,6 +1279,16 @@ abstract final class NushiService {
     nushiv1nushi.GetGitHubIssueResponse.new,
   );
 
+  /// A pull request's newest 100 commits, oldest first, and how many it
+  /// has: asked when they show, not with each poll of GetGitHubPull.
+  /// API 127.
+  static const getGitHubCommits = connect.Spec(
+    '/$name/GetGitHubCommits',
+    connect.StreamType.unary,
+    nushiv1nushi.GetGitHubCommitsRequest.new,
+    nushiv1nushi.GetGitHubCommitsResponse.new,
+  );
+
   /// A pull request's files from its merge base to its head, both sides'
   /// texts, as GetDiff gives them.
   static const getGitHubFiles = connect.Spec(
@@ -1323,6 +1333,17 @@ abstract final class NushiService {
     connect.StreamType.unary,
     nushiv1nushi.SubmitGitHubReviewRequest.new,
     nushiv1nushi.SubmitGitHubReviewResponse.new,
+  );
+
+  /// Sets a pull request's title or description (one at a time), only
+  /// while it still says what the edit began from: else FailedPrecondition,
+  /// reason changed_since. PermissionDenied when GitHub doesn't let the
+  /// user edit it. API 128.
+  static const editGitHubPull = connect.Spec(
+    '/$name/EditGitHubPull',
+    connect.StreamType.unary,
+    nushiv1nushi.EditGitHubPullRequest.new,
+    nushiv1nushi.EditGitHubPullResponse.new,
   );
 
   /// Re-runs the failed jobs of the workflow runs that a pull request's
@@ -1450,6 +1471,17 @@ abstract final class NushiService {
     connect.StreamType.unary,
     nushiv1nushi.LinkChatPullRequest.new,
     nushiv1nushi.LinkChatPullResponse.new,
+  );
+
+  /// What the chats' turns used from from to to (ADR 0136): totals, by day,
+  /// agent, model and project folder, the costliest chats, and the account
+  /// limits agents reported. The Mac's only: it names project folders and
+  /// chats' titles, which the phone has no page for. API 126.
+  static const getUsage = connect.Spec(
+    '/$name/GetUsage',
+    connect.StreamType.unary,
+    nushiv1nushi.GetUsageRequest.new,
+    nushiv1nushi.GetUsageResponse.new,
   );
 
   /// Streams every change to every chat from now on. The first message is

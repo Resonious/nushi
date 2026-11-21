@@ -8,19 +8,20 @@ import 'package:flutter/material.dart' show ThemeMode;
 import 'package:nushi/arrangement.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/file_mode.dart';
+import 'package:nushi/file_tabs.dart' show KeptTabs;
 import 'package:nushi/fonts.dart';
-import 'package:nushi/run_state.dart';
 import 'package:nushi/tile_images.dart';
 import 'package:nushi/tile_look.dart';
 import 'package:nushi/tile_picture.dart';
+import 'package:nushi/usage_range.dart';
 
 /// What the app remembers across launches, in `app.json` in the data folder:
 /// whether the details panel shows (its toolbar button), which of its widgets
 /// are collapsed and their order, what each chat's Changes view shows, the
 /// side panes' widths (not the details panel's, which is fixed), whether
 /// changed files show flat and diffs unified, which chats show their
-/// terminals and their Files pane (opened by its own button, not a file's
-/// opening), whether it lists ignored files and
+/// terminals and their Files pane, its file tabs, whether it lists ignored
+/// files and
 /// shows its tree and on which side, whether its clicks open preview tabs,
 /// its tab size, indent guides and scrolling past the end, the
 /// terminal's font, the app's and code's fonts, whether the chat takes the
@@ -41,7 +42,8 @@ import 'package:nushi/tile_picture.dart';
 /// browser tab and which sites there may reach the local network, whether a
 /// preview's source wraps its lines and shows its whitespace,
 /// what reply cards ask the agent, the pull request each chat's tab shows,
-/// and the newer release whose toast was dismissed. Each is a [Pref].
+/// the range Settings › Usage shows, and the newer release whose toast
+/// was dismissed. Each is a [Pref].
 /// Not whether new chats get a worktree, nor whether a subagent's pane
 /// shows wide, nor a beta's `projectRail`: an older `worktrees`,
 /// `subagentWide` or `projectRail` key is ignored, and dropped by the
@@ -74,23 +76,24 @@ final Pref<bool> diffUnified = _plain('unified', false);
 /// The chats whose terminal panel is open.
 final Pref<Set<String>> terminalChats = _set('terminals', chats: true);
 
-/// The chats whose Files pane is open, and whether the pane lists what git
-/// ignores. Saved only for the chats whose pane was opened by its own
-/// button, key or menu: one a file's opening opened ([filesPassing]) is
-/// left out, as its file tabs are (ADR 0123).
-final Pref<Set<String>> filesChats = Pref(
-  'files',
-  (v) => {..._strings(v) ?? const []},
-  write: (s) => s.difference(filesPassing).toList(),
-  chats: (s) => s,
-  without: (s, gone) => s.difference(gone),
-);
-
-/// The chats whose Files pane a file's opening opened (a path's click,
-/// `show`, ⌘P), not the pane's own button, while the app runs: their open
-/// pane isn't saved.
-final Set<String> filesPassing = runSet();
+/// The chats whose Files pane is open, however it opened (its own button
+/// or a file's opening; ADR 0123's amendment of 2026-11-19), and whether
+/// the pane lists what git ignores.
+final Pref<Set<String>> filesChats = _set('files', chats: true);
 final Pref<bool> filesIgnored = _plain('filesIgnored', false);
+
+/// Each chat's file tabs (ADR 0070's amendment of 2026-11-19), by chat
+/// id: their names, the one that shows, the provisional one and those
+/// showing their Source (`files_kept.dart` puts them back).
+final Pref<Map<String, KeptTabs>> fileTabsKept = Pref(
+  'fileTabs',
+  (v) => _entries(v, KeptTabs.read),
+  write: (m) => {
+    for (final MapEntry(:key, :value) in m.entries) key: value.json,
+  },
+  chats: (m) => m.keys,
+  without: (m, gone) => {...m}..removeWhere((id, _) => gone.contains(id)),
+);
 
 /// Whether the Files pane shows its tree beside its viewer (on at first;
 /// ⇧⌘Y, its second row's button, its ⋯ and View › Show File Tree): one
@@ -176,8 +179,8 @@ final Pref<Map<String, List<String>>> githubOwners = _places('githubOwners');
 /// Nushi knows ("My folders' repositories"), not all.
 final Pref<bool> githubKnownRepos = _plain('githubKnown', false);
 
-/// Findings from review bots (Settings › GitHub; off at first): the To do
-/// list reads must-address findings out of these bots' reviews (logins,
+/// Findings from review bots (Settings › GitHub; off at first): the merge
+/// status card reads must-address findings out of these bots' reviews (logins,
 /// comma-separated), the list items under a heading with any of
 /// [githubFindingHeadings]' words (comma-separated, any case).
 final Pref<bool> githubFindings = _plain('githubFindings', false);
@@ -387,10 +390,6 @@ final Pref<Map<String, int>> chatOpened = _byChat(
 /// in the order pinned.
 final Pref<Map<String, List<String>>> pinnedFiles = _byChat('pins', _strings);
 
-/// The pins kept in [saved] (`app.json` read whole, as [readSaved] does).
-Map<String, List<String>> savedPins(Map<String, Object?> saved) =>
-    _byPlace(saved['pins']);
-
 /// The newest comment seen of each chat's pull request (ms since the
 /// epoch), by chat id: newer ones are unread.
 final Pref<Map<String, int>> pullSeen = _byChat(
@@ -506,6 +505,14 @@ final Pref<bool> wrapLines = _plain('wrap', true);
 /// Only drawn: the text is as it was.
 final Pref<bool> showWhitespace = _plain('whitespace', false);
 
+/// The span of days Settings › Usage shows (ADR 0136): the last 7 days
+/// until another is picked.
+final usageRange = Pref<UsageRange>(
+  'usageRange',
+  (v) => UsageRange.values.asNameMap()[v] ?? UsageRange.week,
+  write: (r) => r.name,
+);
+
 /// The newer release whose toast was dismissed ("0.1.17"): it shows again
 /// only for a newer one.
 final Pref<String?> dismissedUpdate = _plain('dismissedUpdate', null);
@@ -517,6 +524,7 @@ List<Pref<Object?>> get _chatPrefs => [
   changeScopes,
   terminalChats,
   filesChats,
+  fileTabsKept,
   sidebarChats,
   sidebarSections,
   chatOpened,
@@ -599,6 +607,11 @@ final class Pref<T> extends ValueNotifier<T> {
     value = _read(_saved[key]);
     _touched = false;
   }
+
+  /// Takes what a launch would read from [saved], `app.json` read whole
+  /// ([readSaved]): a test's relaunch.
+  @visibleForTesting
+  void readFrom(Map<String, Object?> saved) => value = _read(saved[key]);
 }
 
 /// A set pref's toggle, for what's kept as a set of ids or names (the

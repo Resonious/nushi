@@ -17,6 +17,7 @@ import 'package:nushi/context_cache.dart';
 import 'package:nushi/dev_servers.dart';
 import 'package:nushi/drafts.dart';
 import 'package:nushi/errors.dart';
+import 'package:nushi/files_kept.dart';
 import 'package:nushi/gen/nushi/v1/nushi.connect.client.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/issue_chat.dart';
@@ -55,7 +56,7 @@ final String dataDir = Platform.environment.containsKey('FLUTTER_TEST')
     : Platform.environment['NUSHI_DATA'] ?? native.install.dataFolder;
 
 /// The API version this app was built with (`internal/api.Version`).
-const apiVersion = 125;
+const apiVersion = 128;
 
 /// The API from which GetDiff answers one file (GetDiffRequest.path), what
 /// a file preview's change marks are drawn from.

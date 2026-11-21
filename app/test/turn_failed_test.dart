@@ -7,7 +7,6 @@ import 'dart:convert';
 import 'package:connectrpc/connect.dart' as connect;
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/controls.dart';
@@ -16,7 +15,6 @@ import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
 import 'package:nushi/items.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/theme/theme.dart';
-import 'package:nushi/toast.dart';
 
 import 'fake_daemon.dart';
 import 'harness.dart';
@@ -72,22 +70,19 @@ Future<Daemon> _show(
   viewport(tester, Size(width, 340));
   final d = await fake.connect(tester);
   await tester.pumpWidget(
-    MaterialApp(
-      builder: (context, child) => ToastHost(child: child!),
-      debugShowCheckedModeBanner: false,
-      theme: NushiTheme(tokens).toThemeData(),
-      home: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            spacing: 12,
-            children: [
-              for (final it in state.items)
-                ItemView(it, state, d, live: false, still: true),
-            ],
-          ),
+    themed(
+      Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          spacing: 12,
+          children: [
+            for (final it in state.items)
+              ItemView(it, state, d, live: false, still: true),
+          ],
         ),
       ),
+      tokens: tokens,
+      banner: false,
     ),
   );
   await tester.pump();
@@ -95,8 +90,6 @@ Future<Daemon> _show(
 }
 
 final Finder _button = find.widgetWithText(Button, 'Try again');
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 /// The full window on [items], chat 'c'.
 Future<(FakeDaemon, Daemon)> _window(
@@ -130,13 +123,6 @@ void _wraps(WidgetTester tester, double width) {
 
 void main() {
   setUpAll(loadFonts);
-  setUp(
-    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('nushi/fonts'),
-          (_) async => <String>[],
-        ),
-  );
 
   for (final (name, tokens) in [
     ('dark', Tokens.dark),
@@ -375,7 +361,7 @@ void main() {
     expect(find.text('Branch renamed'), findsOneWidget);
     expect(_button, findsNothing);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final width in [1700.0, 720.0]) {
     testWidgets('a long error wraps in the window at $width', (tester) async {
@@ -386,7 +372,7 @@ void main() {
       expect(_button, findsOneWidget);
       _wraps(tester, width);
       await closeView(tester, d);
-    }, variant: _mac);
+    }, variant: onMac);
   }
 
   testWidgets('a long error wraps on the phone, and a tap sends', (
@@ -409,9 +395,7 @@ void main() {
           : null);
     final phone = await startPhone(tester, fake);
     await tester.tap(find.text('Fix the login redirect'));
-    for (var i = 0; i < 20; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+    await frames(tester, 20, const Duration(milliseconds: 50));
     expect(_button, findsOneWidget);
     _wraps(tester, 390);
     await tester.tap(_button);

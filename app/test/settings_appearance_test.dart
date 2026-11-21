@@ -1,6 +1,6 @@
-// Settings › Appearance: its place in the nav and the palette, Appearance
-// and Chat width moved from General, the cards' Dark and Light (a look,
-// never the appearance), a user's card's Show in Finder; the page and a
+// Settings › Appearance: its place in the nav and the palette, Mode and
+// Chat width as segments, the theme first and picked once, every font in
+// one group, a user's card's Show in Finder; the page and a
 // card as goldens, and renders with a theme of the user's.
 import 'dart:io';
 
@@ -8,12 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/arrangement.dart';
+import 'package:nushi/controls.dart' show Segmented;
 import 'package:nushi/daemon.dart';
 import 'package:nushi/main.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/settings_appearance.dart';
 import 'package:nushi/settings_general.dart';
 import 'package:nushi/settings_rows.dart';
+import 'package:nushi/settings_terminal.dart';
 import 'package:nushi/settings_theme.dart';
 import 'package:nushi/settings_view.dart';
 import 'package:nushi/sidebar_view.dart';
@@ -25,8 +27,6 @@ import 'fake_daemon.dart';
 import 'fake_desktop.dart';
 import 'harness.dart';
 import 'settings_harness.dart';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 /// A theme of the user's, a dim muted text that reads under AA, and the
 /// folder's gone after.
@@ -93,10 +93,7 @@ void main() {
 
     d.closeSettings();
     await tester.pumpAndSettle();
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyK);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pumpAndSettle();
+    await cmdKey(tester, LogicalKeyboardKey.keyK);
     await tester.enterText(find.byType(TextField).last, 'theme');
     await tester.pumpAndSettle();
     expect(find.text('Appearance and themes'), findsOne);
@@ -105,7 +102,7 @@ void main() {
     expect(d.settingsOpen, const SettingsAt(SettingsSection.appearance));
     expect(find.byType(ThemeGroup), findsOne);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Appearance and Chat width moved from General and still '
       'work', (tester) async {
@@ -115,18 +112,28 @@ void main() {
     expect(find.byType(ThemeGroup), findsNothing);
     d.openSettings(section: SettingsSection.appearance);
     await tester.pumpAndSettle();
-    await _tap(tester, find.text('As the system'));
-    await _tap(tester, _menuItem('Light'));
+    // Mode and Chat width are segments, each choice in sight.
+    final mode = find.byKey(const ValueKey('appearance-mode'));
+    await _tap(tester, find.descendant(of: mode, matching: find.text('Light')));
     expect(appearance.value, ThemeMode.light);
     expect(
       NushiTheme.of(tester.element(find.byType(SettingsView))).t,
       same(Tokens.light),
     );
-    await _tap(tester, find.text('Centered'));
-    await _tap(tester, _menuItem('Full width'));
+    final width = find.byKey(const ValueKey('chat-width'));
+    await _tap(
+      tester,
+      find.descendant(of: width, matching: find.text('Full width')),
+    );
     expect(chatFullWidth.value, isTrue);
+    expect(readSaved()['chatFullWidth'], isTrue);
+    await _tap(
+      tester,
+      find.descendant(of: width, matching: find.text('Centered')),
+    );
+    expect(chatFullWidth.value, isFalse);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('Project rail is a switch, off at first, kept once set', (
     tester,
@@ -154,7 +161,7 @@ void main() {
     expect(projectRail.value, isFalse);
     expect(readSaved()['projectRailOn'], isFalse);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("Project rail says why it isn't shown while it's on", (
     tester,
@@ -179,15 +186,41 @@ void main() {
     await tester.pumpAndSettle();
     expect(says('A column of project tiles beside the chats.'), findsOne);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
-  testWidgets('Dark and Light change the cards only; the picked one stays '
-      'both, and Appearance stays', (tester) async {
+  testWidgets('the Theme group: Mode first, as System, Light and Dark; the '
+      'cards draw the set the app shows; the picked theme shows once', (
+    tester,
+  ) async {
     final d = await _app(tester);
-    final app = NushiTheme.of(tester.element(find.byType(SettingsView))).t;
+    final group = find.byType(ThemeGroup);
+    final mode = find.byKey(const ValueKey('appearance-mode'));
+    // Mode is the group's first row, over the cards, and the page has no
+    // row named Appearance.
+    expect(find.descendant(of: group, matching: mode), findsOne);
+    expect(
+      tester.getRect(mode).bottom,
+      lessThan(tester.getRect(find.byType(ThemeCard).first).top),
+    );
+    expect(find.widgetWithText(SettingsRow, 'Appearance'), findsNothing);
+    expect(
+      tester.getRect(group).top,
+      lessThan(tester.getRect(find.text('Layout')).top),
+    );
+    expect(
+      tester.widget<Segmented<ThemeMode>>(mode).segments.map((s) => s.$2),
+      ['System', 'Light', 'Dark'],
+    );
     expect(_cards(tester).map((c) => c.look).toSet(), {Brightness.dark});
-    final tabs = find.byKey(const ValueKey('theme-look'));
-    await _tap(tester, find.descendant(of: tabs, matching: find.text('Light')));
+    // Picked once: one card ringed and checked, no large picture of it.
+    expect(_cards(tester).where((c) => c.picked).single.theme.id, 'nushi');
+    expect(find.byKey(const ValueKey('theme-check')), findsOne);
+    expect(find.byType(ThemePreview), findsNWidgets(_cards(tester).length));
+    expect(find.byKey(const ValueKey('theme-look')), findsNothing);
+
+    await _tap(tester, find.descendant(of: mode, matching: find.text('Light')));
+    expect(appearance.value, ThemeMode.light);
+    expect(readSaved()['appearance'], 'light');
     expect(_cards(tester).map((c) => c.look).toSet(), {Brightness.light});
     // Each card draws its own theme's light set.
     for (final c in _cards(tester)) {
@@ -203,23 +236,49 @@ void main() {
         same(c.theme.light),
       );
     }
-    expect(appearance.value, ThemeMode.system);
-    expect(
-      NushiTheme.of(tester.element(find.byType(SettingsView))).t,
-      same(app),
-    );
-    final picked = find.byKey(const ValueKey('theme-picked'));
-    final shown = [
-      for (final p in tester.widgetList<ThemePreview>(
-        find.descendant(of: picked, matching: find.byType(ThemePreview)),
-      ))
-        p.tokens,
-    ];
-    expect(shown, [same(Tokens.dark), same(Tokens.light)]);
-    await _tap(tester, find.descendant(of: tabs, matching: find.text('Dark')));
+    await _tap(tester, find.descendant(of: mode, matching: find.text('Dark')));
+    expect(appearance.value, ThemeMode.dark);
     expect(_cards(tester).map((c) => c.look).toSet(), {Brightness.dark});
+    await _tap(
+      tester,
+      find.descendant(of: mode, matching: find.text('System')),
+    );
+    expect(appearance.value, ThemeMode.system);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
+
+  testWidgets('every font in one group: App, Code, and the terminal’s family '
+      'and size, which Terminal shows too', (tester) async {
+    final d = await _app(tester);
+    final fonts = find.ancestor(
+      of: find.text('Fonts'),
+      matching: find.byType(SettingsGroup),
+    );
+    for (final key in ['app-font', 'code-font', 'terminal-font']) {
+      expect(
+        find.descendant(of: fonts, matching: find.byKey(ValueKey(key))),
+        findsOne,
+        reason: key,
+      );
+    }
+    final size = find.descendant(
+      of: fonts,
+      matching: find.byType(TerminalSizeField),
+    );
+    await _tap(tester, size);
+    await _tap(tester, _menuItem('14'));
+    expect(terminalFontSize.value, 14);
+    d.openSettings(section: SettingsSection.terminal);
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byType(TerminalSizeField),
+        matching: find.text('14'),
+      ),
+      findsOne,
+    );
+    d.dispose();
+  }, variant: onMac);
 
   testWidgets('a user’s card says Yours, warns, and shows its file in '
       'Finder', (tester) async {
@@ -245,7 +304,7 @@ void main() {
     expect(opened.single, ['-R', '${themeFiles.dir.path}/Harbor.json']);
     expect(colorTheme.value, 'nushi', reason: 'Show in Finder picks nothing');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   // The page at full size, a theme of the user's among the cards.
   for (final (size, w) in [
@@ -272,7 +331,7 @@ void main() {
           'settings_appearance_${w}_${b.name}_yours',
         );
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 
@@ -284,7 +343,6 @@ void main() {
     // differently on CI's Mac than here (1% of a 220-wide card), and the
     // page's golden below holds the cards.
     testWidgets('golden, the page, $name', (tester) async {
-      colorTheme.value = 'nushi';
       final d = await FakeDaemon([]).connect(tester);
       await pumpSettings(
         tester,

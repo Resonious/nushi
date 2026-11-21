@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/gestures.dart';
@@ -40,14 +39,11 @@ Item _show(String id, String path) => Item(
   input: jsonEncode({'path': path}),
 );
 
-Item _say(String id, String text) =>
-    Item(id: id, kind: ItemKind.ITEM_KIND_USER_MESSAGE, text: text);
-
-Item get _user => _say('u', 'Write the report and a chart for it.');
+Item get _user => userSays('u', 'Write the report and a chart for it.');
 
 /// Two turns: six files in the first, two in the last.
 final List<Item> _turns = [
-  _say('u1', 'Sketch the whole design.'),
+  userSays('u1', 'Sketch the whole design.'),
   for (final f in [
     'docs/brief.md',
     'docs/flows.md',
@@ -57,7 +53,7 @@ final List<Item> _turns = [
     'docs/notes.md',
   ])
     _write('w-$f', f),
-  _say('u2', 'Now the report and its chart.'),
+  userSays('u2', 'Now the report and its chart.'),
   _write('w-r', 'docs/report.md'),
   _write('w-c', 'docs/img/chart.png'),
 ];
@@ -152,8 +148,6 @@ Future<void> _more(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 void main() {
   setUpAll(loadFonts);
 
@@ -206,7 +200,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_names(tester), ['plan.md', 'notes.md', 'chart.png', 'report.md']);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a file written, then shown by its absolute path, is one '
       'row, marked when the show opens it, its old pin kept', (tester) async {
@@ -214,7 +208,6 @@ void main() {
     // show call's path is the agent's own (a page as the owner saw it, but
     // Markdown: a test has no web view).
     const page = '/Users/me/nushi/mock/page.md';
-    pinnedFiles.value = {};
     final (d, fake) = await _app(tester, [
       ..._three,
       _write('w4', 'mock/page.md'),
@@ -250,14 +243,14 @@ void main() {
     togglePin(c, 'mock/page.md');
     expect(pinnedFiles.value, isEmpty);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('no files, no widget', (tester) async {
     final (d, _) = await _app(tester, [_user]);
     expect(find.byType(DetailsPanel), findsOneWidget);
     expect(_rows, findsNothing);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("five, the last turn's first, then Show more for the rest, "
       'newest first; Show less folds them again', (tester) async {
@@ -284,11 +277,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(_names(tester), hasLength(5));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("pinned first, in the order pinned, the pin in the icon's "
       'place on hover; kept in app.json', (tester) async {
-    Directory(dataDir).createSync(recursive: true); // the tests' own
     final (d, _) = await _app(tester, _turns);
     await _more(tester);
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
@@ -314,16 +306,15 @@ void main() {
     expect(pinnedFiles.value, {
       'c': ['mock/home.html', 'docs/brief.md'],
     });
-    expect(savedPins(readSaved()), pinnedFiles.value);
+    expect(readSaved()['pins'], pinnedFiles.value);
     // Unpinned, it goes back among the older.
     await tester.tap(_inRows(find.byIcon(Icons.push_pin)).first);
     await tester.pumpAndSettle();
     expect(_names(tester).first, 'brief.md');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('pins survive a restart', (tester) async {
-    Directory(dataDir).createSync(recursive: true);
     var (d, _) = await _app(tester, _turns);
     togglePin(d.chats['c']!, 'docs/flows.md');
     await tester.pumpAndSettle();
@@ -333,11 +324,11 @@ void main() {
     final saved = readSaved();
     pinnedFiles.value = {};
     (d, _) = await _app(tester, _turns);
-    pinnedFiles.value = savedPins(saved);
+    pinnedFiles.readFrom(saved);
     await tester.pumpAndSettle();
     expect(_names(tester).take(3), ['flows.md', 'chart.png', 'report.md']);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('a file opened stays among the first for an hour', (
     tester,
@@ -353,7 +344,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_names(tester).take(3), ['chart.png', 'report.md', 'flows.md']);
     // Closed, it stays recent for the hour.
-    c.files.closeAll();
+    c.files.tabs.value.toList().forEach(c.files.close);
     clock = () => start.add(const Duration(minutes: 59));
     await tester.pump(const Duration(minutes: 1)); // the widget's tick
     expect(_names(tester).take(3), ['chart.png', 'report.md', 'flows.md']);
@@ -361,7 +352,7 @@ void main() {
     await tester.pump(const Duration(minutes: 1));
     expect(_names(tester), isNot(contains('flows.md')));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   for (final (name, mode) in [
     ('dark', Brightness.dark),
@@ -384,6 +375,6 @@ void main() {
       );
       await render(tester, find.byType(NushiApp), 'artifacts_widget_$name');
       d.dispose();
-    }, variant: _mac);
+    }, variant: onMac);
   }
 }

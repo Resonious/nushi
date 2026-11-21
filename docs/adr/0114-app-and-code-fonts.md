@@ -29,3 +29,7 @@ The owner (2026-11-13): "App font. Right now you can only set terminal font but 
 - `ui()` and `code()` reading the preferences themselves: nothing would rebuild on a pick, and the phone shares those widgets.
 - Each family's name drawn in its own font in the menu: hundreds of fonts loaded to open a menu.
 - The picked fonts in the theme previews: a wide one cuts the pictures' text, and a tall one overflows their fixed rows.
+
+## Amendment (2026-11-19): every font in one group
+- Settings › Appearance's Fonts holds all three: App, Code, and Terminal (its family and size side by side). Settings › Terminal keeps the terminal's two beside its preview: the same settings, so either place changes both.
+

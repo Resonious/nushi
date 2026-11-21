@@ -9,9 +9,8 @@ import 'package:nushi/settings.dart';
 import 'package:nushi/toast.dart';
 
 import 'fake_daemon.dart';
+import 'harness.dart';
 import 'pull_fixture.dart';
-
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
 
 GitHubComment _bot(String body) =>
     said('github-actions', body, bot: true, review: 'commented');
@@ -273,22 +272,16 @@ void main() {
     expect(todo(old, findings: _setup).older, isEmpty);
   });
 
-  testWidgets('Send, Send picked and Send all put reply cards in the box, '
-      'each saying whose; a toast only when none went, the row "In the box '
-      '✓" until the card goes; the bar counts them', (tester) async {
+  testWidgets("the merge status card's Send 6 to agent and a failing "
+      "check's Send to agent put reply cards in the box, each saying whose; "
+      'a toast only when none went; the bar counts them', (tester) async {
     final (d, _) = await openPullTab(tester, fixturePull());
     final box = d.chats['c']!.draft.replies;
     Finder toast(String s) =>
         find.descendant(of: find.byType(ToastLine), matching: find.text(s));
-    expect(find.text('To do'), findsOneWidget);
-    expect(
-      find.textContaining(
-        'Then waiting on @notes-reviewers',
-        findRichText: true,
-      ),
-      findsOneWidget,
-    );
-    await tester.tap(find.text('Send').at(1));
+    await tester.tap(find.byKey(const ValueKey('segment checks')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Send to agent').at(1));
     await tester.pumpAndSettle();
     expect(box.value.single.from, startsWith('Failed checks on PR'));
     expect(box.value.single.quote, startsWith('Check CI / rubocop:'));
@@ -296,109 +289,87 @@ void main() {
       box.value.single.from,
       endsWith('on PR octo/notes#412 (GitHub), my pull request:'),
     );
-    // The row and the bar say it went in; no toast besides.
     expect(find.byType(ToastLine), findsNothing);
-    expect(find.text('In the box ✓'), findsOneWidget);
-    expect(find.text('Send'), findsNWidgets(5));
     // The bar, at the tab's foot.
     final bar = _waiting(1);
     expect(bar, findsOneWidget);
     expect(tester.getRect(bar).top, greaterThan(800));
-    // Two picked: rspec and mona's review.
-    await tester.tap(find.byType(Checkbox).at(0));
-    await tester.tap(find.byType(Checkbox).at(3));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Send 2 picked'));
-    await tester.pumpAndSettle();
-    expect(box.value.length, 3);
-    expect(box.value.last.from, startsWith('Changes requested by @mona'));
-    expect(find.byType(ToastLine), findsNothing);
-    expect(find.text('Send 2 picked'), findsNothing); // unpicked once sent
-    expect(find.text('In the box ✓'), findsNWidgets(3));
-    expect(_waiting(3), findsOneWidget);
-    await tester.tap(find.text('Send all 6 to agent'));
+    await tester.tap(find.text('Send 6 to agent'));
     await tester.pumpAndSettle();
     expect(box.value.length, 6); // the same card once
+    expect(box.value[3].from, startsWith('Changes requested by @mona'));
     expect(_waiting(6), findsOneWidget);
     expect(find.byType(ToastLine), findsNothing);
-    expect(find.text('Send'), findsNothing);
     // All of them there already: only a toast can say so.
-    await tester.tap(find.text('Send all 6 to agent'));
+    await tester.tap(find.text('Send 6 to agent'));
     await tester.pumpAndSettle();
     expect(toast("All 6 are in the chat's box already"), findsOneWidget);
-    expect(toast('Go to chat'), findsNothing);
-    // A card taken out: its row can send again; all sent: every row can.
-    box.value = box.value.sublist(1);
-    await tester.pumpAndSettle();
-    expect(find.text('Send'), findsOneWidget);
     box.value = const [];
     await tester.pumpAndSettle();
-    expect(find.text('In the box ✓'), findsNothing);
     expect(bar, findsNothing);
     // Go to chat, from the bar.
-    await tester.tap(find.text('Send').first);
+    await tester.tap(find.text('Send 6 to agent'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(Button, 'Go to chat'));
     await tester.pumpAndSettle();
     expect(d.chats['c']!.tab.value.name, 'chat');
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets("Settings' Findings from review bots: off, no findings; on, "
-      'under their bot', (tester) async {
+      'in the Comments segment, sent with the rest', (tester) async {
     final (d, _) = await openPullTab(tester, fixturePull());
-    expect(find.text('@mona'), findsOneWidget);
-    expect(find.text('Findings from github-actions'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('segment comments')));
+    await tester.pumpAndSettle();
+    expect(find.text('spec/notebooks/page_spec.rb:68–72'), findsNothing);
     githubFindings.value = true;
     await tester.pumpAndSettle();
-    expect(find.text('Findings from github-actions'), findsOneWidget);
+    expect(find.text('2 unresolved · 1 finding'), findsOneWidget);
     expect(find.text('spec/notebooks/page_spec.rb:68–72'), findsOneWidget);
-    expect(find.text('Send all 7 to agent'), findsOneWidget);
+    expect(find.text('Send 7 to agent'), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
-  testWidgets("a bot's review on an older commit: its findings' group says "
-      'so, and shows it', (tester) async {
+  testWidgets("a bot's review on an older commit says so in its card", (
+    tester,
+  ) async {
     githubFindings.value = true;
     final old = fixturePull();
     old.conversation[1].commit = 'c0ffee1${'c' * 33}';
+    old.reviews[1].commit = 'c0ffee1${'c' * 33}';
     final (d2, _) = await openPullTab(tester, old);
     expect(
       find.text(
-        'Findings from github-actions  from a review on an older commit '
-        '(c0ffee1) · comment /review for a fresh one',
-        findRichText: true,
+        'On an older commit (c0ffee1): some findings may be done · comment '
+        '/review for a fresh one',
       ),
       findsOneWidget,
     );
-    expect(find.text('spec/notebooks/page_spec.rb:68–72'), findsOneWidget);
-    await tester.tap(find.text('Show the review'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Risk:', findRichText: true), findsOneWidget);
     d2.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
-  testWidgets("a check's Log: its log's failing part; Threads jumps to the "
-      'list', (tester) async {
+  testWidgets("a check's log, from its ⋯: its failing part", (tester) async {
     final (d, fake) = await openPullTab(tester, fixturePull());
-    await tester.tap(find.text('Log').first);
+    await tester.tap(find.byKey(const ValueKey('segment checks')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('More').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Show the log'));
     await tester.pumpAndSettle();
     expect(
       fake.calls.whereType<GetGitHubJobLogRequest>().single.job.toInt(),
       31,
     );
     expect(find.textContaining('exit code 1'), findsOneWidget);
-    await tester.tap(find.text('Hide log'));
+    await tester.tap(find.byTooltip('More').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hide the log'));
     await tester.pumpAndSettle();
     expect(find.textContaining('exit code 1'), findsNothing);
-    expect(tester.getRect(find.text('To do')).top, greaterThan(200));
-    await tester.tap(find.text('2 unresolved'));
-    await tester.pumpAndSettle();
-    expect(tester.getRect(find.text('To do')).top, lessThan(100));
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
-  testWidgets("a check's Log that failed to come: closed and opened again, "
+  testWidgets("a check's log that failed to come: hidden and shown again, "
       'asked again, and the error goes', (tester) async {
     var refuse = true;
     final (d, fake) = await openPullTab(
@@ -408,55 +379,41 @@ void main() {
           ? throw StateError('down')
           : null,
     );
-    await tester.tap(find.text('Log').first);
+    Future<void> toggle(String entry) async {
+      await tester.tap(find.byTooltip('More').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(entry));
+      await tester.pumpAndSettle();
+    }
+
+    await tester.tap(find.byKey(const ValueKey('segment checks')));
     await tester.pumpAndSettle();
+    await toggle('Show the log');
     expect(find.text('Bad state: down'), findsOneWidget);
     refuse = false;
-    await tester.tap(find.text('Hide log'));
-    await tester.pumpAndSettle();
+    await toggle('Hide the log');
     expect(find.text('Bad state: down'), findsNothing);
-    await tester.tap(find.text('Log').first);
-    await tester.pumpAndSettle();
+    await toggle('Show the log');
     // The refused call never reached the fake's calls.
     expect(fake.calls.whereType<GetGitHubJobLogRequest>(), hasLength(1));
-    expect(find.text('Bad state: down'), findsNothing);
     expect(find.textContaining('exit code 1'), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 
-  testWidgets('nothing to do, a reviewer still asked: the head says who is '
-      "next, To do's foot only Ping on GitHub", (tester) async {
+  testWidgets('nothing blocks, a reviewer still asked: the card says ready, '
+      'Approvals says who, with Ping on GitHub', (tester) async {
     final p = mergePull('ready')
       ..conversation.clear()
       ..reviewers.add(
         GitHubReviewer(login: 'notes-reviewers', state: 'requested'),
       );
     final (d, _) = await openPullTab(tester, p);
-    expect(
-      find.textContaining('Waiting on', findRichText: true),
-      findsOneWidget,
-    );
+    expect(find.text('Ready to merge'), findsOneWidget);
+    expect(find.text('1 approved · 1 awaited'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('segment approvals')));
+    await tester.pumpAndSettle();
+    expect(find.text('notes-reviewers'), findsNWidgets(2)); // and the side's
     expect(find.text('Ping on GitHub'), findsOneWidget);
     d.dispose();
-  }, variant: _mac);
-
-  testWidgets("a draft with nothing to do: To do's foot says who is waited "
-      "on, since the head's draft line doesn't", (tester) async {
-    final p = mergePull('ready')
-      ..conversation.clear()
-      ..item.draft = true
-      ..reviewers.add(
-        GitHubReviewer(login: 'notes-reviewers', state: 'requested'),
-      );
-    final (d, _) = await openPullTab(tester, p);
-    expect(
-      find.textContaining(
-        'Waiting on @notes-reviewers: review requested.',
-        findRichText: true,
-      ),
-      findsOneWidget,
-    );
-    expect(find.text('Ping on GitHub'), findsOneWidget);
-    d.dispose();
-  }, variant: _mac);
+  }, variant: onMac);
 }

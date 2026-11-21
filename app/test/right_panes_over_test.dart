@@ -20,8 +20,6 @@ import 'right_panes_fixture.dart';
 // width under them, covered at its right. The layout is the same either
 // side of that line.
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 const PanesOpen _three = (
   side: true,
   files: true,
@@ -119,7 +117,7 @@ void main() {
     expect(_shadowed(tester, BrowserPane), isFalse);
     expect(tester.takeException(), isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 
   testWidgets('stepped a point at a time across the line, the panes and '
       'the header move a point at most, and the header never spans them', (
@@ -163,5 +161,5 @@ void main() {
     expect(files!.left, lessThan(header.right));
     expect(tester.takeException(), isNull);
     await closeView(tester, d);
-  }, variant: _mac);
+  }, variant: onMac);
 }

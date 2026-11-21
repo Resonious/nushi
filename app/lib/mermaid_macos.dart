@@ -6,9 +6,6 @@ import 'package:nushi/mermaid.dart';
 
 const _channel = MethodChannel('nushi/mermaid');
 
-/// How long a diagram waits on the Mac's web view, its queue included.
-Duration diagramWait = const Duration(minutes: 1);
-
 /// The Mac's diagrams: mermaid.js in one hidden web view (`nushi/mermaid`,
 /// `macos/Runner/Diagrams.swift`). The web view gives each diagram 10 s, so
 /// a slow one doesn't hold the rest; a call that waits past [diagramWait]
@@ -47,10 +44,7 @@ class MacDiagrams implements Diagrams {
         retry: r?['retry'] == true,
       );
     } on TimeoutException {
-      return const DrawnDiagram(
-        error: 'The diagram took too long to draw',
-        retry: true,
-      );
+      return diagramTooLong;
     } on Object catch (e) {
       return DrawnDiagram(
         error: e is PlatformException ? '${e.message}' : '$e',

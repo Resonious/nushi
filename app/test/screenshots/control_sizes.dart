@@ -6,7 +6,6 @@ import 'dart:async';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/cleanup_dialog.dart';
 import 'package:nushi/clock.dart';
@@ -26,12 +25,8 @@ import '../harness.dart';
 import '../pull_fixture.dart';
 import 'demo.dart';
 
-final _mac = TargetPlatformVariant.only(TargetPlatform.macOS);
-
 Future<void> _pump(WidgetTester tester, [int times = 8]) async {
-  for (var i = 0; i < times; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  await frames(tester, times, const Duration(milliseconds: 100));
 }
 
 /// A permission the agent asks for, beside the demo's question.
@@ -109,11 +104,6 @@ Future<Daemon> _app(
   bool details = false,
 }) async {
   viewport(tester, size, brightness: brightness);
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-        const MethodChannel('nushi/fonts'),
-        (_) async => <String>[],
-      );
   clock = () => demoNow;
   showDetails.value = details;
   paneWidths.value = {};
@@ -252,7 +242,7 @@ void main() {
         await _pump(tester);
         await render(tester, find.byType(NushiApp), 'confirm_$at');
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('cleanup $at', (tester) async {
         final wt = Worktree(
@@ -293,7 +283,7 @@ void main() {
         await _pump(tester);
         await render(tester, find.byType(NushiApp), 'cleanup_$at');
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('settings general $at', (tester) async {
         final d = await _app(tester, size, b)
@@ -301,14 +291,14 @@ void main() {
         await _pump(tester);
         await render(tester, find.byType(NushiApp), 'settings_general_$at');
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('cards $at', (tester) async {
         final d = await _app(tester, size, b, select: 'rss');
         await _pump(tester);
         await render(tester, find.byType(NushiApp), 'cards_$at');
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('chat $at', (tester) async {
         Collapsible.opened.add('e2');
@@ -316,13 +306,13 @@ void main() {
         final d = await _app(tester, size, b);
         await render(tester, find.byType(NushiApp), 'chat_$at');
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('pull rows $at', (tester) async {
         final d = await _pulls(tester, size, b);
         await render(tester, find.byType(NushiApp), 'pull_rows_$at');
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('github $at', (tester) async {
         final (_, d) = await openView(
@@ -336,7 +326,7 @@ void main() {
         await tester.pumpAndSettle();
         await render(tester, find.byType(NushiApp), 'github_pull_$at');
         await closeView(tester, d);
-      }, variant: _mac);
+      }, variant: onMac);
 
       testWidgets('mcp form $at', (tester) async {
         final d = await _app(tester, size, b);
@@ -349,7 +339,7 @@ void main() {
         await _pump(tester);
         await render(tester, find.byType(NushiApp), 'mcp_form_$at');
         d.dispose();
-      }, variant: _mac);
+      }, variant: onMac);
     }
   }
 }
