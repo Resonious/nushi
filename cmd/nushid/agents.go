@@ -93,8 +93,11 @@ func (e *signedOutError) Unwrap() error { return e.err }
 
 // signedOut is explain, but for a start the agent refused with ACP's
 // Authentication required (Codex with no login, through either of its
-// agents): Nushi signs no agent in, so it says how the user does, signIn
-// being the command ("": unknown).
+// agents): the plain message of how the user signs in, signIn being the
+// command ("": unknown). It is all a start says when the agent offers no
+// way Nushi can run, and what the phone shows; otherwise the error also
+// carries the ways to sign in (chats.SignInError, the API's AgentSignIn),
+// which the Mac's app offers (SignInAgent, ADR 0145).
 func signedOut(signIn string, explain func(error) error) func(error) error {
 	return func(err error) error {
 		if aerr := (*acp.Error)(nil); errors.As(err, &aerr) && aerr.Code == acp.ErrorCodeAuthenticationRequired {
