@@ -35,8 +35,9 @@ Future<void> startSigningIn(
 });
 
 /// Asks to sign in [s]'s agent before a chat starts (ADR 0145): its card
-/// in a dialog; true once the agent says it's signed in, false when the
-/// user closed it (a sign-in running is cancelled then).
+/// in a dialog; true once the agent says it's signed in, whoever started
+/// the sign-in (a chat's card may have), false when the user closed it (a
+/// sign-in the dialog started is cancelled then; a card's goes on).
 Future<bool> signInDialog(
   BuildContext context,
   Daemon daemon,
@@ -48,27 +49,68 @@ Future<bool> signInDialog(
     ) ??
     false;
 
-class _SignInDialog extends StatelessWidget {
+class _SignInDialog extends StatefulWidget {
   const new(this.run, this.methods);
 
   final SignInRun run;
   final List<Option> methods;
 
   @override
+  State<_SignInDialog> createState() => _SignInDialogState();
+}
+
+class _SignInDialogState extends State<_SignInDialog> {
+  late final SignInRun run = widget.run;
+
+  // The sign-in running as it opened (a card's), which closing it leaves
+  // running, and how many had signed in then.
+  late final Object? _theirs;
+  late final int _signedIn;
+  bool _closed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _theirs = run.running;
+    _signedIn = run.signedIn;
+    run.addListener(_heard);
+  }
+
+  @override
+  void dispose() {
+    run.removeListener(_heard);
+    super.dispose();
+  }
+
+  // Signed in, by whichever sign-in: the dialog has done its part.
+  void _heard() {
+    if (run.signedIn != _signedIn) _close(true);
+  }
+
+  void _close(bool signedIn) {
+    if (_closed || !mounted) return;
+    _closed = true;
+    Navigator.pop(context, signedIn);
+  }
+
+  @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: run,
     builder: (context, _) => PopScope(
       onPopInvokedWithResult: (popped, _) {
-        if (popped) run.cancel(); // Esc while waiting: the login ends
+        if (!popped) return;
+        _closed = true;
+        // Esc or Cancel while its own waits: that login ends.
+        if (run.running case final r? when r != _theirs) run.cancel();
       },
       child: nushiDialog(
         signInTitle(run.agent),
         SignInLines(run, starts: true),
         signInButtons(
           run,
-          methods,
-          onCancel: () => Navigator.pop(context, false),
-          onSignedIn: () => Navigator.pop(context, true),
+          widget.methods,
+          onCancel: () => _close(false),
+          onSignedIn: () => _close(true),
         ),
       ),
     ),
@@ -76,7 +118,7 @@ class _SignInDialog extends StatelessWidget {
 }
 
 /// The card in a chat's transcript where its reopen failed because its
-/// agent isn't signed in ([item], a notice of status "sign_in" whose options
+/// agent isn't signed in ([item], a "reopen_failed" notice whose options
 /// are the ways to sign in): signed in, the chat reopens, and a message
 /// waiting goes (ADR 0145).
 class SignInCard extends StatelessWidget {

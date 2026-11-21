@@ -44,7 +44,14 @@ class SignInRun extends ChangeNotifier {
   /// that did, or was cancelled.
   String? failed;
 
+  /// How many of its sign-ins ended signed in: what tells a dialog that
+  /// didn't start the one running (a card did) that it worked.
+  int signedIn = 0;
+
   CancelableSignal? _signal;
+
+  /// The sign-in running, to tell it from another; null while none runs.
+  Object? get running => _signal;
 
   /// Signs the agent in through [method]: true once the agent says it is,
   /// false when it didn't (see [failed]), was cancelled, or one runs
@@ -60,6 +67,7 @@ class SignInRun extends ChangeNotifier {
         SignInAgentRequest(agent: agent, methodId: method),
         signal: signal,
       );
+      signedIn++;
       return true;
     } on Object catch (e) {
       final cancelled = e is ConnectException && e.code == Code.canceled;

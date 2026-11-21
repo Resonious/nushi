@@ -227,6 +227,75 @@ void main() {
     d.dispose();
   });
 
+  /// A chat's card beside a launcher of the new-chat dialog, the card's
+  /// sign-in started and waiting, the dialog then opened over it; what
+  /// the dialog answered goes in [answers].
+  Future<(FakeDaemon, Daemon, Completer<String?>)> cardThenDialog(
+    WidgetTester tester,
+    List<bool> answers,
+  ) async {
+    viewport(tester, const Size(900, 700));
+    final fake = FakeDaemon([]);
+    final gate = fake.signInGate = Completer<String?>();
+    final d = await fake.connect(tester);
+    await tester.pumpWidget(
+      themed(
+        Column(
+          children: [
+            ItemView(_notice, _codexChat(), d, live: false, still: true),
+            Builder(
+              builder: (context) => Button(
+                label: 'New chat',
+                onPressed: () async =>
+                    answers.add(await signInDialog(context, d, _signIn)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(_button);
+    await tester.pump();
+    await tester.tap(find.widgetWithText(Button, 'New chat'));
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsOneWidget);
+    return (fake, d, gate);
+  }
+
+  testWidgets('a dialog opened while a card signs in learns it worked', (
+    tester,
+  ) async {
+    final answers = <bool>[];
+    final (fake, d, gate) = await cardThenDialog(tester, answers);
+    gate.complete(null);
+    await tester.pumpAndSettle();
+    expect(answers, [true]);
+    expect(find.byType(Dialog), findsNothing);
+    expect(fake.signIns, hasLength(1)); // no second login
+    d.dispose();
+  });
+
+  testWidgets('closing that dialog leaves the card’s sign-in running', (
+    tester,
+  ) async {
+    final answers = <bool>[];
+    final (fake, d, gate) = await cardThenDialog(tester, answers);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(Dialog),
+        matching: find.widgetWithText(Button, 'Cancel'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(answers, [false]);
+    expect(fake.cancelled.whereType<SignInAgentRequest>(), isEmpty);
+    expect(d.signInOf('codex').waiting, 'chat-gpt');
+    gate.complete(null);
+    await tester.pumpAndSettle();
+    d.dispose();
+  });
+
   // The phone, as an app that doesn't know the ways to sign in, keeps a
   // failed reopen's plain notice and its Try again.
   testWidgets('the phone keeps the plain notice', (tester) async {
