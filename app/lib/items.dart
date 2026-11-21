@@ -125,10 +125,11 @@ class ItemView extends StatelessWidget {
       case ItemKind.ITEM_KIND_NOTICE
           when item.status == 'compacted' || item.status == 'history_differs':
         return HistoryMark(item, agent: chat.agentName);
-      // Its agent isn't signed in: the ways it signs itself in (ADR 0145).
-      // The phone keeps the plain notice: the login opens the Mac's browser.
+      // Its agent isn't signed in: the ways it signs itself in, a failed
+      // reopen's options (ADR 0145). The phone keeps the plain notice, with
+      // Try again: the login opens the Mac's browser.
       case ItemKind.ITEM_KIND_NOTICE
-          when item.status == 'sign_in' &&
+          when item.status == 'reopen_failed' &&
               item.options.isNotEmpty &&
               !daemon.remote:
         return SignInCard(item, chat, daemon);
@@ -146,7 +147,6 @@ class ItemView extends StatelessWidget {
           'turn_failed' ||
           'not_ready' ||
           'folder_gone' ||
-          'sign_in' ||
           'reopen_failed' => (Icons.error_outline, t.crashed),
           // Its agent deleted the session: nothing broke.
           'session_gone' => (Icons.history_toggle_off, t.textMuted),
@@ -170,8 +170,7 @@ class ItemView extends StatelessWidget {
             'Move…',
             () => moveChat(context, daemon, chat, gone: true),
           ),
-          'reopen_failed' ||
-          'sign_in' => ('Try again', () => daemon.reopen(chat)),
+          'reopen_failed' => ('Try again', () => daemon.reopen(chat)),
           // Continue when the turn got somewhere, else Try again.
           'turn_failed' when again != null => (
             again.label,

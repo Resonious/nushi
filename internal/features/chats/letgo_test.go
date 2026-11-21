@@ -372,7 +372,7 @@ func TestSignedInWhileLetGo(t *testing.T) {
 	testcheck.NoErr(t, svc.Archive(c.id, true))
 	c.mu.Lock()
 	c.reopenFailed = true
-	c.failure = c.addLocked(model.Item{Kind: model.Notice, Status: "sign_in", Text: "Couldn't reopen the chat"})
+	c.failure = c.addLocked(model.Item{Kind: model.Notice, Status: "reopen_failed", Text: "Couldn't reopen the chat", Options: []model.Option{{ID: "chat-gpt"}}})
 	c.letGoLocked()
 	let := c.inCopy && len(c.aside) == 1
 	c.mu.Unlock()

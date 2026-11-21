@@ -168,7 +168,7 @@ func TestWakeWantsSignIn(t *testing.T) {
 	testcheck.NoErr(t, svc.Sleep(c.id))
 	f.signOut()
 	testcheck.NoErr(t, svc.Prompt(t.Context(), c.id, model.Message{Text: "two"}, SendIdle))
-	eventually(t, c, func() bool { f := c.failureLocked(); return f != nil && f.Status == "sign_in" })
+	eventually(t, c, func() bool { f := c.failureLocked(); return f != nil && wantsSignIn(*f) })
 	c.mu.Lock()
 	notice, queued := *c.failureLocked(), len(c.queue)
 	c.mu.Unlock()

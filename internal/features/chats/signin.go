@@ -157,13 +157,20 @@ func signInFailed(ctx context.Context, title string, err error) error {
 	return fmt.Errorf("%s didn't sign in: %w", title, err)
 }
 
+// wantsSignIn says a notice is a reopen's that failed for want of a
+// sign-in: a "reopen_failed" one with the ways to sign in as its options
+// (failedLocked).
+func wantsSignIn(it model.Item) bool {
+	return it.Kind == model.Notice && it.Status == "reopen_failed" && len(it.Options) > 0
+}
+
 // signedIn is the agent named agent signed in: its chats whose reopen
 // failed for want of it may reopen, each when it's next shown (Reopen), as
 // AgentReady has them.
 func (s *Service) signedIn(agent string) {
 	for _, c := range s.openChats() {
 		c.mu.Lock()
-		if f := c.failureLocked(); c.kind.Name == agent && c.reopenFailed && f != nil && f.Status == "sign_in" {
+		if f := c.failureLocked(); c.kind.Name == agent && c.reopenFailed && f != nil && wantsSignIn(*f) {
 			c.reopenFailed = false
 			c.statusChangedLocked()
 			c.logLocked().Info("chat may reopen", "why", "agent signed in")

@@ -59,7 +59,8 @@ type Copies interface {
 }
 
 // reopenNotices are the statuses of a failed reopen's notice, each of
-// failedLocked's reasons.
+// failedLocked's reasons, and "sign_in", which 0.52's betas gave a reopen
+// refused for want of a sign-in (a copy of theirs may hold one).
 var reopenNotices = []string{"reopen_failed", "not_ready", "folder_gone", "sign_in"}
 
 // shownOnly says an item is the chat's state rather than its history:

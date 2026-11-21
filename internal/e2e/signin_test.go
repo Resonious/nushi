@@ -93,7 +93,7 @@ func TestSignInOnWake(t *testing.T) {
 
 	a.send(id, "two")
 	notice := a.waitFor("the sign-in notice", func(e *nushiv1.EventsResponse) bool {
-		return e.ChatId == id && e.GetItem().GetItem().GetStatus() == "sign_in"
+		return e.ChatId == id && e.GetItem().GetItem().GetStatus() == "reopen_failed" && len(e.GetItem().GetItem().GetOptions()) > 0
 	}).GetItem().GetItem()
 	if o := notice.Options; len(o) != 1 || o[0].Id != "chat-gpt" || o[0].Name != "ChatGPT" {
 		t.Fatalf("notice %v", notice)

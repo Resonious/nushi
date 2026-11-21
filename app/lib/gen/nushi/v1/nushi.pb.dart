@@ -3499,7 +3499,8 @@ class SignInAgentResponse extends $pb.GeneratedMessage {
 /// ways the agent signs itself in that Nushi can run (SignInAgent): the
 /// agent's own, none needing a key typed into Nushi; there is no detail
 /// when it offers none. A chat whose reopen fails so says it in a notice of
-/// status "sign_in" whose options are these methods (API 139, ADR 0145).
+/// status "reopen_failed" whose options are these methods (API 139, ADR
+/// 0145): an app that doesn't know them offers Try again, as before.
 class AgentSignIn extends $pb.GeneratedMessage {
   factory AgentSignIn({
     $core.String? agent,

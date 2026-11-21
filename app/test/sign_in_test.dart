@@ -35,7 +35,7 @@ const _refused =
 final _notice = Item(
   id: 'n',
   kind: ItemKind.ITEM_KIND_NOTICE,
-  status: 'sign_in',
+  status: 'reopen_failed',
   text: "Couldn't reopen the chat: $_refused",
   options: [_chatGpt],
 );
@@ -227,6 +227,8 @@ void main() {
     d.dispose();
   });
 
+  // The phone, as an app that doesn't know the ways to sign in, keeps a
+  // failed reopen's plain notice and its Try again.
   testWidgets('the phone keeps the plain notice', (tester) async {
     final fake = FakeDaemon([]);
     final d = Daemon(transport: fake, remote: true);
@@ -236,6 +238,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text("Codex isn't signed in"), findsNothing);
     expect(find.textContaining("Couldn't reopen the chat"), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
     d.dispose();
   });
 

@@ -201,9 +201,10 @@ func (s *Service) resume(c *chat) {
 // shown (Reopen), a message, a reload or a move, or its agent becoming
 // ready or signed in, and says why in one notice, which replaces the last
 // one's. Its reason says what helps: "not_ready" setting its agent up
-// (Settings › Agents), "folder_gone" moving the chat, "sign_in" signing
-// the agent in, one of the ways the notice's options are (SignInError,
-// ADR 0145), "reopen_failed" trying again.
+// (Settings › Agents), "folder_gone" moving the chat, "reopen_failed"
+// trying again, or, when the notice has options (wantsSignIn), signing the
+// agent in, one of the ways they are (SignInError, ADR 0145): an app that
+// doesn't know them still offers Try again.
 func (c *chat) failedLocked(err error) {
 	c.reopenFailed = true
 	reason := "reopen_failed"
@@ -213,7 +214,7 @@ func (c *chat) failedLocked(err error) {
 	} else if ready := c.kind.ready(); ready != nil {
 		reason, err = "not_ready", ready
 	} else if in, ok := errors.AsType[*SignInError](err); ok {
-		reason, options = "sign_in", in.Methods
+		options = in.Methods
 	}
 	text := "Couldn't reopen the chat: " + detail(err)
 	if i := c.indexLocked(c.failure); i >= 0 && i == len(c.items)-1 && c.items[i].Status == reason && c.items[i].Text == text {
