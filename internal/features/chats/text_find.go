@@ -98,9 +98,9 @@ func (b *backwards) add(id string, n int) bool {
 }
 
 // done is the matches in the transcript's order, and more.
-func (b backwards) done(more bool) ([]TextMatch, bool, error) {
-	slices.Reverse(b)
-	return b, more, nil
+func (b *backwards) done(more bool) ([]TextMatch, bool, error) {
+	slices.Reverse(*b)
+	return *b, more, nil
 }
 
 // findInCopy is FindText for a chat whose items were let go: its copy's
