@@ -147,7 +147,7 @@ func (s *Service) SignIn(ctx context.Context, agent, method string) error {
 func signInFailed(ctx context.Context, title string, err error) error {
 	switch {
 	case errors.Is(ctx.Err(), context.DeadlineExceeded):
-		return fmt.Errorf("%s didn't finish signing in within %v: %w", title, SignInTimeout, err)
+		return fmt.Errorf("%s didn't finish signing in within %d minutes: %w", title, int(SignInTimeout.Minutes()), err)
 	case ctx.Err() != nil:
 		return ctx.Err()
 	}
