@@ -166,4 +166,29 @@ void main() {
     expect(f.query, isNull);
     expect(asked, ['foo', 'food']);
   });
+
+  testWidgets('a letter typed and taken back within the pause looks for '
+      'nothing again: the current match and the count stay', (tester) async {
+    final asked = <String>[];
+    final (f, _) = _find(const []);
+    f.ask = (r, signal) async {
+      asked.add(r.text);
+      return FindInChatResponse();
+    };
+    await _type(tester, f, 'e');
+    f.found(['l1 0', 'l1 1', 'l2 0', 'l2 1']);
+    f
+      ..step(1)
+      ..step(1);
+    final (current, count, ask) = (f.current, f.count, f.asked);
+    f.query = 'ex';
+    await tester.pump(ChatFind.pause ~/ 2);
+    f.query = 'e';
+    expect(f.searching, isFalse, reason: 'nothing waits to be asked');
+    await tester.pump(ChatFind.pause * 2);
+    expect(f.current, current);
+    expect(f.count, count);
+    expect(f.asked, ask);
+    expect(asked, ['e']);
+  });
 }

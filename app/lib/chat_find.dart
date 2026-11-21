@@ -95,6 +95,7 @@ class ChatFind extends Find {
     if (q == (_typing == null ? query : _next)) return;
     _typing?.cancel();
     _typing = null;
+    if (q == query) return; // typed and taken back within the pause
     if (q == null || q.isEmpty) {
       _look(q);
       return;
