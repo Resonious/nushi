@@ -30,6 +30,7 @@ Future<(Daemon, FakeDaemon)> _open(
   GitHubItem Function() now, {
   Size size = const Size(1440, 900),
   Brightness brightness = Brightness.dark,
+  bool linked = true,
 }) async {
   viewport(tester, size, brightness: brightness);
   showDetails.value = false;
@@ -39,7 +40,8 @@ Future<(Daemon, FakeDaemon)> _open(
     'claude',
     'Speed up the search index',
     folder: '/Users/me/search-service',
-  )..pull = fixtureLink;
+  );
+  if (linked) c.pull = fixtureLink;
   final fake = FakeDaemon([c])
     ..answer = (input) => switch (input) {
       // The chats' states: their rows (API 133).
@@ -171,6 +173,36 @@ void main() {
     expect(checksSeen.value['c'], ['PR_412@c3']);
     await _poll(tester);
     expect(find.byType(ChecksFailedBar), findsNothing);
+    await closeView(tester, d);
+  }, variant: onMac);
+
+  testWidgets('a pull request linked to a chat while its checks fail isn’t '
+      'flagged for that failure; a later commit’s is', (tester) async {
+    var now = _state('a1');
+    final (d, _) = await _open(tester, () => now, linked: false);
+    final chat = d.chats['c']!;
+    expect(checksSeen.value['c'], isEmpty, reason: 'seen with none');
+    chat.linkPull(fixtureLink);
+    d.listChanged();
+    await _poll(tester);
+    await _poll(tester);
+    expect(checksSeen.value['c'], ['PR_412@a1']);
+    expect(chat.needsYou, isFalse, reason: 'failing as it was linked');
+    expect(find.byType(ChecksFailedBar), findsNothing);
+    now = _state('b2');
+    await _poll(tester);
+    expect(chat.needsYou, isTrue);
+    await closeView(tester, d);
+  }, variant: onMac);
+
+  testWidgets('a pull request first seen passing is flagged once it fails, '
+      'on the same commit too', (tester) async {
+    var now = _state('a1', checks: 'success');
+    final (d, _) = await _open(tester, () => now);
+    expect(checksSeen.value['c'], ['PR_412@']);
+    now = _state('a1');
+    await _poll(tester);
+    expect(d.chats['c']!.needsYou, isTrue);
     await closeView(tester, d);
   }, variant: onMac);
 

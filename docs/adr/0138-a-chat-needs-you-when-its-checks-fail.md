@@ -10,7 +10,7 @@ A chat's pull request fails its checks after the agent's turn has ended, often w
 - The states say which commit the checks are of (`GitHubItem.checks_oid`, the head's oid beside its rollup; API 129). A failure is a pull request and that commit (`<node id>@<oid>`).
 - A failure the user hasn't acted on makes the chat need you (its phase `waiting`, after a turn or background work, before the rest), with the amber dot, the Dock's badge and the project rail's count, and a bar over the composer: "Checks failed on #n", **Ask to fix** and a ✕ (Dismiss).
 - Ask to fix puts each failed check's card in the chat's box, as Fix checks does (the same cards, with what the user set them to ask); nothing is sent. Ask to fix, Dismiss and the PR widget's Fix checks each mark the failure seen (`checksSeen` in `app.json`, by chat). The same failure stays quiet on every ask after; one on a later commit flags the chat again. A failure no longer failing takes the flag away.
-- A chat first seen while its checks fail isn't flagged for that failure, so nothing old lights up after an update. A daemon before API 129 says no commit, and nothing is flagged.
+- A chat first seen while its checks fail isn't flagged for that failure, so nothing old lights up after an update. Nor is a pull request linked to a chat later, for what fails as its state is first known: each pull request seen is kept with its failure, or with none (`<node id>@`), so a later failure of it is new. A daemon before API 129 says no commit, and nothing is flagged.
 - No notification: the badge counts it, and the dot says it.
 
 ## Consequences

@@ -88,13 +88,30 @@ class ChecksWatch {
           for (final l in links)
             if (failureOf(states.item(l)) case final f?) (l, f),
         ];
-        final acted = seen[chat.id];
+        final acted = switch (seen[chat.id]) {
+          final a? => [...a],
+          null => null,
+        };
         if (acted == null) {
           // First seen once its pull requests' states are known: what
           // fails then isn't new.
           if (links.any((l) => states.item(l) == null)) continue;
-          (first ??= {...seen})[chat.id] = [for (final (_, f) in failing) f];
+          (first ??= {...seen})[chat.id] = [
+            for (final l in links) _first(states.item(l)!),
+          ];
           continue;
+        }
+        // A pull request linked since, as its state is first known: what
+        // fails on it then isn't new either.
+        final known = {for (final f in acted) f.split('@').first};
+        final linked = [
+          for (final l in links)
+            if (states.item(l) case final it? when !known.contains(it.id))
+              _first(it),
+        ];
+        if (linked.isNotEmpty) {
+          acted.addAll(linked);
+          (first ??= {...seen})[chat.id] = acted;
         }
         changed |= chat.failChecks([
           for (final (l, f) in failing)
@@ -107,6 +124,10 @@ class ChecksWatch {
       _judging = false;
     }
   }
+
+  /// [it] as it's first seen on a chat: its failure, or that it's known
+  /// with none (`<node id>@`), so a later failure of it is new.
+  String _first(GitHubItem it) => failureOf(it) ?? '${it.id}@';
 
   /// The user acted on [chat]'s failed checks (Ask to fix, Dismiss, Fix
   /// checks): they don't need you again, until a later commit's fail.
