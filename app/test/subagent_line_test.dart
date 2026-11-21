@@ -36,6 +36,33 @@ void main() {
     expect(chevron.right, greaterThan(line.right - 20));
   });
 
+  testWidgets('a running subagent whose start isn’t known ends its words '
+      'with no dot', (tester) async {
+    final run = (
+      call: Item(
+        id: 'a',
+        kind: ItemKind.ITEM_KIND_TOOL_CALL,
+        agent: 'general-purpose',
+        title: 'Verify the steps',
+        status: 'in_progress',
+        subagent: Subagent(state: 'running'),
+      ),
+      items: <Item>[],
+    );
+    await tester.pumpWidget(
+      themed(
+        SizedBox(width: 900, child: SubagentLine(run, ChatState('c', '/x'))),
+      ),
+    );
+    expect(subagentTime(run), '');
+    final texts = [
+      for (final t in tester.widgetList<Text>(find.byType(Text)))
+        t.data ?? t.textSpan?.toPlainText() ?? '',
+    ];
+    expect(texts.where((t) => t.contains('·')), isEmpty, reason: '$texts');
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('a live line ticks each second; one done no longer does', (
     tester,
   ) async {

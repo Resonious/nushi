@@ -398,9 +398,11 @@ class SubagentLine extends StatelessWidget {
                           LiveText(
                             // After its words, a dot joins them: "39 tools
                             // · 182k tokens · 7m 55s" reads as one line.
-                            () => _stateWords(s).isEmpty
-                                ? subagentTime(s)
-                                : '· ${subagentTime(s)}',
+                            () => switch (subagentTime(s)) {
+                              '' => '',
+                              final time when _stateWords(s).isEmpty => time,
+                              final time => '· $time',
+                            },
                             live: subagentRunning(s),
                             style: theme.ui(t.textMuted, size: 12),
                           ),
