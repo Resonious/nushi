@@ -250,10 +250,22 @@ func TestCaps(t *testing.T) {
 		}
 		t.Cleanup(func() { _ = ws.Close() })
 	}
-	if ws, code := from(url, "listen", newID(), "192.0.2.7"); ws != nil || code != http.StatusServiceUnavailable {
-		t.Fatalf("a seventh connection in all: %d", code)
+	// At Total the dialers without a listener make way
+	// (TestUnpairedDialersMakeWay); with none left, a new one is refused.
+	if !testcheck.Eventually(func() bool { s.mu.Lock(); defer s.mu.Unlock(); return len(s.unpaired) == 2 }) {
+		t.Fatal("the dialers aren't counted as unpaired")
 	}
-	if _, code := from(url, "listen", "short", "192.0.2.8"); code != http.StatusNotFound {
+	for _, addr := range []string{"192.0.2.7", "192.0.2.8"} {
+		ws, code := from(url, "listen", newID(), addr)
+		if ws == nil {
+			t.Fatalf("refused (%d) with a dialer to make way", code)
+		}
+		t.Cleanup(func() { _ = ws.Close() })
+	}
+	if ws, code := from(url, "listen", newID(), "192.0.2.9"); ws != nil || code != http.StatusServiceUnavailable {
+		t.Fatalf("a connection past Total with only listeners open: %d", code)
+	}
+	if _, code := from(url, "listen", "short", "192.0.2.10"); code != http.StatusNotFound {
 		t.Fatalf("a malformed id: %d", code)
 	}
 }
@@ -1057,4 +1069,73 @@ func TestOne48CantFillTheRelay(t *testing.T) {
 		t.Fatalf("another /48 refused: %d", code)
 	}
 	open = append(open, ws)
+}
+
+// When Total are open, a dialer without a listener makes way for a new
+// connection: the oldest silent one, then the one waiting longest for a
+// listener. Each holds its place 20 s at most anyway, but a few networks'
+// worth renewed could otherwise hold every place (security review
+// 2026-11-18, finding 2). Listeners and paired dialers stay, and with
+// only those open a new connection is refused.
+func TestUnpairedDialersMakeWay(t *testing.T) {
+	lim := Defaults
+	lim.IPHeader = "X-Test-IP"
+	lim.Total = 4
+	lim.NewRate = 1e9
+	lim.SpeakWait, lim.DialWait = time.Hour, time.Hour // only making way ends one here
+	s := New(lim).(*server)
+	srv := httptest.NewServer(s)
+	t.Cleanup(srv.Close)
+	url := "ws" + strings.TrimPrefix(srv.URL, "http")
+	open := func(side, addr string) *websocket.Conn {
+		t.Helper()
+		ws, code := from(url, side, newID(), addr)
+		if ws == nil {
+			t.Fatalf("a %s from %s refused: %d", side, addr, code)
+		}
+		t.Cleanup(func() { _ = ws.Close() })
+		return ws
+	}
+	unpaired := func(want, spoke int) bool {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		n := 0
+		for _, u := range s.unpaired {
+			if u.spoke {
+				n++
+			}
+		}
+		return len(s.unpaired) == want && n == spoke
+	}
+	waiting := open("dial", "192.0.2.1") // the oldest: it speaks, and waits for a listener that never comes
+	testcheck.NoErr(t, waiting.WriteMessage(websocket.BinaryMessage, []byte("hello")))
+	if !testcheck.Eventually(func() bool { return unpaired(1, 1) }) {
+		t.Fatal("the dialer isn't waiting")
+	}
+	silent := open("dial", "192.0.2.2")
+	l, d := pair(t, url, newKey())
+	send(t, d, "paired")
+	expect(t, l, "paired")
+	if !testcheck.Eventually(func() bool { return unpaired(2, 1) }) {
+		t.Fatal("the paired dialer still counts as unpaired, or the silent one doesn't")
+	}
+	gone := func(ws *websocket.Conn, what string) {
+		t.Helper()
+		testcheck.NoErr(t, ws.SetReadDeadline(time.Now().Add(30*time.Second)))
+		if _, _, err := ws.ReadMessage(); err == nil || errors.Is(err, os.ErrDeadlineExceeded) {
+			t.Fatalf("the %s dialer stayed: %v", what, err)
+		}
+	}
+	open("listen", "192.0.2.3")
+	gone(silent, "silent")
+	open("listen", "192.0.2.4")
+	gone(waiting, "waiting")
+	if !testcheck.Eventually(func() bool { s.mu.Lock(); defer s.mu.Unlock(); return s.total == lim.Total }) {
+		t.Fatal("the dialers that made way still count")
+	}
+	if ws, code := from(url, "listen", newID(), "192.0.2.5"); ws != nil || code != http.StatusServiceUnavailable {
+		t.Fatalf("a connection past Total with only listeners and a pair open: %d", code)
+	}
+	send(t, d, "still")
+	expect(t, l, "still")
 }

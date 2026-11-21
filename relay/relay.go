@@ -109,7 +109,16 @@ type server struct {
 	ws        sources        // the WebSockets' sources
 	nets      map[string]int // WebSockets by netKey
 	listeners map[string]int // listeners by netKey
+	unpaired  map[*peer]*unpaired
 	plain     plain
+}
+
+// unpaired is a dialer without a listener yet: silent, or waiting for one
+// (match). When Total are open, the oldest of them makes way (evict).
+type unpaired struct {
+	since time.Time
+	spoke bool
+	gone  chan struct{} // closed when it makes way
 }
 
 // room is one rendezvous id: its connections, and its listener still
@@ -149,7 +158,7 @@ func New(lim Limits) http.Handler {
 	} else {
 		lim.PlainPerNet = min(max(lim.PlainPerNet, lim.PlainPerIP), half)
 	}
-	s := &server{lim: lim, rooms: map[string]*room{}, ws: newSources(lim), nets: map[string]int{}, listeners: map[string]int{},
+	s := &server{lim: lim, rooms: map[string]*room{}, ws: newSources(lim), nets: map[string]int{}, listeners: map[string]int{}, unpaired: map[*peer]*unpaired{},
 		plain: plain{conns: map[net.Conn]*plainConn{}, by: newSources(lim), nets: map[string]int{}}}
 	// A page's script may connect only when it is the web app's own: no
 	// other page has a reason to be here.
@@ -246,6 +255,15 @@ func (s *server) dial(w http.ResponseWriter, r *http.Request) {
 	defer s.exit(id, true)
 	p := &peer{ws: ws}
 	defer s.closeBoth(p)
+	u := &unpaired{since: time.Now(), gone: make(chan struct{})}
+	s.mu.Lock()
+	s.unpaired[p] = u
+	s.mu.Unlock()
+	defer func() {
+		s.mu.Lock()
+		delete(s.unpaired, p)
+		s.mu.Unlock()
+	}()
 	// A dialer meets a listener only once it has spoken (it always speaks
 	// first), so a silent dialer can't hold a listener the listener doesn't
 	// know is taken.
@@ -255,7 +273,13 @@ func (s *server) dial(w http.ResponseWriter, r *http.Request) {
 	if !silent.Stop() || !ok {
 		return
 	}
-	l := s.match(id)
+	s.mu.Lock()
+	u.spoke = s.unpaired[p] == u // else it made way as it spoke
+	s.mu.Unlock()
+	if !u.spoke {
+		return
+	}
+	l := s.match(id, p, u)
 	if l == nil {
 		_ = ws.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(4404, "no listener"), time.Now().Add(time.Second))
 		return
@@ -281,7 +305,11 @@ func (s *server) join(w http.ResponseWriter, r *http.Request, dialer bool) (stri
 	}
 	src := keys{s.sourceKey(r), s.netKey(r)}
 	s.mu.Lock()
-	if s.total >= s.lim.Total || s.nets[src.net] >= s.lim.PerNet || dialer && s.rooms[id] != nil && s.rooms[id].dialers >= s.lim.PerID {
+	var way *peer // the dialer that makes way when Total are open
+	if s.total >= s.lim.Total {
+		way = s.oldestUnpaired()
+	}
+	if s.total >= s.lim.Total && way == nil || s.nets[src.net] >= s.lim.PerNet || dialer && s.rooms[id] != nil && s.rooms[id].dialers >= s.lim.PerID {
 		s.mu.Unlock()
 		http.Error(w, "busy", http.StatusServiceUnavailable)
 		return "", keys{}, nil
@@ -290,6 +318,9 @@ func (s *server) join(w http.ResponseWriter, r *http.Request, dialer bool) (stri
 		s.mu.Unlock()
 		http.Error(w, "busy", code)
 		return "", keys{}, nil
+	}
+	if way != nil {
+		s.evict(way)
 	}
 	s.total++
 	s.nets[src.net]++
@@ -359,14 +390,20 @@ func (s *server) unwait(id string, p *peer) {
 	s.exit(id, false)
 }
 
-// match takes the listener waiting on id, waiting up to DialWait for one.
-func (s *server) match(id string) *peer {
+// match takes the listener waiting on id for dialer p, waiting up to
+// DialWait for one, unless p makes way first (w.gone).
+func (s *server) match(id string, p *peer, w *unpaired) *peer {
 	timeout := time.After(s.lim.DialWait)
 	for {
 		s.mu.Lock()
+		if s.unpaired[p] != w {
+			s.mu.Unlock()
+			return nil
+		}
 		rm := s.rooms[id]
 		if l := rm.waiting; l != nil {
 			rm.waiting = nil
+			delete(s.unpaired, p)
 			s.mu.Unlock()
 			return l
 		}
@@ -374,10 +411,37 @@ func (s *server) match(id string) *peer {
 		s.mu.Unlock()
 		select {
 		case <-arrived:
+		case <-w.gone:
 		case <-timeout:
 			return nil
 		}
 	}
+}
+
+// oldestUnpaired is the dialer that makes way for a new connection when
+// Total are open: the oldest silent one, else the one waiting longest for
+// a listener, else none. A dialer holds its place 20 s at most (SpeakWait,
+// then DialWait), so it costs one who means it a dial again, and keeps
+// silent dialers to made-up ids from holding every place (security review
+// 2026-11-18, finding 2). Listeners, and dialers with a listener, stay.
+// Called with s.mu.
+func (s *server) oldestUnpaired() *peer {
+	var oldest *peer
+	for p, w := range s.unpaired {
+		if o := s.unpaired[oldest]; oldest == nil || !w.spoke && o.spoke || w.spoke == o.spoke && w.since.Before(o.since) {
+			oldest = p
+		}
+	}
+	return oldest
+}
+
+// evict closes unpaired dialer p. Its place is free once its handler has
+// seen it go, so until then Total may be passed by the dialers evicted.
+// Called with s.mu.
+func (s *server) evict(p *peer) {
+	close(s.unpaired[p].gone)
+	delete(s.unpaired, p)
+	_ = p.ws.Close()
 }
 
 // prepare sets p's caps: its message size, its idle time (pings count),
