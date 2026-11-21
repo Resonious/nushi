@@ -99,7 +99,7 @@ The Mac's relay is then `wss://nushi.example.com`.
 
 - Cloudflare drops a WebSocket that's silent for about 100 s; both ends ping well within that.
 - Whoever terminates TLS can serve the app's code (ADR 0054): a CDN in front is trusted for it, as the relay's host is.
-- A web app loads a few dozen files at once, hence the higher cap on plain connections per address (`-plain-per-ip`).
+- A web app loads a few dozen files at once, hence the higher cap on plain connections per address (`-plain-per-ip`). One IPv6 /48 (an IPv4 address is its own) holds 64 at most (`-plain-per-net`), never fewer than `-plain-per-ip`.
 - Tailscale Funnel worked too, but slowly: about 0.1–0.3 MB/s, and seconds per connection.
 
 ### On a VPS
