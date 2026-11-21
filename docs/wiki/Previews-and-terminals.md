@@ -33,6 +33,8 @@ Some agents can also open a file in the Files pane themselves, or open a page fr
 - **Mermaid diagrams** (`.mmd` or `.mermaid` files). Mermaid blocks in the agent's messages draw as diagrams too.
 - **Code and text files**, with syntax highlighting.
 
+In a Markdown preview, images written as HTML (`<img src="logo.png" width="120">`, a README's logo) and SVG images show as pictures. An SVG that would load anything from elsewhere or run anything shows as its text instead.
+
 The file's path is above the file, in the pane's second row. Click the path to copy it.
 
 ## See which lines changed
@@ -84,10 +86,23 @@ Right-click in a file's text in the Files pane to get an editor's menu.
 - **Copy**: the selected text.
 - **Copy path**: the file's path with a line, as `docs/roadmap.md:12`: the selection's first line, or the line you clicked.
 - **Quote in reply**: the selected lines go into the chat's message box as a quote, with the file and line numbers. Type your message under it and send.
-- **Find…** (⌘F): find in the file, while you're editing it.
+- **Find…** (⌘F): find in the file.
 - **Show in Finder** (Show in Folder on Linux, Show in Explorer on Windows) and **Open in your editor**, your default text editor.
 
 While you're editing, **Cut** and **Paste** are there too. Copy, Cut and Quote in reply need a selection. Right-clicking keeps your selection where it is.
+
+## Find in a file
+
+Press ⌘F with a file in the Files pane to find text in it, the same way you find in the chat. Click in the file first: ⌘F finds in whatever has the focus, so with the message box focused it finds in the chat.
+
+1. Click in the file, then press ⌘F. The find bar opens at the file's top right.
+2. Type. Every match is marked, the current one in the accent, and the bar counts them ("2 of 7", or "None").
+3. Press ⏎ for the next match and ⇧⏎ for the one before. The file scrolls to each one.
+4. Press Esc to close the bar.
+
+It works in rendered Markdown, in a CSV's table (its header too; a match hidden past a cell's "…" marks the whole cell), in a file you're editing, and in one that shows read-only. It finds in every line or row, not just those on screen.
+
+On the Mac it works in an HTML page and a browser tab too: click in the page, then press ⌘F. It finds the text you can see on the page; Esc puts you back where you were: in the page, or in the address bar if you pressed ⌘F there. On Linux and Windows a page has no find of its own yet. SVG, PDF and diagram previews have none.
 
 ## Use the browser
 

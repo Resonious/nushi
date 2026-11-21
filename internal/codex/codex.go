@@ -17,6 +17,7 @@ import (
 	"unicode/utf8"
 
 	acp "github.com/afrase/acp-go/unstable"
+	"github.com/afrase/codex-acp-go/codexacp"
 
 	"github.com/afrase/nushi/internal/agentproc"
 	"github.com/afrase/nushi/internal/model"
@@ -38,14 +39,32 @@ func (Harness) Info() model.HarnessInfo {
 	return model.HarnessInfo{Name: "codex", Title: "Codex", Resume: "codex resume", ClientMCP: true, DeleteArchives: true, OneWriter: true, Moves: true}
 }
 
-// Start starts the adapter, as claude.Harness does Claude's,
-// running r's CLI, the user's Codex (codex-acp's CODEX_PATH). Codex reads
-// its own config and login ($CODEX_HOME, else ~/.codex); Nushi never does.
+// Start starts the adapter, as claude.Harness does Claude's, running r's
+// CLI, the user's Codex (codex-acp's CODEX_PATH): codex-acp set up in the
+// data folder, which runs it as it is, or Nushi's Go agent when r has no
+// adapter program (the user's setting, agents.Agent.Own; ADR 0142), which
+// runs its native binary when npm installed it (Native). Codex reads its own config and login
+// ($CODEX_HOME, else ~/.codex); Nushi never does.
 func (Harness) Start(dir string, r model.AgentRun, client acp.Client, log *slog.Logger) (*agentproc.Agent, error) {
+	if r.Program == "" {
+		cmd, err := goCommand(dir, r.CLI, r.Env)
+		if err != nil {
+			return nil, err
+		}
+		return agentproc.Start(cmd, client, log)
+	}
+	return agentproc.Start(adapterCommand(dir, r), client, log)
+}
+
+// adapterCommand is codex-acp, set up in the data folder, in dir with r's
+// environment and r's CLI as CODEX_PATH: npm's launcher stays in front of
+// Codex there, as before the Go agent, since it is what tells Codex how it
+// was installed (Native).
+func adapterCommand(dir string, r model.AgentRun) *exec.Cmd {
 	cmd := exec.Command(r.Node, r.Program) //nolint:gosec,noctx // lives until Stop or Close, not a context; the adapter set up in the data folder (ADR 0037)
 	cmd.Dir = dir
 	cmd.Env = append(slices.Clone(r.Env), "CODEX_PATH="+r.CLI)
-	return agentproc.Start(cmd, client, log)
+	return cmd
 }
 
 // Adapter is Codex's ACP adapter, as Nushi pins it: adapter/'s
@@ -67,6 +86,14 @@ var adapterFiles embed.FS
 
 // CLI is Codex's program.
 const CLI = "codex"
+
+// NoSignIn are the sign-in methods codex-acp and the Go agent may offer
+// that Nushi doesn't (ADR 0145): an API key ("api-key", from the request or
+// the environment) and a model gateway ("gateway"), which are the user's
+// keys, and ChatGPT's device code ("chat-gpt-device-code"), whose code and
+// page the agent shows through a URL elicitation Nushi doesn't take.
+// "chat-gpt" stays: the agent opens the browser and waits on its own.
+var NoSignIn = []string{"api-key", "chat-gpt-device-code", "gateway"}
 
 // Tested are the Codex versions the adapter was run with: its own (until
 // milestone Z), then the user's.
@@ -93,11 +120,12 @@ func (Harness) Gone(err error) bool {
 }
 
 // ForkAt says how to fork a session at a message, if the agent is the
-// adapter: the same vendor meta as Claude's adapter takes
+// adapter or the Go agent (codex-acp-go's codexacp, which reads the same
+// meta): the same vendor meta as Claude's adapter takes
 // (`_meta.jetbrains.air.fork`, ADR 0020), which codex-acp honors for any
 // client. Codex cuts the fork after the whole turn that has the message.
 func (Harness) ForkAt(init *acp.InitializeResponse) func(messageID string) map[string]any {
-	if init.AgentInfo == nil || init.AgentInfo.Name != "@agentclientprotocol/codex-acp" {
+	if init.AgentInfo == nil || (init.AgentInfo.Name != "@agentclientprotocol/codex-acp" && init.AgentInfo.Name != codexacp.Name) {
 		return nil
 	}
 	return func(messageID string) map[string]any {

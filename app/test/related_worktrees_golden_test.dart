@@ -12,7 +12,7 @@ import 'package:nushi/subagents.dart';
 import 'fake_daemon.dart';
 import 'harness.dart';
 
-const _repo = '/Users/me/nushi';
+const _repo = '/Users/me/acme';
 final String _base = 'b' * 40;
 
 RelatedWorktree _worktree(
@@ -20,6 +20,7 @@ RelatedWorktree _worktree(
   String call, {
   String state = 'present',
   bool merged = false,
+  bool pullMerged = false,
 }) => RelatedWorktree(
   path: '$_repo/.claude/worktrees/$branch',
   branch: branch,
@@ -28,6 +29,7 @@ RelatedWorktree _worktree(
   callId: call,
   state: state,
   merged: merged,
+  pullMerged: pullMerged,
 );
 
 // A running one has no time: it would count from the real clock.
@@ -46,7 +48,8 @@ final List<RelatedWorktree> _worktrees = [
   _worktree('worktree-agent-parser', 'a'),
   _worktree('worktree-agent-docs-and-a-rather-long-branch-name', 'b'),
   _worktree('worktree-agent-merged', 'c', state: 'removed', merged: true),
-  _worktree('worktree-agent-squashed', 'd', state: 'removed'),
+  // Squash-merged: GitHub says so (issue 83).
+  _worktree('worktree-agent-squashed', 'd', state: 'removed', pullMerged: true),
   _worktree('worktree-agent-collected', 'e', state: 'removed'),
 ];
 
@@ -92,44 +95,45 @@ Future<Daemon> _app(
   Brightness brightness,
 ) async {
   viewport(tester, size, brightness: brightness);
-  final fake = FakeDaemon([chat('c', 'claude', 'Rewrite the parser')])
-    ..answer = (input) => switch (input) {
-      GetChatRequest() => GetChatResponse(
-        items: [
-          Item(
-            id: 'u',
-            kind: ItemKind.ITEM_KIND_USER_MESSAGE,
-            text: 'Split the parser work among subagents.',
+  final fake =
+      FakeDaemon([chat('c', 'claude', 'Rewrite the parser', folder: _repo)])
+        ..answer = (input) => switch (input) {
+          GetChatRequest() => GetChatResponse(
+            items: [
+              Item(
+                id: 'u',
+                kind: ItemKind.ITEM_KIND_USER_MESSAGE,
+                text: 'Split the parser work among subagents.',
+              ),
+              _subagent('a', 'Rewrite the parser', 'running'),
+              _subagent('b', 'Write the docs', 'done'),
+              _subagent('c', 'Fix the tests', 'done'),
+            ],
           ),
-          _subagent('a', 'Rewrite the parser', 'running'),
-          _subagent('b', 'Write the docs', 'done'),
-          _subagent('c', 'Fix the tests', 'done'),
-        ],
-      ),
-      GetRelatedWorktreesRequest() => GetRelatedWorktreesResponse(
-        worktrees: _worktrees,
-      ),
-      GetRelatedWorktreeStatsRequest(:final paths) =>
-        GetRelatedWorktreeStatsResponse(
-          stats: [for (final p in paths) _stats(p)],
-        ),
-      GetFolderStatusRequest() => GetFolderStatusResponse(
-        git: true,
-        branch: 'main',
-        defaultBase: 'main',
-        ahead: 3,
-        files: 2,
-        added: 5,
-        removed: 1,
-      ),
-      ListCommitsRequest() => ListCommitsResponse(
-        commits: [
-          Commit(hash: 'c' * 40, short: 'ccccccc', subject: 'Parse a line'),
-        ],
-      ),
-      GetDiffRequest() => _diff,
-      _ => null,
-    };
+          GetRelatedWorktreesRequest() => GetRelatedWorktreesResponse(
+            worktrees: _worktrees,
+          ),
+          GetRelatedWorktreeStatsRequest(:final paths) =>
+            GetRelatedWorktreeStatsResponse(
+              stats: [for (final p in paths) _stats(p)],
+            ),
+          GetFolderStatusRequest() => GetFolderStatusResponse(
+            git: true,
+            branch: 'main',
+            defaultBase: 'main',
+            ahead: 3,
+            files: 2,
+            added: 5,
+            removed: 1,
+          ),
+          ListCommitsRequest() => ListCommitsResponse(
+            commits: [
+              Commit(hash: 'c' * 40, short: 'ccccccc', subject: 'Parse a line'),
+            ],
+          ),
+          GetDiffRequest() => _diff,
+          _ => null,
+        };
   final d = await fake.connect(tester);
   d.select('c');
   await tester.pumpWidget(NushiApp(daemon: d));
@@ -174,7 +178,7 @@ void main() {
         expect(chat.related.list, hasLength(5));
         // Every line's end at the line's edge, tagged or not.
         final ends = {
-          for (final e in find.byIcon(Icons.chevron_right).evaluate())
+          for (final e in find.byIcon(paneIcon).evaluate())
             if (e.findAncestorWidgetOfExactType<SubagentLine>() != null)
               tester.getTopRight(find.byElementPredicate((x) => x == e)).dx,
         };

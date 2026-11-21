@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:markdown_view/markdown_view.dart';
@@ -8,6 +9,7 @@ import 'package:markdown_view/markdown_view.dart';
 import 'package:nushi/bottom_follower.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/chat_column.dart';
+import 'package:nushi/chat_find.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/fork_chat.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -189,7 +191,18 @@ class _TranscriptState extends State<Transcript> {
         metrics,
       _ => null,
     };
-    if (near != null && near.extentBefore < near.viewportDimension) {
+    // The user's own scroll: where a typed find left the list no longer
+    // holds back the page before.
+    if (n is ScrollUpdateNotification && n.depth == 0 && !_follower.jumping) {
+      _typedTo = false;
+    }
+    // At the top the list can't move, so a drag up there is no scroll.
+    if (n is OverscrollNotification && n.depth == 0 && n.overscroll < 0) {
+      _pulledUp();
+    }
+    if (near != null &&
+        !_typedTo &&
+        near.extentBefore < near.viewportDimension) {
       _nearTop();
     }
     // The list's height changed with no scroll and no build of all of it
@@ -285,6 +298,19 @@ class _TranscriptState extends State<Transcript> {
   }
 
   /// The user scrolled to within a screen of the top: the page before.
+  /// The user scrolls up with the list at its top, where no scroll tells
+  /// of it: where a typed find left the list no longer holds back the page
+  /// before.
+  void _pulledUp() {
+    if (!_typedTo) return;
+    final scroll = _follower.scroll;
+    if (!scroll.hasClients) return;
+    final p = scroll.position;
+    if (p.pixels > p.minScrollExtent) return;
+    _typedTo = false;
+    _nearTop();
+  }
+
   /// Not while the list fills in (its top isn't built yet).
   /// What shows stays put as items come in above it.
   void _nearTop() {
@@ -546,7 +572,7 @@ class _TranscriptState extends State<Transcript> {
     if (_follower.following || _restore != null) {
       _tail = Transcript.firstEntries;
     }
-    if (widget.items == null) widget.chat.find.addListener(_findChanged);
+    if (widget.items == null) _attachFind(widget.chat);
     _follower.scroll.addListener(_findPinAt);
     _marks.onFound = (marks) {
       final find = widget.chat.find;
@@ -593,8 +619,23 @@ class _TranscriptState extends State<Transcript> {
     }
     _shownAsk = -1;
     old.chat.find.removeListener(_findChanged);
-    if (widget.items == null) widget.chat.find.addListener(_findChanged);
+    if (widget.items == null) _attachFind(widget.chat);
   }
+
+  /// Follows [chat]'s find, and gives it the daemon's search of what isn't
+  /// loaded and the entries laid out (ChatFind).
+  void _attachFind(ChatState chat) {
+    final daemon = widget.daemon;
+    chat.find
+      ..addListener(_findChanged)
+      ..entryOf = ((id) => _entryOf[id])
+      ..ask = (r, signal) async => daemon.daemonApi >= findInChatApi
+          ? await daemon.client.findInChat(r, signal: signal)
+          : null;
+  }
+
+  // The key of each item's entry laid out, while a find is open.
+  var _entryOf = const <String, String>{};
 
   // Not in dispose: by then the list has let go of its scroll.
   @override
@@ -618,13 +659,17 @@ class _TranscriptState extends State<Transcript> {
   // keys), and the last time the find asked for its current one to show.
   final _marks = TextMarks();
   int _shownAsk = -1;
+  // The list is where typing in the find took it, not scrolled since.
+  bool _typedTo = false;
   // What was above what's loaded as the find's query was asked.
   late int _findOlder = widget.chat.older;
   bool _roomAbove = false; // the list starts below the find bar
 
   /// What the find bar covers of the transcript's top: more with its line
-  /// saying it looks in what's loaded (FindBar.loadAll).
-  double get _findBarHeight => widget.chat.older > 0 || widget.chat.loadingOlder
+  /// saying it looks in what's loaded (FindBar.loadAll) or loads.
+  double get _findBarHeight =>
+      widget.chat.older > 0 && !widget.chat.find.whole ||
+          widget.chat.loadingOlder
       ? FindBar.withNote
       : FindBar.height;
 
@@ -632,14 +677,23 @@ class _TranscriptState extends State<Transcript> {
   /// brings it into view.
   void _showCurrent() {
     final find = widget.chat.find;
-    final marks = _marks.marks;
-    final mark = marks.isEmpty
-        ? null
-        : marks[find.at.clamp(0, marks.length - 1)];
+    final key = find.current;
+    final mark = _marks.marks.where((m) => m.key == key).firstOrNull;
     _marks.pick(mark);
     if (find.asked == _shownAsk) return;
     _shownAsk = find.asked;
-    if (mark != null) _reveal(mark);
+    if (mark != null) {
+      // Typing loads nothing (ADR 0144): a match it goes to near the top
+      // of what's loaded isn't the user scrolling there for more.
+      _typedTo = !find.stepped;
+      _reveal(mark);
+    } else if (ChatFind.farItem(key) case final id? when find.stepped) {
+      // A match above what's loaded: its part comes, and the find lands
+      // on it once it's laid out (ChatFind).
+      unawaited(
+        widget.daemon.loadOlder(widget.chat, through: [id], reach: true),
+      );
+    }
   }
 
   /// Takes the list to [mark], a third of the way down, unless it shows
@@ -851,7 +905,10 @@ class _TranscriptState extends State<Transcript> {
               )
             : null);
     _pageFills(entries);
-    if (chat.find.query == null) _roomAbove = false;
+    if (chat.find.query == null) {
+      _roomAbove = false;
+      _typedTo = false;
+    }
     // While it fills in, the entries above what's built wait.
     final tail = _tail;
     final from = tail == null ? 0 : max(0, entries.length - tail);
@@ -861,6 +918,16 @@ class _TranscriptState extends State<Transcript> {
       _tail = null;
     }
     _laidOut = entries.sublist(from);
+    // As the find's marks (below): while it fills in, an entry built has
+    // no marks yet, and a step to a match in it would land nowhere.
+    if (query.isEmpty) {
+      _entryOf = const {};
+    } else if (_tail == null) {
+      _entryOf = {
+        for (final e in _laidOut)
+          for (final it in entryItems(e)) it.id: _key(e),
+      };
+    }
     _keepPlace(_laidOut, header: header != null);
     _planMoves();
     if (_goTo != null) {
@@ -887,16 +954,16 @@ class _TranscriptState extends State<Transcript> {
     final live = widget.items == null ? chat.busy : widget.live;
     _follower.stick();
     _restoreAfterLayout();
-    final t = NushiTheme.of(context).t;
+    final colors = findColors(NushiTheme.of(context).t);
     // A find looks in all of it, once it's built: while it fills in, what
     // it found stays as it was.
     if (_tail == null || query.isEmpty) {
       _marks.look(
         query,
         query.isEmpty ? const [] : [for (final e in entries) _key(e)],
-        hit: t.needs.withValues(alpha: 0.3),
-        now: t.accent.withValues(alpha: 0.4),
-        edge: t.accent,
+        hit: colors.hit,
+        now: colors.now,
+        edge: colors.edge,
       );
     }
     final before = _built;
@@ -921,51 +988,59 @@ class _TranscriptState extends State<Transcript> {
               // chunk rebuilds only its message.
               child: NotificationListener(
                 onNotification: _onScroll,
-                // Unseen while it fills in up to a kept place, rather than
-                // showing each frame what came in above.
-                child: Opacity(
-                  opacity: _restore == null ? 1 : 0,
-                  child: _ownBar(
-                    context,
-                    SingleChildScrollView(
-                      controller: _follower.scroll,
-                      padding: EdgeInsets.only(
-                        top: _padTop = _roomAbove ? _findBarHeight + 8 : 2,
-                        bottom: 14,
-                      ),
-                      child: _codeBars(
-                        behavior,
-                        Column(
-                          key: _column,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (header case final h?)
-                              Padding(padding: sides, child: h),
-                            // A live card goes with its entry: the column's
-                            // children stay one an entry.
-                            for (final (i, e) in entries.indexed.skip(from))
-                              _withLiveCards(
-                                context,
-                                e,
-                                sides,
-                                _entry(
-                                  before,
+                // A wheel up at the top moves nothing and notifies nothing.
+                child: Listener(
+                  onPointerSignal: (e) {
+                    if (e is PointerScrollEvent && e.scrollDelta.dy < 0) {
+                      _pulledUp();
+                    }
+                  },
+                  // Unseen while it fills in up to a kept place, rather than
+                  // showing each frame what came in above.
+                  child: Opacity(
+                    opacity: _restore == null ? 1 : 0,
+                    child: _ownBar(
+                      context,
+                      SingleChildScrollView(
+                        controller: _follower.scroll,
+                        padding: EdgeInsets.only(
+                          top: _padTop = _roomAbove ? _findBarHeight + 8 : 2,
+                          bottom: 14,
+                        ),
+                        child: _codeBars(
+                          behavior,
+                          Column(
+                            key: _column,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (header case final h?)
+                                Padding(padding: sides, child: h),
+                              // A live card goes with its entry: the column's
+                              // children stay one an entry.
+                              for (final (i, e) in entries.indexed.skip(from))
+                                _withLiveCards(
+                                  context,
                                   e,
-                                  live: live && i == entries.length - 1,
-                                  still: chat.waiting,
-                                  top: entryGap(
-                                    entries,
-                                    i,
-                                    header: header != null,
-                                    phone: TouchTargets.of(context),
+                                  sides,
+                                  _entry(
+                                    before,
+                                    e,
+                                    live: live && i == entries.length - 1,
+                                    still: chat.waiting,
+                                    top: entryGap(
+                                      entries,
+                                      i,
+                                      header: header != null,
+                                      phone: TouchTargets.of(context),
+                                    ),
+                                    sides: sides,
+                                    rise: arrived.contains(_key(e)),
                                   ),
-                                  sides: sides,
-                                  rise: arrived.contains(_key(e)),
                                 ),
-                              ),
-                            if (widget.footer case final f?)
-                              Padding(padding: sides, child: f),
-                          ],
+                              if (widget.footer case final f?)
+                                Padding(padding: sides, child: f),
+                            ],
+                          ),
                         ),
                       ),
                     ),

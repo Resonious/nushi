@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:nushi/chat.dart';
+import 'package:nushi/clock.dart';
 import 'package:nushi/controls.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/github_items.dart';
 import 'package:nushi/motion.dart';
 import 'package:nushi/pull_link.dart';
 import 'package:nushi/pull_summary.dart';
@@ -44,10 +46,19 @@ String itemState(GitHubItem it) => switch (it.state) {
   _ => null,
 };
 
+/// The daemon's GetGitHubItems' items say their checks' commit
+/// (`checks_oid`), so the chats' states are asked as the rows' items.
+const statesFromItemsApi = 133;
+
 /// The chats' pull requests as lists show them (their state and checks):
-/// asked of the daemon in one call (GetGitHubStates: one query a host, kept
-/// 30 s there) while something watches, at once, each minute quietly, and
-/// when a chat gets a pull request; a chat's widget puts what it read too.
+/// asked of the daemon in one call while something watches, at once, when
+/// a chat gets a pull request, and on a timer quietly ([every]: each
+/// minute, every 15 once all are merged or closed, every 5 at least while
+/// the window isn't in front; ADR 0140). From API 133 that call is the
+/// rows' items (GetGitHubItems: one query a host for every chat, whose
+/// rows then need no ask of their own), before it GetGitHubStates (one
+/// query a host, kept 30 s there); a chat's widget puts what it read too.
+/// Archived chats and chats without a pull request aren't asked for.
 class PullStates extends ChangeNotifier {
   /// The one of [daemon].
   factory of(Daemon daemon) => _all[daemon] ??= PullStates._(daemon);
@@ -61,7 +72,24 @@ class PullStates extends ChangeNotifier {
   int _watchers = 0;
   Timer? _timer;
   Timer? _soon;
+  AppLifecycleListener? _front;
   Set<String> _asked = const {};
+
+  /// When they were last asked for; null before.
+  DateTime? asked;
+
+  /// Whether something watches: they're asked on the timer.
+  bool get watching => _watchers > 0;
+
+  /// How long until the next ask: a minute; 15 once every one known is
+  /// merged or closed; 5 at least while the window isn't in front.
+  Duration get every {
+    final known = [for (final l in _links) _items[l.id]];
+    final done =
+        known.isNotEmpty &&
+        known.every((it) => it != null && itemPoll(it) == pullDonePoll);
+    return polledEvery(done ? pullDonePoll : pullWidgetPoll);
+  }
 
   /// [link]'s pull request as last known.
   GitHubItem? item(GitHubLink? link) => link == null ? null : _items[link.id];
@@ -94,18 +122,40 @@ class PullStates extends ChangeNotifier {
   void watch() {
     if (_watchers++ > 0) return;
     daemon.addListener(_chatsChanged);
-    _timer = Timer.periodic(
-      const Duration(minutes: 1),
-      (_) => unawaited(refresh(quiet: true)),
-    );
+    _front = AppLifecycleListener(onResume: _resumed);
     unawaited(refresh());
   }
 
   void unwatch() {
     if (--_watchers > 0) return;
     daemon.removeListener(_chatsChanged);
+    _front?.dispose();
+    _front = null;
     _timer?.cancel();
     _soon?.cancel();
+  }
+
+  /// The next ask: [every] after the last.
+  void _schedule() {
+    _timer?.cancel();
+    if (_watchers == 0) return;
+    final now = clock();
+    final due = (asked ?? now).add(every).difference(now);
+    _timer = Timer(
+      due.isNegative ? Duration.zero : due,
+      () => unawaited(refresh(quiet: true)),
+    );
+  }
+
+  /// Back in front: asked now if the minute's pace says it's due, else
+  /// on that pace again.
+  void _resumed() {
+    final at = asked;
+    if (at == null || clock().difference(at) >= pullWidgetPoll) {
+      unawaited(refresh(quiet: true));
+    } else {
+      _schedule();
+    }
   }
 
   Iterable<GitHubLink> get _links => [
@@ -124,19 +174,43 @@ class PullStates extends ChangeNotifier {
   }
 
   Future<void> refresh({bool quiet = false}) async {
+    _timer?.cancel();
     final links = _links.toList();
     _asked = {for (final l in links) l.id};
-    if (links.isEmpty) return;
+    if (links.isEmpty) return; // asked again once a chat gets one
     try {
-      final r = await daemon.client.getGitHubStates(
-        GetGitHubStatesRequest(items: links, quiet: quiet),
-      );
-      for (final it in r.items) {
-        _items[it.id] = it;
+      if (daemon.daemonApi >= statesFromItemsApi) {
+        final items = GitHubItems.of(daemon);
+        await items.ask([for (final l in links) addressOf(l)], quiet: quiet);
+        for (final l in links) {
+          if (items.look(addressOf(l)).item case final it?) _items[l.id] = it;
+        }
+      } else {
+        final r = await daemon.client.getGitHubStates(
+          GetGitHubStatesRequest(items: links, quiet: quiet),
+        );
+        for (final it in r.items) {
+          _items[it.id] = it;
+        }
       }
+      _seenFirst();
       notifyListeners();
     } on Object {
       // The last known states stay.
+    } finally {
+      asked = clock();
+      _schedule();
+    }
+  }
+
+  /// The comments each chat's pull requests have when first known aren't
+  /// new to it (the PR widget's count, ADR 0140).
+  void _seenFirst() {
+    for (final c in daemon.chats.values) {
+      if (c.archived) continue;
+      for (final l in c.pulls.isEmpty ? [?c.pull] : c.pulls) {
+        if (_items[l.id] case final it?) seenComments(c.id, it);
+      }
     }
   }
 }

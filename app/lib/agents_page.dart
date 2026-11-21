@@ -6,6 +6,7 @@ import 'package:nushi/agents.dart';
 import 'package:nushi/folder_button.dart';
 import 'package:nushi/gen/nushi/v1/nushi.connect.client.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/settings_general.dart';
 import 'package:nushi/settings_rows.dart';
 import 'package:nushi/shell_env_line.dart';
 import 'package:nushi/theme/theme.dart';
@@ -14,14 +15,26 @@ import 'package:nushi/widgets.dart';
 /// Settings › Agents: each agent as found on this Mac (its version and
 /// path, or "Not installed"), and for one that runs
 /// through an adapter (Codex), Set up, Update and Remove (ADR 0037); Claude
-/// runs through Nushi's Go agent, with nothing to set up (ADR 0066). The
-/// [marked] agent's row stands out: a chat that couldn't start it sent you
-/// here.
+/// runs through Nushi's Go agent, with nothing to set up (ADR 0066). Under
+/// the agent the daemon says has one (Codex), the setting that runs it
+/// through Nushi's Go agent instead of its adapter (ADR 0142), once
+/// [settings] came. The [marked] agent's row stands out: a chat that
+/// couldn't start it sent you here.
 class AgentsPage extends StatefulWidget {
-  const new(this.client, {super.key, this.marked});
+  const new(
+    this.client, {
+    super.key,
+    this.marked,
+    this.settings,
+    this.onChange,
+  });
 
   final NushiServiceClient client;
   final String? marked;
+
+  /// The daemon's settings; null until it said.
+  final Settings? settings;
+  final SettingsChange? onChange;
 
   @override
   State<AgentsPage> createState() => _AgentsPageState();
@@ -49,6 +62,29 @@ class _AgentsPageState extends State<AgentsPage> {
     if (mounted) setState(() => _removing.remove(a.name));
   }
 
+  /// Codex's switch between its adapter and Nushi's Go agent, set in line
+  /// with the agent's name; the agents are found again once it's set, as
+  /// Codex's needs changed. Null while the daemon's settings aren't known
+  /// (or it is too old to have the setting).
+  Widget? _goAgent() {
+    final (set, change) = (widget.settings, widget.onChange);
+    if (set == null || change == null || !set.hasCodexGoAgent()) return null;
+    return Padding(
+      padding: const EdgeInsets.only(left: agentTextIndent),
+      child: SettingsRow(
+        goAgentLabel,
+        description: goAgentDescription,
+        control: SettingsSwitch(
+          value: set.codexGoAgent,
+          run: ({required on}) async {
+            await change((s) => s.codexGoAgent = on);
+            await listAgents(widget.client);
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => ValueListenableBuilder(
     valueListenable: agentList,
@@ -59,7 +95,7 @@ class _AgentsPageState extends State<AgentsPage> {
         if (agents.isNotEmpty)
           SettingsGroup(
             children: [
-              for (final a in agents.values)
+              for (final a in agents.values) ...[
                 AgentRow(
                   a,
                   client: widget.client,
@@ -68,6 +104,8 @@ class _AgentsPageState extends State<AgentsPage> {
                       ? null
                       : () => _remove(a),
                 ),
+                if (a.goAgentSwitch) ?_goAgent(),
+              ],
             ],
           ),
         ShellEnvLine(widget.client),
@@ -75,6 +113,12 @@ class _AgentsPageState extends State<AgentsPage> {
     ),
   );
 }
+
+/// The switch for Codex's Go agent, and what it says under it.
+const goAgentLabel = 'Run Codex without Node';
+const goAgentDescription =
+    "New: Nushi's built-in agent instead of the codex-acp adapter. "
+    'Chats use it from their next start.';
 
 String _mb(int bytes) => '${(bytes / 1e6).round()} MB';
 

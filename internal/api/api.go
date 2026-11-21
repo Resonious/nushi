@@ -31,7 +31,7 @@ import (
 )
 
 // Version is the API version reported by Ping. Bump it when methods are added.
-const Version = 128
+const Version = 139
 
 // Release is the version a release build stamps in (make package's
 // VERSION, through -ldflags -X), "" in a build that isn't packaged
@@ -84,6 +84,9 @@ type Services struct {
 	Updates Updates
 	// Usage sums what the chats' turns used; nil: it isn't kept.
 	Usage Usage
+	// CodexGo keeps whether Codex runs through Nushi's Go agent; nil: not
+	// kept.
+	CodexGo CodexGoPref
 }
 
 // Restart stops the daemon for a newer build once nothing would be lost
@@ -127,6 +130,9 @@ var macOnly = map[string]bool{
 	nushiv1connect.NushiServiceSendTestPushProcedure:   true,
 	// The Mac's app starts the new daemon.
 	nushiv1connect.NushiServiceRestartWhenIdleProcedure: true,
+	// An agent's login opens the Mac's browser, for whoever sits at the
+	// Mac (ADR 0145).
+	nushiv1connect.NushiServiceSignInAgentProcedure: true,
 	// The phone shows nothing of updates.
 	nushiv1connect.NushiServiceCheckForUpdatesProcedure: true,
 	// Homebrew replaces the app on the Mac, on the Mac's word only (ADR
@@ -161,6 +167,8 @@ var macOnly = map[string]bool{
 	// chats' titles (ADR 0136); the call checks for the Mac's socket too
 	// (onMac).
 	nushiv1connect.NushiServiceGetUsageProcedure: true,
+	// The phone has no find in a chat.
+	nushiv1connect.NushiServiceFindInChatProcedure: true,
 }
 
 // ForDevices is the API a paired device's channel gets, which the

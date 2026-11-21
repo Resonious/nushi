@@ -88,11 +88,39 @@ The tab looks like the pull request's page on GitHub, so what you know from ther
 
 **Fix checks** in the **Checks** tab sends every failed check at once.
 
+## When checks fail
+
+When a chat's pull request fails its checks after the agent is done, the chat shows **Needs you** (an amber dot, counted on the Dock's badge). A bar over the message box says **Checks failed on #n**. Nushi never fixes or sends anything by itself.
+
+1. Click **Ask to fix**. Each failed check goes into the message box as a card with the failing part of its log.
+2. Add anything you want to say, and send.
+
+Click **✕** instead to dismiss it. The same failure doesn't ask again, but a failure after a new push does. A failure that was already there when Nushi first saw the chat doesn't ask.
+
 By default, review cards tell the agent not to reply on GitHub, and failed-check cards tell it not to commit or push. Change what each kind of card asks in **Settings › GitHub › What reply cards ask**:
 
 1. Click **Edit** beside the kind of card.
 2. Change the words and click **Save**. Empty asks the default.
 3. A changed kind says **Edited**. Click **Reset** beside it to go back to the default.
+
+## React to a comment
+
+Reactions show under the description and each comment, as on GitHub: an emoji and how many people used it. Yours are filled in blue with a ring.
+
+1. Click the smiley under the comment.
+2. Pick one of the eight emoji. It's added on GitHub.
+
+Click one of your reactions to take it back, or someone else's to add yours.
+
+## Mark files viewed
+
+As on GitHub, you can tick off each file once you've looked at it. Nushi saves the mark on GitHub, so github.com shows it too.
+
+1. Open **Files changed** and pick a file.
+2. Click **Viewed** at the right of the file's name. The file folds, and gets a green tick in the list.
+3. To look again, click the chevron before its name. Click **Viewed** again to untick it.
+
+The top of the list counts them, such as **1 / 4 files viewed**. A file that changed after you marked it says **Changed since last view** and is unticked again.
 
 ## Reply, review and resolve
 
@@ -128,6 +156,6 @@ After the merge, **Clean up…** offers to delete the worktree and branches and 
 - A chat's row in the sidebar gets a red dot while its checks fail, and an amber one while they run.
 - For a pull request from a fork, the chat's branch isn't linked to the fork, so a push from the chat doesn't reach the pull request.
 - A fine-grained token works, but sees only one owner's repositories and can't show checks.
-- Nushi only checks GitHub while the GitHub view or a chat with a pull request is open, and only writes what you send.
+- While Nushi runs it checks your chats' pull requests' state once a minute, every 5 minutes while its window is in the background. It reads a whole pull request only while the GitHub view or its Pull request tab shows it, and only writes what you send.
 - Text you're writing in a reply or review stays if you switch to another chat. It's lost if you quit Nushi.
 - The [Phone](Phone) shows a one-line pull request summary in the chat (`+2` for the others) and the link chips, but has no Pull request tab.

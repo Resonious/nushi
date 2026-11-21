@@ -72,6 +72,10 @@ class BottomFollower extends ChangeNotifier {
     _move(p.maxScrollExtent - _glideFrom * (1 - Motion.settle.transform(v)));
   }
 
+  /// The list is being moved by this, not the user: its scroll's
+  /// notification isn't theirs.
+  bool get jumping => _jumping;
+
   void _move(double to) {
     _jumping = true;
     scroll.position.jumpTo(to);

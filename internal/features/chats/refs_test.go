@@ -150,7 +150,7 @@ func TestAnImageIsHeldAsAReferenceOnceItsCopyHasIt(t *testing.T) {
 		hasBytes(t, when+": a snapshot", itemWith(t, snap.Items, shot).Images, shot)
 		part, err := svc.Recent(c.id, 1)
 		testcheck.NoErr(t, err)
-		page, _, err := svc.Items(c.id, part.Chat.Items[0].ID, 10)
+		page, _, err := svc.Items(c.id, part.Chat.Items[0].ID, "", 10)
 		testcheck.NoErr(t, err)
 		svc.Inline(c.id, page)
 		hasBytes(t, when+": a page", itemWith(t, page, pasted).Images, pasted, small)

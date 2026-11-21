@@ -1,5 +1,11 @@
 part of 'daemon.dart';
 
+/// The daemon's API whose GetChatItems reaches back to an item (`through`).
+const pageThroughApi = 137;
+
+/// How many items above a match a page that reaches back to it holds.
+const _aboveMatch = 24;
+
 /// A long chat's pages: it opens with its recent part (GetChatRequest.recent)
 /// and takes the pages before it (GetChatItems) as the transcript scrolls
 /// up, or as something goes to a message not taken yet (ADR 0026).
@@ -11,13 +17,16 @@ extension DaemonPages on Daemon {
   /// has them all, or a page is on its way). Given [through], it goes on
   /// page by page until it has all those messages, given [until] until a
   /// page has one it holds, or with [all] to the chat's start, and puts
-  /// them in at once, after any page on its way. A failed page sets
-  /// [ChatState.olderFailed] until the next try.
+  /// them in at once, after any page on its way. With [reach] and one
+  /// message [through], each page reaches back to it and a few items above
+  /// it (GetChatItemsRequest.through; ⌘F's step to a match, ADR 0144). A
+  /// failed page sets [ChatState.olderFailed] until the next try.
   Future<void> loadOlder(
     ChatState chat, {
     Iterable<String> through = const [],
     bool Function(Item)? until,
     bool all = false,
+    bool reach = false,
   }) async {
     final more = all || through.isNotEmpty || until != null;
     // One at a time: after any on its way, and any that waited for it.
@@ -36,6 +45,9 @@ extension DaemonPages on Daemon {
     final snapshot = chat.snapshots;
     final page = <Item>[];
     var failed = false;
+    final to = reach && want.length == 1 && daemonApi >= pageThroughApi
+        ? want.single
+        : '';
     try {
       var first = before;
       var older = chat.older;
@@ -44,8 +56,14 @@ extension DaemonPages on Daemon {
           GetChatItemsRequest(
             chatId: chat.id,
             before: first,
-            // Going to a message: as much as the daemon gives at once.
-            limit: more ? 500 : pageItems,
+            // Going to a message: as much as the daemon gives at once, or
+            // through it, what's above it to read.
+            limit: to.isNotEmpty
+                ? _aboveMatch
+                : more
+                ? 500
+                : pageItems,
+            through: to,
             imageRefs: true,
           ),
         );

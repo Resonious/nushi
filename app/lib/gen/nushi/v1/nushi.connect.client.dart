@@ -152,6 +152,28 @@ extension type NushiServiceClient(connect.Transport _transport) {
     );
   }
 
+  /// Counts a query's matches in each of a chat's items, its whole
+  /// transcript as the daemon holds it (what GetChat and GetChatItems
+  /// give), for ⌘F in a long chat: the app counts the matches in what it
+  /// hasn't loaded and loads the part a step goes to (ADR 0144). Not on a
+  /// device's channel: the phone has no find. API 136.
+  Future<nushiv1nushi.FindInChatResponse> findInChat(
+    nushiv1nushi.FindInChatRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.findInChat,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
   /// One of a chat's images, by its hash: for a client that took the chat's
   /// items with image_refs, as each image is about to show. Only an image
   /// of that chat's own items. API 110.
@@ -241,6 +263,30 @@ extension type NushiServiceClient(connect.Transport _transport) {
   }) {
     return connect.Client(_transport).unary(
       specs.NushiService.removeAgent,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
+  /// Signs an agent in through its own login (ACP authenticate), one of
+  /// the ways an AgentSignIn offers: a short-lived process of the agent,
+  /// started as a chat's would be, runs it (Codex opens the browser and
+  /// waits) and is stopped after. Returns once the agent says it is signed
+  /// in (10 minutes at most); a call cancelled stops it, and its login.
+  /// One at a time for each agent. Nushi sees no credential (API 139, ADR
+  /// 0145).
+  Future<nushiv1nushi.SignInAgentResponse> signInAgent(
+    nushiv1nushi.SignInAgentRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.signInAgent,
       input,
       signal: signal,
       headers: headers,
@@ -2648,6 +2694,61 @@ extension type NushiServiceClient(connect.Transport _transport) {
   }) {
     return connect.Client(_transport).unary(
       specs.NushiService.getGitHubFiles,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
+  /// Which of a pull request's files the user marked viewed (GitHub's
+  /// viewerViewedState), and marking one viewed or not. API 130.
+  Future<nushiv1nushi.GetGitHubViewedResponse> getGitHubViewed(
+    nushiv1nushi.GetGitHubViewedRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.getGitHubViewed,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
+  Future<nushiv1nushi.SetGitHubViewedResponse> setGitHubViewed(
+    nushiv1nushi.SetGitHubViewedRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.setGitHubViewed,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
+  /// Adds the user's emoji reaction to a comment, a review or a pull
+  /// request's description, or takes it away. API 131.
+  Future<nushiv1nushi.ReactGitHubResponse> reactGitHub(
+    nushiv1nushi.ReactGitHubRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.NushiService.reactGitHub,
       input,
       signal: signal,
       headers: headers,

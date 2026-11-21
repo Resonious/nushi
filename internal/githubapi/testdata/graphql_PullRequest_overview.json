@@ -24,6 +24,10 @@
         "baseRefOid": "1111111111111111111111111111111111111111",
         "headRefOid": "3333333333333333333333333333333333333333",
         "isCrossRepository": false,
+        "reactionGroups": [
+          { "content": "THUMBS_UP", "viewerHasReacted": false, "reactors": { "totalCount": 0 } },
+          { "content": "HOORAY", "viewerHasReacted": true, "reactors": { "totalCount": 2 } }
+        ],
         "headRepository": { "nameWithOwner": "acme/lumen" },
         "mergeable": "MERGEABLE",
         "mergeStateStatus": "BLOCKED",
@@ -43,7 +47,13 @@
         ] },
         "comments": { "nodes": [
           { "id": "IC_1", "url": "https://github.com/acme/lumen/pull/57#issuecomment-1", "author": { "login": "iris", "__typename": "User" },
-            "authorAssociation": "MEMBER", "body": "Does this cover the API tokens too?", "createdAt": "2026-11-18T10:00:00Z" }
+            "authorAssociation": "MEMBER", "body": "Does this cover the API tokens too?", "createdAt": "2026-11-18T10:00:00Z",
+            "reactionGroups": [
+              { "content": "THUMBS_UP", "viewerHasReacted": true, "reactors": { "totalCount": 3 } },
+              { "content": "THUMBS_DOWN", "viewerHasReacted": false, "reactors": { "totalCount": 0 } },
+              { "content": "EYES", "viewerHasReacted": false, "reactors": { "totalCount": 1 } },
+              { "content": "SPARKLES", "viewerHasReacted": false, "reactors": { "totalCount": 4 } }
+            ] }
         ] },
         "reviews": { "nodes": [
           { "id": "PRR_tomas_1", "url": "https://github.com/acme/lumen/pull/57#pullrequestreview-1", "author": { "login": "tomas", "__typename": "User" },
@@ -68,7 +78,8 @@
               "comments": { "nodes": [
                 { "id": "PRRC_1", "url": "https://github.com/acme/lumen/pull/57#discussion_r1", "author": { "login": "tomas", "__typename": "User" },
                   "authorAssociation": "MEMBER", "body": "Should this read the timeout from config?", "createdAt": "2026-11-18T11:00:00Z",
-                  "pullRequestReview": { "id": "PRR_tomas_1" } },
+                  "pullRequestReview": { "id": "PRR_tomas_1" },
+                  "reactionGroups": [ { "content": "HEART", "viewerHasReacted": false, "reactors": { "totalCount": 1 } } ] },
                 { "id": "PRRC_2", "url": "https://github.com/acme/lumen/pull/57#discussion_r2", "author": { "login": "mira", "__typename": "User" },
                   "authorAssociation": "MEMBER", "body": "Yes, moved it.", "createdAt": "2026-11-18T12:00:00Z",
                   "pullRequestReview": { "id": "PRR_mira_reply" } }

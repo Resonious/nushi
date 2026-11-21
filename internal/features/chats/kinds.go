@@ -23,6 +23,10 @@ type Kind struct {
 	// Ready says, quickly, why the agent can't start now (it isn't
 	// installed or set up); nil when it can. nil: it always can.
 	Ready func() error
+	// NoSignIn are the ids of sign-in methods the agent may offer that
+	// Nushi doesn't (signInMethods): ones that need what Nushi can't show
+	// or won't handle.
+	NoSignIn []string
 }
 
 // kind is a Kind the service runs, with what its harness can do resolved

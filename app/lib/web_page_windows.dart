@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:nushi/daemon.dart' show dataDir;
 import 'package:nushi/outside_page.dart';
 import 'package:nushi/theme/tokens.dart';
+import 'package:nushi/web_find.dart';
 import 'package:nushi/web_page.dart';
 import 'package:nushi/web_view_windows.dart';
 
@@ -65,6 +66,10 @@ class WindowsPage implements PageHost {
   Future<void> reload() async {
     if (_path.isNotEmpty) await _web.reload();
   }
+
+  /// None yet: the find's script is WebKit's (ADR 0143).
+  @override
+  PageFinder? get finder => null;
 
   void _leave(String url) {
     final to = Uri.tryParse(url);

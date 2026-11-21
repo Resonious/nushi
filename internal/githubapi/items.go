@@ -22,7 +22,7 @@ fragment PullRow on PullRequest {
   repository { nameWithOwner }
   reviewDecision
   totalCommentsCount
-  commits(last: 1) { nodes { commit { statusCheckRollup { state } } } }
+  commits(last: 1) { nodes { commit { oid statusCheckRollup { state } } } }
   reviewThreads(first: 100) { nodes { isResolved } }
 }`
 
@@ -53,6 +53,7 @@ type row struct {
 	Commits            struct {
 		Nodes []struct {
 			Commit struct {
+				OID               string `json:"oid"`
 				StatusCheckRollup *struct {
 					State string `json:"state"`
 				} `json:"statusCheckRollup"`
@@ -90,6 +91,7 @@ func (r row) item(host string) model.GitHubItem {
 	}
 	if n := r.Commits.Nodes; len(n) > 0 && n[0].Commit.StatusCheckRollup != nil {
 		it.Checks = rollupState(n[0].Commit.StatusCheckRollup.State)
+		it.ChecksOID = n[0].Commit.OID
 	}
 	for _, t := range r.ReviewThreads.Nodes {
 		if !t.IsResolved {

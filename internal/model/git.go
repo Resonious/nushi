@@ -43,6 +43,12 @@ type RelatedWorktree struct {
 	// Merged says git shows LastHead on the chat's branch or its base, and
 	// it has commits of its own. git can't see a squash merge.
 	Merged bool `json:",omitempty"`
+	// PullMerged says GitHub has a merged pull request with Branch as its
+	// head, opened in the chat's life: a squash merge, which git can't see.
+	// PullAsked says GitHub was asked, once, after the worktree went away
+	// (issue 83); its answer stays.
+	PullMerged bool `json:",omitempty"`
+	PullAsked  bool `json:",omitempty"`
 }
 
 // RelatedState says whether a related worktree is still there.

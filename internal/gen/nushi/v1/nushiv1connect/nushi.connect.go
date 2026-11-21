@@ -51,6 +51,8 @@ const (
 	// NushiServiceGetChatItemsProcedure is the fully-qualified name of the NushiService's GetChatItems
 	// RPC.
 	NushiServiceGetChatItemsProcedure = "/nushi.v1.NushiService/GetChatItems"
+	// NushiServiceFindInChatProcedure is the fully-qualified name of the NushiService's FindInChat RPC.
+	NushiServiceFindInChatProcedure = "/nushi.v1.NushiService/FindInChat"
 	// NushiServiceGetChatImageProcedure is the fully-qualified name of the NushiService's GetChatImage
 	// RPC.
 	NushiServiceGetChatImageProcedure = "/nushi.v1.NushiService/GetChatImage"
@@ -63,6 +65,9 @@ const (
 	// NushiServiceRemoveAgentProcedure is the fully-qualified name of the NushiService's RemoveAgent
 	// RPC.
 	NushiServiceRemoveAgentProcedure = "/nushi.v1.NushiService/RemoveAgent"
+	// NushiServiceSignInAgentProcedure is the fully-qualified name of the NushiService's SignInAgent
+	// RPC.
+	NushiServiceSignInAgentProcedure = "/nushi.v1.NushiService/SignInAgent"
 	// NushiServiceListAgentSessionsProcedure is the fully-qualified name of the NushiService's
 	// ListAgentSessions RPC.
 	NushiServiceListAgentSessionsProcedure = "/nushi.v1.NushiService/ListAgentSessions"
@@ -405,6 +410,15 @@ const (
 	// NushiServiceGetGitHubFilesProcedure is the fully-qualified name of the NushiService's
 	// GetGitHubFiles RPC.
 	NushiServiceGetGitHubFilesProcedure = "/nushi.v1.NushiService/GetGitHubFiles"
+	// NushiServiceGetGitHubViewedProcedure is the fully-qualified name of the NushiService's
+	// GetGitHubViewed RPC.
+	NushiServiceGetGitHubViewedProcedure = "/nushi.v1.NushiService/GetGitHubViewed"
+	// NushiServiceSetGitHubViewedProcedure is the fully-qualified name of the NushiService's
+	// SetGitHubViewed RPC.
+	NushiServiceSetGitHubViewedProcedure = "/nushi.v1.NushiService/SetGitHubViewed"
+	// NushiServiceReactGitHubProcedure is the fully-qualified name of the NushiService's ReactGitHub
+	// RPC.
+	NushiServiceReactGitHubProcedure = "/nushi.v1.NushiService/ReactGitHub"
 	// NushiServiceGetGitHubJobLogProcedure is the fully-qualified name of the NushiService's
 	// GetGitHubJobLog RPC.
 	NushiServiceGetGitHubJobLogProcedure = "/nushi.v1.NushiService/GetGitHubJobLog"
@@ -503,6 +517,12 @@ type NushiServiceClient interface {
 	// A chat's items before one of them, a page at a time: for a client that
 	// took only the recent part (GetChatRequest.recent), as it scrolls up.
 	GetChatItems(context.Context, *connect.Request[v1.GetChatItemsRequest]) (*connect.Response[v1.GetChatItemsResponse], error)
+	// Counts a query's matches in each of a chat's items, its whole
+	// transcript as the daemon holds it (what GetChat and GetChatItems
+	// give), for ⌘F in a long chat: the app counts the matches in what it
+	// hasn't loaded and loads the part a step goes to (ADR 0144). Not on a
+	// device's channel: the phone has no find. API 136.
+	FindInChat(context.Context, *connect.Request[v1.FindInChatRequest]) (*connect.Response[v1.FindInChatResponse], error)
 	// One of a chat's images, by its hash: for a client that took the chat's
 	// items with image_refs, as each image is about to show. Only an image
 	// of that chat's own items. API 110.
@@ -520,6 +540,14 @@ type NushiServiceClient interface {
 	SetUpAgent(context.Context, *connect.Request[v1.SetUpAgentRequest]) (*connect.Response[v1.SetUpAgentResponse], error)
 	// Removes an agent's adapter; its awake chats sleep first.
 	RemoveAgent(context.Context, *connect.Request[v1.RemoveAgentRequest]) (*connect.Response[v1.RemoveAgentResponse], error)
+	// Signs an agent in through its own login (ACP authenticate), one of
+	// the ways an AgentSignIn offers: a short-lived process of the agent,
+	// started as a chat's would be, runs it (Codex opens the browser and
+	// waits) and is stopped after. Returns once the agent says it is signed
+	// in (10 minutes at most); a call cancelled stops it, and its login.
+	// One at a time for each agent. Nushi sees no credential (API 139, ADR
+	// 0145).
+	SignInAgent(context.Context, *connect.Request[v1.SignInAgentRequest]) (*connect.Response[v1.SignInAgentResponse], error)
 	// Lists an agent's sessions in a folder that aren't chats (started in a
 	// terminal, say), newest first, a page at a time. It starts the agent to
 	// ask (ACP session/list).
@@ -943,6 +971,13 @@ type NushiServiceClient interface {
 	// A pull request's files from its merge base to its head, both sides'
 	// texts, as GetDiff gives them.
 	GetGitHubFiles(context.Context, *connect.Request[v1.GetGitHubFilesRequest]) (*connect.Response[v1.GetGitHubFilesResponse], error)
+	// Which of a pull request's files the user marked viewed (GitHub's
+	// viewerViewedState), and marking one viewed or not. API 130.
+	GetGitHubViewed(context.Context, *connect.Request[v1.GetGitHubViewedRequest]) (*connect.Response[v1.GetGitHubViewedResponse], error)
+	SetGitHubViewed(context.Context, *connect.Request[v1.SetGitHubViewedRequest]) (*connect.Response[v1.SetGitHubViewedResponse], error)
+	// Adds the user's emoji reaction to a comment, a review or a pull
+	// request's description, or takes it away. API 131.
+	ReactGitHub(context.Context, *connect.Request[v1.ReactGitHubRequest]) (*connect.Response[v1.ReactGitHubResponse], error)
 	// The end of a failed Actions job's log (16 KB).
 	GetGitHubJobLog(context.Context, *connect.Request[v1.GetGitHubJobLogRequest]) (*connect.Response[v1.GetGitHubJobLogResponse], error)
 	// The user's writes.
@@ -1061,6 +1096,12 @@ func NewNushiServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(nushiServiceMethods.ByName("GetChatItems")),
 			connect.WithClientOptions(opts...),
 		),
+		findInChat: connect.NewClient[v1.FindInChatRequest, v1.FindInChatResponse](
+			httpClient,
+			baseURL+NushiServiceFindInChatProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("FindInChat")),
+			connect.WithClientOptions(opts...),
+		),
 		getChatImage: connect.NewClient[v1.GetChatImageRequest, v1.GetChatImageResponse](
 			httpClient,
 			baseURL+NushiServiceGetChatImageProcedure,
@@ -1089,6 +1130,12 @@ func NewNushiServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			httpClient,
 			baseURL+NushiServiceRemoveAgentProcedure,
 			connect.WithSchema(nushiServiceMethods.ByName("RemoveAgent")),
+			connect.WithClientOptions(opts...),
+		),
+		signInAgent: connect.NewClient[v1.SignInAgentRequest, v1.SignInAgentResponse](
+			httpClient,
+			baseURL+NushiServiceSignInAgentProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("SignInAgent")),
 			connect.WithClientOptions(opts...),
 		),
 		listAgentSessions: connect.NewClient[v1.ListAgentSessionsRequest, v1.ListAgentSessionsResponse](
@@ -1835,6 +1882,24 @@ func NewNushiServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(nushiServiceMethods.ByName("GetGitHubFiles")),
 			connect.WithClientOptions(opts...),
 		),
+		getGitHubViewed: connect.NewClient[v1.GetGitHubViewedRequest, v1.GetGitHubViewedResponse](
+			httpClient,
+			baseURL+NushiServiceGetGitHubViewedProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("GetGitHubViewed")),
+			connect.WithClientOptions(opts...),
+		),
+		setGitHubViewed: connect.NewClient[v1.SetGitHubViewedRequest, v1.SetGitHubViewedResponse](
+			httpClient,
+			baseURL+NushiServiceSetGitHubViewedProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("SetGitHubViewed")),
+			connect.WithClientOptions(opts...),
+		),
+		reactGitHub: connect.NewClient[v1.ReactGitHubRequest, v1.ReactGitHubResponse](
+			httpClient,
+			baseURL+NushiServiceReactGitHubProcedure,
+			connect.WithSchema(nushiServiceMethods.ByName("ReactGitHub")),
+			connect.WithClientOptions(opts...),
+		),
 		getGitHubJobLog: connect.NewClient[v1.GetGitHubJobLogRequest, v1.GetGitHubJobLogResponse](
 			httpClient,
 			baseURL+NushiServiceGetGitHubJobLogProcedure,
@@ -1979,11 +2044,13 @@ type nushiServiceClient struct {
 	listChats               *connect.Client[v1.ListChatsRequest, v1.ListChatsResponse]
 	getChat                 *connect.Client[v1.GetChatRequest, v1.GetChatResponse]
 	getChatItems            *connect.Client[v1.GetChatItemsRequest, v1.GetChatItemsResponse]
+	findInChat              *connect.Client[v1.FindInChatRequest, v1.FindInChatResponse]
 	getChatImage            *connect.Client[v1.GetChatImageRequest, v1.GetChatImageResponse]
 	startChat               *connect.Client[v1.StartChatRequest, v1.StartChatResponse]
 	listAgents              *connect.Client[v1.ListAgentsRequest, v1.ListAgentsResponse]
 	setUpAgent              *connect.Client[v1.SetUpAgentRequest, v1.SetUpAgentResponse]
 	removeAgent             *connect.Client[v1.RemoveAgentRequest, v1.RemoveAgentResponse]
+	signInAgent             *connect.Client[v1.SignInAgentRequest, v1.SignInAgentResponse]
 	listAgentSessions       *connect.Client[v1.ListAgentSessionsRequest, v1.ListAgentSessionsResponse]
 	openAgentSession        *connect.Client[v1.OpenAgentSessionRequest, v1.OpenAgentSessionResponse]
 	searchAgentSessions     *connect.Client[v1.SearchAgentSessionsRequest, v1.SearchAgentSessionsResponse]
@@ -2108,6 +2175,9 @@ type nushiServiceClient struct {
 	getGitHubIssue          *connect.Client[v1.GetGitHubIssueRequest, v1.GetGitHubIssueResponse]
 	getGitHubCommits        *connect.Client[v1.GetGitHubCommitsRequest, v1.GetGitHubCommitsResponse]
 	getGitHubFiles          *connect.Client[v1.GetGitHubFilesRequest, v1.GetGitHubFilesResponse]
+	getGitHubViewed         *connect.Client[v1.GetGitHubViewedRequest, v1.GetGitHubViewedResponse]
+	setGitHubViewed         *connect.Client[v1.SetGitHubViewedRequest, v1.SetGitHubViewedResponse]
+	reactGitHub             *connect.Client[v1.ReactGitHubRequest, v1.ReactGitHubResponse]
 	getGitHubJobLog         *connect.Client[v1.GetGitHubJobLogRequest, v1.GetGitHubJobLogResponse]
 	replyGitHubThread       *connect.Client[v1.ReplyGitHubThreadRequest, v1.ReplyGitHubThreadResponse]
 	resolveGitHubThread     *connect.Client[v1.ResolveGitHubThreadRequest, v1.ResolveGitHubThreadResponse]
@@ -2167,6 +2237,11 @@ func (c *nushiServiceClient) GetChatItems(ctx context.Context, req *connect.Requ
 	return c.getChatItems.CallUnary(ctx, req)
 }
 
+// FindInChat calls nushi.v1.NushiService.FindInChat.
+func (c *nushiServiceClient) FindInChat(ctx context.Context, req *connect.Request[v1.FindInChatRequest]) (*connect.Response[v1.FindInChatResponse], error) {
+	return c.findInChat.CallUnary(ctx, req)
+}
+
 // GetChatImage calls nushi.v1.NushiService.GetChatImage.
 func (c *nushiServiceClient) GetChatImage(ctx context.Context, req *connect.Request[v1.GetChatImageRequest]) (*connect.Response[v1.GetChatImageResponse], error) {
 	return c.getChatImage.CallUnary(ctx, req)
@@ -2190,6 +2265,11 @@ func (c *nushiServiceClient) SetUpAgent(ctx context.Context, req *connect.Reques
 // RemoveAgent calls nushi.v1.NushiService.RemoveAgent.
 func (c *nushiServiceClient) RemoveAgent(ctx context.Context, req *connect.Request[v1.RemoveAgentRequest]) (*connect.Response[v1.RemoveAgentResponse], error) {
 	return c.removeAgent.CallUnary(ctx, req)
+}
+
+// SignInAgent calls nushi.v1.NushiService.SignInAgent.
+func (c *nushiServiceClient) SignInAgent(ctx context.Context, req *connect.Request[v1.SignInAgentRequest]) (*connect.Response[v1.SignInAgentResponse], error) {
+	return c.signInAgent.CallUnary(ctx, req)
 }
 
 // ListAgentSessions calls nushi.v1.NushiService.ListAgentSessions.
@@ -2812,6 +2892,21 @@ func (c *nushiServiceClient) GetGitHubFiles(ctx context.Context, req *connect.Re
 	return c.getGitHubFiles.CallUnary(ctx, req)
 }
 
+// GetGitHubViewed calls nushi.v1.NushiService.GetGitHubViewed.
+func (c *nushiServiceClient) GetGitHubViewed(ctx context.Context, req *connect.Request[v1.GetGitHubViewedRequest]) (*connect.Response[v1.GetGitHubViewedResponse], error) {
+	return c.getGitHubViewed.CallUnary(ctx, req)
+}
+
+// SetGitHubViewed calls nushi.v1.NushiService.SetGitHubViewed.
+func (c *nushiServiceClient) SetGitHubViewed(ctx context.Context, req *connect.Request[v1.SetGitHubViewedRequest]) (*connect.Response[v1.SetGitHubViewedResponse], error) {
+	return c.setGitHubViewed.CallUnary(ctx, req)
+}
+
+// ReactGitHub calls nushi.v1.NushiService.ReactGitHub.
+func (c *nushiServiceClient) ReactGitHub(ctx context.Context, req *connect.Request[v1.ReactGitHubRequest]) (*connect.Response[v1.ReactGitHubResponse], error) {
+	return c.reactGitHub.CallUnary(ctx, req)
+}
+
 // GetGitHubJobLog calls nushi.v1.NushiService.GetGitHubJobLog.
 func (c *nushiServiceClient) GetGitHubJobLog(ctx context.Context, req *connect.Request[v1.GetGitHubJobLogRequest]) (*connect.Response[v1.GetGitHubJobLogResponse], error) {
 	return c.getGitHubJobLog.CallUnary(ctx, req)
@@ -2955,6 +3050,12 @@ type NushiServiceHandler interface {
 	// A chat's items before one of them, a page at a time: for a client that
 	// took only the recent part (GetChatRequest.recent), as it scrolls up.
 	GetChatItems(context.Context, *connect.Request[v1.GetChatItemsRequest]) (*connect.Response[v1.GetChatItemsResponse], error)
+	// Counts a query's matches in each of a chat's items, its whole
+	// transcript as the daemon holds it (what GetChat and GetChatItems
+	// give), for ⌘F in a long chat: the app counts the matches in what it
+	// hasn't loaded and loads the part a step goes to (ADR 0144). Not on a
+	// device's channel: the phone has no find. API 136.
+	FindInChat(context.Context, *connect.Request[v1.FindInChatRequest]) (*connect.Response[v1.FindInChatResponse], error)
 	// One of a chat's images, by its hash: for a client that took the chat's
 	// items with image_refs, as each image is about to show. Only an image
 	// of that chat's own items. API 110.
@@ -2972,6 +3073,14 @@ type NushiServiceHandler interface {
 	SetUpAgent(context.Context, *connect.Request[v1.SetUpAgentRequest]) (*connect.Response[v1.SetUpAgentResponse], error)
 	// Removes an agent's adapter; its awake chats sleep first.
 	RemoveAgent(context.Context, *connect.Request[v1.RemoveAgentRequest]) (*connect.Response[v1.RemoveAgentResponse], error)
+	// Signs an agent in through its own login (ACP authenticate), one of
+	// the ways an AgentSignIn offers: a short-lived process of the agent,
+	// started as a chat's would be, runs it (Codex opens the browser and
+	// waits) and is stopped after. Returns once the agent says it is signed
+	// in (10 minutes at most); a call cancelled stops it, and its login.
+	// One at a time for each agent. Nushi sees no credential (API 139, ADR
+	// 0145).
+	SignInAgent(context.Context, *connect.Request[v1.SignInAgentRequest]) (*connect.Response[v1.SignInAgentResponse], error)
 	// Lists an agent's sessions in a folder that aren't chats (started in a
 	// terminal, say), newest first, a page at a time. It starts the agent to
 	// ask (ACP session/list).
@@ -3395,6 +3504,13 @@ type NushiServiceHandler interface {
 	// A pull request's files from its merge base to its head, both sides'
 	// texts, as GetDiff gives them.
 	GetGitHubFiles(context.Context, *connect.Request[v1.GetGitHubFilesRequest]) (*connect.Response[v1.GetGitHubFilesResponse], error)
+	// Which of a pull request's files the user marked viewed (GitHub's
+	// viewerViewedState), and marking one viewed or not. API 130.
+	GetGitHubViewed(context.Context, *connect.Request[v1.GetGitHubViewedRequest]) (*connect.Response[v1.GetGitHubViewedResponse], error)
+	SetGitHubViewed(context.Context, *connect.Request[v1.SetGitHubViewedRequest]) (*connect.Response[v1.SetGitHubViewedResponse], error)
+	// Adds the user's emoji reaction to a comment, a review or a pull
+	// request's description, or takes it away. API 131.
+	ReactGitHub(context.Context, *connect.Request[v1.ReactGitHubRequest]) (*connect.Response[v1.ReactGitHubResponse], error)
 	// The end of a failed Actions job's log (16 KB).
 	GetGitHubJobLog(context.Context, *connect.Request[v1.GetGitHubJobLogRequest]) (*connect.Response[v1.GetGitHubJobLogResponse], error)
 	// The user's writes.
@@ -3509,6 +3625,12 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(nushiServiceMethods.ByName("GetChatItems")),
 		connect.WithHandlerOptions(opts...),
 	)
+	nushiServiceFindInChatHandler := connect.NewUnaryHandler(
+		NushiServiceFindInChatProcedure,
+		svc.FindInChat,
+		connect.WithSchema(nushiServiceMethods.ByName("FindInChat")),
+		connect.WithHandlerOptions(opts...),
+	)
 	nushiServiceGetChatImageHandler := connect.NewUnaryHandler(
 		NushiServiceGetChatImageProcedure,
 		svc.GetChatImage,
@@ -3537,6 +3659,12 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 		NushiServiceRemoveAgentProcedure,
 		svc.RemoveAgent,
 		connect.WithSchema(nushiServiceMethods.ByName("RemoveAgent")),
+		connect.WithHandlerOptions(opts...),
+	)
+	nushiServiceSignInAgentHandler := connect.NewUnaryHandler(
+		NushiServiceSignInAgentProcedure,
+		svc.SignInAgent,
+		connect.WithSchema(nushiServiceMethods.ByName("SignInAgent")),
 		connect.WithHandlerOptions(opts...),
 	)
 	nushiServiceListAgentSessionsHandler := connect.NewUnaryHandler(
@@ -4283,6 +4411,24 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(nushiServiceMethods.ByName("GetGitHubFiles")),
 		connect.WithHandlerOptions(opts...),
 	)
+	nushiServiceGetGitHubViewedHandler := connect.NewUnaryHandler(
+		NushiServiceGetGitHubViewedProcedure,
+		svc.GetGitHubViewed,
+		connect.WithSchema(nushiServiceMethods.ByName("GetGitHubViewed")),
+		connect.WithHandlerOptions(opts...),
+	)
+	nushiServiceSetGitHubViewedHandler := connect.NewUnaryHandler(
+		NushiServiceSetGitHubViewedProcedure,
+		svc.SetGitHubViewed,
+		connect.WithSchema(nushiServiceMethods.ByName("SetGitHubViewed")),
+		connect.WithHandlerOptions(opts...),
+	)
+	nushiServiceReactGitHubHandler := connect.NewUnaryHandler(
+		NushiServiceReactGitHubProcedure,
+		svc.ReactGitHub,
+		connect.WithSchema(nushiServiceMethods.ByName("ReactGitHub")),
+		connect.WithHandlerOptions(opts...),
+	)
 	nushiServiceGetGitHubJobLogHandler := connect.NewUnaryHandler(
 		NushiServiceGetGitHubJobLogProcedure,
 		svc.GetGitHubJobLog,
@@ -4431,6 +4577,8 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 			nushiServiceGetChatHandler.ServeHTTP(w, r)
 		case NushiServiceGetChatItemsProcedure:
 			nushiServiceGetChatItemsHandler.ServeHTTP(w, r)
+		case NushiServiceFindInChatProcedure:
+			nushiServiceFindInChatHandler.ServeHTTP(w, r)
 		case NushiServiceGetChatImageProcedure:
 			nushiServiceGetChatImageHandler.ServeHTTP(w, r)
 		case NushiServiceStartChatProcedure:
@@ -4441,6 +4589,8 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 			nushiServiceSetUpAgentHandler.ServeHTTP(w, r)
 		case NushiServiceRemoveAgentProcedure:
 			nushiServiceRemoveAgentHandler.ServeHTTP(w, r)
+		case NushiServiceSignInAgentProcedure:
+			nushiServiceSignInAgentHandler.ServeHTTP(w, r)
 		case NushiServiceListAgentSessionsProcedure:
 			nushiServiceListAgentSessionsHandler.ServeHTTP(w, r)
 		case NushiServiceOpenAgentSessionProcedure:
@@ -4689,6 +4839,12 @@ func NewNushiServiceHandler(svc NushiServiceHandler, opts ...connect.HandlerOpti
 			nushiServiceGetGitHubCommitsHandler.ServeHTTP(w, r)
 		case NushiServiceGetGitHubFilesProcedure:
 			nushiServiceGetGitHubFilesHandler.ServeHTTP(w, r)
+		case NushiServiceGetGitHubViewedProcedure:
+			nushiServiceGetGitHubViewedHandler.ServeHTTP(w, r)
+		case NushiServiceSetGitHubViewedProcedure:
+			nushiServiceSetGitHubViewedHandler.ServeHTTP(w, r)
+		case NushiServiceReactGitHubProcedure:
+			nushiServiceReactGitHubHandler.ServeHTTP(w, r)
 		case NushiServiceGetGitHubJobLogProcedure:
 			nushiServiceGetGitHubJobLogHandler.ServeHTTP(w, r)
 		case NushiServiceReplyGitHubThreadProcedure:
@@ -4770,6 +4926,10 @@ func (UnimplementedNushiServiceHandler) GetChatItems(context.Context, *connect.R
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.GetChatItems is not implemented"))
 }
 
+func (UnimplementedNushiServiceHandler) FindInChat(context.Context, *connect.Request[v1.FindInChatRequest]) (*connect.Response[v1.FindInChatResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.FindInChat is not implemented"))
+}
+
 func (UnimplementedNushiServiceHandler) GetChatImage(context.Context, *connect.Request[v1.GetChatImageRequest]) (*connect.Response[v1.GetChatImageResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.GetChatImage is not implemented"))
 }
@@ -4788,6 +4948,10 @@ func (UnimplementedNushiServiceHandler) SetUpAgent(context.Context, *connect.Req
 
 func (UnimplementedNushiServiceHandler) RemoveAgent(context.Context, *connect.Request[v1.RemoveAgentRequest]) (*connect.Response[v1.RemoveAgentResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.RemoveAgent is not implemented"))
+}
+
+func (UnimplementedNushiServiceHandler) SignInAgent(context.Context, *connect.Request[v1.SignInAgentRequest]) (*connect.Response[v1.SignInAgentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.SignInAgent is not implemented"))
 }
 
 func (UnimplementedNushiServiceHandler) ListAgentSessions(context.Context, *connect.Request[v1.ListAgentSessionsRequest]) (*connect.Response[v1.ListAgentSessionsResponse], error) {
@@ -5284,6 +5448,18 @@ func (UnimplementedNushiServiceHandler) GetGitHubCommits(context.Context, *conne
 
 func (UnimplementedNushiServiceHandler) GetGitHubFiles(context.Context, *connect.Request[v1.GetGitHubFilesRequest]) (*connect.Response[v1.GetGitHubFilesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.GetGitHubFiles is not implemented"))
+}
+
+func (UnimplementedNushiServiceHandler) GetGitHubViewed(context.Context, *connect.Request[v1.GetGitHubViewedRequest]) (*connect.Response[v1.GetGitHubViewedResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.GetGitHubViewed is not implemented"))
+}
+
+func (UnimplementedNushiServiceHandler) SetGitHubViewed(context.Context, *connect.Request[v1.SetGitHubViewedRequest]) (*connect.Response[v1.SetGitHubViewedResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.SetGitHubViewed is not implemented"))
+}
+
+func (UnimplementedNushiServiceHandler) ReactGitHub(context.Context, *connect.Request[v1.ReactGitHubRequest]) (*connect.Response[v1.ReactGitHubResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("nushi.v1.NushiService.ReactGitHub is not implemented"))
 }
 
 func (UnimplementedNushiServiceHandler) GetGitHubJobLog(context.Context, *connect.Request[v1.GetGitHubJobLogRequest]) (*connect.Response[v1.GetGitHubJobLogResponse], error) {

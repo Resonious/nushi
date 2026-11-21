@@ -7,6 +7,7 @@ import 'package:nushi/attached_files.dart';
 import 'package:nushi/chat.dart';
 import 'package:nushi/chat_column.dart';
 import 'package:nushi/chat_menu.dart';
+import 'package:nushi/checks_watch.dart';
 import 'package:nushi/composer.dart';
 import 'package:nushi/composer_parts.dart';
 import 'package:nushi/daemon.dart';
@@ -133,6 +134,8 @@ class _ChatViewState extends State<ChatView> {
                           ),
                           if (chat.mcpChanged && !chat.archived)
                             _McpChanged(chat, widget.daemon),
+                          if (chat.checksFailed.isNotEmpty && !chat.archived)
+                            ChecksFailedBar(chat, widget.daemon),
                           if (!chat.archived && !chat.sessionGone)
                             UnsentReview(chat),
                           if (chat.archived)
@@ -166,7 +169,9 @@ class _ChatViewState extends State<ChatView> {
                             ),
                             child: FindBar(
                               chat.find,
-                              loadAll: chat.older > 0
+                              // The daemon counts what isn't loaded
+                              // (ChatFind.whole); an older one doesn't.
+                              loadAll: chat.older > 0 && !chat.find.whole
                                   ? () => unawaited(
                                       widget.daemon.loadOlder(chat, all: true),
                                     )

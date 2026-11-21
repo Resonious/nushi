@@ -3,6 +3,7 @@ package api
 import (
 	"cmp"
 	"context"
+	"errors"
 	"time"
 
 	"connectrpc.com/connect"
@@ -34,7 +35,7 @@ func (s *server) ListAgents(ctx context.Context, req *connect.Request[nushiv1.Li
 		m := s.MCP[info.Name]
 		a := &nushiv1.Agent{Name: info.Name, Title: info.Title, Resume: info.Resume, Mcp: k.MCP, DeleteArchives: info.DeleteArchives,
 			Path: st.Path, Version: st.Version, Problem: st.Problem, SignedIn: st.SignedIn, Ready: st.Ready, Awake: int32(st.Awake),
-			McpUserOnly: m != nil && m.UserOnly()}
+			McpUserOnly: m != nil && m.UserOnly(), GoAgentSwitch: st.Own != nil, SignIn: st.SignIn}
 		if ad := st.Adapter; ad != nil {
 			a.Adapter = &nushiv1.Adapter{Package: ad.Package, Pinned: st.Pinned, Installed: st.Installed, Packages: int32(st.Packages),
 				DownloadBytes: ad.Download, DiskBytes: ad.Disk, Folder: st.Folder}
@@ -46,6 +47,30 @@ func (s *server) ListAgents(ctx context.Context, req *connect.Request[nushiv1.Li
 
 func (s *server) SetUpAgent(ctx context.Context, req *connect.Request[nushiv1.SetUpAgentRequest]) (*connect.Response[nushiv1.SetUpAgentResponse], error) {
 	return done[nushiv1.SetUpAgentResponse](s.Agents.SetUp(ctx, req.Msg.Agent), refused)
+}
+
+func (s *server) SignInAgent(ctx context.Context, req *connect.Request[nushiv1.SignInAgentRequest]) (*connect.Response[nushiv1.SignInAgentResponse], error) {
+	err := s.Chats.SignIn(ctx, s.agent(req.Msg.Agent), req.Msg.MethodId)
+	return done[nushiv1.SignInAgentResponse](err, func(err error) error { return waitErr(ctx, err) })
+}
+
+// signInDetail is cerr, a start that failed with cause, carrying an
+// AgentSignIn when cause is the agent's refusal for want of a sign-in that
+// Nushi can run (chats.SignInError): the app offers to sign it in, and
+// starts again (ADR 0145).
+func signInDetail(cerr *connect.Error, cause error) *connect.Error {
+	in, ok := errors.AsType[*chats.SignInError](cause)
+	if !ok {
+		return cerr
+	}
+	out := &nushiv1.AgentSignIn{Agent: in.Agent}
+	for _, m := range in.Methods {
+		out.Methods = append(out.Methods, &nushiv1.Option{Id: m.ID, Name: m.Name, Description: m.Description})
+	}
+	if d, err := connect.NewErrorDetail(out); err == nil {
+		cerr.AddDetail(d)
+	}
+	return cerr
 }
 
 func (s *server) RemoveAgent(_ context.Context, req *connect.Request[nushiv1.RemoveAgentRequest]) (*connect.Response[nushiv1.RemoveAgentResponse], error) {
@@ -91,7 +116,7 @@ func (s *server) OpenAgentSession(ctx context.Context, req *connect.Request[nush
 	m := req.Msg
 	id, err := s.Chats.Open(ctx, s.agent(m.Agent), m.Folder, m.SessionId, m.Title)
 	if err != nil {
-		return nil, refused(err)
+		return nil, signInDetail(connect.NewError(connect.CodeFailedPrecondition, err), err)
 	}
 	return connect.NewResponse(&nushiv1.OpenAgentSessionResponse{ChatId: id}), nil
 }

@@ -25,6 +25,7 @@ import (
 	"github.com/afrase/nushi/internal/api"
 	"github.com/afrase/nushi/internal/claude"
 	"github.com/afrase/nushi/internal/claudehistory"
+	"github.com/afrase/nushi/internal/codex"
 	"github.com/afrase/nushi/internal/events"
 	"github.com/afrase/nushi/internal/features/chats"
 	"github.com/afrase/nushi/internal/features/memory"
@@ -63,6 +64,12 @@ func main() {
 	}
 	if len(os.Args) > 1 && os.Args[1] == claude.AgentCommand { // and Claude, through its Go agent (ADR 0066)
 		if runClaudeAgent() != nil {
+			os.Exit(1) // Main logged why
+		}
+		return
+	}
+	if len(os.Args) > 1 && os.Args[1] == codex.AgentCommand { // and Codex, through its Go agent (ADR 0142)
+		if runCodexAgent() != nil {
 			os.Exit(1) // Main logged why
 		}
 		return
@@ -155,7 +162,7 @@ func run() error {
 
 	hub := &events.Hub{}
 	st := store.New(dir)
-	known := knownagents.All(projects)
+	known := knownagents.All(projects, st.CodexGoAgent)
 	agentSvc := newAgents(dir, known)
 	st.HadMessages = func(s model.ChatRecord) bool { return claudehistory.Has(projects, s.SessionID, s.Folder) }
 	copies, err := transcripts.Open(filepath.Join(dir, "transcripts"))
@@ -197,6 +204,7 @@ func run() error {
 	sv.GitHub = newGitHub(st, dev)
 	chatSvc.UseGitHub(sv.GitHub)
 	sv.Updates = updateSvc
+	sv.CodexGo = st
 	sv.Usage = usageSvc
 	if err := usePush(st, sv.Remote, chatSvc, kinds); err != nil {
 		return err

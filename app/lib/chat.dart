@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart'
 import 'package:nushi/agents.dart';
 import 'package:nushi/browser_tabs.dart';
 import 'package:nushi/chat_colors.dart';
+import 'package:nushi/chat_find.dart';
 import 'package:nushi/chat_look.dart';
 import 'package:nushi/chat_paths.dart';
 import 'package:nushi/clock.dart';
@@ -176,6 +177,20 @@ class ChatState extends ChangeNotifier {
   /// daemon before API 118 says only the primary).
   List<GitHubLink> pulls = const [];
 
+  /// Its pull requests whose checks failed since the user last acted on
+  /// them (`checks_watch.dart`, ADR 0138): it needs you until Ask to fix or
+  /// Dismiss, or until they no longer fail. The app's judgment, not the
+  /// daemon's.
+  List<GitHubLink> checksFailed = const [];
+
+  /// Sets [checksFailed]; whether that changed it.
+  bool failChecks(List<GitHubLink> links) {
+    if (listEquals(links, checksFailed)) return false;
+    checksFailed = links;
+    notifyListeners();
+    return true;
+  }
+
   /// Sets [pull] (and [pulls], when [all] is given) as the daemon just said
   /// it, ahead of the chat's event.
   void linkPull(GitHubLink? link, {List<GitHubLink>? all}) {
@@ -314,6 +329,9 @@ class ChatState extends ChangeNotifier {
       ? .working
       : background > 0
       ? .background
+      // Its pull request's checks failed (ADR 0138): once the agent is done.
+      : checksFailed.isNotEmpty
+      ? .waiting
       : sessionGone
       ? .expired
       : reopenFailed
@@ -325,6 +343,10 @@ class ChatState extends ChangeNotifier {
       : fresh
       ? .fresh
       : .idle;
+
+  /// Whether it needs you: a permission prompt or a question ([waiting]),
+  /// or its pull request's checks failed once the agent is done.
+  bool get needsYou => phase == ChatPhase.waiting;
 
   /// What the user is writing to it.
   final draft = Draft();
@@ -343,8 +365,8 @@ class ChatState extends ChangeNotifier {
   /// header shows it again. In the app's memory only.
   final sideHidden = ValueNotifier<bool>(false);
 
-  /// ⌘F in its transcript (the Mac's).
-  final find = Find();
+  /// ⌘F in its transcript (the Mac's), the whole chat.
+  late final find = ChatFind(this);
 
   /// ⌘F in its Changes view.
   final changesFind = ChangesFind();
@@ -652,6 +674,7 @@ class ChatState extends ChangeNotifier {
     _early.clear();
     early.forEach(_apply);
     notifyListeners();
+    find.reloaded();
   }
 
   /// Puts an older page before the items; an item the page has that came
@@ -682,7 +705,7 @@ class ChatState extends ChangeNotifier {
   /// looks in what it has. Whether any went.
   bool trim(int n) {
     if (!loaded || outbox.sending.isNotEmpty) return false;
-    if ((find.query ?? '').isNotEmpty) return false;
+    if (find.looking) return false;
     var start = recentStart(items, items.length, n);
     if (pane.value case final id?) {
       final i = items.indexWhere((it) => it.id == id);

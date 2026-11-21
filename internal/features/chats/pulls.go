@@ -114,7 +114,7 @@ func (c *chat) addPullLocked(pull model.ChatGitHub, primary bool) error {
 	case dropGitHub:
 		linked = append([]model.ChatGitHub{pull}, linked...)
 	case primary && len(linked) > 0:
-		linked[0] = pull // takes the primary's place
+		linked[max(0, slices.IndexFunc(linked, func(p model.ChatGitHub) bool { return !p.Done }))] = pull // takes the primary's place
 	default:
 		linked = append(linked, pull)
 	}
@@ -256,5 +256,75 @@ func (c *chat) openedPullLocked(it model.Item) {
 	}
 	if err := c.addPullLocked(p, false); err != nil {
 		c.logLocked().Info("linking an opened pull request", "err", err)
+	}
+}
+
+// SawPulls takes what GitHub said of pull requests (states, rows, one read
+// whole) as their links' Done in every chat that has them, so the primary
+// is the first still open (ADR 0117). No ask of its own: it reads what
+// the app asked for anyway (ADR 0045).
+func (s *Service) SawPulls(items []model.GitHubItem) {
+	done := map[string]bool{} // by node id, and by address
+	for _, it := range items {
+		if !it.Pull || it.State == "" {
+			continue
+		}
+		d := it.State == "merged" || it.State == "closed"
+		done[model.ChatGitHub{GitHubRef: it.GitHubRef}.Key()] = d
+		if it.ID != "" {
+			done[it.ID] = d
+		}
+	}
+	if len(done) == 0 {
+		return
+	}
+	// The chats open now, and the stored ones whose links it changes.
+	s.mu.Lock()
+	ids := []string{}
+	for id, c := range s.chats {
+		if c.parent == nil {
+			ids = append(ids, id)
+		}
+	}
+	s.mu.Unlock()
+	stored, _ := s.sessions.Sessions()
+	for _, r := range stored {
+		if !slices.Contains(ids, r.ID) && slices.ContainsFunc(r.LinkedPulls(), func(p model.ChatGitHub) bool {
+			d, ok := sawOf(done, p)
+			return ok && d != p.Done
+		}) {
+			ids = append(ids, r.ID)
+		}
+	}
+	for _, id := range ids {
+		s.sawPulls(id, done)
+	}
+}
+
+// sawOf is what done says of p: by its node id, else its address.
+func sawOf(done map[string]bool, p model.ChatGitHub) (bool, bool) {
+	if d, ok := done[p.ID]; ok && p.ID != "" {
+		return d, true
+	}
+	d, ok := done[p.Key()]
+	return d, ok
+}
+
+func (s *Service) sawPulls(chatID string, done map[string]bool) {
+	c, err := s.listed(chatID)
+	if err != nil {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	linked := c.record.LinkedPulls()
+	changed := false
+	for i, p := range linked {
+		if d, ok := sawOf(done, p); ok && d != p.Done {
+			linked[i].Done, changed = d, true
+		}
+	}
+	if changed {
+		c.saveLocked(func(s *model.ChatRecord) { setPulls(s, linked) })
 	}
 }

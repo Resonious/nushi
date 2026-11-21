@@ -6,7 +6,8 @@ name: Release
 # until it is published. Run it by hand to rebuild an existing release's files. The app (macOS), the Linux app (on each
 # architecture: Flutter doesn't cross-build), the relays (Linux, with the web app) build in parallel jobs, beside the
 # check; publish attaches them once all are built and the commit is checked, then casks writes the casks and tap
-# pushes them (security.md's Releases says what runs with which token). CI builds, installs and starts the Linux
+# pushes them (security.md's Releases says what runs with which token). A published release whose check, build or
+# attaching fails is made a draft again (withdraw). CI builds, installs and starts the Linux
 # app with the same steps (tools/release.sh's linux part) on every push, since this can't run before a release. Actions are pinned by commit, as in CI.
 # Each job that runs steps has a timeout, as CI's do: two to three times its longest recent run (2026-10-29), room
 # for a cold cache.
@@ -55,14 +56,14 @@ jobs:
       # CI has usually checked this commit already; only a commit without a passing CI run of every job (one
       # cancelled by a newer push, or one whose change let CI skip jobs, ADR 0129) is checked here, by the ci job,
       # which runs them all. Only a push's run counts: a pull request's run is listed under its head commit but tested
-      # the merge of it into the base.
+      # the merge of it into the base. CI's Mac app build skipped doesn't count: the app job here is that build.
       - id: ci
         env:
           GH_TOKEN: ${{ github.token }}
           SHA: ${{ steps.tag.outputs.sha }}
         run: |
           for id in $(gh run list --repo "$GITHUB_REPOSITORY" --workflow CI --event push --commit "$SHA" --status success --json databaseId --jq '.[].databaseId'); do
-            skipped=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs?per_page=100" --jq '[.jobs[] | select(.conclusion == "skipped")] | length')
+            skipped=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs?per_page=100" --jq '[.jobs[] | select(.conclusion == "skipped" and .name != "App build (macOS)")] | length')
             if [ "$skipped" = 0 ]; then echo "CI passed on $SHA, every job run ($id)."; echo "checked=true" >> "$GITHUB_OUTPUT"; exit 0; fi
             echo "CI run $id skipped $skipped jobs."
           done
@@ -206,8 +207,8 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # Attaches the builds' files. The only job with contents: write on this repository, it checks nothing out and runs
-  # no code of the tag's but this file: its steps are this file's and pinned actions.
+  # Attaches the builds' files. One of two jobs with contents: write on this repository (withdraw is the other), it
+  # checks nothing out and runs no code of the tag's but this file: its steps are this file's and pinned actions.
   publish:
     name: Attach the files
     needs: [tag, ci, app, linux, relay]
@@ -233,6 +234,29 @@ jobs:
         run: |
           ls -l dist
           gh release upload "$TAG" dist/* --clobber --repo "$GITHUB_REPOSITORY"
+
+  # A published release is offered as an update as soon as it is published (internal/features/updates reads tags,
+  # not files), so one whose check, build or attaching failed or was cancelled goes back to a draft, which neither
+  # the update check nor the casks see. Publishing the draft again builds it again. A run by hand rebuilds a release
+  # that was already out, so it leaves it as it is. The job checks nothing out: its one step is this file's.
+  withdraw:
+    name: Withdraw the release to a draft
+    needs: [tag, ci, app, linux, relay, publish]
+    # A job GitHub itself cancels (no runner in time) fails nothing and cancels no run: its result says so.
+    if: >-
+      always() && github.event_name == 'release' &&
+      (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Make the release a draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release edit "$TAG" --draft=true --repo "$GITHUB_REPOSITORY"
+          echo "::error::$TAG wasn't built and attached, so it is a draft again: fix what failed, then publish it again."
 
   # The latest release updates nushi, and nushi@beta with it; the newest beta (a pre-release of a later version)
   # nushi@beta alone (ADR 0108); an older one built again by hand neither. The tag's tools/cask.sh says which and

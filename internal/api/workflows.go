@@ -55,9 +55,15 @@ func workflowErr(err error) error {
 func workflowProto(w model.Workflow) *nushiv1.Workflow {
 	out := &nushiv1.Workflow{RunId: w.RunID, Name: w.Name, Description: w.Description, State: w.State, End: w.End,
 		Started: unixMs(w.Started), Ended: unixMs(w.Ended), Active: unixMs(w.Active), Agents: int32(w.Agents), Done: int32(w.Done),
-		Failed: int32(w.Failed), Running: w.Running, RunningCount: int32(w.RunningCount), Summary: w.Summary, Stalled: w.Stalled}
+		Failed: int32(w.Failed), Running: w.Running, RunningCount: int32(w.RunningCount), Summary: w.Summary, Stalled: w.Stalled, Tokens: w.Tokens}
+	for _, i := range w.RunningPhases {
+		out.RunningPhases = append(out.RunningPhases, int32(i))
+	}
 	for _, p := range w.Phases {
 		out.Phases = append(out.Phases, &nushiv1.WorkflowPhase{Title: p.Title, Detail: p.Detail, Started: int32(p.Started), Done: int32(p.Done), Failed: int32(p.Failed)})
+	}
+	for _, p := range w.Planned {
+		out.Planned = append(out.Planned, &nushiv1.WorkflowPhase{Title: p.Title, Detail: p.Detail})
 	}
 	return out
 }

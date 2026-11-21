@@ -74,7 +74,7 @@ void main() {
     final subs = subagentsOf(items);
     expect([for (final s in subs) s.call.id], ['a']);
     expect([for (final it in subs.single.items) it.id], ['r', 's']);
-    expect(subagentState(subs.single), 'done · 1 tool call');
+    expect(subagentState(subs.single), '1 tool');
   });
 
   test("a running subagent's time counts to the app's clock, its waits "
@@ -96,18 +96,22 @@ void main() {
       ),
     ]);
     expect(subagentState(subs.single), 'Thinking · 3m 00s');
-    // Ended, its worked time and the tokens the agent reported.
+    // Ended, the tokens the agent reported, then its worked time; done
+    // says no word (its check does, #106), failed does.
     subs.single.call.subagent
       ..state = 'done'
       ..workingSince = Int64.ZERO
       ..worked = Int64(192500)
       ..tokens = Int64(48120);
-    expect(subagentState(subs.single), 'done · 3m 12s · 48.1k tokens');
+    expect(subagentState(subs.single), '48.1k tokens · 3m 12s');
+    subs.single.call.subagent.state = 'failed';
+    expect(subagentState(subs.single), 'failed · 48.1k tokens · 3m 12s');
     // One the daemon didn't see work (replayed): neither.
     subs.single.call.subagent
+      ..state = 'done'
       ..worked = Int64.ZERO
       ..tokens = Int64.ZERO;
-    expect(subagentState(subs.single), 'done');
+    expect(subagentState(subs.single), '');
   });
 
   test("what a subagent runs on: asked for, else the chat's", () {

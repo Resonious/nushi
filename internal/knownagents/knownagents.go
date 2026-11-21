@@ -74,8 +74,10 @@ type Agent struct {
 // All is every agent, in the order they're listed, the default (Claude)
 // first. projects is Claude's projects folder (claudehistory.Projects),
 // which its Local reads. Claude runs through Nushi's Go agent (ADR 0066):
-// no adapter, Node, set-up or pinned versions.
-func All(projects string) []Agent {
+// no adapter, Node, set-up or pinned versions. codexGo is the user's
+// setting that runs Codex through Nushi's Go agent instead of codex-acp
+// (ADR 0142), asked each time a Codex chat's agent starts; nil: never.
+func All(projects string, codexGo func() bool) []Agent {
 	all := []Agent{
 		{
 			Harness: claude.Harness{}, Local: claudehistory.Local{Projects: projects, Workflows: claudehistory.NewRuns()},
@@ -85,8 +87,10 @@ func All(projects string) []Agent {
 		},
 		{
 			Harness: codex.Harness{}, Local: codex.Local{},
-			Agent: agents.Agent{CLI: codex.CLI, Tested: codex.Tested,
-				Adapter: &agents.Adapter{Lock: codex.Adapter, Package: codex.AdapterPackage, Bin: codex.AdapterBin, Download: codex.AdapterDownload, Disk: codex.AdapterDisk}},
+			Agent: agents.Agent{CLI: codex.CLI, Tested: codex.Tested, SignIn: "codex login", NoSignIn: codex.NoSignIn,
+				Adapter: &agents.Adapter{Lock: codex.Adapter, Package: codex.AdapterPackage, Bin: codex.AdapterBin, Download: codex.AdapterDownload, Disk: codex.AdapterDisk},
+				// The Go agent needs no Node and nothing set up.
+				Own: codexGo},
 			Skills: codexskills.Codex{}, Trust: codextrust.Trust{},
 		},
 		{

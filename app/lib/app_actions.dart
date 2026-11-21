@@ -26,6 +26,7 @@ import 'package:nushi/native.dart';
 import 'package:nushi/new_chat.dart';
 import 'package:nushi/open_file.dart';
 import 'package:nushi/palette.dart';
+import 'package:nushi/preview_find.dart' show focusedPreviewFind;
 import 'package:nushi/preview_marks.dart';
 import 'package:nushi/pull_link.dart';
 import 'package:nushi/pull_link_dialog.dart';
@@ -40,6 +41,7 @@ import 'package:nushi/status_bar.dart';
 import 'package:nushi/terminal_panel.dart';
 import 'package:nushi/update_toast.dart';
 import 'package:nushi/view_options.dart';
+import 'package:nushi/web_find.dart' show focusedPageFind, pageFinds;
 import 'package:nushi/web_views.dart' show webEmbedded;
 import 'package:nushi/widgets.dart';
 
@@ -52,8 +54,9 @@ import 'package:nushi/widgets.dart';
 enum ActMenu { nushi, file, view, chat }
 
 /// ⌘F: find in the chat's transcript, or its changed files. A focused
-/// terminal keeps it for its own find, and the preview's editor for the
-/// file's (`EditorFind`).
+/// terminal keeps it for its own find, the preview's editor for the
+/// file's (`EditorFind`), and a preview with the focus for what it shows
+/// (`FindSlot`).
 const findKey = Cmd(LogicalKeyboardKey.keyF);
 
 /// ⇧⌘B: a side chat (Claude Code's /btw, "by the way").
@@ -280,6 +283,14 @@ List<AppAction> appActions(BuildContext context, Daemon d) {
     _ => null,
   };
   final closing = shown == null ? null : tabToClose(shown);
+  // The preview with the focus, which ⌘F finds in (issue 63); else the
+  // chat's or Changes', not under a pane expanded over the transcript,
+  // where its bar would open unseen.
+  final preview = shown == null ? null : focusedPreviewFind();
+  final chatFinds =
+      shown != null &&
+      (shown.shownTab == ChatTab.chat && shown.covered == null ||
+          shown.shownTab == ChatTab.changes);
   return [
     AppAction(.newChat, 'New chat', run: () => newChat(context, d, '')),
     AppAction(
@@ -334,18 +345,33 @@ List<AppAction> appActions(BuildContext context, Daemon d) {
     ),
     AppAction(
       .find,
-      shown?.shownTab == ChatTab.changes
+      preview != null
+          ? 'Find in the file'
+          : shown?.shownTab == ChatTab.changes
           ? 'Find in changes'
           : 'Find in the chat',
-      // Not under a pane expanded over the transcript, where its bar
-      // would open unseen.
-      enabled:
-          shown != null &&
-          (shown.shownTab == ChatTab.chat && shown.covered == null ||
-              shown.shownTab == ChatTab.changes),
-      run: () => shown!.shownTab == ChatTab.changes
-          ? shown.changesFind.open()
-          : shown.find.open(),
+      // A preview with the focus finds in its file. A page's web view with
+      // the keys gives ⌘F to the menu bar, which comes here: that page's
+      // find, asked of the web views shown.
+      enabled: preview != null || pageFinds.isNotEmpty || chatFinds,
+      run: () {
+        void own() {
+          if (preview != null) {
+            preview.open();
+          } else if (chatFinds) {
+            shown.shownTab == ChatTab.changes
+                ? shown.changesFind.open()
+                : shown.find.open();
+          }
+        }
+
+        if (pageFinds.isEmpty) return own();
+        unawaited(
+          focusedPageFind().then(
+            (page) => page == null ? own() : page.openFromPage(),
+          ),
+        );
+      },
     ),
     AppAction(
       .chat,
@@ -491,6 +517,16 @@ Future<void> _quit() async {
   }
 }
 
+/// Clean up the worktree…: with the tab's pull request whole, for its
+/// branch on GitHub (read now unless the tab shows it; ADR 0140).
+Future<void> _cleanUp(BuildContext context, Daemon d, ChatState chat) async {
+  final cp = ChatPull.of(d, chat);
+  final l = cp.current;
+  final pull = l == null ? null : await cp.whole(context, l);
+  if (!context.mounted) return;
+  await showCleanUp(context, d, chat, pull: pull);
+}
+
 /// The spell check ⌘; goes through in [chat], while it runs: its prompt
 /// box's, or its side chat's if that one has the focus. The box must be in
 /// sight.
@@ -590,9 +626,7 @@ List<AppAction> chatActions(
           chat.worktree != null &&
           d.daemonApi >= cleanUpApi &&
           !CleanUpJob.of(chat).running,
-      run: () => unawaited(
-        showCleanUp(context, d, chat!, pull: ChatPull.of(d, chat).pull),
-      ),
+      run: () => unawaited(_cleanUp(context, d, chat!)),
     ),
     AppAction(
       .archive,

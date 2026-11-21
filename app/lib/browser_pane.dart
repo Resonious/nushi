@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nushi/app_actions.dart' show findKey;
 import 'package:nushi/browser_address.dart';
 import 'package:nushi/browser_bar.dart';
 import 'package:nushi/browser_menu.dart';
@@ -19,6 +20,7 @@ import 'package:nushi/server_logs.dart';
 import 'package:nushi/servers_menu.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/toast.dart';
+import 'package:nushi/web_find.dart';
 import 'package:nushi/web_page.dart' show openInBrowserOrSay;
 import 'package:nushi/web_views.dart';
 
@@ -97,6 +99,9 @@ class _BrowserPaneState extends State<BrowserPane>
     with BrowserTabsFocus
     implements BrowserControls {
   BrowserHost? _host;
+
+  /// The page's find, where its web view has one (issue 63, ADR 0143).
+  WebFind? _find;
   late final _address = TextEditingController(text: widget.tab.address.value);
   final _field = FocusNode(debugLabel: 'address');
 
@@ -143,6 +148,7 @@ class _BrowserPaneState extends State<BrowserPane>
     if (identical(_tab.view, this)) _tab.view = null;
     _tab.address.removeListener(_moved);
     _field.removeListener(_moved);
+    _find?.dispose();
     _host
       ?..blockedLocal.removeListener(_blocked)
       ..dispose();
@@ -163,6 +169,9 @@ class _BrowserPaneState extends State<BrowserPane>
   void _open(Uri url) {
     final host = _host ??= native.web.tab(_tab)
       ..blockedLocal.addListener(_blocked);
+    if (host.finder case final finder? when _find == null) {
+      _find = WebFind(finder);
+    }
     unawaited(host.open(url));
   }
 
@@ -285,10 +294,15 @@ class _BrowserPaneState extends State<BrowserPane>
     );
     // Esc collapses it, from anywhere in it Flutter has the keys (a page
     // in WebKit keeps its own).
+    // ⌘F, from anywhere in it Flutter has the keys (its address field),
+    // finds in the page; from the page, the menu bar's comes to the app's
+    // action, which asks the web view (`focusedPageFind`).
+    final find = _find;
     return CallbackShortcuts(
       bindings: {
         if (widget.expanded && expand != null)
           const SingleActivator(LogicalKeyboardKey.escape): expand,
+        if (find != null && host != null) findKey: find.open,
       },
       child: Focus(focusNode: _pane, child: pane),
     );
@@ -371,17 +385,21 @@ class _BrowserPaneState extends State<BrowserPane>
   static const double _plusRoom = 2.0 + 28;
 
   /// The page, and over it why it didn't load when it didn't.
-  Widget _page(BrowserHost host) => Stack(
-    fit: StackFit.expand,
-    children: [
-      ClearOfEdge(child: host.view(context)),
-      ValueListenableBuilder(
-        valueListenable: host.failed,
-        builder: (context, failed, _) =>
-            failed == null ? const SizedBox.shrink() : _Failed(failed),
-      ),
-    ],
-  );
+  Widget _page(BrowserHost host) {
+    final page = Stack(
+      fit: StackFit.expand,
+      children: [
+        ClearOfEdge(child: host.view(context)),
+        ValueListenableBuilder(
+          valueListenable: host.failed,
+          builder: (context, failed, _) =>
+              failed == null ? const SizedBox.shrink() : _Failed(failed),
+        ),
+      ],
+    );
+    final find = _find;
+    return find == null ? page : PageFindFrame(find: find, child: page);
+  }
 }
 
 /// A new tab's page: what to type.

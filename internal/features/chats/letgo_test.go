@@ -124,7 +124,7 @@ func look(t *testing.T, svc *Service, id string, n int) seen {
 	s.Recent, err = svc.Recent(id, n)
 	testcheck.NoErr(t, err)
 	for before, older := s.Recent.Chat.Items[0].ID, s.Recent.Older; older > 0; {
-		page, start, err := svc.Items(id, before, n)
+		page, start, err := svc.Items(id, before, "", n)
 		testcheck.NoErr(t, err)
 		s.Pages, s.Starts = append(s.Pages, page), append(s.Starts, start)
 		before, older = page[0].ID, start
@@ -355,6 +355,36 @@ func TestAgentReadyWhileLetGo(t *testing.T) {
 		t.Fatal("not let go")
 	}
 	svc.AgentReady("claude")
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.reopenFailed || !c.inCopy {
+		t.Errorf("reopen failed %v, let go %v", c.reopenFailed, c.inCopy)
+	}
+}
+
+// A chat whose reopen failed for want of a sign-in may try again once its
+// agent is signed in, its notice set aside, not written to the copy, while
+// its items are let go.
+func TestSignedInWhileLetGo(t *testing.T) {
+	svc, agent, c, copies, _ := lettingGo(t, nil, Timing{})
+	agent.updates = []acp.SessionUpdate{chunk("m1", "ok")}
+	turn(t, svc, c, "one")
+	testcheck.NoErr(t, svc.Archive(c.id, true))
+	c.mu.Lock()
+	c.reopenFailed = true
+	c.failure = c.addLocked(model.Item{Kind: model.Notice, Status: "reopen_failed", Text: "Couldn't reopen the chat", Options: []model.Option{{ID: "chat-gpt"}}})
+	c.letGoLocked()
+	let := c.inCopy && len(c.aside) == 1
+	c.mu.Unlock()
+	if !let {
+		t.Fatal("not let go")
+	}
+	saved, err := copies.Read(c.id)
+	testcheck.NoErr(t, err)
+	if slices.ContainsFunc(saved, func(it model.Item) bool { return it.Kind == model.Notice }) {
+		t.Errorf("the sign-in notice went into the copy: %+v", saved)
+	}
+	svc.signedIn("claude")
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.reopenFailed || !c.inCopy {

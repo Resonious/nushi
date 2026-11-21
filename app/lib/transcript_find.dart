@@ -8,6 +8,18 @@ import 'package:nushi/keys.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 
+/// What every find marks its matches in, from the theme: each match in
+/// `hit`, the current one in `now` with an `edge` around it. The
+/// transcript, the editor and each preview's find draw in these.
+typedef FindColors = ({Color hit, Color now, Color edge});
+
+/// [t]'s find colours ([FindColors]).
+FindColors findColors(Tokens t) => (
+  hit: t.needs.withValues(alpha: 0.3),
+  now: t.accent.withValues(alpha: 0.4),
+  edge: t.accent,
+);
+
 /// ⌘F in a chat's transcript: what's looked for (null: the bar is closed),
 /// its matches as the transcript last laid them out ([TextMark.key]: each
 /// match in a text, each in what a row folds away) and which one is current.
@@ -76,11 +88,13 @@ class Find extends ChangeNotifier {
 
   /// Takes [hits], the one at [at] current, for a find that picks its
   /// own: a terminal's starts from its latest output, an editor's from its
-  /// caret.
+  /// caret, a chat's whole find (ChatFind) the match a step loaded, which
+  /// it [ask]s to show.
   @protected
-  void foundAt(List<String> hits, int at) {
+  void foundAt(List<String> hits, int at, {bool ask = false}) {
     _hits = hits;
     _at = hits.isEmpty ? 0 : at.clamp(0, hits.length - 1);
+    if (ask) _asked++;
     notifyListeners();
   }
 
@@ -295,33 +309,36 @@ class _FindBarState extends State<FindBar> {
           width: FindBar.width,
           padding: const EdgeInsets.fromLTRB(10, 4, 4, 4),
           decoration: floatBox(t, radius: NushiTheme.card),
-          child: all == null && !widget.loading
-              ? row
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    row,
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 6, 4),
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              widget.loading
-                                  ? 'Loading earlier messages…'
-                                  : 'Searching loaded messages · ',
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.ui(t.textMuted, size: 12),
-                            ),
-                          ),
-                          if (all != null && !widget.loading)
-                            LinkText('Load all', size: 12, onTap: all),
-                        ],
+          // The row is the column's first child with or without the line
+          // under it: in another place in the tree its field would be built
+          // anew, with the focus and no keyboard, and typing would stop as
+          // the line came (earlier messages loading as a match shows).
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              row,
+              if (all != null || widget.loading)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 6, 4),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          widget.loading
+                              ? 'Loading earlier messages…'
+                              : 'Searching loaded messages · ',
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.ui(t.textMuted, size: 12),
+                        ),
                       ),
-                    ),
-                  ],
+                      if (all != null && !widget.loading)
+                        LinkText('Load all', size: 12, onTap: all),
+                    ],
+                  ),
                 ),
+            ],
+          ),
         );
       },
     );

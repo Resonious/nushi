@@ -42,7 +42,16 @@ BUILD := $(or $(shell git rev-list --count HEAD 2>/dev/null),1)
 MACOS_MIN := 13.0
 MACOS_CGO := -O2 -g -mmacosx-version-min=$(MACOS_MIN)
 
-.PHONY: run daemon stop app package package-linux install gen gen-tools test test-go test-packages test-app test-timings test-web lint lint-go lint-dart lint-linux lint-windows check golden-diff renders lines relay relay-web icons adapters web web-fonts web-cut mermaid screenshots gallery claude-record hooks
+# Bare make only lists the targets: it starts nothing, so a tool that
+# reads the Makefile with make -p (which runs the default target) can't
+# start the daemon and the app on the real data folder. make run does.
+.DEFAULT_GOAL := help
+
+.PHONY: help run daemon stop app package package-linux install gen gen-tools test test-go test-packages test-app test-timings test-web lint lint-go lint-dart lint-linux lint-windows check golden-diff renders lines relay relay-web icons adapters web web-fonts web-cut mermaid screenshots gallery claude-record hooks
+
+help:
+	@echo "make run starts the daemon and the app; make check runs every check. Targets:"
+	@sed -n 's/^\([a-z][a-z0-9-]*\):.*/\1/p' Makefile | sort -u | tr '\n' ' '; echo
 
 # Starts the daemon in the background (unless one is running), then the app.
 run: daemon app

@@ -1,7 +1,8 @@
 // Package acptest is a fake ACP agent for tests, shaped like Claude's
 // agent (or like Codex's adapter, with Agent.Codex: codex.go; like omp,
 // with Agent.Omp: omp.go; or like opencode, with Agent.Opencode:
-// opencode.go). It answers prompts by script, keyed on the prompt's text:
+// opencode.go), behind a login with Agent.SignIn (signin.go). It answers
+// prompts by script, keyed on the prompt's text:
 //
 //   - containing "permission": a tool call that asks permission (options
 //     "allow" and "reject"), then a message naming the option picked, or
@@ -69,10 +70,11 @@ import (
 type Agent struct {
 	History  *History
 	Pause    time.Duration
-	Codex    bool // answers as codex-acp does (codex.go)
-	Omp      bool // answers as omp does (omp.go)
-	Opencode bool // answers as opencode does (opencode.go)
-	Images   bool // says it takes images in prompts (as plain agents don't)
+	Codex    bool    // answers as codex-acp does (codex.go)
+	Omp      bool    // answers as omp does (omp.go)
+	Opencode bool    // answers as opencode does (opencode.go)
+	Images   bool    // says it takes images in prompts (as plain agents don't)
+	SignIn   *SignIn // when set, it takes no session until signed in (signin.go)
 	// For the log: what it writes to its stderr, how long session/load
 	// takes, and whether it reopens a session it doesn't know (as if
 	// another process had kept it), replaying nothing.
@@ -94,6 +96,7 @@ type Agent struct {
 	childUpdates bool
 	after        map[string]func()
 	spent        map[string]float64 // each session's cost so far in this process, for "usage"
+	served       chan struct{}      // closed once Serve's input has ended
 }
 
 // turn is a running prompt's: cancelled once session/cancel came for it.
@@ -122,6 +125,8 @@ func (a *Agent) Serve(r io.Reader, w io.Writer) {
 	a.cwds = map[string]string{}
 	a.turns = map[string]*turn{}
 	a.spent = map[string]float64{}
+	a.served = make(chan struct{})
+	defer close(a.served)
 	sc := bufio.NewScanner(r)
 	sc.Buffer(nil, 1<<30)
 	for sc.Scan() {
@@ -152,7 +157,7 @@ func (a *Agent) Serve(r io.Reader, w io.Writer) {
 			}
 		}
 		a.mu.Unlock()
-		if f.ID != nil {
+		if f.ID != nil && !a.signInAnswered(f) {
 			go a.answer(f)
 		}
 	}
@@ -252,6 +257,7 @@ func (a *Agent) answer(f frame) {
 		if a.Omp {
 			result = ompInit()
 		}
+		result = a.withSignIn(result)
 	case "session/list":
 		var req struct{ Cwd, Cursor string }
 		_ = json.Unmarshal(f.Params, &req)

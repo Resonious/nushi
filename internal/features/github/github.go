@@ -43,6 +43,9 @@ type Client interface { //nolint:interfacebloat // the GitHub calls the feature 
 	Blobs(ctx context.Context, repo string, at []githubapi.BlobAt) (map[githubapi.BlobAt]githubapi.Blob, error)
 	Reply(ctx context.Context, thread, body string) error
 	Resolve(ctx context.Context, thread string, resolve bool) error
+	Viewed(ctx context.Context, repo string, number int) (viewed, changed []string, err error)
+	SetViewed(ctx context.Context, pull, path string, viewed bool) error
+	React(ctx context.Context, subject, kind string, on bool) error
 	Comment(ctx context.Context, subject, body string) error
 	EditPull(ctx context.Context, pull string, title, body *string) error
 	SubmitReview(ctx context.Context, r githubapi.Review) error
@@ -246,7 +249,7 @@ func normalHost(name string) (string, bool) {
 func (s *Service) known(name string) (string, []string, error) {
 	h, ok := normalHost(name)
 	if !ok {
-		return "", nil, fmt.Errorf("%q isn't a host's name", name)
+		return "", nil, unknownHostError(fmt.Sprintf("%q isn't a host's name", name))
 	}
 	pasted, err := s.Store.GitHubTokenHosts()
 	if err != nil {
@@ -254,11 +257,17 @@ func (s *Service) known(name string) (string, []string, error) {
 	}
 	if h != "github.com" && !slices.Contains(pasted, h) && !slices.Contains(s.Gh.Hosts(), h) {
 		if s.Gh.Reload(); !slices.Contains(s.Gh.Hosts(), h) {
-			return "", nil, fmt.Errorf("%s isn't a host gh is signed in to or one given a token in Settings › GitHub", h)
+			return "", nil, unknownHostError(h + " isn't a host gh is signed in to or one given a token in Settings › GitHub")
 		}
 	}
 	return h, pasted, nil
 }
+
+// unknownHostError is known's error for a name that isn't a GitHub host Nushi
+// knows (gh's, or one given a token), not a failure to ask.
+type unknownHostError string
+
+func (e unknownHostError) Error() string { return string(e) }
 
 // AddToken checks a pasted token on a host and keeps it in the keychain.
 // It's used for the host instead of gh's login, until removed.

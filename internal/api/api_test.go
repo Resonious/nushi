@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
@@ -149,6 +150,24 @@ func TestStartFailureReason(t *testing.T) {
 			ce.Meta().Get(ReasonHeader) != tc.reason {
 			t.Errorf("start in %q: %v (reason %q), want %q", tc.folder, err, ce.Meta().Get(ReasonHeader), tc.reason)
 		}
+	}
+}
+
+// A start refused for want of a sign-in Nushi can run carries the ways to
+// sign in as an AgentSignIn; any other refusal carries none.
+func TestSignInDetail(t *testing.T) {
+	in := &chats.SignInError{Agent: "codex", Methods: []model.Option{{ID: "chat-gpt", Name: "ChatGPT", Description: "d"}}, Err: errors.New("auth")}
+	got := signInDetail(connect.NewError(connect.CodeFailedPrecondition, in), fmt.Errorf("couldn't start: %w", in)).Details()
+	if len(got) != 1 {
+		t.Fatalf("%d details", len(got))
+	}
+	v, err := got[0].Value()
+	sign, ok := v.(*nushiv1.AgentSignIn)
+	if err != nil || !ok || sign.Agent != "codex" || len(sign.Methods) != 1 || sign.Methods[0].Id != "chat-gpt" || sign.Methods[0].Name != "ChatGPT" {
+		t.Errorf("detail %v (%v)", v, err)
+	}
+	if d := signInDetail(connect.NewError(connect.CodeFailedPrecondition, errors.New("no")), errors.New("no")).Details(); len(d) != 0 {
+		t.Errorf("a plain refusal's details: %v", d)
 	}
 }
 

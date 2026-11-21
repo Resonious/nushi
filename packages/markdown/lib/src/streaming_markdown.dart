@@ -14,6 +14,7 @@ import 'package:markdown_view/src/text_marks.dart';
 part 'code_block.dart';
 part 'file_link.dart';
 part 'heading_mark.dart';
+part 'html_images.dart';
 
 /// The colors and fonts of [StreamingMarkdown].
 @immutable
@@ -83,7 +84,8 @@ class MarkdownStyle {
 /// Markdown that may still be streaming in: healed before it is parsed (see
 /// [heal]), with highlighted code blocks that scroll sideways. Images are
 /// what [imageBuilder] makes of them, or else their alt text: nothing is
-/// fetched on its own. Raw HTML shows as the text it is. Put it in a
+/// fetched on its own; an HTML `<img>` is one too. Raw HTML otherwise shows
+/// as the text it is. Put it in a
 /// [SelectionArea] to select text.
 ///
 /// While it streams, only its last block is parsed again as text comes:
@@ -263,11 +265,20 @@ class _StreamingMarkdownState extends State<StreamingMarkdown> {
         if (mark != null) ...const [_MarkedHeader(), _MarkedSetextHeader()],
       ],
       inlineSyntaxes: [
+        _HtmlImageSyntax(),
         if (linking) _FilePathSyntax(files.keys),
         if (streaming) ...streamSyntaxes,
       ],
       builders: {
         'pre': _CodeBlockBuilder(s, w.codeBlock),
+        _HtmlImageSyntax.tag: _HtmlImageBuilder(
+          (uri, alt) =>
+              imageBuilder?.call(uri, alt) ??
+              Text(
+                '[image: ${alt ?? uri}]',
+                style: body.copyWith(color: s.muted),
+              ),
+        ),
         if (streaming) ...streamBuilders(w.caret),
         if (linking) ...{
           'code': _FileLinkBuilder(files, w.onTapFile!),
@@ -403,6 +414,7 @@ class _HtmlAsText extends md.HtmlBlockSyntax {
     while (lines.isNotEmpty && lines.last.isEmpty) {
       lines.removeLast();
     }
+    if (lines.any(_imgTag.hasMatch)) return _htmlImageBlock(lines);
     return md.Element('p', [
       for (final (i, line) in lines.indexed) ...[
         if (i > 0) md.Element.empty('br'),

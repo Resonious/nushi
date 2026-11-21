@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:nushi/app_actions.dart' show findKey;
 import 'package:nushi/change_marks.dart' show MarksAgainst;
 import 'package:nushi/chat.dart';
 import 'package:nushi/daemon.dart';
@@ -13,12 +14,14 @@ import 'package:nushi/file_text.dart';
 import 'package:nushi/line_base.dart';
 import 'package:nushi/native.dart';
 import 'package:nushi/preview.dart';
+import 'package:nushi/preview_find.dart';
 import 'package:nushi/preview_marks.dart';
 import 'package:nushi/preview_text.dart' show prettyJson;
 import 'package:nushi/settings.dart' show indentGuides, scrollPastEnd, tabSize;
 import 'package:nushi/source_editor.dart';
 import 'package:nushi/source_menu.dart';
 import 'package:nushi/theme/theme.dart';
+import 'package:nushi/web_find.dart';
 import 'package:nushi/web_page.dart';
 import 'package:nushi/web_views.dart';
 
@@ -202,6 +205,7 @@ class _FileViewState extends State<FileView> {
   @override
   void dispose() {
     _focus.dispose();
+    _pageFind?.dispose();
     super.dispose();
   }
 
@@ -218,8 +222,27 @@ class _FileViewState extends State<FileView> {
     null => null,
   };
 
+  /// ⌘F with the focus in the view: the preview's own find ([FindSlot]);
+  /// the editor's, deeper, takes it first while it has the focus. An HTML
+  /// page finds with its web view's own text, where the web view can
+  /// ([PageHost.finder]; ADR 0143).
+  late final _slot = FindSlot()
+    ..choose = () =>
+        _shown.page != null && !_shown.showsSource ? _pageFind : null;
+  late final WebFind? _pageFind = switch (_shown.page?.finder) {
+    final finder? when _shown.kind == PreviewKind.html => WebFind(finder),
+    _ => null,
+  };
+
   KeyEventResult _key(FocusNode _, KeyEvent e) {
-    if (e is KeyUpEvent || !_shown.showsSource) return KeyEventResult.ignored;
+    if (e is KeyUpEvent) return KeyEventResult.ignored;
+    if (findKey.accepts(e, HardwareKeyboard.instance)) {
+      final f = _slot.current;
+      if (f == null) return KeyEventResult.ignored;
+      f.open();
+      return KeyEventResult.handled;
+    }
+    if (!_shown.showsSource) return KeyEventResult.ignored;
     // In the editor ⌥Z types its character.
     if (_shown.edit != null && !_focus.hasPrimaryFocus) {
       return KeyEventResult.ignored;
@@ -253,13 +276,14 @@ class _FileViewState extends State<FileView> {
             },
           ),
           Expanded(
-            // A click in a source takes the focus to the view, for ⌥Z;
-            // a page's web view and the editor keep their own.
+            // A click in a source takes the focus to the view, for ⌥Z,
+            // and in any file Flutter draws, for ⌘F; a page's web view and
+            // the editor keep their own.
             child: Listener(
               onPointerDown: (_) {
-                if (shown.showsSource &&
-                    shown.edit == null &&
-                    !_focus.hasFocus) {
+                final page = shown.page != null && !shown.showsSource;
+                final editing = shown.edit != null && shown.showsSource;
+                if (!page && !editing && !_focus.hasFocus) {
                   _focus.requestFocus();
                 }
               },
@@ -277,29 +301,38 @@ class _FileViewState extends State<FileView> {
                   ]),
                   builder: (context, _) => MarksAgainst.of(
                     shown.lines,
-                    child: PreviewBody(
-                      watch: shown.watch,
-                      source: shown.source.value,
-                      tabSize: tabSize.value,
-                      guides: indentGuides.value,
-                      pastEnd: scrollPastEnd.value,
-                      base: shown.lines.value,
-                      onReveal: shown.reveal,
-                      menu: shown.menu,
-                      editor: _editor,
-                      readOnly: shown.readOnly,
-                      page: switch ((shown.page, shown.diagram)) {
-                        (final page?, _) => (watch) => WebPage(
-                          host: page,
-                          watch: watch,
-                          roots: [chat.folder, ?chat.worktree?.path],
-                        ),
-                        (_, final diagram?) => (watch) => DiagramView(
-                          host: diagram,
-                          watch: watch,
-                        ),
-                        _ => null,
-                      },
+                    child: FindSlotScope(
+                      slot: _slot,
+                      child: PreviewBody(
+                        watch: shown.watch,
+                        source: shown.source.value,
+                        tabSize: tabSize.value,
+                        guides: indentGuides.value,
+                        pastEnd: scrollPastEnd.value,
+                        base: shown.lines.value,
+                        onReveal: shown.reveal,
+                        menu: shown.menu,
+                        editor: _editor,
+                        readOnly: shown.readOnly,
+                        page: switch ((shown.page, shown.diagram)) {
+                          (final page?, _) => (watch) {
+                            final view = WebPage(
+                              host: page,
+                              watch: watch,
+                              roots: [chat.folder, ?chat.worktree?.path],
+                            );
+                            final find = _pageFind;
+                            return find == null
+                                ? view
+                                : PageFindFrame(find: find, child: view);
+                          },
+                          (_, final diagram?) => (watch) => DiagramView(
+                            host: diagram,
+                            watch: watch,
+                          ),
+                          _ => null,
+                        },
+                      ),
                     ),
                   ),
                 ),

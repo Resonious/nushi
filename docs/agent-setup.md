@@ -30,8 +30,10 @@ Nushi runs your `claude` through its own ACP agent, `nushid claude-acp` ([ADR 00
 Nushi runs your `codex` through `@agentclientprotocol/codex-acp` 2.2.2, set up the same way (about 2 MB).
 
 - It uses Codex's own login or config (`$CODEX_HOME`, else `~/.codex`): sign in with `codex login`, or name a provider in `config.toml`. [Codex config](user/codex-config.md) has one for Fireworks.
+- **Sign in from Nushi.** When Codex isn't signed in, starting or reopening a chat shows **Codex isn't signed in** with **Sign in with ChatGPT**: Codex opens your browser for its own ChatGPT login, and once you've finished there the chat starts. **Cancel** stops the login. Nushi offers only the ways an agent signs itself in, never an API key, and never sees your password ([ADR 0145](adr/0145-agents-sign-in-through-their-own-login.md)). Any ACP agent that lists such a way gets the same.
 - A provider's key comes from the environment, which agents get from your login shell (above).
 - A Codex chat resumes in a terminal with `codex resume <session id>`.
+- **Preview: Codex without Node.** A Go agent for Codex ([codex-acp-go](https://github.com/afrase/codex-acp-go), run as `nushid codex-acp`) talks to Codex's app-server directly, so Codex needs no Node and no Set up: when npm installed your `codex`, it runs the native program inside it, not npm's Node launcher (about 14 MB less a chat) ([ADR 0142](adr/0142-codex-through-nushis-go-agent.md)). It is off by default: turn on **Run Codex without Node** under Codex in **Settings › Agents** to try it. Chats use it from their next start (a new chat, or one reopened or woken); a chat already running keeps its agent, and nothing needs a restart. Chats move between the two agents while asleep, as both use Codex's own sessions. What it doesn't do yet is in [Codex facts](facts/codex.md#the-go-agent-codex-acp-gos-codexacp).
 
 ### Ante
 

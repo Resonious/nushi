@@ -28,6 +28,7 @@ import (
 	"github.com/afrase/nushi/internal/ante/antetest"
 	"github.com/afrase/nushi/internal/api"
 	"github.com/afrase/nushi/internal/claude"
+	"github.com/afrase/nushi/internal/codex"
 	"github.com/afrase/nushi/internal/database"
 	"github.com/afrase/nushi/internal/events"
 	"github.com/afrase/nushi/internal/features/agents"
@@ -65,10 +66,12 @@ type daemon struct {
 	looks   *atomic.Int64 // the restart's looks (restart.Service.Looked)
 	lapsed  *atomic.Bool  // its ask lapsed, and it stopped looking
 	claudes *claudes      // the fake claudes Claude's Go agent ran
+	codexes *codexes      // the fake app-servers Codex's Go agent ran
 	tools   *tools.Service
 	hub     *events.Hub
 	dataDir string           // what it was started on, for reopen
 	history *acptest.History // and the fake agent's sessions
+	signIn  *acptest.SignIn  // the login of the "signin" agent (signin_test.go)
 }
 
 // reopen stops d and starts it again in its place, on the same data folder
@@ -205,7 +208,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		"pig":      pis(pi.PiG),
 	}
 	kinds := []chats.Kind{{Harness: fakeHarness{}, Launch: fake("")}}
-	for _, a := range knownagents.All("") { // no projects folder: Local isn't used
+	for _, a := range knownagents.All("", nil) { // no projects folder: Local isn't used
 		if l := launches[a.Agent.Name]; l != nil {
 			h := a.Harness
 			if a.Agent.Name == "claude" {
@@ -215,6 +218,14 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		}
 	}
 	kinds = append(kinds, chats.Kind{Harness: claudeOnFake{projects: filepath.Join(dataDir, "claude", "projects")}, Launch: fake(""), MCP: true})
+	cxs := codexStores(dataDir)
+	kinds = append(kinds, chats.Kind{Harness: codexGo{}, Launch: launch(cxs.serve), MCP: true})
+	// "signin" is the fake agent behind a login, offering Codex's ways to
+	// sign in, which Nushi leaves out as it does Codex's.
+	signIn := &acptest.SignIn{Finish: make(chan error, 1), Begun: make(chan string, 4), Ended: make(chan struct{}, 4)}
+	kinds = append(kinds, chats.Kind{Harness: model.HarnessInfo{Name: "signin", Title: "Signin"}, NoSignIn: codex.NoSignIn, Launch: launch(func(r io.Reader, w io.Writer) {
+		(&acptest.Agent{History: history, SignIn: signIn}).Serve(r, w)
+	})})
 	copies, err := transcripts.Open(filepath.Join(dataDir, "transcripts"))
 	if err != nil {
 		t.Fatal(err)
@@ -251,7 +262,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		lapsed.Store(!waiting)
 	}
 	sv := api.Services{Chats: svc, Agents: agents.New(nil, nil, shellenv.Off(os.Environ()), "", nil), Terms: terms, Hub: hub, Memory: memory.New(svc), Transcripts: st, Restart: restarts,
-		Servers: srvs, Usage: meter}
+		Servers: srvs, Usage: meter, CodexGo: st}
 	socket, forDevices := api.Handlers(sv, toolSvc, "tok") // as main serves them
 	srv := httptest.NewServer(socket)
 	devices := httptest.NewServer(forDevices)
@@ -268,7 +279,7 @@ func startDaemon(t *testing.T, dataDir string, history *acptest.History) *daemon
 		_ = db.Close() // closed already when stopped twice: reopen's, then the cleanup's
 	}
 	t.Cleanup(stop)
-	return &daemon{url: srv.URL, devices: devices.URL, stop: stop, chats: svc, restart: restarts, looks: looks, lapsed: lapsed, claudes: cls, tools: toolSvc, hub: hub, dataDir: dataDir, history: history, kill: func() {
+	return &daemon{url: srv.URL, devices: devices.URL, stop: stop, chats: svc, restart: restarts, looks: looks, lapsed: lapsed, claudes: cls, codexes: cxs, tools: toolSvc, hub: hub, dataDir: dataDir, history: history, signIn: signIn, kill: func() {
 		mu.Lock()
 		defer mu.Unlock()
 		kill()

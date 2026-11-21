@@ -8,6 +8,8 @@ import 'package:nushi/browser_local.dart';
 import 'package:nushi/browser_page.dart';
 import 'package:nushi/preview_entry.dart';
 import 'package:nushi/settings.dart' show localNetworkSites;
+import 'package:nushi/web_find.dart';
+import 'package:nushi/web_find_macos.dart';
 import 'package:nushi/web_page.dart';
 import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -120,7 +122,12 @@ class BrowserPage implements BrowserHost {
         if (!_gone) _failed.value = null;
       }),
     );
-    unawaited(nav.setOnPageFinished((_) => unawaited(_moved())));
+    unawaited(
+      nav.setOnPageFinished((_) {
+        if (!_gone) _finder.pageLoaded();
+        unawaited(_moved());
+      }),
+    );
     unawaited(
       nav.setOnUrlChange((c) {
         if (_gone) return;
@@ -157,6 +164,10 @@ class BrowserPage implements BrowserHost {
   final BrowserTab tab;
   final PageAddress _page;
   late final Future<void> _ready;
+  late final _finder = WebKitFinder(() => _c.webViewIdentifier);
+
+  @override
+  PageFinder get finder => _finder;
   int? _id; // the plugin's for the web view, once watched
   final _c = WebKitWebViewController(
     WebKitWebViewControllerCreationParams(

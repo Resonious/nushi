@@ -22,6 +22,7 @@ import 'package:nushi/preview.dart';
 import 'package:nushi/preview_path.dart';
 import 'package:nushi/preview_text.dart';
 import 'package:nushi/source_view.dart';
+import 'package:nushi/web_find.dart';
 import 'package:nushi/web_page.dart';
 
 import 'fake_daemon.dart';
@@ -100,6 +101,9 @@ class _Host implements PageHost {
 
   @override
   Future<void> reload() async => reloads++;
+
+  @override
+  PageFinder? get finder => null;
 
   @override
   void dispose() => disposed = true;

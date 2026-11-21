@@ -19,6 +19,7 @@ import 'package:nushi/plan_view.dart';
 import 'package:nushi/question_card.dart';
 import 'package:nushi/replies.dart';
 import 'package:nushi/rewind.dart';
+import 'package:nushi/sign_in.dart';
 import 'package:nushi/stop_label.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/thinking.dart';
@@ -124,6 +125,14 @@ class ItemView extends StatelessWidget {
       case ItemKind.ITEM_KIND_NOTICE
           when item.status == 'compacted' || item.status == 'history_differs':
         return HistoryMark(item, agent: chat.agentName);
+      // Its agent isn't signed in: the ways it signs itself in, a failed
+      // reopen's options (ADR 0145). The phone keeps the plain notice, with
+      // Try again: the login opens the Mac's browser.
+      case ItemKind.ITEM_KIND_NOTICE
+          when item.status == 'reopen_failed' &&
+              item.options.isNotEmpty &&
+              !daemon.remote:
+        return SignInCard(item, chat, daemon);
       case ItemKind.ITEM_KIND_NOTICE:
         final (icon, color) = switch (item.status) {
           'cancelled' => (Icons.stop_circle_outlined, t.textMuted),

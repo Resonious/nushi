@@ -14,6 +14,7 @@ import 'package:nushi/issue_picker.dart';
 import 'package:nushi/keys.dart';
 import 'package:nushi/new_chat_issue.dart';
 import 'package:nushi/open_session.dart';
+import 'package:nushi/sign_in.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
 
@@ -43,12 +44,18 @@ Future<void> newChat(
   if (agent.isEmpty || knownAgents[agent]?.ready == false) {
     daemon.openSettings(section: SettingsSection.agents);
   } else if (session == null) {
-    await tryOrShow(
+    // An agent that isn't signed in offers to sign in, and starts again.
+    await startSigningIn(
       context,
+      daemon,
       () => daemon.startChat(folder, agent, issue: picked),
     );
   } else if (await mayOpen(context, session) && context.mounted) {
-    await tryOrShow(context, () => daemon.openSession(folder, agent, session));
+    await startSigningIn(
+      context,
+      daemon,
+      () => daemon.openSession(folder, agent, session),
+    );
   }
 }
 

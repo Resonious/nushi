@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:nushi/agents.dart';
 import 'package:nushi/daemon.dart';
+import 'package:nushi/sign_in.dart';
 import 'package:nushi/skills_list.dart';
 import 'package:nushi/widgets.dart';
 
@@ -48,7 +49,7 @@ Future<void> newSkill(BuildContext context, SkillsList list) async {
   // The chat is the work now: Settings shuts first (ADR 0087).
   daemon.closeSettings();
   String? started;
-  await tryOrShow(context, () async {
+  await startSigningIn(context, daemon, () async {
     started = await daemon.startChat(list.folder, list.agent);
   });
   // By id: under a trust card, or when you went elsewhere, the new chat

@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path"
@@ -90,12 +91,16 @@ type run struct {
 	statted time.Time
 	tooBig  bool
 	started time.Time // the script's time, when nothing else says
-	notes   notes     // the session's transcript, for the run's notification
+	// scripted says the script was read; meta is what it says of the run.
+	scripted bool
+	meta     scriptMeta
+	notes    notes // the session's transcript, for the run's notification
 	// agentStat is how often the running agents' transcripts are looked
 	// at; snapshotWait how long an end its notification told waits for
 	// the snapshot.
 	agentStat, snapshotWait time.Duration
-	steps                   map[string]*steps // the agents' transcripts read for the pane
+	steps                   map[string]*steps       // the agents' transcripts read for the pane
+	tokens                  map[string]*agentTokens // and for their tokens, by agent id
 }
 
 // runKey is the folder of session sid in folder's history, for a run of
@@ -140,8 +145,8 @@ func (l Local) readRun(sid, folder string, w model.Workflow, read func(r *run, r
 	if jerr := r.readJournal(root, w.RunID); jerr != nil && r.snap == nil && r.notes.end == nil {
 		return jerr
 	}
-	if r.started.IsZero() && w.Started.IsZero() {
-		r.started = scriptTime(root, w.RunID)
+	if !r.scripted {
+		r.readScript(root, w.RunID)
 	}
 	return read(r, root)
 }
@@ -201,6 +206,7 @@ func (r *run) readJournal(root *os.Root, runID string) error {
 	}
 	if r.snap == nil && time.Since(r.statted) >= r.agentStat {
 		r.statted = time.Now()
+		r.readTokens(root, dir)
 		for _, row := range r.j.rows {
 			if row.State == "running" && agentID.MatchString(row.AgentID) {
 				if fi, err := root.Lstat(path.Join(dir, "agent-"+row.AgentID+".jsonl")); err == nil {
@@ -212,23 +218,34 @@ func (r *run) readJournal(root *os.Root, runID string) error {
 	return nil
 }
 
-// scriptTime is when the run's script was written, the run's start when
-// nothing else says: workflows/scripts/<name>-<run>.js.
-func scriptTime(root *os.Root, runID string) time.Time {
+// maxScript is how much of a run's script is read: its meta opens it.
+const maxScript = 256 << 10
+
+// readScript reads the run's script once it's there,
+// workflows/scripts/<name>-<run>.js: its time (the run's start when
+// nothing else says) and its meta (the phases it plans).
+func (r *run) readScript(root *os.Root, runID string) {
 	d, err := root.Open(path.Join("workflows", "scripts"))
 	if err != nil {
-		return time.Time{}
+		return
 	}
 	defer d.Close() //nolint:errcheck // read-only
 	names, _ := d.Readdirnames(4096)
-	for _, n := range names {
-		if strings.HasSuffix(n, "-"+runID+".js") {
-			if fi, err := root.Lstat(path.Join("workflows", "scripts", n)); err == nil && fi.Mode().IsRegular() {
-				return fi.ModTime()
-			}
-		}
+	i := slices.IndexFunc(names, func(n string) bool { return strings.HasSuffix(n, "-"+runID+".js") })
+	if i < 0 {
+		return
 	}
-	return time.Time{}
+	f, fi, err := regularfile.OpenIn(root, path.Join("workflows", "scripts", names[i]), false)
+	if err != nil {
+		return
+	}
+	defer f.Close() //nolint:errcheck // read-only
+	data, err := io.ReadAll(io.LimitReader(f, maxScript))
+	if err != nil {
+		return
+	}
+	r.scripted, r.started = true, fi.ModTime()
+	r.meta, _ = readMeta(string(data)) // none: no plan to show
 }
 
 func latest(a, b time.Time) time.Time {
@@ -239,13 +256,14 @@ func latest(a, b time.Time) time.Time {
 }
 
 // summary is w with what was read: while it runs, the journal's phases in
-// the order reached, its counts and who runs; once it ended, the
-// snapshot's.
+// the order reached, its counts and who runs, and the phases its script
+// plans that it hasn't reached; once it ended, the snapshot's.
 func (r *run) summary(w model.Workflow) model.Workflow {
 	w.Started = cmp.Or(w.Started, r.started)
 	w.Active = r.active
-	w.Phases, w.Running = nil, nil
+	w.Phases, w.Running, w.RunningPhases = nil, nil, nil
 	w.Agents, w.Done, w.Failed, w.RunningCount = len(r.j.rows), 0, 0, 0
+	w.Tokens = r.tokensSum()
 	if s := r.snap; s != nil {
 		return r.ended(w, *s)
 	}
@@ -272,6 +290,7 @@ func (r *run) summary(w model.Workflow) model.Workflow {
 			w.RunningCount++
 			if len(w.Running) < model.WorkflowRunning {
 				w.Running = append(w.Running, label(row.Label, row.AgentID))
+				w.RunningPhases = append(w.RunningPhases, i)
 			}
 		}
 	}
@@ -281,7 +300,28 @@ func (r *run) summary(w model.Workflow) model.Workflow {
 			w.Summary = clipText(secrets.Mask(n.summary, "…", nil), model.WorkflowSummaryText)
 		}
 	}
+	r.plan(&w, at)
 	return w
+}
+
+// plan adds to w what its script says of the run: the phases it plans and
+// hasn't reached (at holds those reached), and its name and description
+// when nothing else gave them (a replayed call has no name).
+func (r *run) plan(w *model.Workflow, at map[string]int) {
+	m := r.meta
+	w.Name = cmp.Or(w.Name, clipText(secrets.MaskText(m.Name), 200))
+	w.Description = cmp.Or(w.Description, clipText(secrets.MaskText(m.Description), model.WorkflowSummaryText))
+	w.Planned = nil
+	for _, p := range m.Phases {
+		if len(w.Phases)+len(w.Planned) >= model.WorkflowPhases {
+			return
+		}
+		if _, ok := at[p.Title]; ok {
+			continue
+		}
+		at[p.Title] = -1 // listed once
+		w.Planned = append(w.Planned, model.WorkflowPhase{Title: label(p.Title, ""), Detail: clipText(secrets.MaskText(p.Detail), 200)})
+	}
 }
 
 // noted is the end the run's notification told, once the snapshot had
@@ -323,7 +363,15 @@ func (r *run) ended(w model.Workflow, s snapshot) model.Workflow {
 			count(&w, i, func(p *model.WorkflowPhase) { p.Failed++ })
 		}
 	}
+	r.plan(&w, at) // what the snapshot doesn't list
 	w.Agents = max(w.Agents, s.AgentCount, len(s.Agents))
+	// The snapshot's total, else its agents', else what their transcripts
+	// said.
+	var rows int64
+	for _, a := range s.Agents {
+		rows += int64(a.Tokens)
+	}
+	w.Tokens = cmp.Or(s.Tokens, rows, w.Tokens)
 	return w
 }
 

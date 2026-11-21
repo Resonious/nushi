@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nushi/app_actions.dart';
 import 'package:nushi/chat.dart';
+import 'package:nushi/chat_find.dart';
 import 'package:nushi/chat_view.dart';
 import 'package:nushi/composer.dart';
 import 'package:nushi/daemon.dart';
@@ -317,9 +318,11 @@ void main() {
     await closeView(tester, d);
   }, variant: onMac);
 
-  testWidgets('⌘F says it looks in what’s loaded; Load all takes the rest, '
-      'built over frames, and finds there', (tester) async {
-    final (d, _) = await _window(tester);
+  testWidgets('⌘F on a daemon that can’t find in the whole chat says it '
+      'looks in what’s loaded; Load all takes the rest, built over frames, '
+      'and finds there', (tester) async {
+    final (d, paged) = await _window(tester);
+    d.daemonApi = findInChatApi - 1;
     final c = _chat(d);
     c.find
       ..open()
@@ -327,6 +330,7 @@ void main() {
     await _settle(tester);
     expect(find.text('Searching loaded messages · '), findsOneWidget);
     expect(c.find.count, 'None');
+    expect(paged.asked.whereType<FindInChatRequest>(), isEmpty);
     expect(
       tester.getRect(find.byType(FindBar)).bottom -
           tester.getRect(find.byType(SelectionArea)).top,

@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"errors"
+	"iter"
 	"maps"
 	"slices"
 	"strings"
@@ -50,9 +51,76 @@ func (s *Service) FindPull(ctx context.Context, folder string, poll bool, look f
 	if branch == "" {
 		return BranchPull{}, nil
 	}
+	repos := s.branchRepos(ctx, folder, pushed, nil)
+	if len(repos) == 0 {
+		return BranchPull{}, nil
+	}
+	out := BranchPull{Host: repos[0].host, Repo: repos[0].name, Branch: branch}
+	if def := s.DefaultBranch(ctx, folder); def != "" {
+		_, short, found := strings.Cut(def, "/") // origin/main
+		out.Default = branch == def || found && branch == short
+	}
+	if out.Default || look != nil && !look(branch) {
+		return out, nil
+	}
+	var errs []error
+	for r, pulls := range s.branchHeads(ctx, repos, branch, poll, &errs) {
+		if p, ok := pick(pulls); ok {
+			out.Repo = r.name
+			out.Pull = &model.ChatGitHub{Host: r.host, Repo: r.name, Number: p.Number, Pull: true, ID: p.ID, Branch: branch}
+			out.Created = p.Created
+			return out, nil
+		}
+	}
+	return out, errors.Join(errs...)
+}
+
+// BranchMerged says whether a pull request whose head is branch, opened
+// at or after since, was merged on GitHub: for what git can't see, a
+// squash merge (issue 83). It's asked of folder's GitHub repositories as
+// FindPull asks, with the head owned by the one folder pushes to, else
+// origin's: the branch needn't be checked out, nor be the default
+// branch's. A folder with no repository on a GitHub host Nushi knows says
+// false without asking; one whose remotes couldn't be read, or whose
+// GitHub hosts couldn't be asked (no token yet, the keychain waiting for
+// an OK), says why, so the question is asked again later.
+func (s *Service) BranchMerged(ctx context.Context, folder, branch string, since time.Time) (bool, error) {
+	if branch == "" {
+		return false, nil
+	}
+	_, pushed := s.Head(ctx, folder)
+	var errs []error
+	repos := s.branchRepos(ctx, folder, pushed, &errs)
+	if len(repos) == 0 && len(errs) > 0 {
+		return false, errors.Join(errs...)
+	}
+	errs = nil
+	for _, pulls := range s.branchHeads(ctx, repos, branch, false, &errs) {
+		if slices.ContainsFunc(pulls, func(p githubapi.HeadPull) bool { return p.State == "merged" && !p.Created.Before(since) }) {
+			return true, nil
+		}
+	}
+	return false, errors.Join(errs...)
+}
+
+// headRepo is one of a folder's GitHub repositories.
+type headRepo struct{ host, name string }
+
+// branchRepos are folder's GitHub repositories on a host signed in to:
+// its remotes, the one pushed to (pushed) first, then origin, upstream
+// and the rest by name. Why a remote's repository couldn't be had, but
+// for a host that isn't GitHub's (unknownHostError), goes in errs (nil: none
+// wanted).
+func (s *Service) branchRepos(ctx context.Context, folder, pushed string, errs *[]error) []headRepo {
+	failed := func(err error) {
+		if errs != nil {
+			*errs = append(*errs, err)
+		}
+	}
 	remotes, err := s.Remotes(ctx, folder)
 	if err != nil {
-		return BranchPull{}, nil //nolint:nilerr // not a repository: nothing to find
+		failed(err)
+		return nil // not a repository: nothing to find
 	}
 	names := slices.Collect(maps.Keys(remotes))
 	rank := func(n string) int {
@@ -67,48 +135,47 @@ func (s *Service) FindPull(ctx context.Context, folder string, poll bool, look f
 		return 3
 	}
 	slices.SortFunc(names, func(a, b string) int { return cmp.Or(cmp.Compare(rank(a), rank(b)), strings.Compare(a, b)) })
-	type repo struct{ host, name string }
-	var repos []repo
+	var repos []headRepo
 	for _, n := range names {
 		h, r, ok := parseRemote(remotes[n])
-		if _, _, err := githubapi.SplitRepo(r); !ok || err != nil || slices.Contains(repos, repo{h, r}) {
+		if _, _, err := githubapi.SplitRepo(r); !ok || err != nil || slices.Contains(repos, headRepo{h, r}) {
 			continue
 		}
 		if _, err := s.host(ctx, h, false); err != nil {
+			if _, ok := errors.AsType[unknownHostError](err); !ok {
+				failed(err)
+			}
 			continue // no sign-in for it, or not a host Nushi gives a token to
 		}
-		repos = append(repos, repo{h, r})
+		repos = append(repos, headRepo{h, r})
 	}
-	if len(repos) == 0 {
-		return BranchPull{}, nil
-	}
-	out := BranchPull{Host: repos[0].host, Repo: repos[0].name, Branch: branch}
-	if def := s.DefaultBranch(ctx, folder); def != "" {
-		_, short, found := strings.Cut(def, "/") // origin/main
-		out.Default = branch == def || found && branch == short
-	}
-	if out.Default || look != nil && !look(branch) {
-		return out, nil
-	}
-	owner, _, _ := strings.Cut(repos[0].name, "/") // the head's: the repository pushed to
-	var errs []error
-	for _, r := range repos[:min(len(repos), 3)] {
-		if r.host != repos[0].host {
-			continue
+	return repos
+}
+
+// branchHeads yields the pull requests with branch as head of each of the
+// first three of repos on the first's host, the head owned by the first
+// (the repository pushed to: a fork's pull request is on its parent).
+// What GitHub refuses is added to errs.
+func (s *Service) branchHeads(ctx context.Context, repos []headRepo, branch string, poll bool, errs *[]error) iter.Seq2[headRepo, []githubapi.HeadPull] {
+	return func(yield func(headRepo, []githubapi.HeadPull) bool) {
+		if len(repos) == 0 {
+			return
 		}
-		pulls, err := s.heads(ctx, r.host, r.name, owner+":"+branch, poll)
-		if err != nil {
-			errs = append(errs, err)
-			continue
-		}
-		if p, ok := pick(pulls); ok {
-			out.Repo = r.name
-			out.Pull = &model.ChatGitHub{Host: r.host, Repo: r.name, Number: p.Number, Pull: true, ID: p.ID, Branch: branch}
-			out.Created = p.Created
-			return out, nil
+		owner, _, _ := strings.Cut(repos[0].name, "/")
+		for _, r := range repos[:min(len(repos), 3)] {
+			if r.host != repos[0].host {
+				continue
+			}
+			pulls, err := s.heads(ctx, r.host, r.name, owner+":"+branch, poll)
+			if err != nil {
+				*errs = append(*errs, err)
+				continue
+			}
+			if !yield(r, pulls) {
+				return
+			}
 		}
 	}
-	return out, errors.Join(errs...)
 }
 
 // pick is the open pull request, else the newest.

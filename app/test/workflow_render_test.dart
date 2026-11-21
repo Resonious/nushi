@@ -105,7 +105,7 @@ void main() {
         expectTextInside(tester, width);
         await render(tester, find.byType(NushiApp), 'workflow_cards_$name');
 
-        await tester.tap(find.byType(WorkflowCard).last);
+        await tester.tap(find.byTooltip('Open its agents').last);
         await _settle(tester);
         expect(find.byType(WorkflowPane), findsOne);
         expectTextInside(tester, width);
@@ -156,7 +156,16 @@ void main() {
       await _settle(tester);
       expectTextInside(tester, size.width);
       await render(tester, find.byType(PhoneApp), 'workflow_phone_chat_$name');
-      expect(find.byIcon(Icons.chevron_right), findsNothing);
+      // No pane to open: each card's one chevron opens it in place.
+      for (final card in find.byType(WorkflowCard).evaluate()) {
+        expect(
+          find.descendant(
+            of: find.byWidget(card.widget),
+            matching: find.byIcon(Icons.chevron_right),
+          ),
+          findsOne,
+        );
+      }
       await tester.tap(find.byIcon(Icons.more_horiz));
       await _settle(tester);
       await render(tester, find.byType(PhoneApp), 'workflow_phone_sheet_$name');

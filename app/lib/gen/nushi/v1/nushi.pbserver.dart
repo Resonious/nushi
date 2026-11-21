@@ -35,6 +35,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
       $pb.ServerContext ctx, $0.GetChatRequest request);
   $async.Future<$0.GetChatItemsResponse> getChatItems(
       $pb.ServerContext ctx, $0.GetChatItemsRequest request);
+  $async.Future<$0.FindInChatResponse> findInChat(
+      $pb.ServerContext ctx, $0.FindInChatRequest request);
   $async.Future<$0.GetChatImageResponse> getChatImage(
       $pb.ServerContext ctx, $0.GetChatImageRequest request);
   $async.Future<$0.StartChatResponse> startChat(
@@ -45,6 +47,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
       $pb.ServerContext ctx, $0.SetUpAgentRequest request);
   $async.Future<$0.RemoveAgentResponse> removeAgent(
       $pb.ServerContext ctx, $0.RemoveAgentRequest request);
+  $async.Future<$0.SignInAgentResponse> signInAgent(
+      $pb.ServerContext ctx, $0.SignInAgentRequest request);
   $async.Future<$0.ListAgentSessionsResponse> listAgentSessions(
       $pb.ServerContext ctx, $0.ListAgentSessionsRequest request);
   $async.Future<$0.OpenAgentSessionResponse> openAgentSession(
@@ -293,6 +297,12 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
       $pb.ServerContext ctx, $0.GetGitHubCommitsRequest request);
   $async.Future<$0.GetGitHubFilesResponse> getGitHubFiles(
       $pb.ServerContext ctx, $0.GetGitHubFilesRequest request);
+  $async.Future<$0.GetGitHubViewedResponse> getGitHubViewed(
+      $pb.ServerContext ctx, $0.GetGitHubViewedRequest request);
+  $async.Future<$0.SetGitHubViewedResponse> setGitHubViewed(
+      $pb.ServerContext ctx, $0.SetGitHubViewedRequest request);
+  $async.Future<$0.ReactGitHubResponse> reactGitHub(
+      $pb.ServerContext ctx, $0.ReactGitHubRequest request);
   $async.Future<$0.GetGitHubJobLogResponse> getGitHubJobLog(
       $pb.ServerContext ctx, $0.GetGitHubJobLogRequest request);
   $async.Future<$0.ReplyGitHubThreadResponse> replyGitHubThread(
@@ -354,6 +364,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return $0.GetChatRequest();
       case 'GetChatItems':
         return $0.GetChatItemsRequest();
+      case 'FindInChat':
+        return $0.FindInChatRequest();
       case 'GetChatImage':
         return $0.GetChatImageRequest();
       case 'StartChat':
@@ -364,6 +376,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return $0.SetUpAgentRequest();
       case 'RemoveAgent':
         return $0.RemoveAgentRequest();
+      case 'SignInAgent':
+        return $0.SignInAgentRequest();
       case 'ListAgentSessions':
         return $0.ListAgentSessionsRequest();
       case 'OpenAgentSession':
@@ -612,6 +626,12 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return $0.GetGitHubCommitsRequest();
       case 'GetGitHubFiles':
         return $0.GetGitHubFilesRequest();
+      case 'GetGitHubViewed':
+        return $0.GetGitHubViewedRequest();
+      case 'SetGitHubViewed':
+        return $0.SetGitHubViewedRequest();
+      case 'ReactGitHub':
+        return $0.ReactGitHubRequest();
       case 'GetGitHubJobLog':
         return $0.GetGitHubJobLogRequest();
       case 'ReplyGitHubThread':
@@ -678,6 +698,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return getChat(ctx, request as $0.GetChatRequest);
       case 'GetChatItems':
         return getChatItems(ctx, request as $0.GetChatItemsRequest);
+      case 'FindInChat':
+        return findInChat(ctx, request as $0.FindInChatRequest);
       case 'GetChatImage':
         return getChatImage(ctx, request as $0.GetChatImageRequest);
       case 'StartChat':
@@ -688,6 +710,8 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return setUpAgent(ctx, request as $0.SetUpAgentRequest);
       case 'RemoveAgent':
         return removeAgent(ctx, request as $0.RemoveAgentRequest);
+      case 'SignInAgent':
+        return signInAgent(ctx, request as $0.SignInAgentRequest);
       case 'ListAgentSessions':
         return listAgentSessions(ctx, request as $0.ListAgentSessionsRequest);
       case 'OpenAgentSession':
@@ -943,6 +967,12 @@ abstract class NushiServiceBase extends $pb.GeneratedService {
         return getGitHubCommits(ctx, request as $0.GetGitHubCommitsRequest);
       case 'GetGitHubFiles':
         return getGitHubFiles(ctx, request as $0.GetGitHubFilesRequest);
+      case 'GetGitHubViewed':
+        return getGitHubViewed(ctx, request as $0.GetGitHubViewedRequest);
+      case 'SetGitHubViewed':
+        return setGitHubViewed(ctx, request as $0.SetGitHubViewedRequest);
+      case 'ReactGitHub':
+        return reactGitHub(ctx, request as $0.ReactGitHubRequest);
       case 'GetGitHubJobLog':
         return getGitHubJobLog(ctx, request as $0.GetGitHubJobLogRequest);
       case 'ReplyGitHubThread':

@@ -214,8 +214,10 @@ func (c *chat) saveCopyLocked(copied, shown []model.Item) {
 	want := slices.DeleteFunc(slices.Clone(shown), shownOnly)
 	n := len(copied)
 	var err error
+	from := 0 // the first of want this write is to save
 	switch {
 	case n == 0 || n <= len(want) && reflect.DeepEqual(copied, want[:n]):
+		from = n
 		after := make([]string, len(want)-n)
 		for i := range after {
 			if n+i > 0 {
@@ -228,6 +230,11 @@ func (c *chat) saveCopyLocked(copied, shown []model.Item) {
 	}
 	c.mirrored = err == nil
 	if err != nil {
+		// What wasn't written is unsaved still, so the next write tries it
+		// again: Append writes again the items the copy has.
+		for _, it := range want[from:] {
+			c.unsaved[it.ID] = true
+		}
 		c.logLocked().Warn("transcript copy not written", "items", len(want), "err", err)
 		return
 	}

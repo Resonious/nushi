@@ -9,14 +9,17 @@ import 'package:nushi/change_marks.dart';
 import 'package:nushi/indent_guides.dart';
 import 'package:nushi/line_changes.dart';
 import 'package:nushi/menu.dart' show MenuEntry;
+import 'package:nushi/preview_find.dart';
 import 'package:nushi/preview_text.dart';
 import 'package:nushi/settings.dart';
 import 'package:nushi/source_menu.dart';
 import 'package:nushi/source_spans.dart';
 import 'package:nushi/syntax.dart';
 import 'package:nushi/theme/theme.dart';
+import 'package:nushi/transcript_find.dart';
 import 'package:nushi/whitespace_marks.dart';
 
+part 'source_view_find.dart';
 part 'source_view_lines.dart';
 
 /// A line shows this many characters at most (a minified file's one line).
@@ -34,7 +37,8 @@ const _blank = '\u200B';
 /// text, the lines that differ from it have change marks in the gutter
 /// (ADR 0131); pretty-printed JSON's lines aren't the file's, so it has
 /// none. With [menu] (the Files pane's) a right-click opens its menu
-/// ([SourceMenu]).
+/// ([SourceMenu]). Under a [FindSlot] (the Files pane's) ⌘F finds in its
+/// lines, all of them, not only those laid out.
 class SourceView extends StatefulWidget {
   const new(
     this.text, {
@@ -75,8 +79,32 @@ class SourceView extends StatefulWidget {
   State<SourceView> createState() => _SourceViewState();
 }
 
-class _SourceViewState extends State<SourceView> {
+class _SourceViewState extends State<SourceView> with FindInSlot<SourceView> {
   String _text = '';
+
+  /// The find's matches in the lines (`source_view_find.dart`), for the
+  /// lowered query [_looked]; each line's, by its index; the last ask for
+  /// the current one that was brought into view; whether the text starts
+  /// below the bar, for a match at its very top; the line numbers' width
+  /// when unwrapped, which stays over the lines.
+  List<_Hit> _hits = const [];
+  Map<int, List<int>> _hitsByLine = const {};
+  String _looked = '';
+  int _shownAsk = -1;
+  bool _roomAbove = false;
+  double _numbers = 0;
+
+  @override
+  void findChanged() {
+    final f = find!;
+    final q = (f.query ?? '').toLowerCase();
+    if (f.query == null) _roomAbove = false;
+    if (q != _looked) _look(q);
+    setState(() {}); // the lines' marks
+    _showCurrent();
+  }
+
+  void _setRoomAbove() => setState(() => _roomAbove = true);
   List<String> _lines = const [];
   List<Uint32List?>? _spans;
   int _reads = 0; // a highlight lands only for the latest read
@@ -99,6 +127,11 @@ class _SourceViewState extends State<SourceView> {
 
   /// What a list's selection holds, a right-click menu's place.
   final GlobalKey _content = GlobalKey();
+
+  /// Each list's selection area: a key of their own, as one shared would
+  /// move a selection area, its selection and all, into the other list.
+  final GlobalKey<SelectionAreaState> _areaWrapped = GlobalKey();
+  final GlobalKey<SelectionAreaState> _areaRunOn = GlobalKey();
 
   @override
   void initState() {
@@ -129,6 +162,7 @@ class _SourceViewState extends State<SourceView> {
   }
 
   void _read() {
+    _unselect();
     final text = widget.text;
     final read = ++_reads;
     _text = widget.path.toLowerCase().endsWith('.json')
@@ -140,12 +174,30 @@ class _SourceViewState extends State<SourceView> {
     _columns = null;
     _indents = null;
     _mark();
+    // The find looks in the new text, once this build is done.
+    if (find?.query != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _look(_looked);
+      });
+    }
     if (sourceLanguage(widget.path, _text) case final language?) {
       highlightSides(language, '', _text).then((s) {
         if (mounted && read == _reads && s[1] != null) {
+          _unselect();
           setState(() => _spans = s[1]);
         }
       }).ignore();
+    }
+  }
+
+  /// Clears the selection before the lines' text changes under it (a new
+  /// read, the highlighting landing): a line's text laid out anew drops
+  /// its own selection, but the containers above it keep pointing at it,
+  /// and asking them for it then throws in Flutter's selection code
+  /// (issue 100). It would be gone from sight anyway.
+  void _unselect() {
+    for (final area in [_areaWrapped, _areaRunOn]) {
+      area.currentState?.selectableRegion.clearSelection();
     }
   }
 
@@ -225,7 +277,15 @@ class _SourceViewState extends State<SourceView> {
     if (widget.wrap && line > 0) _showLine(line, 30);
   }
 
-  double get _top => widget.padding?.top ?? 0;
+  double get _top => _pad.top;
+
+  /// The view's padding, with room above the text for the find bar while
+  /// a match at the very top needs it.
+  EdgeInsets get _pad {
+    final pad = widget.padding ?? EdgeInsets.zero;
+    return _roomAbove ? pad.copyWith(top: pad.top + FindBar.height) : pad;
+  }
+
   double _lineHeight = 0;
 
   void _showLine(int line, int tries) =>
@@ -323,12 +383,14 @@ class _SourceViewState extends State<SourceView> {
       selected: selected,
       first: first,
       clicked: _lineAt(at) + 1,
+      onFind: find?.open,
     );
   }
 
   /// A list's selection area, its menu inside it when it has one, so its
   /// right-click is the menu's.
   Widget _selectable(_Whole whole, Widget child) => SelectionArea(
+    key: identical(whole, _wholeWrapped) ? _areaWrapped : _areaRunOn,
     child: SelectionContainer(
       delegate: whole,
       child: switch (widget.menu) {
@@ -343,9 +405,13 @@ class _SourceViewState extends State<SourceView> {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      FindFrame(find: find, child: _view(context));
+
+  Widget _view(BuildContext context) {
     final theme = NushiTheme.of(context);
     final t = theme.t;
+    final colors = findColors(t);
     final style = theme.code(t.text, size: 12);
     final gutter = theme.code(t.textMuted, size: 12);
     final digits = '${_lines.length}'.length;
@@ -401,7 +467,7 @@ class _SourceViewState extends State<SourceView> {
     int level(int i) => counted?.levels[i] ?? 0;
     // Scrolled past the end, the last line can come to the top.
     EdgeInsets padded(double viewport) {
-      final pad = widget.padding ?? EdgeInsets.zero;
+      final pad = _pad;
       if (!widget.pastEnd) return pad;
       return pad.copyWith(
         bottom: pastEndPadding(
@@ -439,10 +505,14 @@ class _SourceViewState extends State<SourceView> {
                   ),
                   Expanded(
                     child: _Line(
-                      Text.rich(
-                        text(i),
-                        strutStyle: strut,
-                        selectionColor: Colors.transparent,
+                      LineHits(
+                        hits: _lineHits(i),
+                        colors: colors,
+                        child: Text.rich(
+                          text(i),
+                          strutStyle: strut,
+                          selectionColor: Colors.transparent,
+                        ),
                       ),
                       whole: _lines[i],
                       column: char,
@@ -457,10 +527,11 @@ class _SourceViewState extends State<SourceView> {
         ),
       );
     }
-    final pad = widget.padding ?? EdgeInsets.zero;
+    final pad = _pad;
     // The numbers' column, the view's inset with them: it stays as the
     // lines scroll under it, over them in the view's color.
-    final numbers = pad.left + digits * char + markGap + markBar + markRoom + 1;
+    final numbers = _numbers =
+        pad.left + digits * char + markGap + markBar + markRoom + 1;
     final width = numbers + _widest * char + pad.right;
     return LayoutBuilder(
       builder: (context, box) => MacScrollbar(
@@ -494,11 +565,15 @@ class _SourceViewState extends State<SourceView> {
                         Padding(
                           padding: EdgeInsets.only(left: numbers),
                           child: _Line(
-                            Text.rich(
-                              text(i),
-                              softWrap: false,
-                              strutStyle: strut,
-                              selectionColor: Colors.transparent,
+                            LineHits(
+                              hits: _lineHits(i),
+                              colors: colors,
+                              child: Text.rich(
+                                text(i),
+                                softWrap: false,
+                                strutStyle: strut,
+                                selectionColor: Colors.transparent,
+                              ),
                             ),
                             whole: _lines[i],
                             column: char,

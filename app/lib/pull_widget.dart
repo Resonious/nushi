@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nushi/cleanup_dialog.dart';
 import 'package:nushi/cleanup_job.dart';
 import 'package:nushi/github_items.dart';
 import 'package:nushi/menu.dart';
@@ -53,9 +52,9 @@ PanelWidget? pullWidget(ChatPull cp, {VoidCallback? onShow}) {
 }
 
 /// [child] built again when comments are seen.
-Widget _seen(Widget Function() child) => ValueListenableBuilder(
-  valueListenable: pullSeen,
-  builder: (_, _, _) => child(),
+Widget _seen(Widget Function() child) => ListenableBuilder(
+  listenable: Listenable.merge([pullSeen, pullSeenComments]),
+  builder: (_, _) => child(),
 );
 
 class _Summary extends StatelessWidget {
@@ -74,11 +73,12 @@ class _Summary extends StatelessWidget {
     if (links.length >= 2) {
       return pullsFolded(theme, [for (final l in links) cp.itemOf(l)]);
     }
+    // From its row's item (ADR 0140); the whole one only from a daemon
+    // before them.
     final l = links.single;
-    final p = cp.pull;
+    final it = cp.itemOf(l);
     final offer =
-        p != null &&
-        p.item.state == 'merged' &&
+        it?.state == 'merged' &&
         cp.daemon.daemonApi >= cleanUpApi &&
         !cleanUpLater.value.contains(cp.chat.id) &&
         !CleanUpJob.of(cp.chat).started;
@@ -86,11 +86,10 @@ class _Summary extends StatelessWidget {
       context,
       theme,
       number: l.number,
-      pull: p,
-      unread: p == null ? 0 : unreadComments(cp.chat.id, p),
-      onCleanUp: offer
-          ? () => showCleanUp(context, cp.daemon, cp.chat, pull: p)
-          : null,
+      pull: null,
+      item: it,
+      unread: cp.unreadOf(l),
+      onCleanUp: offer ? () => cleanUpPull(context, cp, l) : null,
     );
   }
 }

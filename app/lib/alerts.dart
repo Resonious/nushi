@@ -56,22 +56,45 @@ enum AlertKind {
   permission(' needs you'),
   question(' has a question'),
   finished(' finished'),
-  failed("'s turn failed");
+  failed("'s turn failed"),
+
+  /// A workflow's end, as the daemon saw it come (ADR 0141).
+  workflowFinished("'s workflow finished"),
+  workflowFailed("'s workflow failed"),
+  workflowStopped("'s workflow stopped"),
+  workflowEnded("'s workflow ended");
 
   new(this.words);
 
   final String words;
 
-  /// The notification this kind takes the place of: a turn's end, done or
-  /// failed, replaces the last one, so a Try again that worked leaves no
-  /// stale failure beside it; a prompt or question has its own.
-  String get slot => this == finished || this == failed ? 'ended' : name;
+  /// The kind of a workflow's end in [state] ("done", "failed"…).
+  static AlertKind ofWorkflow(String state) => switch (state) {
+    'done' => workflowFinished,
+    'failed' => workflowFailed,
+    'stopped' => workflowStopped,
+    _ => workflowEnded,
+  };
 
-  /// Whether the user wants this kind (Settings › General).
+  /// The notification this kind takes the place of: a turn's or a
+  /// workflow's end, done or not, replaces the last one, so a Try again
+  /// that worked leaves no stale failure beside it, and the turn of
+  /// Claude's own after a finished workflow replaces that one; a prompt or
+  /// question has its own.
+  String get slot => switch (this) {
+    permission || question => name,
+    _ => 'ended',
+  };
+
+  /// Whether the user wants this kind (Settings › General): a workflow's
+  /// end as a turn's, finished or not.
   bool get on => switch (this) {
     permission || question => alertNeedsYou.value,
-    finished => alertFinished.value,
-    failed => alertFailed.value,
+    finished || workflowFinished => alertFinished.value,
+    failed ||
+    workflowFailed ||
+    workflowStopped ||
+    workflowEnded => alertFailed.value,
   };
 }
 
@@ -81,7 +104,9 @@ enum AlertKind {
 /// permission prompt or a question when it comes, and a turn's end
 /// [finishedWait] later as the daemon judged it (ChatStatus.ended):
 /// "finished", "failed" with what ended it, nothing for a stopped one, and
-/// none if the agent went straight on. A notification is
+/// none if the agent went straight on; and a workflow's end, done, failed
+/// or stopped, on the one event the daemon marks (ADR 0141). A
+/// notification is
 /// posted unless Nushi is the app in front *and* shows that chat: in the
 /// background every chat's; in front, the other chats'. A click opens its
 /// chat, and a "needs you" goes once its chat no longer does. Nothing
@@ -182,6 +207,17 @@ class ChatAlerts {
         }
       }
       scheduleMicrotask(_badge); // once the daemon applied it
+    } else if (e.hasItem() &&
+        e.item.workflowEnded &&
+        e.item.item.hasWorkflow()) {
+      // Marked only on the one event that brings its end (API 134), never
+      // on a replay: once, at once (no turn to go straight on from).
+      final w = e.item.item.workflow;
+      _post(
+        id,
+        AlertKind.ofWorkflow(w.state),
+        w.name.isEmpty ? '' : 'Workflow: ${w.name}',
+      );
     } else if (e.hasItem()) {
       final it = e.item.item;
       final running =

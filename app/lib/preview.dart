@@ -20,6 +20,7 @@ import 'package:nushi/source_menu.dart';
 import 'package:nushi/source_spans.dart' show defaultTabSize;
 import 'package:nushi/source_view.dart';
 import 'package:nushi/spinner.dart';
+import 'package:nushi/svg_image.dart';
 import 'package:nushi/syntax_languages.dart' show codeNames;
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/widgets.dart';
@@ -545,7 +546,12 @@ class _ChatImageState extends State<_ChatImage> {
         return Text('[image: ${widget.alt}]', style: muted);
       }
       if (f == null) return const SizedBox(height: 24);
-      return ClickableImage(image: MemoryImage(bytesOf(f.data)), size: 480);
+      final bytes = bytesOf(f.data);
+      // An SVG (issue 69) only as svg_image.dart draws it.
+      if (looksLikeSvg(bytes)) {
+        return SvgImage(bytes, alt: widget.alt, size: 480);
+      }
+      return ClickableImage(image: MemoryImage(bytes), size: 480);
     },
   );
 }

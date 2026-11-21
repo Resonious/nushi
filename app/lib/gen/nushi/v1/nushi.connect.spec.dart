@@ -84,6 +84,18 @@ abstract final class NushiService {
     nushiv1nushi.GetChatItemsResponse.new,
   );
 
+  /// Counts a query's matches in each of a chat's items, its whole
+  /// transcript as the daemon holds it (what GetChat and GetChatItems
+  /// give), for ⌘F in a long chat: the app counts the matches in what it
+  /// hasn't loaded and loads the part a step goes to (ADR 0144). Not on a
+  /// device's channel: the phone has no find. API 136.
+  static const findInChat = connect.Spec(
+    '/$name/FindInChat',
+    connect.StreamType.unary,
+    nushiv1nushi.FindInChatRequest.new,
+    nushiv1nushi.FindInChatResponse.new,
+  );
+
   /// One of a chat's images, by its hash: for a client that took the chat's
   /// items with image_refs, as each image is about to show. Only an image
   /// of that chat's own items. API 110.
@@ -129,6 +141,20 @@ abstract final class NushiService {
     connect.StreamType.unary,
     nushiv1nushi.RemoveAgentRequest.new,
     nushiv1nushi.RemoveAgentResponse.new,
+  );
+
+  /// Signs an agent in through its own login (ACP authenticate), one of
+  /// the ways an AgentSignIn offers: a short-lived process of the agent,
+  /// started as a chat's would be, runs it (Codex opens the browser and
+  /// waits) and is stopped after. Returns once the agent says it is signed
+  /// in (10 minutes at most); a call cancelled stops it, and its login.
+  /// One at a time for each agent. Nushi sees no credential (API 139, ADR
+  /// 0145).
+  static const signInAgent = connect.Spec(
+    '/$name/SignInAgent',
+    connect.StreamType.unary,
+    nushiv1nushi.SignInAgentRequest.new,
+    nushiv1nushi.SignInAgentResponse.new,
   );
 
   /// Lists an agent's sessions in a folder that aren't chats (started in a
@@ -1296,6 +1322,31 @@ abstract final class NushiService {
     connect.StreamType.unary,
     nushiv1nushi.GetGitHubFilesRequest.new,
     nushiv1nushi.GetGitHubFilesResponse.new,
+  );
+
+  /// Which of a pull request's files the user marked viewed (GitHub's
+  /// viewerViewedState), and marking one viewed or not. API 130.
+  static const getGitHubViewed = connect.Spec(
+    '/$name/GetGitHubViewed',
+    connect.StreamType.unary,
+    nushiv1nushi.GetGitHubViewedRequest.new,
+    nushiv1nushi.GetGitHubViewedResponse.new,
+  );
+
+  static const setGitHubViewed = connect.Spec(
+    '/$name/SetGitHubViewed',
+    connect.StreamType.unary,
+    nushiv1nushi.SetGitHubViewedRequest.new,
+    nushiv1nushi.SetGitHubViewedResponse.new,
+  );
+
+  /// Adds the user's emoji reaction to a comment, a review or a pull
+  /// request's description, or takes it away. API 131.
+  static const reactGitHub = connect.Spec(
+    '/$name/ReactGitHub',
+    connect.StreamType.unary,
+    nushiv1nushi.ReactGitHubRequest.new,
+    nushiv1nushi.ReactGitHubResponse.new,
   );
 
   /// The end of a failed Actions job's log (16 KB).

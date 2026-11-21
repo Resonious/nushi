@@ -216,7 +216,7 @@ class _AgentRow extends StatelessWidget {
       open: () => chat.pane.value = s.call.id,
       tooltip: [
         if (s.call.agent.isNotEmpty) s.call.agent,
-        subagentState(s),
+        if (subagentState(s) case final st when st.isNotEmpty) st,
         'Model ${settingText(runs.model)}, effort ${settingText(runs.effort)}',
         if (tag.isNotEmpty) 'In the worktree $tag',
       ].join('\n'),

@@ -68,10 +68,14 @@ func runningIn(items []model.Item) []model.Item {
 
 // Items returns the page of a chat's items before the one of id before: n
 // at most, reaching back to the call of a subagent whose steps are in it,
-// and how many items come before the page. Only the page is copied, so a
-// long chat's pages cost what they hold; one whose items were let go reads
-// only the page whole from its copy (letgo.go).
-func (s *Service) Items(chatID, before string, n int) ([]model.Item, int, error) {
+// and how many items come before the page. Given through, an item before
+// the page, it reaches back past that item by n more, maxThrough items at
+// most (ADR 0144: ⌘F's step to a match far back; a client asks again
+// from the page's first item when it didn't reach it); ErrNoItem when the
+// chat has no such item. Only the page is copied, so a long chat's pages
+// cost what they hold; one whose items were let go reads only the page
+// whole from its copy (letgo.go).
+func (s *Service) Items(chatID, before, through string, n int) ([]model.Item, int, error) {
 	c, err := s.open(chatID)
 	if err != nil {
 		return nil, 0, err
@@ -89,12 +93,25 @@ func (s *Service) Items(chatID, before string, n int) ([]model.Item, int, error)
 		return nil, 0, ErrNoItem
 	}
 	start := pageStart(items, end, n)
+	if through != "" {
+		at := slices.IndexFunc(items, func(it model.Item) bool { return it.ID == through })
+		if at < 0 {
+			return nil, 0, ErrNoItem
+		}
+		if at < start {
+			start = pageStart(items, end, end-max(0, at-n, end-maxThrough))
+		}
+	}
 	if c.inCopy {
 		page, err := c.wholeLocked(items[start:end])
 		return page, start, err
 	}
 	return slices.Clone(items[start:end]), start, nil
 }
+
+// maxThrough is how many items a page that reaches back to an item holds
+// at most, before its reach back for a subagent's call.
+const maxThrough = 2000
 
 // maxReach is how far before its n items a page reaches back for a
 // subagent's call: a subagent that ran beside thousands of items would

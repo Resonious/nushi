@@ -26,7 +26,7 @@ fragment ItemPull on PullRequest {
   author { login }
   additions deletions changedFiles mergeStateStatus baseRefName headRefName
   reviewDecision totalCommentsCount
-  commits(last: 1) { nodes { commit { statusCheckRollup { state COUNTS } } } }
+  commits(last: 1) { nodes { commit { oid statusCheckRollup { state COUNTS } } } }
   reviewThreads(first: 100) { nodes { isResolved } }
 }`
 	itemIssue = `
@@ -64,6 +64,7 @@ type itemNode struct {
 	Commits struct {
 		Nodes []struct {
 			Commit struct {
+				OID               string `json:"oid"`
 				StatusCheckRollup *struct {
 					State    string `json:"state"`
 					Contexts struct {
@@ -103,6 +104,7 @@ func (n itemNode) item(host, repo string) model.GitHubItem {
 	if c := n.Commits.Nodes; len(c) > 0 && c[0].Commit.StatusCheckRollup != nil {
 		r := c[0].Commit.StatusCheckRollup
 		it.Checks = rollupState(r.State)
+		it.ChecksOID = c[0].Commit.OID // which commit they're of (ADR 0138)
 		for _, sc := range append(r.Contexts.CheckRuns, r.Contexts.Statuses...) {
 			countCheck(&it.CheckCounts, sc)
 		}

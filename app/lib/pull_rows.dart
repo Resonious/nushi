@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nushi/checks_watch.dart';
 import 'package:nushi/cleanup_dialog.dart';
 import 'package:nushi/cleanup_job.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
@@ -104,7 +105,7 @@ bool itemReady(GitHubItem it) =>
       return (
         words: it.base.isEmpty ? 'Merged' : 'Merged into ${it.base}',
         color: t.textMuted,
-        cleanUp: offer ? () => _cleanUp(context, cp, link) : null,
+        cleanUp: offer ? () => cleanUpPull(context, cp, link) : null,
       );
     case 'closed':
       return (
@@ -157,7 +158,8 @@ List<int> openOnBranch(ChatPull cp, GitHubLink link) {
   ];
 }
 
-Future<void> _cleanUp(
+/// Clean up… on [link]: read whole first, for its branch (ADR 0063).
+Future<void> cleanUpPull(
   BuildContext context,
   ChatPull cp,
   GitHubLink link,
@@ -236,7 +238,7 @@ List<MenuEntry> pullRowMenu(
         'Clean up…',
         onPick: CleanUpJob.of(cp.chat).running
             ? null
-            : () => unawaited(_cleanUp(context, cp, link)),
+            : () => unawaited(cleanUpPull(context, cp, link)),
       ),
     MenuEntry(
       'Unlink',
@@ -364,6 +366,8 @@ class ChecksBadge extends StatelessWidget {
       chat: cp.chat,
       replies: () => checkReplies(cp.daemon, item.ref, p),
     );
+    // Acted on: the chat no longer needs you for it (ADR 0138).
+    ChecksWatch.of(cp.daemon).seen(cp.chat);
   }
 }
 

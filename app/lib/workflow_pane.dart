@@ -235,23 +235,26 @@ class _WorkflowPaneState extends State<WorkflowPane> {
           )
         else if (got == null)
           const SizedBox.shrink()
-        else if (agents.isEmpty)
-          Text('No agents yet', style: small)
         else ...[
+          if (agents.isEmpty) Text('No agents yet', style: small),
           for (final (title, list) in groups) ...[
-            _PhaseRow(
-              title: title.isEmpty ? 'No phase' : title,
-              count: _phaseCount(w, title, list),
-              folded: _folded.contains(title),
-              onTap: () => setState(
-                () => _folded.contains(title)
-                    ? _folded.remove(title)
-                    : _folded.add(title),
+            if (list.isEmpty)
+              _PlannedRow(title, live: workflowLive(w))
+            else ...[
+              _PhaseRow(
+                title: title.isEmpty ? 'No phase' : title,
+                count: _phaseCount(w, title, list),
+                folded: _folded.contains(title),
+                onTap: () => setState(
+                  () => _folded.contains(title)
+                      ? _folded.remove(title)
+                      : _folded.add(title),
+                ),
               ),
-            ),
-            if (!_folded.contains(title))
-              for (final a in list)
-                _AgentRow(a, onTap: () => _agent.value = a.id),
+              if (!_folded.contains(title))
+                for (final a in list)
+                  _AgentRow(a, onTap: () => _agent.value = a.id),
+            ],
           ],
           if (got.more)
             Padding(
@@ -265,7 +268,8 @@ class _WorkflowPaneState extends State<WorkflowPane> {
 }
 
 /// The agents by phase: in the run's order of phases, then any other, then
-/// those with none.
+/// those with none; then the phases it plans and hasn't reached (ADR
+/// 0141), and those of its list it never reached, with no agents.
 List<(String, List<WorkflowAgent>)> _grouped(
   Workflow w,
   List<WorkflowAgent> agents,
@@ -277,11 +281,68 @@ List<(String, List<WorkflowAgent>)> _grouped(
     (by[a.phase] ??= []).add(a);
   }
   final none = by.remove('');
+  final unreached = {
+    for (final p in w.phases)
+      if (p.started == 0 && (by[p.title]?.isEmpty ?? true)) p.title,
+    for (final p in w.planned)
+      if (by[p.title]?.isEmpty ?? true) p.title,
+  };
   return [
     for (final e in by.entries)
       if (e.value.isNotEmpty) (e.key, e.value),
     if (none != null && none.isNotEmpty) ('', none),
+    for (final title in unreached) (title, const <WorkflowAgent>[]),
   ];
+}
+
+/// A phase not reached: an empty ring where a reached one's chevron is,
+/// its title dimmed, and "planned" (or "not reached", once the run
+/// ended) where its count is. Nothing to fold, so no toggle.
+class _PlannedRow extends StatelessWidget {
+  const new(this.title, {required this.live});
+
+  final String title;
+  final bool live;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = NushiTheme.of(context);
+    final t = theme.t;
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 2),
+      child: SizedBox(
+        height: 24,
+        child: Row(
+          spacing: 6,
+          children: [
+            const SizedBox(
+              width: 14,
+              child: Center(child: TaskMark('planned')),
+            ),
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.ui(t.textSecondary, size: 12),
+                    ),
+                  ),
+                  Text(
+                    ' · ${plannedWords(live: live)}',
+                    maxLines: 1,
+                    style: theme.ui(t.textMuted, size: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// A phase's count as the card's [phaseProgress] says it ("5/7"): its

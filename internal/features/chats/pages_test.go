@@ -1,6 +1,7 @@
 package chats
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"testing"
@@ -87,5 +88,39 @@ func TestTheRecentPartBringsAPendingAsk(t *testing.T) {
 	testcheck.NoErr(t, err)
 	if part.Older != 221 || len(part.Running) != 1 || part.Running[0].ID != "ask" {
 		t.Errorf("older %d, running %+v", part.Older, part.Running)
+	}
+}
+
+// A page that reaches back to an item far above the one it ends before
+// holds it and n items above it, maxThrough items at most; one already in
+// the page's n changes nothing, and an item the chat hasn't is refused.
+func TestAPageThroughAnItem(t *testing.T) {
+	svc, _, c := newChat(t, `{"sessionId":"s1"}`, &memModes{})
+	items := make([]model.Item, 3*maxThrough)
+	for i := range items {
+		items[i] = model.Item{ID: fmt.Sprint("i", i), Kind: model.AgentMessage, Text: "x"}
+	}
+	setItems(c, items)
+	end := len(items) - 10
+	before := items[end].ID
+	for _, tc := range []struct {
+		through   string
+		wantStart int
+	}{
+		{"", end - 20},
+		{items[end-5].ID, end - 20},                    // in the page already
+		{items[end-500].ID, end - 520},                 // n above it
+		{items[end-maxThrough+5].ID, end - maxThrough}, // its n cut at maxThrough
+		{items[100].ID, end - maxThrough},              // too far: the client asks again
+		{items[len(items)-1].ID, end - 20},             // after the page
+	} {
+		page, start, err := svc.Items(c.id, before, tc.through, 20)
+		testcheck.NoErr(t, err)
+		if start != tc.wantStart || len(page) != end-start || page[0].ID != items[start].ID {
+			t.Errorf("through %q: start %d (%d items), want %d", tc.through, start, len(page), tc.wantStart)
+		}
+	}
+	if _, _, err := svc.Items(c.id, before, "gone", 20); !errors.Is(err, ErrNoItem) {
+		t.Errorf("through an item it hasn't: %v", err)
 	}
 }

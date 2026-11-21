@@ -34,7 +34,7 @@ On an iPhone with iOS 16.4 or later:
 3. Check that the iPhone's six-digit code is the one the Mac shows, and Allow on the Mac.
 4. Turn on Settings › Notifications, and Allow when iOS asks.
 
-A notification says only what happened ("Claude finished", "Claude's turn failed", "Codex needs you", "Claude has a question"); tapping it opens that chat. None comes for the chat you have open, nor for a turn that was stopped (by you, or by Nushi putting the agent to sleep or archiving the chat). A turn whose agent quit or crashed mid-turn counts as failed.
+A notification says only what happened ("Claude finished", "Claude's turn failed", "Codex needs you", "Claude has a question", and for a Claude workflow "Claude's workflow finished", "…failed" or "…stopped", once, as it ends); tapping it opens that chat. A workflow's end and the turn's end after it take one place, the newer replacing the older, as two turns' ends do. None comes for the chat you have open, nor for a turn that was stopped (by you, or by Nushi putting the agent to sleep or archiving the chat). A turn whose agent quit or crashed mid-turn counts as failed.
 
 Forget this Mac (Settings) forgets the pairing and the device's key on the phone; revoke the device on the Mac too. The web app works the same way in a desktop browser, and Chrome on a Mac gets notifications too.
 
@@ -99,7 +99,7 @@ The Mac's relay is then `wss://nushi.example.com`.
 
 - Cloudflare drops a WebSocket that's silent for about 100 s; both ends ping well within that.
 - Whoever terminates TLS can serve the app's code (ADR 0054): a CDN in front is trusted for it, as the relay's host is.
-- A web app loads a few dozen files at once, hence the higher cap on plain connections per address (`-plain-per-ip`).
+- A web app loads a few dozen files at once, hence the higher cap on plain connections per address (`-plain-per-ip`). One IPv6 /48 (an IPv4 address is its own) holds 64 at most (`-plain-per-net`), never fewer than `-plain-per-ip`.
 - Tailscale Funnel worked too, but slowly: about 0.1–0.3 MB/s, and seconds per connection.
 
 ### On a VPS

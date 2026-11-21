@@ -71,10 +71,11 @@ class _NotificationsGroupState extends State<NotificationsGroup> {
             'A permission prompt or a question.',
             alertNeedsYou,
           ),
-          row('A turn ends', null, alertFinished),
+          row('A turn ends', 'Or a workflow finishes.', alertFinished),
           row(
             'A turn fails',
-            'An error, or the agent quit mid-turn.',
+            'An error, the agent quit mid-turn, or a workflow failed or '
+                'stopped.',
             alertFailed,
           ),
           row('Sound', null, alertSound),

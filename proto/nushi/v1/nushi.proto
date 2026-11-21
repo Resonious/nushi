@@ -36,6 +36,12 @@ service NushiService {
   // A chat's items before one of them, a page at a time: for a client that
   // took only the recent part (GetChatRequest.recent), as it scrolls up.
   rpc GetChatItems(GetChatItemsRequest) returns (GetChatItemsResponse);
+  // Counts a query's matches in each of a chat's items, its whole
+  // transcript as the daemon holds it (what GetChat and GetChatItems
+  // give), for ⌘F in a long chat: the app counts the matches in what it
+  // hasn't loaded and loads the part a step goes to (ADR 0144). Not on a
+  // device's channel: the phone has no find. API 136.
+  rpc FindInChat(FindInChatRequest) returns (FindInChatResponse);
   // One of a chat's images, by its hash: for a client that took the chat's
   // items with image_refs, as each image is about to show. Only an image
   // of that chat's own items. API 110.
@@ -53,6 +59,14 @@ service NushiService {
   rpc SetUpAgent(SetUpAgentRequest) returns (SetUpAgentResponse);
   // Removes an agent's adapter; its awake chats sleep first.
   rpc RemoveAgent(RemoveAgentRequest) returns (RemoveAgentResponse);
+  // Signs an agent in through its own login (ACP authenticate), one of
+  // the ways an AgentSignIn offers: a short-lived process of the agent,
+  // started as a chat's would be, runs it (Codex opens the browser and
+  // waits) and is stopped after. Returns once the agent says it is signed
+  // in (10 minutes at most); a call cancelled stops it, and its login.
+  // One at a time for each agent. Nushi sees no credential (API 139, ADR
+  // 0145).
+  rpc SignInAgent(SignInAgentRequest) returns (SignInAgentResponse);
   // Lists an agent's sessions in a folder that aren't chats (started in a
   // terminal, say), newest first, a page at a time. It starts the agent to
   // ask (ACP session/list).
@@ -477,6 +491,13 @@ service NushiService {
   // A pull request's files from its merge base to its head, both sides'
   // texts, as GetDiff gives them.
   rpc GetGitHubFiles(GetGitHubFilesRequest) returns (GetGitHubFilesResponse);
+  // Which of a pull request's files the user marked viewed (GitHub's
+  // viewerViewedState), and marking one viewed or not. API 130.
+  rpc GetGitHubViewed(GetGitHubViewedRequest) returns (GetGitHubViewedResponse);
+  rpc SetGitHubViewed(SetGitHubViewedRequest) returns (SetGitHubViewedResponse);
+  // Adds the user's emoji reaction to a comment, a review or a pull
+  // request's description, or takes it away. API 131.
+  rpc ReactGitHub(ReactGitHubRequest) returns (ReactGitHubResponse);
   // The end of a failed Actions job's log (16 KB).
   rpc GetGitHubJobLog(GetGitHubJobLogRequest) returns (GetGitHubJobLogResponse);
   // The user's writes.
@@ -787,6 +808,12 @@ message GetChatItemsRequest {
   int32 limit = 3;
   // As GetChatRequest.image_refs. API 110.
   bool image_refs = 4;
+  // An item before the page to reach back to, for going to a message far
+  // above what's loaded (⌘F's step to a match, ADR 0144): the page goes
+  // back past it by `limit` more items, 2000 items at most; when that
+  // doesn't reach it, the client asks again from the page's first item.
+  // not_found when the chat has no such item. API 137.
+  string through = 5;
 }
 
 message GetChatImageRequest {
@@ -800,6 +827,35 @@ message GetChatImageResponse {
   reserved 1;
   reserved "mime_type";
   bytes data = 2;
+}
+
+message FindInChatRequest {
+  string chat_id = 1;
+  // What to find, matched as written, case aside, as the app's find
+  // matches what's loaded: a message's, thought's, notice's or question's
+  // text, a tool call's or permission's title, a call's output (its input
+  // and raw output when its content says nothing). Not diffs, plans,
+  // forms, files or images.
+  string text = 2;
+  // The item the search stops before (the first the client has loaded,
+  // which it searches itself); "" for the whole chat. not_found when the
+  // chat has no such item (it changed since the client's snapshot).
+  string before = 3;
+}
+
+message FindInChatResponse {
+  // The items with matches, in the transcript's order: past the bound,
+  // the 5000 nearest before.
+  repeated ChatMatch matches = 1;
+  // The search stopped at its bound (5000 items with matches): the older
+  // ones aren't counted.
+  bool more = 2;
+}
+
+// An item with matches of a find, and how many.
+message ChatMatch {
+  string item_id = 1;
+  int32 count = 2;
 }
 
 message GetChatItemsResponse {
@@ -909,6 +965,13 @@ message Agent {
   // Its MCP servers are only yours, the user scope, with no off switch or
   // legacy SSE; others have Claude's scopes and those (API 97).
   bool mcp_user_only = 15;
+  // Nushi's Go agent can run it in place of its adapter, as
+  // Settings.codex_go_agent picks: Settings › Agents shows that switch
+  // under it (API 138, ADR 0142).
+  bool go_agent_switch = 16;
+  // What the user runs in a terminal to sign it in ("codex login"); empty
+  // when Nushi doesn't know (API 139).
+  string sign_in = 17;
 }
 
 // An agent's adapter.
@@ -932,6 +995,29 @@ message SetUpAgentRequest {
 }
 
 message SetUpAgentResponse {}
+
+message SignInAgentRequest {
+  string agent = 1;
+  // One of AgentSignIn.methods' ids.
+  string method_id = 2;
+}
+
+message SignInAgentResponse {}
+
+// A start the agent refused because it isn't signed in (ACP's
+// Authentication required): StartChat's and OpenAgentSession's error
+// carries it as a detail, beside the plain message. Its methods are the
+// ways the agent signs itself in that Nushi can run (SignInAgent): the
+// agent's own, none needing a key typed into Nushi; there is no detail
+// when it offers none. A chat whose reopen fails so says it in a notice of
+// status "reopen_failed" whose options are these methods (API 139, ADR
+// 0145): an app that doesn't know them offers Try again, as before.
+message AgentSignIn {
+  string agent = 1;
+  // Each method's id, name ("ChatGPT") and description, as the agent
+  // gives them.
+  repeated Option methods = 2;
+}
 
 message RemoveAgentRequest {
   string agent = 1;
@@ -1377,6 +1463,13 @@ message Settings {
   // (ADR 0066).
   reserved 6;
   reserved "claude_go_agent";
+  // Codex's chats run through Nushi's Go agent (codex-acp-go's codexacp,
+  // ADR 0142), which needs no Node and nothing set up, instead of the
+  // codex-acp adapter; off by default. A Codex chat's agent reads it each
+  // time it starts (a new chat, a reopened or woken one), so chats already
+  // running keep theirs until then. SetSettings leaves it as it is when not
+  // given (API 138).
+  optional bool codex_go_agent = 7;
 }
 
 message ListTranscriptsRequest {}
@@ -1839,6 +1932,11 @@ message RelatedWorktree {
   // last_head has commits of its own, and git shows it on the chat's
   // branch or its base. Not a squash merge's: git can't see those (API 100).
   bool merged = 7;
+  // GitHub has a merged pull request with branch as its head, opened in
+  // the chat's life: a squash merge, which merged can't say. Asked once,
+  // after it was removed with commits of its own that merged doesn't show
+  // (API 135).
+  bool pull_merged = 8;
 }
 
 message GetRelatedWorktreeStatsRequest {
@@ -2286,7 +2384,8 @@ enum ItemKind {
   // installed: Settings › Agents), "folder_gone" (MoveChat),
   // "session_gone" (its agent no longer has the session, and the chat is
   // kept only for its worktree's or scratch folder's work: DeleteChat), or
-  // "reopen_failed" (ReopenChat tries again). "own_turn" marks where the
+  // "reopen_failed" (ReopenChat tries again; with options, the ways its
+  // agent signs in, AgentSignIn). "own_turn" marks where the
   // agent starts working on its own, outside a turn of the user's (after a
   // background task ended). "branch_renamed" says Nushi named the chat's
   // branch after it, between turns (the agent isn't told);
@@ -2450,6 +2549,18 @@ message Workflow {
   // Nothing of it changed for so long (an hour) that it no longer counts as
   // the chat's work, though nothing says it ended.
   bool stalled = 17;
+  // The tokens its agents used so far, as the agent counts a subagent's
+  // (Claude's totalTokens: each agent's last message, read from its
+  // transcript while it runs; the snapshot's total once it ended); 0 when
+  // not known. The agent reports no cost for a workflow. API 132.
+  int64 tokens = 18;
+  // For each of running, the index in phases of the phase it runs in; -1
+  // for none. API 132.
+  repeated int32 running_phases = 19;
+  // The phases its script plans and it hasn't reached, in the script's
+  // order (Claude's meta.phases), with phases 32 at most; their counts are
+  // 0. A phase leaves it for phases once reached. API 134.
+  repeated WorkflowPhase planned = 20;
 }
 
 // A phase of a workflow: its title, the agent's line on it, and how many
@@ -2631,6 +2742,10 @@ message ItemEvent {
   // has only the recent part (GetChatRequest.recent) leaves out what is
   // before it, and a new item before the end goes there.
   int32 index = 3;
+  // The item is a workflow its chat's agent ran, which the daemon saw end
+  // just now (done, failed or stopped): only this one event says so, never
+  // a replay or a reload, so a client notifies once. API 134.
+  bool workflow_ended = 4;
 }
 
 message ChatStatus {
@@ -3529,6 +3644,11 @@ message GitHubItem {
   // A pull request's base and head branches.
   string base = 21;
   string head = 22;
+  // The commit checks are of (its oid): the head's when they were read;
+  // empty with no checks. Told apart, a failure on a new commit is a new
+  // one (ADR 0138). API 129; GetGitHubItems' items say it too from API
+  // 133.
+  string checks_oid = 23;
 }
 
 // A pull request's checks at its head, by state: a neutral one is passed;
@@ -3701,7 +3821,30 @@ message GitHubComment {
   // The review a review thread's comment was made in (its id, as a
   // review's own id here); empty for any other comment. API 127.
   string review_id = 11;
+  // The kinds someone reacted with, in GitHub's order. API 131.
+  repeated GitHubReaction reactions = 12;
 }
+
+// One kind of emoji reaction: GitHub's content in lower case
+// ("thumbs_up", "thumbs_down", "laugh", "hooray", "confused", "heart",
+// "rocket", "eyes"), how many reacted so, and whether the user did.
+message GitHubReaction {
+  string content = 1;
+  int32 count = 2;
+  bool mine = 3;
+}
+
+message ReactGitHubRequest {
+  string host = 1;
+  // The comment's, review's or pull request's node id.
+  string subject = 2;
+  // One of GitHubReaction's contents.
+  string content = 3;
+  // Takes the user's reaction away instead.
+  bool remove = 4;
+}
+
+message ReactGitHubResponse {}
 
 // A review thread on line (from start_line) of path's side ("left", the
 // base; "right", the head), or on the file. An outdated one's lines are
@@ -3821,6 +3964,8 @@ message GitHubPull {
   // GitHub lets the user edit its title and description (viewerCanUpdate:
   // its author, or someone with write access). API 128.
   bool can_edit = 28;
+  // The reactions on its description. API 131.
+  repeated GitHubReaction reactions = 29;
 }
 
 // A label: its name and color (six hex digits, no #, as GitHub gives it).
@@ -3947,6 +4092,29 @@ message GetGitHubFilesRequest {
 message GetGitHubFilesResponse {
   repeated FileChange files = 1;
 }
+
+message GetGitHubViewedRequest {
+  GitHubRef ref = 1;
+  bool quiet = 2;
+}
+
+// Of the first 300 files: the paths the user marked viewed, and those
+// marked before a change since (GitHub's "Changed since last view",
+// shown unticked).
+message GetGitHubViewedResponse {
+  repeated string viewed = 1;
+  repeated string changed = 2;
+}
+
+message SetGitHubViewedRequest {
+  string host = 1;
+  // The pull request's node id.
+  string pull = 2;
+  string path = 3;
+  bool viewed = 4;
+}
+
+message SetGitHubViewedResponse {}
 
 message GetGitHubJobLogRequest {
   GitHubRef ref = 1;

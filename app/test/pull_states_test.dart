@@ -30,12 +30,18 @@ List<Chat> _chats() => [
   chat('d', 'claude', 'No pull request', age: 15),
 ];
 
+/// The chats' pull requests' rows (from API 133 the chats' states).
+final List<GitHubItem> _items = [
+  item(1, 'Add Sub', checks: 'failure'),
+  item(2, 'Add Neg', checks: 'pending', draft: true),
+  item(3, 'Docs', checks: 'success', state: 'merged'),
+];
+
 Object? _states(Object input) => switch (input) {
-  GetGitHubStatesRequest() => GetGitHubStatesResponse(
+  GetGitHubItemsRequest(:final refs) => GetGitHubItemsResponse(
     items: [
-      item(1, 'Add Sub', checks: 'failure'),
-      item(2, 'Add Neg', checks: 'pending', draft: true),
-      item(3, 'Docs', checks: 'success', state: 'merged'),
+      for (final it in _items)
+        if (refs.any((r) => r.number == it.ref.number)) it,
     ],
   ),
   _ => null,
@@ -51,9 +57,9 @@ void main() {
     final d = await fake.connect(tester);
     await tester.pumpWidget(NushiApp(daemon: d));
     await tester.pumpAndSettle();
-    final asked = fake.calls.whereType<GetGitHubStatesRequest>();
+    final asked = fake.calls.whereType<GetGitHubItemsRequest>();
     expect(asked, hasLength(1), reason: 'one call for every chat');
-    expect(asked.single.items.map((l) => l.number), [1, 2, 3]);
+    expect(asked.single.refs.map((l) => l.number), [1, 2, 3]);
     expect(find.byTooltip('#1: checks failing'), findsOneWidget);
     expect(find.byTooltip('#2: checks running'), findsOneWidget);
     expect(find.byType(PullDot), findsNWidgets(3));
@@ -76,7 +82,7 @@ void main() {
     expect(dot('#2: checks running'), t.needs);
     // Each minute, quietly.
     await tester.pump(const Duration(minutes: 1));
-    expect(fake.calls.whereType<GetGitHubStatesRequest>().last.quiet, isTrue);
+    expect(fake.calls.whereType<GetGitHubItemsRequest>().last.quiet, isTrue);
     await closeView(tester, d);
   }, variant: onMac);
 

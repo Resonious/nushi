@@ -139,7 +139,7 @@ Each step the agent takes (a tool call) has a row that ends with how long it ran
 - Calls from before Nushi saw the chat (resumed from a terminal, or replayed by the agent) have no time.
 - A call still running when the turn ends stops counting there.
 
-A subagent is a helper the agent starts for part of a task. Its row shows the time it actually worked, such as **3m 12s**. Its clock stops while it waits for a message. Once a Claude subagent is done, its row also shows the tokens it used, such as **48k tokens**. Other agents don't report tokens, so their subagents show only the time.
+A subagent is a helper the agent starts for part of a task. Its row shows how many tools it used and the time it actually worked, such as **6 tools · 3m 12s**. Its clock stops while it waits for a message. Once a Claude subagent is done, its row also shows the tokens it used, before the time: **39 tools · 182k tokens · 7m 55s**, then a check mark. Other agents don't report tokens, so their subagents show only the tools and the time. No cost shows: Claude counts a subagent's cost in the chat's total, not on its own.
 
 ## Follow the agent's plan
 
@@ -155,10 +155,11 @@ In the conversation, the plan's place says "shown over the box" while it's there
 
 Claude can run a workflow: a script that has many subagents work in phases, in the background. Its card shows in the chat where Claude started it. The chat counts as working until the workflow ends.
 
-1. Read the card: its name, what it does, each phase's progress ("Review 5/7"), who runs now, and how long it has run. At the end it says done, failed or stopped.
-2. Click the card to open the **Workflow pane**. It lists each phase with its subagents, their state and their time.
-3. Click a subagent to read its steps. **All agents** (←) goes back.
-4. To stop it, point at the card and click **Stop**, or use Stop in the pane's header.
+1. Read the card: its name, the phase it's in with its progress ("Review 5/7"), how many agents run, the tokens they've used so far, and how long it has run. No cost shows: Claude doesn't report one for a workflow. At the end a check mark says it's done; otherwise it says failed or stopped.
+2. To see its phases without leaving the chat, click the card, or the chevron (›) at its start. The card opens in place: what the workflow does, then each phase with its progress and the subagents running in it. The phases still to come follow, each with an empty circle and **planned**. Click again to close it.
+3. Click the pane button at the card's end to open the **Workflow pane**. It lists each phase with all its subagents, their state, tokens and time, then the phases still planned. A phase the workflow ended before reaching says **not reached**.
+4. Click a subagent to read its steps. **All agents** (←) goes back.
+5. To stop it, point at the card and click **Stop**, or use Stop in the pane's header.
 
 If a workflow writes nothing for an hour, it says "no activity for 1h" and no longer counts as working. It still ends only when Claude says so.
 
@@ -196,7 +197,7 @@ Skipped questions open the same way. Nothing in the open card can be clicked to 
 
 ## Get notified
 
-Nushi notifies you when a chat needs you, a turn ends, or a turn fails. Click one to open its chat. Pick which you get, and the sound, in **Settings › General › Notifications**.
+Nushi notifies you when a chat needs you, a turn ends, or a turn fails, and when one of Claude's workflows finishes, fails or stops. Click one to open its chat. Pick which you get, and the sound, in **Settings › General › Notifications**: a workflow that finishes goes with **A turn ends**, one that fails or stops with **A turn fails**.
 
 ## Rewind a message
 
@@ -220,7 +221,7 @@ The fork opens, and a toast says **Forked into a new chat**. If you forked by mi
 
 ## Ask a side question
 
-Press **⇧⌘B** to open a **side chat** beside the main one. It knows the conversation but doesn't add to it, so you can ask "why did you do that?" without sidetracking the agent. ⇧⌘B hides it again. **Keep as chat** makes it a chat of its own.
+Press **⇧⌘B** to open a **side chat** beside the main one. It knows the conversation but doesn't add to it, so you can ask "why did you do that?" without sidetracking the agent; an empty one says so. ⇧⌘B hides it again. **Keep as chat** makes it a chat of its own.
 
 **×** ends it at once. If it has messages, Nushi archives it instead of deleting it, and a toast says **Archived side chat**:
 
@@ -232,6 +233,17 @@ If Undo can't bring it back (the chat was deleted or archived, or has another si
 ## Work in a worktree
 
 A worktree is a separate copy of your repository on its own branch. To keep a chat's work apart from your checkout, click **New worktree** under the box before the first message. It shows only when the chat's folder is a git repository. The chat gets its own worktree, on a new branch named after the chat. Review its work in the **Changes** tab: see [Reviewing changes](Reviewing-changes).
+
+## Find text in a chat
+
+Press ⌘F in a chat to find text in it, all of it, even the part of a long chat you haven't scrolled up to yet.
+
+1. Press **⌘F**. The find bar opens at the chat's top right.
+2. Type. The bar counts the matches in the whole chat ("2 of 9").
+3. Press ⏎ (or ↓) for the next match, ⇧⏎ (or ↑) for the one before. Past the last it goes round to the first.
+4. Press **Esc** to close it.
+
+A match further up than what's loaded takes a moment: Nushi loads that part of the chat and goes to it. It finds in what the chat shows (messages, thoughts, tool rows and their output), not in diffs, plans or images, and ignores case.
 
 ## Find an old chat
 

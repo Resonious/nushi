@@ -187,7 +187,7 @@ void main() {
   }, variant: onMac);
 
   testWidgets('in a read-only source: the selection stays, Copy and Quote '
-      'in reply take it; no Find, Cut or Paste', (tester) async {
+      'in reply take it; Find, but no Cut or Paste', (tester) async {
     final copied = _clipboard(tester);
     final (d, _) = await openEditor(
       tester,
@@ -200,7 +200,9 @@ void main() {
 
     // Nothing selected: the line clicked.
     await _rightClick(tester, tester.getCenter(line('func main() {')));
-    for (final label in ['Find…', 'Cut', 'Paste']) {
+    // Find is the source's own (issue 63); Cut and Paste the editor's.
+    expect(find.text('Find…'), findsOneWidget);
+    for (final label in ['Cut', 'Paste']) {
       expect(find.text(label), findsNothing, reason: label);
     }
     expect(_on(tester, 'Copy'), isFalse);

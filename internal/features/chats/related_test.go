@@ -3,11 +3,14 @@ package chats
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"regexp"
 	"slices"
+	"sync"
 	"testing"
+	"time"
 
 	acp "github.com/afrase/acp-go/unstable"
 
@@ -291,6 +294,105 @@ func TestRelatedMerged(t *testing.T) {
 	testcheck.Git(t, repo, "worktree", "remove", "--force", merged)
 	testcheck.Git(t, repo, "branch", "-q", "-D", "merged")
 	is(map[string]bool{"idle": false, "merged": true, "squashed": false})
+}
+
+// fakeGitHub answers BranchMerged from merged, by branch, failing while
+// down; it records each branch asked.
+type fakeGitHub struct {
+	mu     sync.Mutex
+	merged map[string]bool
+	down   bool
+	asked  []string
+	since  time.Time
+}
+
+func (f *fakeGitHub) Known(string) bool { return false }
+
+func (f *fakeGitHub) BranchMerged(_ context.Context, _, branch string, since time.Time) (bool, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.asked = append(f.asked, branch)
+	f.since = since
+	if f.down {
+		return false, errors.New("down")
+	}
+	return f.merged[branch], nil
+}
+
+func (f *fakeGitHub) askedOf() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return slices.Clone(f.asked)
+}
+
+// A squash-merged worktree's branch is asked of GitHub once it's gone,
+// once: only one with commits of its own that git doesn't show merged,
+// and asked again only when GitHub couldn't answer, once its back-off is
+// over (issue 83).
+func TestRelatedSquashMergedOnGitHub(t *testing.T) {
+	repo := relatedRepo(t)
+	idle, _ := addWorktree(t, repo, "idle")
+	merged, _ := addWorktree(t, repo, "merged")
+	squashed, _ := addWorktree(t, repo, "squashed")
+	open, _ := addWorktree(t, repo, "open")
+	svc, c := relatedChat(t, testHarness{Name: "claude"}, repo, &memSessions{})
+	gh := &fakeGitHub{merged: map[string]bool{"squashed": true}, down: true}
+	svc.UseGitHub(gh)
+	startSubagent(t, c, "a1")
+	for i, wt := range []string{idle, merged, squashed, open} {
+		step(t, c, "a1", fmt.Sprint("s", i), shell(t, "ls "+wt))
+	}
+	related(t, svc, c)
+	for _, wt := range []string{merged, squashed, open} {
+		testcheck.Write(t, filepath.Join(wt, "w.txt"), wt+"\n")
+		testcheck.Git(t, wt, "add", ".")
+		testcheck.Git(t, wt, "commit", "-q", "-m", "work")
+	}
+	related(t, svc, c)
+	if got := gh.askedOf(); len(got) != 0 {
+		t.Fatalf("asked while present: %v", got)
+	}
+	testcheck.Git(t, repo, "merge", "-q", "--no-ff", "-m", "merge", "merged")
+	for _, wt := range []string{idle, merged, squashed} {
+		testcheck.Git(t, repo, "worktree", "remove", "--force", wt)
+	}
+	related(t, svc, c) // GitHub down: asked, nothing kept
+	if got := gh.askedOf(); !slices.Equal(got, []string{"squashed"}) {
+		t.Fatalf("asked %v", got)
+	}
+	related(t, svc, c) // within the back-off: not asked again
+	if got := gh.askedOf(); !slices.Equal(got, []string{"squashed"}) {
+		t.Fatalf("asked within the back-off: %v", got)
+	}
+	gh.mu.Lock()
+	gh.down = false
+	gh.mu.Unlock()
+	c.looking.Lock()
+	c.pullsAfter = time.Time{} // the back-off over
+	c.looking.Unlock()
+	is := func() {
+		t.Helper()
+		for _, r := range related(t, svc, c) {
+			want := r.Branch == "squashed"
+			if r.PullMerged != want || r.PullAsked != want {
+				t.Errorf("%s: pull merged %v, asked %v", r.Branch, r.PullMerged, r.PullAsked)
+			}
+		}
+	}
+	is()
+	is()
+	if got := gh.askedOf(); !slices.Equal(got, []string{"squashed", "squashed"}) {
+		t.Errorf("asked %v", got)
+	}
+	c.mu.Lock()
+	created := c.record.Created
+	c.mu.Unlock()
+	gh.mu.Lock()
+	since := gh.since
+	gh.mu.Unlock()
+	if since.IsZero() || !since.Equal(created) {
+		t.Errorf("since %v, the chat began %v", since, created)
+	}
 }
 
 // A subagent's end is a look of its own, with no turn ending and no

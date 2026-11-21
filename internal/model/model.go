@@ -116,13 +116,23 @@ type ChatRecord struct {
 // MaxPulls is how many pull requests a chat holds at most (ADR 0117).
 const MaxPulls = 10
 
-// PullLink is the chat's primary pull request: the one it was started
-// from, else its first; nil when it has none.
+// PullLink is the chat's primary pull request (ADR 0117): the one it was
+// started from, else the first still open (as GitHub last said; one never
+// asked about counts as open), else its first; nil when it has none.
 func (s ChatRecord) PullLink() *ChatGitHub {
-	if all := s.AllPulls(); len(all) > 0 {
+	all := s.AllPulls()
+	if len(all) == 0 {
+		return nil
+	}
+	if s.GitHub != nil && s.GitHub.Pull {
 		return &all[0]
 	}
-	return nil
+	for i := range all {
+		if !all[i].Done {
+			return &all[i]
+		}
+	}
+	return &all[0]
 }
 
 // LinkedPulls are the chat's pull requests other than the one it was

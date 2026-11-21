@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 	case filepath.Base(os.Args[0]) == "claude":
 		os.Exit(fakeClaude(os.Args[1:]))
 	case os.Getenv("RECORD_TEST_AGENT") == "1":
-		if claudeacp.Main() != nil {
+		if claudeacp.Main(claudeacp.Config{}) != nil {
 			os.Exit(1) // Main logged why
 		}
 	case os.Getenv("RECORD_TEST_AGENT") == "hang":

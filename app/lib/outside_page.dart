@@ -9,6 +9,7 @@ import 'package:nushi/preview.dart';
 import 'package:nushi/preview_entry.dart';
 import 'package:nushi/theme/theme.dart';
 import 'package:nushi/tool_parts.dart' show plainPath;
+import 'package:nushi/web_find.dart';
 import 'package:nushi/web_page.dart';
 import 'package:nushi/web_views.dart';
 
@@ -47,6 +48,10 @@ class OutsidePage implements PageHost {
   /// The browser has its own copy to reload.
   @override
   Future<void> reload() async {}
+
+  /// The browser has its own find.
+  @override
+  PageFinder? get finder => null;
 
   @override
   void dispose() => _path.dispose();
@@ -106,6 +111,10 @@ class OutsideTab implements BrowserHost {
 
   @override
   ValueListenable<Uri?> get blockedLocal => _blocked;
+
+  /// The browser has its own find.
+  @override
+  PageFinder? get finder => null;
 
   /// No page is drawn here to take a picture of.
   @override

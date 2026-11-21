@@ -24,6 +24,7 @@ RelatedWorktree _worktree(
   String name, {
   String state = 'present',
   bool merged = false,
+  bool pullMerged = false,
   String call = '',
   String? head,
 }) => RelatedWorktree(
@@ -34,6 +35,7 @@ RelatedWorktree _worktree(
   callId: call,
   state: state,
   merged: merged,
+  pullMerged: pullMerged,
 );
 
 Item _subagent(String id, String state) => Item(
@@ -522,17 +524,18 @@ void main() {
       await closeView(tester, daemon);
     });
 
-    testWidgets('merged is what git shows, and a squash reads as removed', (
-      tester,
-    ) async {
+    testWidgets('merged is what git shows, or what GitHub does of a squash '
+        '(issue 83); one neither shows reads as removed', (tester) async {
       await setUpChat(tester);
       chatState.related.take([
         _worktree('kept'),
-        _worktree('squashed', state: 'removed'),
+        _worktree('dropped', state: 'removed'),
+        _worktree('squashed', state: 'removed', pullMerged: true),
         _worktree('merged', state: 'removed', merged: true),
       ]);
       await showWidget(tester);
-      expect(find.text('merged'), findsNWidgets(2)); // the branch and the end
+      // The branch and the ends.
+      expect(find.text('merged'), findsNWidgets(3));
       expect(find.text('removed'), findsOne);
       await closeView(tester, daemon);
     });

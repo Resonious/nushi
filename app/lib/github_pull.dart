@@ -107,9 +107,11 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
   void initState() {
     super.initState();
     if (widget.source case final s?) {
-      s.addListener(_sourceChanged);
-      // Asked as the tab opens, unless it was a moment ago.
-      unawaited(s.refresh(again: false));
+      // Read whole while the tab shows (ADR 0140): asked as it opens,
+      // unless it was a moment ago.
+      s
+        ..addListener(_sourceChanged)
+        ..showTab();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) s.markSeen();
       });
@@ -136,7 +138,9 @@ class _GitHubPullPaneState extends State<GitHubPullPane> {
   @override
   void dispose() {
     _tabLeft[_refKey] = _tab;
-    widget.source?.removeListener(_sourceChanged);
+    widget.source
+      ?..removeListener(_sourceChanged)
+      ..hideTab();
     _redraw.removeListener(_changed);
     _poll?.cancel();
     _scroll.dispose();

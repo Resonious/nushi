@@ -1,21 +1,28 @@
 package knownagents
 
 import (
+	"context"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io/fs"
+	"os"
+	"path/filepath"
 	"reflect"
 	"slices"
 	"testing"
 
+	"github.com/afrase/nushi/internal/features/agents"
 	"github.com/afrase/nushi/internal/features/chats"
 	"github.com/afrase/nushi/internal/features/skills"
+	"github.com/afrase/nushi/internal/shellenv"
+	"github.com/afrase/nushi/internal/testcheck"
 )
 
 // Each agent is whole: named once, its setup named and titled as its
 // harness, with its skills and trust; Claude first.
 func TestEveryAgentIsWhole(t *testing.T) {
-	all := All(t.TempDir())
+	all := All(t.TempDir(), nil)
 	var names []string
 	for _, a := range all {
 		info, n := a.Harness.Info(), a.Agent.Name
@@ -100,7 +107,7 @@ func TestEachHarnessHasWhatItHasAndNoMore(t *testing.T) {
 		"pi":       {[]string{"ContextAsker", "Forker", "GoneReader"}, nil},
 		"pig":      {[]string{"ContextAsker", "Forker", "GoneReader"}, nil},
 	}
-	for _, a := range All("") {
+	for _, a := range All("", nil) {
 		w := want[a.Agent.Name]
 		if got := listed(a.Harness); !slices.Equal(got, w.harness) {
 			t.Errorf("%s has %v, want %v", a.Agent.Name, got, w.harness)
@@ -116,7 +123,7 @@ func TestEachHarnessHasWhatItHasAndNoMore(t *testing.T) {
 // Claude's built-in skills, plugins and links, and Ante's plain MCP
 // servers.
 func TestWhatTheAppShowsIsOneAgentsAlone(t *testing.T) {
-	for _, a := range All("") {
+	for _, a := range All("", nil) {
 		claudes := a.Agent.Name == "claude"
 		_, builtIn := a.Skills.(skills.BuiltIn)
 		_, plugins := a.Skills.(skills.Plugins)
@@ -135,8 +142,46 @@ func TestWhatTheAppShowsIsOneAgentsAlone(t *testing.T) {
 // Claude runs through Nushi's Go agent: no adapter to set up, so no Node,
 // and no CLI version pinned (ADR 0066).
 func TestClaudeHasNoAdapter(t *testing.T) {
-	c := All(t.TempDir())[0]
+	c := All(t.TempDir(), nil)[0]
 	if c.Agent.Name != "claude" || c.Agent.Adapter != nil || len(c.Agent.Tested) != 0 {
 		t.Errorf("Claude: %+v", c.Agent)
 	}
 }
+
+// Codex runs through codex-acp, set up, until the user's setting says the
+// Go agent (ADR 0142): then a start has no adapter program, which
+// codex.Harness takes for the Go agent, and needs no Node or Set up. The
+// setting is asked at each start, so flipping it needs no restart.
+func TestCodexFollowsItsGoAgentSetting(t *testing.T) {
+	bin := t.TempDir()
+	for _, p := range []string{"codex", "node"} {
+		testcheck.Write(t, filepath.Join(bin, p), "#!/bin/sh\n")
+		testcheck.NoErr(t, os.Chmod(filepath.Join(bin, p), 0o700))
+	}
+	t.Setenv("PATH", bin)
+	on := false
+	var found []agents.Agent
+	for _, a := range All("", func() bool { return on }) {
+		found = append(found, a.Agent)
+	}
+	svc := agents.New(found, func(context.Context, string, ...string) ([]byte, error) { return nil, nil }, shellenv.Off(os.Environ()), t.TempDir(), setUp{})
+	if r, err := svc.Run("codex"); err != nil || r.Program != "/adapter/codex-acp" || r.Node != filepath.Join(bin, "node") {
+		t.Errorf("off: %+v, %v", r, err)
+	}
+	on = true
+	if r, err := svc.Run("codex"); err != nil || r.Program != "" || r.Node != "" || r.CLI != filepath.Join(bin, "codex") {
+		t.Errorf("on: %+v, %v", r, err)
+	}
+	if err := svc.SetUp(context.Background(), "codex"); err == nil {
+		t.Error("on: Codex had something to set up")
+	}
+}
+
+// setUp is an installer whose every adapter is set up, at /adapter.
+type setUp struct{}
+
+func (setUp) Install(context.Context, fs.FS, string, func()) error { return nil }
+func (setUp) Installed(_, _, bin string) (version, program string) {
+	return "1.0.0", "/adapter/" + bin
+}
+func (setUp) Remove(string) error { return nil }

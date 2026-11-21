@@ -12,6 +12,7 @@ import 'package:nushi/chat_colors.dart';
 import 'package:nushi/daemon.dart';
 import 'package:nushi/drafts.dart';
 import 'package:nushi/gen/nushi/v1/nushi.pb.dart';
+import 'package:nushi/pull_link.dart' show rowItem;
 
 /// The seven agents, as the daemon lists them: installed, ready.
 List<Agent> readyAgents() => [
@@ -30,6 +31,8 @@ List<Agent> readyAgents() => [
       path: '/bin/$name',
       ready: true,
       mcpUserOnly: name == 'ante',
+      goAgentSwitch: name == 'codex',
+      signIn: name == 'codex' ? 'codex login' : '',
     ),
 ];
 
@@ -43,7 +46,9 @@ class FakeDaemon implements Transport {
   /// list or a chat its test shares with the next.
   final List<Chat> chats;
 
-  /// What ListAgents answers; the agents set up and removed.
+  /// What ListAgents answers (one with a Go agent switch without its
+  /// adapter while [settings] run it through the Go agent, as the daemon
+  /// does); the agents set up and removed.
   List<Agent> agents = readyAgents();
 
   /// How reading the shell's environment went, as ListAgents tells it
@@ -58,9 +63,20 @@ class FakeDaemon implements Transport {
   final setSettings = <Settings>[];
   String? startError;
 
+  /// The ways to sign in a [startError] carries, as a start the agent
+  /// refused for want of a sign-in does (API 139).
+  AgentSignIn? startSignIn;
+
+  /// Each SignInAgent asked for. One waits for [signInGate] when set, and
+  /// fails with the message it completes with (null: signed in), or as
+  /// Canceled once its call is cancelled.
+  final signIns = <SignInAgentRequest>[];
+  Completer<String?>? signInGate;
+
   /// Answers calls the fake doesn't know (Jira's, git's): an answer (or a
   /// Future of one, to answer later), or null for the empty one; a thrown
-  /// error fails the call. Every such call is in [calls].
+  /// error fails the call. Every such call is in [calls]. GetGitHubItems
+  /// it leaves unanswered are its GetGitHubPull answers' rows.
   Object? Function(Object input)? answer;
   final calls = <Object>[];
 
@@ -114,6 +130,9 @@ class FakeDaemon implements Transport {
   searches;
   final searched = <SearchAgentSessionsRequest>[];
   final cancelledSearches = <String>[];
+
+  /// The requests whose caller cancelled them, as each was.
+  final cancelled = <Object>[];
   // The fake's stream, which lives as long as the test.
   final _events = StreamController<EventsResponse>()..add(EventsResponse());
 
@@ -142,6 +161,9 @@ class FakeDaemon implements Transport {
         'daemon unavailable: dial failed',
       );
     }
+    if (options?.signal case final signal?) {
+      unawaited(signal.future.then((_) => cancelled.add(input)));
+    }
     if (input is ListAgentSessionsRequest) listed.add(input);
     if (input is OpenAgentSessionRequest) opened.add(input);
     if (input is SearchAgentSessionsRequest) {
@@ -169,8 +191,32 @@ class FakeDaemon implements Transport {
           Code.failedPrecondition,
           e,
           metadata: Headers()..add('nushi-reason', 'agent_start'),
+          details: [
+            if (startSignIn case final s?)
+              ErrorDetail(s.info_.qualifiedMessageName, s.writeToBuffer()),
+          ],
         );
       }
+    }
+    if (input is SignInAgentRequest) {
+      signIns.add(input);
+      final waits = <Future<Object?>>[
+        if (signInGate case final g?) g.future,
+        if (options?.signal case final s?) s.future,
+      ];
+      final out = waits.isEmpty ? null : await Future.any(waits);
+      switch (out) {
+        case ConnectException():
+          throw ConnectException(Code.canceled, 'operation canceled');
+        case final String why:
+          throw ConnectException(Code.failedPrecondition, why);
+      }
+      return UnaryResponse(
+        spec,
+        Headers(),
+        SignInAgentResponse() as O,
+        Headers(),
+      );
     }
     if (input is WriteChatFileRequest && files.containsKey(input.path)) {
       calls.add(input);
@@ -178,6 +224,9 @@ class FakeDaemon implements Transport {
     }
     var other = answer?.call(input);
     if (other is Future) other = await other;
+    if (other == null && input is GetGitHubItemsRequest) {
+      other = await _itemsFromWhole(input);
+    }
     calls.add(input);
     if (input is DeleteChatRequest) _delete(input.chatId);
     final out =
@@ -190,7 +239,7 @@ class FakeDaemon implements Transport {
             :final reloadEnvironment,
           ) =>
             ListAgentsResponse(
-              agents: agents,
+              agents: [for (final a in agents) _asRun(a)],
               environment: refreshEnvironment || reloadEnvironment
                   ? environment
                   : null,
@@ -279,6 +328,37 @@ class FakeDaemon implements Transport {
     emit(EventsResponse(chatId: id, chat: fork));
   }
 
+  /// GetGitHubItems answered as the daemon would from what [answer] says
+  /// of each pull request whole (its row, `rowItem`), for a test that
+  /// answers only GetGitHubPull; null when it says none.
+  Future<GetGitHubItemsResponse?> _itemsFromWhole(
+    GetGitHubItemsRequest input,
+  ) async {
+    final items = <GitHubItem>[];
+    for (final ref in input.refs) {
+      Object? whole;
+      try {
+        whole = answer?.call(GetGitHubPullRequest(ref: ref));
+        if (whole is Future) whole = await whole;
+      } on Object {
+        continue; // the whole one fails: the row isn't known
+      }
+      if (whole is GetGitHubPullResponse &&
+          whole.pull.item.ref.number == ref.number) {
+        items.add(rowItem(whole.pull));
+      }
+    }
+    return items.isEmpty ? null : GetGitHubItemsResponse(items: items);
+  }
+
+  /// [a] as the daemon lists it now: Codex through the Go agent needs no
+  /// adapter, so it's ready once found.
+  Agent _asRun(Agent a) => a.goAgentSwitch && settings.codexGoAgent
+      ? (a.deepCopy()
+          ..clearAdapter()
+          ..ready = a.path.isNotEmpty && a.problem.isEmpty)
+      : a;
+
   /// Pins [ids] as the daemon does: each at its place, every other chat
   /// unpinned, an archived one never; a chat whose pin changed comes as
   /// an event.
@@ -330,6 +410,10 @@ class FakeDaemon implements Transport {
   /// (ADR 0096), by the path asked for; null for one that isn't there.
   /// Each write is in [writes]; [putFile] changes one as an agent would.
   final files = <String, List<int>?>{};
+
+  /// The [files] whose permissions don't let them be written: they show
+  /// read-only.
+  final readOnlyFiles = <String>{};
   final writes = <WriteChatFileRequest>[];
   final _watches = <String, List<StreamController<WatchChatFileResponse>>>{};
 
@@ -341,7 +425,8 @@ class FakeDaemon implements Transport {
       data: data,
       size: Int64(data.length),
       sha256: sha256.convert(data).toString(),
-      editable: true,
+      editable: !readOnlyFiles.contains(path),
+      readOnly: readOnlyFiles.contains(path),
     ),
   };
 
