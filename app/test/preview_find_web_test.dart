@@ -226,6 +226,18 @@ void main() {
     await endEditor(tester, d);
   }, variant: onMac);
 
+  test('typing asks the page only for the query it ends on', () async {
+    final finder = FakePageFinder(_page);
+    final find = WebFind(finder)..query = '';
+    for (final q in ['t', 'te', 'tea']) {
+      find.query = q;
+    }
+    await pumpEventQueue();
+    expect(finder.asked, ['find tea 0']);
+    expect(find.count, isNotEmpty);
+    find.dispose();
+  });
+
   testWidgets('the bar with matches', (tester) async {
     await renderFind(tester, 'find-html', (w, b) async {
       final finder = FakePageFinder(_page)..hasKeys = true;

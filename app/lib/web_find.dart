@@ -103,6 +103,7 @@ class WebFind extends Find {
     final q = query ?? '';
     final ask = ++_asks;
     _then(() async {
+      if (ask != _asks || query == null) return; // overtaken: never asked
       PageFound found;
       try {
         found = await finder.find(
@@ -125,7 +126,11 @@ class WebFind extends Find {
     if (!canStep) return;
     super.step(by);
     final to = at;
-    _then(() => finder.show(to, cover: findBarCover));
+    final ask = _asks;
+    _then(() async {
+      if (ask != _asks || query == null) return; // a new query's marks
+      await finder.show(to, cover: findBarCover);
+    });
   }
 
   /// A new page, or the same again: its marks are gone, so it's looked in
