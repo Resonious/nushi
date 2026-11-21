@@ -17,9 +17,15 @@ import (
 func startErr(t *testing.T, a *app, folder string) (*connect.Error, *nushiv1.AgentSignIn) {
 	t.Helper()
 	_, err := a.c.StartChat(t.Context(), connect.NewRequest(&nushiv1.StartChatRequest{Agent: "signin", Folder: folder}))
+	return signInErr(t, err)
+}
+
+// signInErr is a call's error, and the AgentSignIn it carries (nil: none).
+func signInErr(t *testing.T, err error) (*connect.Error, *nushiv1.AgentSignIn) {
+	t.Helper()
 	var ce *connect.Error
 	if !errors.As(err, &ce) {
-		t.Fatalf("StartChat = %v", err)
+		t.Fatalf("the call = %v", err)
 	}
 	for _, d := range ce.Details() {
 		if v, err := d.Value(); err == nil {
@@ -76,6 +82,18 @@ func TestSignInBeforeStart(t *testing.T) {
 	}
 	id := a.start(&nushiv1.StartChatRequest{Agent: "signin", Folder: folder})
 	a.say(id, "hi")
+}
+
+// Opening a session of an agent that isn't signed in fails as a start
+// does: with the ways to sign in, so the app offers them.
+func TestSignInBeforeOpen(t *testing.T) {
+	d := startDaemon(t, t.TempDir(), &acptest.History{})
+	a := open(t, d)
+	_, err := a.c.OpenAgentSession(t.Context(), connect.NewRequest(&nushiv1.OpenAgentSessionRequest{Agent: "signin", Folder: t.TempDir(), SessionId: "s-elsewhere"}))
+	ce, in := signInErr(t, err)
+	if ce.Code() != connect.CodeFailedPrecondition || in == nil || in.Agent != "signin" || len(in.Methods) != 1 || in.Methods[0].Id != "chat-gpt" {
+		t.Fatalf("OpenAgentSession: %v, sign-in %v", ce, in)
+	}
 }
 
 // A chat whose agent signed out while it slept says so as it wakes for a
