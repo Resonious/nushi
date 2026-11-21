@@ -48,6 +48,7 @@ func main() {
 	flag.DurationVar(&lim.HTTPIdle, "http-idle", lim.HTTPIdle, "close a plain HTTP connection (not a WebSocket) idle this long")
 	flag.DurationVar(&lim.FirstWait, "first-wait", lim.FirstWait, "how long a new connection has for its first request's headers")
 	flag.IntVar(&lim.PlainPerIP, "plain-per-ip", lim.PlainPerIP, "plain HTTP connections (not WebSockets) from one address")
+	flag.IntVar(&lim.PlainPerNet, "plain-per-net", lim.PlainPerNet, "plain HTTP connections from one IPv6 /48 (an IPv4 address is its own), at least -plain-per-ip and at most half of -total")
 	web := flag.String("web", "", "serve the web app in this folder instead of the one built into a release's relay (ADR 0113); needs -origin")
 	origin := flag.String("origin", "", "serve the phone's web app (ADR 0054) at this origin, the one the browser sees it at (https://host[:port]) and the only one whose pages may connect; with -web and -host, https://<host> by default. Behind a reverse proxy (Tailscale Funnel, cloudflared, Caddy) it is the proxy's public address")
 	flag.Parse()
