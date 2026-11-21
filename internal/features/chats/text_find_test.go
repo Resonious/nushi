@@ -55,8 +55,8 @@ func TestFindTextCountsWhatShows(t *testing.T) {
 
 // A long chat is searched fast and within bounds: 60,000 items, every
 // tenth with a match, answer within a second (more than enough; it takes
-// a few milliseconds), stopping at maxTextMatches; a search whose
-// context ended stops.
+// a few milliseconds), stopping at maxTextMatches with the ones nearest
+// before (a step up goes to them); a search whose context ended stops.
 func TestFindTextInALongChat(t *testing.T) {
 	svc, _, c := newChat(t, `{"sessionId":"s1"}`, &memModes{})
 	items := make([]model.Item, 60_000)
@@ -74,8 +74,13 @@ func TestFindTextInALongChat(t *testing.T) {
 	if took := time.Since(start); took > time.Second {
 		t.Errorf("took %v", took)
 	}
-	if len(got) != maxTextMatches || !more || got[0].ID != "i0" || got[1].ID != "i10" {
-		t.Errorf("%d found, more %v, first %v", len(got), more, got[:2])
+	if len(got) != maxTextMatches || !more || got[0].ID != "i10000" || got[len(got)-1].ID != "i59990" {
+		t.Errorf("%d found, more %v, first %v, last %v", len(got), more, got[0], got[len(got)-1])
+	}
+	got, more, err = svc.FindText(t.Context(), c.id, "needle", "i50001")
+	testcheck.NoErr(t, err)
+	if len(got) != maxTextMatches || !more || got[0].ID != "i10" || got[len(got)-1].ID != "i50000" {
+		t.Errorf("before i50001: %d found, more %v, first %v, last %v", len(got), more, got[0], got[len(got)-1])
 	}
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()

@@ -844,10 +844,11 @@ message FindInChatRequest {
 }
 
 message FindInChatResponse {
-  // The items with matches, in the transcript's order.
+  // The items with matches, in the transcript's order: past the bound,
+  // the 5000 nearest before.
   repeated ChatMatch matches = 1;
-  // The search stopped at its bound (5000 items with matches): the rest
-  // aren't counted.
+  // The search stopped at its bound (5000 items with matches): the older
+  // ones aren't counted.
   bool more = 2;
 }
 

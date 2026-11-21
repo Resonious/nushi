@@ -1957,10 +1957,11 @@ func (x *FindInChatRequest) GetBefore() string {
 
 type FindInChatResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The items with matches, in the transcript's order.
+	// The items with matches, in the transcript's order: past the bound,
+	// the 5000 nearest before.
 	Matches []*ChatMatch `protobuf:"bytes,1,rep,name=matches,proto3" json:"matches,omitempty"`
-	// The search stopped at its bound (5000 items with matches): the rest
-	// aren't counted.
+	// The search stopped at its bound (5000 items with matches): the older
+	// ones aren't counted.
 	More          bool `protobuf:"varint,2,opt,name=more,proto3" json:"more,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

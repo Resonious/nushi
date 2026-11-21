@@ -2238,12 +2238,13 @@ class FindInChatResponse extends $pb.GeneratedMessage {
           FindInChatResponse.$_createMessage);
   static FindInChatResponse? _defaultInstance;
 
-  /// The items with matches, in the transcript's order.
+  /// The items with matches, in the transcript's order: past the bound,
+  /// the 5000 nearest before.
   @$pb.TagNumber(1)
   $pb.PbList<ChatMatch> get matches => $_getList(0);
 
-  /// The search stopped at its bound (5000 items with matches): the rest
-  /// aren't counted.
+  /// The search stopped at its bound (5000 items with matches): the older
+  /// ones aren't counted.
   @$pb.TagNumber(2)
   $core.bool get more => $_getBF(1);
   @$pb.TagNumber(2)

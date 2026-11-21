@@ -22,7 +22,7 @@ type TextMatch struct {
 }
 
 // maxTextMatches bounds a search's answer: past so many items with
-// matches, the rest aren't counted.
+// matches, the older ones aren't counted.
 const maxTextMatches = 5000
 
 // copyChunk is how many items of a let-go chat's copy are read whole at a
@@ -32,7 +32,9 @@ const copyChunk = 256
 // FindText counts query's matches (textfind.Literal: case aside, as
 // written) in what each of a chat's items shows (findText), for those
 // before the item of id before ("" for all of them), in the transcript's
-// order, and says whether it stopped at maxTextMatches. The chat's lock is
+// order, and says whether it stopped at maxTextMatches: it searches back
+// from before, so what it answers are the matches nearest it, the ones a
+// step up from what's loaded goes to. The chat's lock is
 // held only to take its items' texts (strings, shared, not copied), or the
 // heads of a chat whose items were let go, whose copy is then read a chunk
 // at a time; ctx's end stops it.
@@ -67,19 +69,38 @@ func (s *Service) FindText(ctx context.Context, chatID, query, before string) ([
 	if err != nil {
 		return nil, false, err
 	}
-	var out []TextMatch
-	for i, t := range texts[:end] {
+	var out backwards
+	for i := end - 1; i >= 0; i-- {
 		if i%64 == 0 && ctx.Err() != nil {
 			return nil, false, ctx.Err()
 		}
-		if n := t.count(q); n > 0 {
-			if len(out) == maxTextMatches {
-				return out, true, nil
-			}
-			out = append(out, TextMatch{t.id, n})
+		if out.add(texts[i].id, texts[i].count(q)) {
+			return out.done(true)
 		}
 	}
-	return out, false, nil
+	return out.done(false)
+}
+
+// backwards gathers a search's matches from the last item back.
+type backwards []TextMatch
+
+// add counts item id's n matches, if any; true when it has maxTextMatches
+// items already, so the search stops.
+func (b *backwards) add(id string, n int) bool {
+	if n == 0 {
+		return false
+	}
+	if len(*b) == maxTextMatches {
+		return true
+	}
+	*b = append(*b, TextMatch{id, n})
+	return false
+}
+
+// done is the matches in the transcript's order, and more.
+func (b backwards) done(more bool) ([]TextMatch, bool, error) {
+	slices.Reverse(b)
+	return b, more, nil
 }
 
 // findInCopy is FindText for a chat whose items were let go: its copy's
@@ -90,12 +111,12 @@ func findInCopy(ctx context.Context, q textfind.Query, c *chat, heads []model.It
 	if err != nil {
 		return nil, false, err
 	}
-	var out []TextMatch
-	for from := 0; from < end; from += copyChunk {
+	var out backwards
+	for to := end; to > 0; to -= copyChunk {
 		if ctx.Err() != nil {
 			return nil, false, ctx.Err()
 		}
-		part := heads[from:min(from+copyChunk, end)]
+		part := heads[max(0, to-copyChunk):to]
 		var ids []string
 		for _, h := range part {
 			if !shownOnly(h) {
@@ -110,22 +131,19 @@ func findInCopy(ctx context.Context, q textfind.Query, c *chat, heads []model.It
 		for i := range read {
 			whole[read[i].ID] = &read[i]
 		}
-		for i := range part {
+		for i := len(part) - 1; i >= 0; i-- {
 			it := &part[i]
 			if w, ok := whole[it.ID]; ok {
 				it = w
 			} else if !shownOnly(*it) {
 				continue // gone from the copy since its heads
 			}
-			if n := (itemText{it.ID, findText(*it)}).count(q); n > 0 {
-				if len(out) == maxTextMatches {
-					return out, true, nil
-				}
-				out = append(out, TextMatch{it.ID, n})
+			if out.add(it.ID, (itemText{it.ID, findText(*it)}).count(q)) {
+				return out.done(true)
 			}
 		}
 	}
-	return out, false, nil
+	return out.done(false)
 }
 
 // endBefore is the place of the item of id before among n (all of them
