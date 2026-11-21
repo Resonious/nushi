@@ -119,10 +119,12 @@ type sources struct {
 // newSources holds none yet, at lim's rate.
 func newSources(lim Limits) sources { return sources{lim: lim, by: map[string]*source{}} }
 
-// admit counts a new connection from key, or says why not: the address
-// opens connections too fast (429), or holds limit already (503). Called
-// with the server's mu.
-func (ss *sources) admit(key string, now time.Time, limit int) int {
+// admit counts a connection from key, or says why not: the address opens
+// connections too fast (429), or holds limit already (503). A new one
+// costs a token; one that isn't (a proxy's pooled connection now carrying
+// this address's request) doesn't, nor needs one. Called with the
+// server's mu.
+func (ss *sources) admit(key string, now time.Time, limit int, isNew bool) int {
 	if now.Sub(ss.swept) > time.Minute {
 		ss.swept = now
 		for k, src := range ss.by {
@@ -138,12 +140,14 @@ func (ss *sources) admit(key string, now time.Time, limit int) int {
 	}
 	ss.refill(src, now)
 	switch {
-	case src.tokens < 1:
+	case isNew && src.tokens < 1:
 		return http.StatusTooManyRequests
 	case src.conns >= limit:
 		return http.StatusServiceUnavailable
 	}
-	src.tokens--
+	if isNew {
+		src.tokens--
+	}
 	src.conns++
 	return 0
 }

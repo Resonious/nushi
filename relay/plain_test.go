@@ -93,3 +93,40 @@ func TestPlainPerNet(t *testing.T) {
 		t.Errorf("another /48: %d", code)
 	}
 }
+
+// Behind a proxy that pools its connections, one connection carries
+// different clients' requests in turn. Only a connection's first request
+// is a new connection of its client's: taking a pooled one over spends
+// none of the client's rate (security review 2026-11-18, smaller
+// observations), while new connections still do.
+func TestPooledProxyConnection(t *testing.T) {
+	lim := Defaults
+	lim.IPHeader = "X-Test-IP"
+	lim.NewBurst, lim.NewRate = 3, 0.001
+	addr := plainServer(t, lim)
+	c, err := net.Dial("tcp", addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = c.Close() })
+	testcheck.NoErr(t, c.SetDeadline(time.Now().Add(30*time.Second)))
+	r := bufio.NewReader(c)
+	for i := range 10 {
+		client := []string{"203.0.113.1", "203.0.113.2"}[i%2]
+		_, _ = fmt.Fprintf(c, "GET /healthz HTTP/1.1\r\nHost: relay\r\nX-Test-IP: %s\r\n\r\n", client)
+		resp, err := http.ReadResponse(r, nil)
+		if err != nil {
+			t.Fatalf("request %d: %v", i, err)
+		}
+		_ = resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("request %d, from %s on the pooled connection: %d", i, client, resp.StatusCode)
+		}
+	}
+	// The first request spent one of 203.0.113.1's three.
+	for i, want := range []int{http.StatusOK, http.StatusOK, http.StatusServiceUnavailable} {
+		if code := ask(t, addr, "/healthz", "203.0.113.1"); code != want {
+			t.Fatalf("new connection %d: %d, want %d", i, code, want)
+		}
+	}
+}

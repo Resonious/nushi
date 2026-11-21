@@ -77,7 +77,7 @@ func (s *server) connState(c net.Conn, st http.ConnState) {
 		key, nkey := "", ""
 		if addr := c.RemoteAddr().String(); !s.proxied(addr) {
 			key, nkey = keyOf(addr, 64), keyOf(addr, 48)
-			if !s.admitPlain(key, nkey, now) {
+			if !s.admitPlain(key, nkey, now, true) {
 				_ = c.Close()
 				return
 			}
@@ -118,10 +118,11 @@ func (s *server) drop(c net.Conn) {
 }
 
 // admitPlain counts a plain connection under its address's key and its
-// /48's, or says it may not be: the address opens them too fast or holds
-// PlainPerIP, or the /48 holds PlainPerNet. Called with s.mu.
-func (s *server) admitPlain(key, nkey string, now time.Time) bool {
-	if s.plain.nets[nkey] >= s.lim.PlainPerNet || s.plain.by.admit(key, now, s.lim.PlainPerIP) != 0 {
+// /48's, or says it may not be: the address opens them too fast (isNew:
+// sources.admit) or holds PlainPerIP, or the /48 holds PlainPerNet.
+// Called with s.mu.
+func (s *server) admitPlain(key, nkey string, now time.Time, isNew bool) bool {
+	if s.plain.nets[nkey] >= s.lim.PlainPerNet || s.plain.by.admit(key, now, s.lim.PlainPerIP, isNew) != 0 {
 		return false
 	}
 	s.plain.nets[nkey]++
@@ -159,8 +160,8 @@ func (s *server) late(c net.Conn, pc *plainConn) {
 }
 
 // served counts r's connection as one that has sent a request and, behind
-// a proxy, under the header's address; it says no when that address is
-// over its caps.
+// a proxy, under the header's address; it says no when that address (or
+// its /48) is over its caps.
 func (s *server) served(r *http.Request) bool {
 	c, _ := r.Context().Value(connKey{}).(net.Conn)
 	s.mu.Lock()
@@ -177,8 +178,11 @@ func (s *server) served(r *http.Request) bool {
 	if pc.key == key {
 		return true
 	}
+	// A connection that has carried a request already is a proxy's,
+	// pooled, now carrying another client's: not a new one of this
+	// client's, so it costs none of its rate.
 	now, nkey := time.Now(), s.netKey(r)
-	if !s.admitPlain(key, nkey, now) {
+	if !s.admitPlain(key, nkey, now, pc.key == "") {
 		return false
 	}
 	s.leavePlain(pc.key, pc.net, now)

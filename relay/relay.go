@@ -286,7 +286,7 @@ func (s *server) join(w http.ResponseWriter, r *http.Request, dialer bool) (stri
 		http.Error(w, "busy", http.StatusServiceUnavailable)
 		return "", keys{}, nil
 	}
-	if code := s.ws.admit(src.addr, time.Now(), s.lim.PerIP); code != 0 {
+	if code := s.ws.admit(src.addr, time.Now(), s.lim.PerIP, true); code != 0 {
 		s.mu.Unlock()
 		http.Error(w, "busy", code)
 		return "", keys{}, nil
