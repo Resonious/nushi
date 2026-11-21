@@ -35,7 +35,7 @@ func (s *SignIn) SignOut() {
 	s.in = false
 }
 
-// signInMethods are codex-acp's auth methods, as 0.17 advertises them to
+// signInMethods are codex-acp's auth methods, as 2.2.2 advertises them to
 // a client without URL elicitation (the device code's besides, which the
 // Go agent may advertise).
 var signInMethods = []map[string]any{

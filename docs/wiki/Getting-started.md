@@ -63,6 +63,12 @@ Nushi runs your own copy of the agent, with your login, settings and history.
 
 If it says **Not installed**, Nushi couldn't find the command. Check that it runs in a new terminal window, then come back and click **Reload** (under **Shell environment** at the bottom). If it says **Not signed in**, sign in to the agent in a terminal.
 
+Codex can also sign in from Nushi. If it isn't signed in when a chat starts, you see **Codex isn't signed in**:
+
+1. Click **Sign in with ChatGPT**. Your browser opens.
+2. Sign in there. Nushi shows **Waiting for you to finish in the browser…** meanwhile; **Cancel** stops it.
+3. Once you're done, the chat starts on its own.
+
 Codex needs one extra piece: click **Set up** next to it. That needs Node and npm. (Or try **Run Codex without Node**, under Codex in the same page: it needs no Node and no Set up. It's new, so it's off unless you turn it on.)
 
 ## Your first chat
