@@ -309,33 +309,36 @@ class _FindBarState extends State<FindBar> {
           width: FindBar.width,
           padding: const EdgeInsets.fromLTRB(10, 4, 4, 4),
           decoration: floatBox(t, radius: NushiTheme.card),
-          child: all == null && !widget.loading
-              ? row
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    row,
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 6, 4),
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              widget.loading
-                                  ? 'Loading earlier messages…'
-                                  : 'Searching loaded messages · ',
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.ui(t.textMuted, size: 12),
-                            ),
-                          ),
-                          if (all != null && !widget.loading)
-                            LinkText('Load all', size: 12, onTap: all),
-                        ],
+          // The row is the column's first child with or without the line
+          // under it: in another place in the tree its field would be built
+          // anew, with the focus and no keyboard, and typing would stop as
+          // the line came (earlier messages loading as a match shows).
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              row,
+              if (all != null || widget.loading)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 6, 4),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          widget.loading
+                              ? 'Loading earlier messages…'
+                              : 'Searching loaded messages · ',
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.ui(t.textMuted, size: 12),
+                        ),
                       ),
-                    ),
-                  ],
+                      if (all != null && !widget.loading)
+                        LinkText('Load all', size: 12, onTap: all),
+                    ],
+                  ),
                 ),
+            ],
+          ),
         );
       },
     );
