@@ -10,6 +10,8 @@ The phone reaches your computer through a **relay**: a small server program that
 
 Nushi doesn't run a relay for you. You or your team run one on a server that your phone and your computer can both reach, with an address like `wss://relay.example.com`. The same server also hosts the phone app. The [relay setup guide](https://github.com/afrase/nushi/blob/main/docs/remote.md#the-relay) covers this.
 
+You can also host the relay and phone app together on Cloudflare Workers. Follow [the Workers setup steps](https://github.com/afrase/nushi/blob/main/docs/remote.md#on-cloudflare-workers).
+
 ## Turn on remote access
 
 1. Open **Settings › Remote access** in Nushi on your computer.

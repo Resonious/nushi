@@ -1,0 +1,22 @@
+{
+  "name": "nushi-relay",
+  "main": "index.js",
+  "compatibility_date": "2026-10-08",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "nushi.snd.one", "custom_domain": true }],
+  "assets": {
+    "binding": "PHONE",
+    "directory": "../../app/build/web",
+    "html_handling": "none",
+    "run_worker_first": true
+  },
+  "durable_objects": { "bindings": [{ "name": "ROOMS", "class_name": "Room" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  "ratelimits": [{
+    "name": "UPGRADES",
+    "namespace_id": "34001",
+    "simple": { "limit": 60, "period": 60 }
+  }],
+  "observability": { "enabled": false }
+}

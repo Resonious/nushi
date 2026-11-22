@@ -86,6 +86,17 @@ bin/nushi-relay -addr 127.0.0.1:8090 -origin https://relay.example.com
 - **Behind any HTTPS reverse proxy**, `-origin` is the proxy's public address and `-ip-header` its header with the client's address (below).
 - **Use `wss://`.** Company proxies tunnel 443 but often break a plain `ws://` upgrade, and iOS refuses plain connections by default.
 
+### On Cloudflare Workers
+
+The Worker serves the built phone app and pairs WebSockets in one Durable Object per rendezvous ID. Deploy it in the Cloudflare account that owns the domain. Use a dedicated hostname for the phone app.
+
+1. Set the custom domain in `relay/worker/wrangler.jsonc` to your hostname.
+2. From the repository root, run `make web` with the Flutter version in the release workflow.
+3. Sign in with Wrangler, then run `npx wrangler@4.147.0 deploy -c relay/worker/wrangler.jsonc`. If you have multiple accounts, set `CLOUDFLARE_ACCOUNT_ID` to the account that owns the zone.
+4. Open `https://<hostname>/` on the phone and enter `wss://<hostname>` in **Settings › Remote access** on the computer.
+
+To check a deployment with temporary device keys, run `NUSHI_WORKER_TEST_URL=wss://<hostname> go test -count=1 ./relay/worker`. For local development, use `npx wrangler@4.147.0 dev -c relay/worker/wrangler.jsonc --local-upstream 127.0.0.1:8787 --port 8787` and test against `ws://127.0.0.1:8787`.
+
 ### Behind a Cloudflare tunnel
 
 The author's relay runs on a Raspberry Pi behind a Cloudflare named tunnel (`cloudflared`, which terminates TLS):
