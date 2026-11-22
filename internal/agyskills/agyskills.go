@@ -112,9 +112,9 @@ func (Agy) SetSkillOn(context.Context, string, string, string, bool) error {
 	return errors.New(noSwitch)
 }
 
-// own are the places agy's own skill folders are in (not .agents/skills,
+// Own are the places agy's own skill folders are in (not .agents/skills,
 // which is shared and trashed by features/skills).
-func own(folder string) (project, yours []string) {
+func (Agy) Own(folder string) (project, yours []string) {
 	home, _ := os.UserHomeDir()
 	for _, d := range walk(git.RealPath(folder)) {
 		for _, rel := range []string{".agent/skills", "_agents/skills", "_agent/skills"} {
@@ -124,18 +124,4 @@ func own(folder string) (project, yours []string) {
 		}
 	}
 	return project, []string{filepath.Join(agy.ConfigDir(home), "skills")}
-}
-
-// CanTrash says why Trash wouldn't move path: nil only for a skill's
-// folder right in one of agy's own places.
-func (Agy) CanTrash(_ context.Context, folder, path string) error {
-	project, yours := own(folder)
-	return skillfile.CanTrash(project, yours, path)
-}
-
-// Trash moves one of agy's own skill folders to the Trash: only one
-// CanTrash passes.
-func (Agy) Trash(ctx context.Context, folder, path string) error {
-	project, yours := own(folder)
-	return skillfile.Trash(ctx, project, yours, path)
 }

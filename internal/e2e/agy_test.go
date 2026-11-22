@@ -28,7 +28,7 @@ func TestAnAgyChat(t *testing.T) {
 	}
 	start := must(a.c.StartChat(ctx, connect.NewRequest(&nushiv1.StartChatRequest{Agent: "agy", Folder: t.TempDir()})))
 	id := start.ChatId
-	if got := config(start.Config); got != "model/model=gemini-4-neon thought_level/thought_level=high mode/mode=default" {
+	if got := config(a.get(id).Config); got != "model/model=gemini-4-neon thought_level/thought_level=high mode/mode=default" {
 		t.Errorf("options = %s", got)
 	}
 	if got := a.commandNames(id); got != "compact plan goal" {

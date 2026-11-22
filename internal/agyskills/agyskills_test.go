@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/afrase/nushi/internal/skillfile"
 	"github.com/afrase/nushi/internal/testcheck"
 )
 
@@ -63,7 +64,7 @@ func TestSetSkillOnRefused(t *testing.T) {
 	}
 }
 
-func TestCanTrash(t *testing.T) {
+func TestOwn(t *testing.T) {
 	home := t.TempDir()
 	setHome(t, home)
 	repo := filepath.Join(home, "repo")
@@ -73,14 +74,14 @@ func TestCanTrash(t *testing.T) {
 	shared := writeSkill(t, filepath.Join(repo, ".agents", "skills"), "s", "s", "shared")
 	user := writeSkill(t, filepath.Join(home, ".gemini", "config", "skills"), "u", "u", "user")
 
-	a := Agy{}
-	if err := a.CanTrash(context.Background(), repo, proj); err != nil {
+	project, yours := (Agy{}).Own(repo)
+	if err := skillfile.CanTrash(project, yours, proj); err != nil {
 		t.Errorf("CanTrash(project): %v", err)
 	}
-	if err := a.CanTrash(context.Background(), repo, user); err != nil {
+	if err := skillfile.CanTrash(project, yours, user); err != nil {
 		t.Errorf("CanTrash(user): %v", err)
 	}
-	if err := a.CanTrash(context.Background(), repo, shared); err == nil {
+	if err := skillfile.CanTrash(project, yours, shared); err == nil {
 		t.Errorf("CanTrash(shared) = nil, want refusal (shared is trashed by skills.Service)")
 	}
 }
