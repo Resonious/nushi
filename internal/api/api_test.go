@@ -138,9 +138,10 @@ func TestStartFailureReason(t *testing.T) {
 	launch := func(acp.Client, *slog.Logger) (chats.Agent, error) { return nil, errors.New("it quit") }
 	st := store.New(t.TempDir())
 	svc := chats.New(t.Context(), []chats.Kind{{Harness: model.HarnessInfo{Name: "a", Title: "A"}, Launch: launch}}, chats.Options{Remembered: st, Sessions: st, Scratch: t.TempDir()})
-	c := client(t, New(Services{Chats: svc}))
+	c := client(t, New(Services{Home: t.TempDir(), Chats: svc}))
 	for _, tc := range []struct{ folder, reason, says string }{
 		{"", ReasonAgentStart, "couldn't start A: start agent: it quit"},
+		{"~", ReasonAgentStart, "couldn't start A: start agent: it quit"},
 		{"relative", "", "is not an absolute path"},
 	} {
 		_, err := c.StartChat(context.Background(), connect.NewRequest(&nushiv1.StartChatRequest{Folder: tc.folder}))

@@ -61,6 +61,8 @@ type server struct {
 
 // Services are what the API serves.
 type Services struct {
+	// Home is the daemon user's home directory for chat folder inputs.
+	Home   string
 	Chats  *chats.Service
 	Agents *agents.Service
 	MCP    map[string]*mcp.Service // by agent: "claude", "ante"

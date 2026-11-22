@@ -89,7 +89,7 @@ func foundSession(f chats.Found) *nushiv1.FoundSession {
 
 func (s *server) OpenAgentSession(ctx context.Context, req *connect.Request[nushiv1.OpenAgentSessionRequest]) (*connect.Response[nushiv1.OpenAgentSessionResponse], error) {
 	m := req.Msg
-	id, err := s.Chats.Open(ctx, s.agent(m.Agent), m.Folder, m.SessionId, m.Title)
+	id, err := s.Chats.Open(ctx, s.agent(m.Agent), s.chatFolder(m.Folder), m.SessionId, m.Title)
 	if err != nil {
 		return nil, refused(err)
 	}

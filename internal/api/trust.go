@@ -11,7 +11,7 @@ import (
 )
 
 func (s *server) CheckFolder(_ context.Context, req *connect.Request[nushiv1.CheckFolderRequest]) (*connect.Response[nushiv1.CheckFolderResponse], error) {
-	runs, key, err := s.Trust.Check(s.agent(req.Msg.Agent), req.Msg.Folder)
+	runs, key, err := s.Trust.Check(s.agent(req.Msg.Agent), s.chatFolder(req.Msg.Folder))
 	if err != nil {
 		return nil, refused(err)
 	}
@@ -23,7 +23,7 @@ func (s *server) CheckFolder(_ context.Context, req *connect.Request[nushiv1.Che
 }
 
 func (s *server) TrustFolder(_ context.Context, req *connect.Request[nushiv1.TrustFolderRequest]) (*connect.Response[nushiv1.TrustFolderResponse], error) {
-	switch err := s.Trust.Trust(s.agent(req.Msg.Agent), req.Msg.Folder, req.Msg.Key); {
+	switch err := s.Trust.Trust(s.agent(req.Msg.Agent), s.chatFolder(req.Msg.Folder), req.Msg.Key); {
 	case errors.Is(err, trust.ErrChanged):
 		return nil, connect.NewError(connect.CodeAborted, err)
 	case err != nil:

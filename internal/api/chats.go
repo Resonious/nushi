@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 	"errors"
+	"path/filepath"
+	"strings"
 
 	"connectrpc.com/connect"
 
@@ -61,7 +63,18 @@ func (s *server) GetChatItems(_ context.Context, req *connect.Request[nushiv1.Ge
 	return connect.NewResponse(&nushiv1.GetChatItemsResponse{Older: int32(start), Items: s.itemsProto(req.Msg.ChatId, items, req.Msg.ImageRefs)}), nil
 }
 
+// chatFolder expands a leading home-directory component before a chat's
+// trust check, checkout or launch. An empty folder still requests a scratch chat.
+func (s *server) chatFolder(folder string) string {
+	first, rest, _ := strings.Cut(filepath.ToSlash(folder), "/")
+	if first == "~" && s.Home != "" {
+		return filepath.Join(s.Home, rest)
+	}
+	return folder
+}
+
 func (s *server) StartChat(ctx context.Context, req *connect.Request[nushiv1.StartChatRequest]) (*connect.Response[nushiv1.StartChatResponse], error) {
+	folder := s.chatFolder(req.Msg.Folder)
 	var issue *model.ChatIssue
 	if m := req.Msg; m.JiraKey != "" {
 		if err := jira.CheckKey(m.JiraKey); err != nil {
@@ -81,8 +94,8 @@ func (s *server) StartChat(ctx context.Context, req *connect.Request[nushiv1.Sta
 			return nil, invalid(err)
 		}
 		opts.GitHub = &link
-		if link.Pull && opts.Worktree && req.Msg.Folder != "" {
-			co, err := s.GitHub.CheckOut(ctx, req.Msg.Folder, link.GitHubRef)
+		if link.Pull && opts.Worktree && folder != "" {
+			co, err := s.GitHub.CheckOut(ctx, folder, link.GitHubRef)
 			if err != nil {
 				return nil, githubErr(err)
 			}
@@ -93,7 +106,7 @@ func (s *server) StartChat(ctx context.Context, req *connect.Request[nushiv1.Sta
 			}
 		}
 	}
-	id, err := s.Chats.StartOn(ctx, req.Msg.Agent, req.Msg.Folder, opts)
+	id, err := s.Chats.StartOn(ctx, req.Msg.Agent, folder, opts)
 	if head, ok := errors.AsType[*trust.UntrustedHeadError](err); ok { // the app shows its card, and starts again
 		out := &nushiv1.StartChatResponse{HeadFolder: head.Folder, HeadRunsKey: head.Shown}
 		for _, r := range head.Runs {
@@ -110,7 +123,7 @@ func (s *server) StartChat(ctx context.Context, req *connect.Request[nushiv1.Sta
 }
 
 func (s *server) MoveChat(ctx context.Context, req *connect.Request[nushiv1.MoveChatRequest]) (*connect.Response[nushiv1.MoveChatResponse], error) {
-	return done[nushiv1.MoveChatResponse](s.Chats.Move(ctx, req.Msg.ChatId, req.Msg.Folder, req.Msg.Worktree), refused)
+	return done[nushiv1.MoveChatResponse](s.Chats.Move(ctx, req.Msg.ChatId, s.chatFolder(req.Msg.Folder), req.Msg.Worktree), refused)
 }
 
 func (s *server) SendPrompt(ctx context.Context, req *connect.Request[nushiv1.SendPromptRequest]) (*connect.Response[nushiv1.SendPromptResponse], error) {

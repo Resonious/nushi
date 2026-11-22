@@ -67,7 +67,7 @@ The buttons beside the message box are icons. Press and hold one to see its name
 - **While the agent is working**: type your message, then pick one of two buttons. **Queue** (a stack of squares) sends it after the current turn ends. **Stop and send** (fast-forward, ⏩) stops the turn and sends yours right away.
 - **Stop the agent**: tap **Stop** (a square in a circle).
 
-To start a new chat, tap **+** on the **Chats** screen, pick a folder and an agent, and tap **Start**.
+To start a new chat, tap **+** on the **Chats** screen, pick a folder and an agent, and tap **Start**. You can also type a folder on your computer. Use `~` for your home folder or `~/p/nushi` for a folder inside it.
 
 ## Unpair a phone
 
